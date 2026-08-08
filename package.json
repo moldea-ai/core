@@ -1,0 +1,39 @@
+{
+  "name": "@moldea.ai/core",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/moldea-ai/core#readme",
+  "bugs": {
+    "url": "https://github.com/moldea-ai/core/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/moldea-ai/core.git"
+  },
+  "license": "MIT",
+  "author": "Jesus Graterol",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "lint": "eslint src",
+    "test": "npm run test:unit",
+    "test:integration": "npm run build && vitest run --config vitest/test-integration.config.ts",
+    "test:unit": "npm run build && vitest run --config vitest/test-unit.config.ts",
+    "test:bench": "npm run build && vitest bench"
+  },
+  "dependencies": {
+    "error-message-utils": "1.2.11",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "26.2.0",
+    "eslint": "10.8.1",
+    "eslint-config-prettier": "10.1.8",
+    "prettier": "3.9.6",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.66.0",
+    "vitest": "4.1.10"
+  }
+}
