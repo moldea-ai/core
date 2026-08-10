@@ -13,14 +13,16 @@
       "dependsOn": ["^lint"]
     },
     "test": {
-      "dependsOn": ["build"]
+      "dependsOn": ["^test"]
     },
     "test:integration": {
-      "dependsOn": ["build"]
+      "dependsOn": ["^test:integration"]
     },
-    "test:unit": {},
+    "test:unit": {
+      "dependsOn": ["^build"]
+    },
     "typecheck": {
-      "dependsOn": ["^typecheck"]
+      "dependsOn": ["^build", "^typecheck"]
     }
   }
 }

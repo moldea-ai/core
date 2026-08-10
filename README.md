@@ -4,7 +4,7 @@ The `packages` project is the open-source package monorepo for `moldea`. It deve
 
 The repository is intentionally separate from the hosted [`platform`](https://github.com/moldea-ai/platform) monorepo. It contains reusable package products and their shared development infrastructure, not Cloud applications, hosted APIs, runtime infrastructure, or deployment configuration.
 
-`@moldea.ai/repository` is the first implemented package. Additional package directories are introduced progressively in the specified implementation order rather than created as placeholders.
+`@moldea.ai/repository` is the first implemented package, and `@moldea.ai/core` is being built against its public reader contract and memory implementation. Additional package directories are introduced progressively in the specified implementation order rather than created as placeholders.
 
 ## Specifications
 
@@ -32,6 +32,7 @@ configs/
 fixtures/                      # Repository-wide conformance fixtures
 packages/                      # Private shared implementation packages
 projects/
+  core/                        # Deterministic repository-format interpretation
   repository/                  # Source-neutral reader contract and memory reader
 eslint.config.js
 package.json
