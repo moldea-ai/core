@@ -14,6 +14,8 @@ import { createNullPrototypeRecord, freezeRecursively } from './immutable.js';
 
 const CORE_DIAGNOSTIC_MESSAGES: Partial<Record<ICoreDiagnosticCode, string>> = {
   MOLDEA_AGENT_HANDOFF_DESCRIPTION_INVALID: 'The agent handoff description is invalid.',
+  MOLDEA_CANONICAL_ASSET_SYMLINK: 'The canonical asset is a symlink.',
+  MOLDEA_CANONICAL_PATH_UNRECOGNIZED: 'The canonical path is unrecognized.',
   MOLDEA_CAPABILITY_DESCRIPTION_INVALID: 'The capability description is invalid.',
   MOLDEA_CAPABILITY_DESCRIPTION_MISSING: 'The capability description is missing.',
   MOLDEA_CONTEXT_PATH_INVALID: 'The context relationship path is invalid.',
@@ -28,6 +30,7 @@ const CORE_DIAGNOSTIC_MESSAGES: Partial<Record<ICoreDiagnosticCode, string>> = {
   MOLDEA_DECISION_STATUS_INVALID: 'The decision status is invalid.',
   MOLDEA_DECISION_TIMESTAMP_MISMATCH:
     'The decision filename timestamp and createdAt value do not match.',
+  MOLDEA_ENTRY_TYPE_INVALID: 'The repository entry type is invalid.',
   MOLDEA_FRAMEWORK_ADAPTER_FORMAT_UNSUPPORTED:
     'The configured framework adapter does not support the repository format version.',
   MOLDEA_FRAMEWORK_ADAPTER_UNAVAILABLE: 'The declared framework adapter is unavailable.',
@@ -36,6 +39,7 @@ const CORE_DIAGNOSTIC_MESSAGES: Partial<Record<ICoreDiagnosticCode, string>> = {
   MOLDEA_ID_DUPLICATE: 'An ID is duplicated within its required scope.',
   MOLDEA_ID_INVALID: 'The ID is invalid.',
   MOLDEA_ID_RESERVED: 'The ID uses a reserved filesystem name.',
+  MOLDEA_MANIFEST_MISSING: 'The project manifest is missing.',
   MOLDEA_MANIFEST_PATH_INVALID: 'The manifest path is not the canonical manifest path.',
   MOLDEA_MANIFEST_PROPERTY_UNKNOWN: 'The manifest contains an unknown property.',
   MOLDEA_MANIFEST_ROOT_INVALID: 'The manifest root is not a mapping.',
@@ -49,6 +53,7 @@ const CORE_DIAGNOSTIC_MESSAGES: Partial<Record<ICoreDiagnosticCode, string>> = {
   MOLDEA_PATH_DUPLICATE: 'The path is duplicated.',
   MOLDEA_PATH_INVALID: 'The manifest logical path is invalid.',
   MOLDEA_PATTERN_DUPLICATE: 'The impact pattern is duplicated.',
+  MOLDEA_PROJECT_FILE_MISSING: 'The project file is missing.',
   MOLDEA_SKILL_IMPLEMENTATION_MISSING: 'The registered skill implementation is missing.',
   MOLDEA_SYMBOL_FORBIDDEN: 'A canonical moldea reference must not include a symbol.',
   MOLDEA_SYMBOL_INVALID: 'The repository-reference symbol is invalid.',

@@ -1,0 +1,65 @@
+{
+  "entries": [
+    {
+      "path": "/moldea/runtimes/custom/api.md",
+      "type": "file",
+      "text": "# Custom runtime\n"
+    },
+    {
+      "path": "/moldea/agents/customer-support/instruction.md",
+      "type": "file",
+      "text": "You are the customer-support agent.\n"
+    },
+    {
+      "path": "/moldea/project.md",
+      "type": "file",
+      "text": "# Example project\n"
+    },
+    {
+      "path": "/moldea/context/security/privacy.md",
+      "type": "file",
+      "text": "# Privacy\n"
+    },
+    {
+      "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+      "type": "file",
+      "text": "---\nstatus: accepted\ncreatedAt: \"2026-08-07T19:42:03.456Z\"\n---\nUse PostgreSQL.\n"
+    },
+    {
+      "path": "/moldea/agents/customer-support/description.md",
+      "type": "file",
+      "text": "Helps customers resolve account issues.\n"
+    },
+    {
+      "path": "/moldea/moldea.yaml",
+      "type": "file",
+      "text": "version: 1\n"
+    },
+    {
+      "path": "/moldea/context/product.md",
+      "type": "file",
+      "text": "# Product\n"
+    },
+    {
+      "path": "/moldea/agents/customer-support/handoff-description.md",
+      "type": "file",
+      "text": "Use for customer account support.\n"
+    }
+  ],
+  "expectedInventory": {
+    "manifest": "/moldea/moldea.yaml",
+    "project": "/moldea/project.md",
+    "context": ["/moldea/context/product.md", "/moldea/context/security/privacy.md"],
+    "decisions": ["/moldea/decisions/1786131723456-use-postgresql.md"],
+    "runtimeGuidance": ["/moldea/runtimes/custom/api.md"],
+    "agents": [
+      {
+        "id": "customer-support",
+        "path": "/moldea/agents/customer-support",
+        "description": "/moldea/agents/customer-support/description.md",
+        "instruction": "/moldea/agents/customer-support/instruction.md",
+        "handoffDescription": "/moldea/agents/customer-support/handoff-description.md"
+      }
+    ]
+  }
+}

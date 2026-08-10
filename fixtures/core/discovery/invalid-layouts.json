@@ -1,0 +1,150 @@
+{
+  "cases": [
+    {
+      "name": "missing moldea root",
+      "entries": [],
+      "expectedDiagnostics": [
+        {
+          "code": "MOLDEA_MANIFEST_MISSING",
+          "path": "/moldea/moldea.yaml",
+          "details": {}
+        },
+        {
+          "code": "MOLDEA_PROJECT_FILE_MISSING",
+          "path": "/moldea/project.md",
+          "details": {}
+        }
+      ]
+    },
+    {
+      "name": "missing foundation files",
+      "entries": [
+        {
+          "path": "/moldea/context/product.md",
+          "type": "file",
+          "text": "# Product\n"
+        }
+      ],
+      "expectedDiagnostics": [
+        {
+          "code": "MOLDEA_MANIFEST_MISSING",
+          "path": "/moldea/moldea.yaml",
+          "details": {}
+        },
+        {
+          "code": "MOLDEA_PROJECT_FILE_MISSING",
+          "path": "/moldea/project.md",
+          "details": {}
+        }
+      ]
+    },
+    {
+      "name": "wrong foundation entry types",
+      "entries": [
+        {
+          "path": "/moldea/moldea.yaml",
+          "type": "directory"
+        },
+        {
+          "path": "/moldea/project.md",
+          "type": "symlink"
+        }
+      ],
+      "expectedDiagnostics": [
+        {
+          "code": "MOLDEA_ENTRY_TYPE_INVALID",
+          "path": "/moldea/moldea.yaml",
+          "details": {
+            "actualType": "directory",
+            "expectedType": "file"
+          }
+        },
+        {
+          "code": "MOLDEA_CANONICAL_ASSET_SYMLINK",
+          "path": "/moldea/project.md",
+          "details": {}
+        }
+      ]
+    },
+    {
+      "name": "wrong root entry type",
+      "entries": [
+        {
+          "path": "/moldea",
+          "type": "symlink"
+        }
+      ],
+      "expectedDiagnostics": [
+        {
+          "code": "MOLDEA_ENTRY_TYPE_INVALID",
+          "path": "/moldea",
+          "details": {
+            "actualType": "symlink",
+            "expectedType": "directory"
+          }
+        }
+      ]
+    },
+    {
+      "name": "canonical symlinks and unrecognized entries",
+      "entries": [
+        {
+          "path": "/moldea/moldea.yaml",
+          "type": "file",
+          "text": "version: 1\n"
+        },
+        {
+          "path": "/moldea/project.md",
+          "type": "file",
+          "text": "# Project\n"
+        },
+        {
+          "path": "/moldea/context/product.md",
+          "type": "symlink"
+        },
+        {
+          "path": "/moldea/decisions/nested/1786131723456-choice.md",
+          "type": "file",
+          "text": "nested\n"
+        },
+        {
+          "path": "/moldea/agents/support/notes.md",
+          "type": "file",
+          "text": "notes\n"
+        },
+        {
+          "path": "/moldea/runtimes/readme.txt",
+          "type": "symlink"
+        }
+      ],
+      "expectedDiagnostics": [
+        {
+          "code": "MOLDEA_CANONICAL_PATH_UNRECOGNIZED",
+          "path": "/moldea/agents/support/notes.md",
+          "details": {
+            "entryType": "file"
+          }
+        },
+        {
+          "code": "MOLDEA_CANONICAL_ASSET_SYMLINK",
+          "path": "/moldea/context/product.md",
+          "details": {}
+        },
+        {
+          "code": "MOLDEA_CANONICAL_PATH_UNRECOGNIZED",
+          "path": "/moldea/decisions/nested/1786131723456-choice.md",
+          "details": {
+            "entryType": "file"
+          }
+        },
+        {
+          "code": "MOLDEA_CANONICAL_PATH_UNRECOGNIZED",
+          "path": "/moldea/runtimes/readme.txt",
+          "details": {
+            "entryType": "symlink"
+          }
+        }
+      ]
+    }
+  ]
+}
