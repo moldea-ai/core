@@ -4,7 +4,7 @@ The `packages` project is the open-source package monorepo for `moldea`. It deve
 
 The repository is intentionally separate from the hosted [`platform`](https://github.com/moldea-ai/platform) monorepo. It contains reusable package products and their shared development infrastructure, not Cloud applications, hosted APIs, runtime infrastructure, or deployment configuration.
 
-No first-class package is implemented in the workspace yet. Package directories are introduced progressively in the specified implementation order rather than created as placeholders.
+`@moldea.ai/repository` is the first implemented package. Additional package directories are introduced progressively in the specified implementation order rather than created as placeholders.
 
 ## Specifications
 
@@ -29,8 +29,10 @@ configs/
   typescript/                  # Shared environment and declaration configs
   vite/                        # Shared ESM library build configuration
   vitest/                      # Shared package test configuration
+fixtures/                      # Repository-wide conformance fixtures
 packages/                      # Private shared implementation packages
-projects/                      # First-class package projects
+projects/
+  repository/                  # Source-neutral reader contract and memory reader
 eslint.config.js
 package.json
 pnpm-lock.yaml
@@ -114,7 +116,7 @@ Public JavaScript artifacts are ESM-only unless a focused specification establis
 
 Environment-neutral packages extend `configs/typescript/environment-neutral.json`; Node-specific packages extend `configs/typescript/node.json`. Declaration builds use the corresponding `*-library.json` configuration and set package-local `rootDir` and `outDir` values.
 
-Package tests use Vitest without global test APIs. Node and non-React tests follow the established `*.test-unit.ts` and `*.test-integration.ts` naming conventions. Shared conformance fixtures live at repository level when they represent a contract implemented by multiple packages.
+Package tests use Vitest without global test APIs. Tests are colocated with the source modules they exercise, and Node and non-React tests follow the established `*.test-unit.ts` and `*.test-integration.ts` naming conventions. Each package exposes separate `test:unit` and `test:integration` commands plus a `test` command that runs both suites. Shared conformance fixtures live at repository level when they represent a contract implemented by multiple packages.
 
 Turborepo derives build order from declared workspace dependencies. Package dependencies must remain explicit and acyclic, and no task may rely on workspace enumeration order or undeclared cross-project state.
 

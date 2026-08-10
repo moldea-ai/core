@@ -1,0 +1,42 @@
+{
+  "entries": [
+    {
+      "path": "/README.md",
+      "type": "file",
+      "text": "repository fixture\n"
+    },
+    {
+      "path": "/empty.bin",
+      "type": "file",
+      "bytes": []
+    },
+    {
+      "path": "/nested/deep/data.bin",
+      "type": "file",
+      "bytes": [0, 1, 13, 10, 128, 255]
+    },
+    {
+      "path": "/nested/empty",
+      "type": "directory"
+    },
+    {
+      "path": "/unicode/café-😀.txt",
+      "type": "file",
+      "text": "mañana\n"
+    },
+    {
+      "path": "/Case.txt",
+      "type": "file",
+      "text": "upper"
+    },
+    {
+      "path": "/case.txt",
+      "type": "file",
+      "text": "lower"
+    },
+    {
+      "path": "/link",
+      "type": "symlink"
+    }
+  ]
+}
