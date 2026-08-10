@@ -1,12 +1,13 @@
 // @vitest-environment node
 import { describe, expect, test } from 'vitest';
 
+import { parseRepositoryPath } from '@moldea.ai/repository';
+
 import type { IFrameworkAdapterResult } from './adapter.js';
 import { DEFAULT_CORE_RESOURCE_LIMITS, SUPPORTED_REPOSITORY_FORMAT_VERSIONS } from './constants.js';
 import { createCore } from './core.js';
 import { CoreConfigurationException, CoreOperationException } from './exceptions.js';
 import { normalizeCoreOptions } from './options.js';
-import { parseRepositoryPath } from '@moldea.ai/repository';
 
 const emptyAdapterResult = (): IFrameworkAdapterResult => ({
   diagnostics: [],

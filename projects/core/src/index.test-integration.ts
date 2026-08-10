@@ -41,6 +41,14 @@ const readDistributionFiles = (extension: string): readonly string[] => {
     .map((fileName) => readFileSync(path.join(distributionDirectory, fileName), 'utf8'));
 };
 
+/**
+ * Packs one project and returns the single newly created tarball name.
+ * @param packageDirectory The package project to pack.
+ * @param packDirectory The isolated destination for generated tarballs.
+ * @returns The generated tarball basename.
+ * @throws
+ * - If the package-manager entrypoint is unavailable or packing is not deterministic
+ */
 const packPackageTarball = (packageDirectory: string, packDirectory: string): string => {
   const packageManagerEntrypoint = process.env['npm_execpath'];
 
@@ -65,6 +73,14 @@ const packPackageTarball = (packageDirectory: string, packDirectory: string): st
   return tarballNames[0];
 };
 
+/**
+ * Reads one regular entry from the uncompressed USTAR-compatible package archive.
+ * @param tarball The complete gzip-compressed package tarball.
+ * @param entryPath The exact archive path to locate.
+ * @returns The entry content as a view over the decompressed archive.
+ * @throws
+ * - If the requested archive entry is absent
+ */
 const readTarEntry = (tarball: Buffer, entryPath: string): Buffer => {
   const archive = gunzipSync(tarball);
   let offset = 0;

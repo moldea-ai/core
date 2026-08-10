@@ -9,6 +9,7 @@ import { CoreConfigurationException } from './exceptions.js';
 import type { IRepositoryFormatVersion } from './format.js';
 import { freezeRecursively } from './immutable.js';
 
+// detached adapter and complete Core configuration snapshots
 export interface IFrameworkAdapterSnapshot {
   readonly id: string;
   readonly supportedRepositoryFormatVersions: readonly IRepositoryFormatVersion[];
@@ -59,6 +60,13 @@ const isStableId = (value: string): boolean => {
   return value.length >= 1 && value.length <= 64 && STABLE_ID_PATTERN.test(value);
 };
 
+/**
+ * Validates, copies, fills, and freezes all configured resource limits.
+ * @param candidate The untrusted optional limit overrides.
+ * @returns The complete frozen resource limits.
+ * @throws
+ * - INVALID_RESOURCE_LIMIT: A Core resource limit is invalid.
+ */
 const normalizeLimits = (candidate: unknown): ICoreResourceLimits => {
   if (candidate === undefined) {
     return DEFAULT_CORE_RESOURCE_LIMITS;
@@ -104,6 +112,14 @@ const normalizeLimits = (candidate: unknown): ICoreResourceLimits => {
   return freezeRecursively(normalized);
 };
 
+/**
+ * Snapshots one adapter definition without freezing caller-owned state.
+ * @param candidate The untrusted adapter definition.
+ * @returns A frozen detached adapter snapshot.
+ * @throws
+ * - RESERVED_ADAPTER_ID: A reserved framework adapter ID was supplied.
+ * - INVALID_ADAPTER_DEFINITION: A framework adapter definition is invalid.
+ */
 const normalizeAdapter = (candidate: unknown): IFrameworkAdapterSnapshot => {
   if (!isRecord(candidate)) {
     return invalidAdapter();
@@ -153,6 +169,15 @@ const normalizeAdapter = (candidate: unknown): IFrameworkAdapterSnapshot => {
   });
 };
 
+/**
+ * Validates, snapshots, and deterministically sorts the configured adapter registry.
+ * @param candidate The untrusted optional adapter definitions.
+ * @returns The frozen adapter snapshots in canonical ID order.
+ * @throws
+ * - DUPLICATE_ADAPTER_ID: A framework adapter ID is registered more than once.
+ * - RESERVED_ADAPTER_ID: A reserved framework adapter ID was supplied.
+ * - INVALID_ADAPTER_DEFINITION: A framework adapter definition is invalid.
+ */
 const normalizeAdapters = (candidate: unknown): readonly IFrameworkAdapterSnapshot[] => {
   if (candidate === undefined) {
     return Object.freeze([]);
@@ -182,6 +207,16 @@ const normalizeAdapters = (candidate: unknown): readonly IFrameworkAdapterSnapsh
   return freezeRecursively(adapters.sort((left, right) => compareStrings(left.id, right.id)));
 };
 
+/**
+ * Validates and snapshots caller-owned Core construction options.
+ * @param options The optional adapters and resource-limit overrides.
+ * @returns A deeply frozen, deterministically ordered configuration snapshot.
+ * @throws
+ * - DUPLICATE_ADAPTER_ID: A framework adapter ID is registered more than once.
+ * - RESERVED_ADAPTER_ID: A reserved framework adapter ID was supplied.
+ * - INVALID_ADAPTER_DEFINITION: A framework adapter definition is invalid.
+ * - INVALID_RESOURCE_LIMIT: A Core resource limit is invalid.
+ */
 export const normalizeCoreOptions = (options: ICoreOptions | undefined): ICoreOptionsSnapshot => {
   if (options !== undefined && !isRecord(options)) {
     return invalidAdapter();

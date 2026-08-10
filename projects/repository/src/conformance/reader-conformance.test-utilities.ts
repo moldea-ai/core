@@ -5,6 +5,7 @@ import type { IRepositoryEntry, IRepositoryReader } from '../contracts.js';
 import { RepositoryPathException, RepositorySourceException } from '../exceptions.js';
 import { REPOSITORY_ROOT, parseRepositoryPath } from '../repository-path.js';
 
+// inputs required to run the source-neutral reader conformance contract
 export interface IRepositoryReaderConformanceFixture {
   readonly caseDistinctPaths: readonly [string, string];
   readonly createReader: () => IRepositoryReader;
@@ -48,7 +49,11 @@ const sortEntries = (entries: readonly IRepositoryEntry[]): IRepositoryEntry[] =
   });
 };
 
-/** Defines the contract checks shared by every official repository reader. */
+/**
+ * Defines the contract checks shared by every official repository reader.
+ * @param implementationName The reader name shown in the generated suite.
+ * @param fixture The source-specific reader factory and expected snapshot values.
+ */
 export const describeRepositoryReaderConformance = (
   implementationName: string,
   fixture: IRepositoryReaderConformanceFixture,

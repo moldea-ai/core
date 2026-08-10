@@ -1,9 +1,11 @@
 import type { ICoreResourceLimits } from './contracts.js';
 import type { IRepositoryFormatVersion } from './format.js';
 
+// repository-format major versions interpreted by this Core release
 export const SUPPORTED_REPOSITORY_FORMAT_VERSIONS: readonly IRepositoryFormatVersion[] =
   Object.freeze([1]);
 
+// default safety budgets applied independently to each Core operation
 export const DEFAULT_CORE_RESOURCE_LIMITS: ICoreResourceLimits = Object.freeze({
   maxDiagnostics: 10_000,
   maxEntries: 100_000,

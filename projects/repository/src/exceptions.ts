@@ -2,6 +2,7 @@ import { Exception } from 'error-message-utils';
 
 import type { IRepositoryPath } from './repository-path.js';
 
+// stable source failure codes and operation identifiers
 export type IRepositorySourceErrorCode =
   | 'ENTRY_NOT_FOUND'
   | 'ENTRY_NOT_FILE'
@@ -15,6 +16,7 @@ export type IRepositorySourceErrorCode =
 
 export type IRepositoryOperation = 'create-reader' | 'get-entry' | 'read-file' | 'list-entries';
 
+// safe construction options for repository path and source exceptions
 export interface IRepositoryPathExceptionOptions {
   readonly cause?: unknown;
 }
@@ -56,6 +58,7 @@ const attachCause = (exception: Error, cause: unknown): void => {
 export class RepositoryPathException extends Exception {
   public override readonly code: 'INVALID_REPOSITORY_PATH';
 
+  /** Creates a safe path exception without exposing the rejected value. */
   public constructor(options?: IRepositoryPathExceptionOptions) {
     super('The repository path is invalid.', 'INVALID_REPOSITORY_PATH');
     this.code = 'INVALID_REPOSITORY_PATH';
@@ -74,6 +77,7 @@ export class RepositorySourceException extends Exception {
 
   public readonly retryable: boolean;
 
+  /** Creates a source exception with the documented operation metadata. */
   public constructor(options: IRepositorySourceExceptionOptions) {
     super(SOURCE_ERROR_MESSAGES[options.code], options.code);
     this.code = options.code;

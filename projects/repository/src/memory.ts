@@ -8,6 +8,7 @@ import { RepositorySourceException, type IRepositoryOperation } from './exceptio
 import { REPOSITORY_ROOT, parseRepositoryPath, type IRepositoryPath } from './repository-path.js';
 import { hasOnlyUnicodeScalarValues } from './unicode.js';
 
+// accepted file, directory, and symlink definitions for an in-memory snapshot
 export type IMemoryRepositoryEntry =
   | {
       readonly path: string;
@@ -91,6 +92,14 @@ const comparePaths = (left: IRepositoryPath, right: IRepositoryPath): number => 
   return 0;
 };
 
+/**
+ * Validates and detaches one untrusted in-memory entry definition.
+ * @param candidate The unknown entry definition supplied at the public boundary.
+ * @returns A validated entry with copied file bytes.
+ * @throws
+ * - INVALID_REPOSITORY_PATH: The repository path is invalid.
+ * - INVALID_SOURCE_DATA: The repository source returned invalid data.
+ */
 const normalizeEntry = (candidate: unknown): IStoredRepositoryEntry => {
   if (typeof candidate !== 'object' || candidate === null) {
     throw invalidSourceData(null);
@@ -137,6 +146,14 @@ const normalizeEntry = (candidate: unknown): IStoredRepositoryEntry => {
   };
 };
 
+/**
+ * Validates cross-entry consistency and synthesizes the complete directory hierarchy.
+ * @param entries The unknown collection supplied at the public boundary.
+ * @returns The detached coherent snapshot keyed by logical path.
+ * @throws
+ * - INVALID_REPOSITORY_PATH: The repository path is invalid.
+ * - INVALID_SOURCE_DATA: The repository source returned invalid data.
+ */
 const materializeEntries = (
   entries: unknown,
 ): ReadonlyMap<IRepositoryPath, IStoredRepositoryEntry> => {
@@ -301,7 +318,14 @@ class MemoryRepositoryReader implements IRepositoryReader {
   }
 }
 
-/** Creates an immutable in-memory repository reader. */
+/**
+ * Creates an immutable in-memory repository reader from detached entry definitions.
+ * @param entries The complete explicit entries to validate and materialize.
+ * @returns A reader bound to the resulting coherent snapshot.
+ * @throws
+ * - INVALID_REPOSITORY_PATH: The repository path is invalid.
+ * - INVALID_SOURCE_DATA: The repository source returned invalid data.
+ */
 export const createMemoryRepositoryReader = (
   entries: readonly IMemoryRepositoryEntry[],
 ): IRepositoryReader => {

@@ -3,6 +3,8 @@
  *
  * JavaScript strings are UTF-16, so lone surrogate code units must be rejected
  * before encoding instead of being replaced with U+FFFD.
+ * @param value The JavaScript string to inspect.
+ * @returns Whether every code unit participates in a valid Unicode scalar value.
  */
 export const hasOnlyUnicodeScalarValues = (value: string): boolean => {
   for (let index = 0; index < value.length; index += 1) {

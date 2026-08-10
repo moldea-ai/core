@@ -4,13 +4,20 @@ import type { IIndexedAgent, IMoldeaProjectIndex } from './contracts.js';
 import type { IAdapterDiagnostic, IDiagnosticDetails } from './diagnostics.js';
 import type { IRepositoryFormatVersion, IRepositoryReference } from './format.js';
 
+// deterministic framework extension registered with one Core instance
 export interface IFrameworkAdapter {
   readonly id: string;
   readonly supportedRepositoryFormatVersions: readonly IRepositoryFormatVersion[];
 
+  /**
+   * Inspects the trusted provisional project through the supplied budget-aware reader.
+   * @param context The immutable project, matching agents, reader, and cancellation signal.
+   * @returns A promise resolving to deterministic evidence and adapter diagnostics.
+   */
   inspect(context: IFrameworkAdapterContext): Promise<IFrameworkAdapterResult>;
 }
 
+// immutable invocation context supplied only after universal validation succeeds
 export interface IFrameworkAdapterContext {
   readonly repository: IRepositoryReader;
   readonly project: IMoldeaProjectIndex;
@@ -18,6 +25,7 @@ export interface IFrameworkAdapterContext {
   readonly signal?: AbortSignal;
 }
 
+// normalized framework observation kinds and evidence records
 export type IFrameworkAdapterEvidenceKind =
   | 'framework-package'
   | 'language'
@@ -41,9 +49,11 @@ export interface IFrameworkAdapterEvidence {
   readonly details: IDiagnosticDetails;
 }
 
+// complete all-or-nothing output from one adapter invocation
 export interface IFrameworkAdapterResult {
   readonly evidence: readonly IFrameworkAdapterEvidence[];
   readonly diagnostics: readonly IAdapterDiagnostic[];
 }
 
+// adapter diagnostic contract
 export type { IAdapterDiagnostic } from './diagnostics.js';

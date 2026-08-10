@@ -3,6 +3,7 @@ import path from 'node:path';
 
 import { defineConfig, type UserConfig } from 'vite';
 
+// supported package runtime targets and shared library-build inputs
 export type ILibraryBuildPlatform = 'environment-neutral' | 'node';
 
 export interface ILibraryBuildConfigOptions {

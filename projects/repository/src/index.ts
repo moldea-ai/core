@@ -1,3 +1,4 @@
+// repository reader contracts
 export type {
   IRepositoryEntry,
   IRepositoryEntryType,
@@ -5,17 +6,20 @@ export type {
   IRepositoryOperationOptions,
   IRepositoryReader,
 } from './contracts.js';
-export {
-  RepositoryPathException,
-  RepositorySourceException,
-  type IRepositoryOperation,
-  type IRepositoryPathExceptionOptions,
-  type IRepositorySourceErrorCode,
-  type IRepositorySourceExceptionOptions,
+
+// exception contracts
+export type {
+  IRepositoryOperation,
+  IRepositoryPathExceptionOptions,
+  IRepositorySourceErrorCode,
+  IRepositorySourceExceptionOptions,
 } from './exceptions.js';
-export {
-  REPOSITORY_ROOT,
-  isRepositoryPath,
-  parseRepositoryPath,
-  type IRepositoryPath,
-} from './repository-path.js';
+
+// exceptions
+export { RepositoryPathException, RepositorySourceException } from './exceptions.js';
+
+// logical path contract
+export type { IRepositoryPath } from './repository-path.js';
+
+// logical path values and functions
+export { REPOSITORY_ROOT, isRepositoryPath, parseRepositoryPath } from './repository-path.js';

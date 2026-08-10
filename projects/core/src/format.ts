@@ -2,6 +2,7 @@ import type { IRepositoryPath } from '@moldea.ai/repository';
 
 import type { IIndexedTextAsset } from './contracts.js';
 
+// supported repository-format major version and exact repository reference
 export type IRepositoryFormatVersion = 1;
 
 export interface IRepositoryReference {
@@ -9,6 +10,7 @@ export interface IRepositoryReference {
   readonly symbol?: string;
 }
 
+// context, decision, framework, and runtime-variable manifest declarations
 export interface IRelationshipManifestEntry {
   readonly bindings?: readonly IRepositoryReference[];
   readonly affectedBy?: readonly string[];
@@ -23,6 +25,7 @@ export interface IRuntimeVariableManifestEntry {
   readonly description: string;
 }
 
+// agent binding and capability declarations
 export interface IAgentBindingsManifestEntry {
   readonly runtimeAgent?: IRepositoryReference;
   readonly inputSchema?: IRepositoryReference;
@@ -49,6 +52,7 @@ export interface ISkillManifestEntry {
   readonly affectedBy?: readonly string[];
 }
 
+// unresolved requirement and complete agent declarations
 export type IUnresolvedRequirementEffect = 'blocking' | 'warning' | 'informational';
 
 export interface IUnresolvedRequirementManifestEntry {
@@ -73,6 +77,7 @@ export interface IAgentManifestEntry {
   readonly unresolved?: Readonly<Record<string, IUnresolvedRequirementManifestEntry>>;
 }
 
+// normalized repository-format version 1 manifest
 export interface IMoldeaManifestV1 {
   readonly version: 1;
   readonly context?: Readonly<Record<string, IRelationshipManifestEntry>>;
@@ -81,6 +86,7 @@ export interface IMoldeaManifestV1 {
   readonly agents?: Readonly<Record<string, IAgentManifestEntry>>;
 }
 
+// parsed decision status and immutable document model
 export type IDecisionStatus = 'proposed' | 'accepted' | 'rejected' | 'superseded';
 
 export interface IParsedDecision {

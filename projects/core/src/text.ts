@@ -31,6 +31,12 @@ const isRecord = (value: unknown): value is Readonly<Record<string, unknown>> =>
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 };
 
+/**
+ * Measures valid scalar UTF-8 bytes and stops once the operation budget is exceeded.
+ * @param value The decoded string to measure without lossy replacement.
+ * @param maximumByteLength The threshold after which measurement may stop early.
+ * @returns The measured bytes, a value above the threshold, or `null` for invalid Unicode.
+ */
 const measureScalarUtf8ByteLength = (value: string, maximumByteLength: number): number | null => {
   let byteLength = 0;
 
@@ -88,6 +94,16 @@ const countUnicodeScalars = (value: string): number => {
   return count;
 };
 
+/**
+ * Collects every normalized NUL location or rejects when the diagnostic budget is exhausted.
+ * @param value The normalized scalar text to inspect.
+ * @param path The logical document path attached to each diagnostic.
+ * @param limits The immutable Core resource limits.
+ * @param operation The public operation requesting validation.
+ * @returns Frozen structural diagnostics for every NUL scalar.
+ * @throws
+ * - RESOURCE_LIMIT_EXCEEDED: A Core resource limit was exceeded.
+ */
 const collectNulDiagnostics = (
   value: string,
   path: IRepositoryPath,
@@ -200,6 +216,17 @@ const invalidResult = (
   });
 };
 
+/**
+ * Validates one public text input, enforces its source-byte budget, and decodes strict UTF-8.
+ * @param input The untrusted public text-document input.
+ * @param limits The immutable Core resource limits.
+ * @param operation The public operation requesting the input.
+ * @returns Decoded text or a frozen structural failure result.
+ * @throws
+ * - INVALID_REPOSITORY_PATH: The repository path is invalid.
+ * - INVALID_ARGUMENT: The Core operation received an invalid argument.
+ * - RESOURCE_LIMIT_EXCEEDED: A Core resource limit was exceeded.
+ */
 const readInput = (
   input: ITextDocumentInput,
   limits: ICoreResourceLimits,
@@ -246,6 +273,17 @@ const readInput = (
   }
 };
 
+/**
+ * Validates and normalizes one text document under an operation-specific resource budget.
+ * @param input The logical path and decoded string or exact source bytes.
+ * @param limits The immutable Core resource limits.
+ * @param operation The public Core operation requesting normalization.
+ * @returns A frozen normalized result or structural text diagnostics.
+ * @throws
+ * - INVALID_REPOSITORY_PATH: The repository path is invalid.
+ * - INVALID_ARGUMENT: The Core operation received an invalid argument.
+ * - RESOURCE_LIMIT_EXCEEDED: A Core resource limit was exceeded.
+ */
 export const normalizeTextDocument = (
   input: ITextDocumentInput,
   limits: ICoreResourceLimits,
@@ -290,6 +328,16 @@ const toLowercaseHex = (bytes: Uint8Array): string => {
   return value;
 };
 
+/**
+ * Calculates the normalized SHA-256 digest for one text document.
+ * @param input The logical path and decoded string or exact source bytes.
+ * @param limits The immutable Core resource limits.
+ * @returns A promise resolving to a frozen digest result or structural text diagnostics.
+ * @throws
+ * - INVALID_REPOSITORY_PATH: The repository path is invalid.
+ * - INVALID_ARGUMENT: The Core operation received an invalid argument.
+ * - RESOURCE_LIMIT_EXCEEDED: A Core resource limit was exceeded.
+ */
 export const calculateContentDigest = async (
   input: ITextDocumentInput,
   limits: ICoreResourceLimits,

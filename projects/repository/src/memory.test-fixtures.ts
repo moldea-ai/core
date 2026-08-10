@@ -56,14 +56,17 @@ const toMemoryEntry = (entry: IFixtureEntry): IMemoryRepositoryEntry => {
   }
 };
 
+/** @returns Fresh memory entries for the shared valid repository snapshot fixture. */
 export const createValidMemoryEntries = (): readonly IMemoryRepositoryEntry[] => {
   return validSnapshot.entries.map(toMemoryEntry);
 };
 
+// invalid memory definitions expected to fail with source-data exceptions
 export const invalidMemoryDefinitionCases = invalidDefinitions.cases.map((fixtureCase) => ({
   entries: fixtureCase.entries.map(toMemoryEntry),
   expectedPath: fixtureCase.expectedPath,
   name: fixtureCase.name,
 }));
 
+// invalid logical-path definitions expected to fail with a path exception
 export const invalidPathMemoryEntries = invalidDefinitions.invalidPathEntries.map(toMemoryEntry);

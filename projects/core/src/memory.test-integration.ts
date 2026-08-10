@@ -1,7 +1,8 @@
 // @vitest-environment node
+import { describe, expect, test } from 'vitest';
+
 import { parseRepositoryPath } from '@moldea.ai/repository';
 import { createMemoryRepositoryReader } from '@moldea.ai/repository/memory';
-import { describe, expect, test } from 'vitest';
 
 import { createCore } from './index.js';
 

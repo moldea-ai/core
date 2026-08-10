@@ -1,3 +1,4 @@
+import { parseRepositoryPath } from '@moldea.ai/repository';
 import {
   CoreConfigurationException,
   CoreOperationException,
@@ -68,7 +69,6 @@ import type {
 } from '@moldea.ai/core/format';
 // @ts-expect-error Repository format version 1 has no manifest handoff relationship.
 import type { IHandoffManifestEntry } from '@moldea.ai/core/format';
-import { parseRepositoryPath } from '@moldea.ai/repository';
 
 type IRootSurface = readonly [
   IAdapterDiagnostic,

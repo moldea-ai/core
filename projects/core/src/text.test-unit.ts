@@ -1,6 +1,7 @@
 // @vitest-environment node
-import { parseRepositoryPath, RepositoryPathException } from '@moldea.ai/repository';
 import { describe, expect, test } from 'vitest';
+
+import { parseRepositoryPath, RepositoryPathException } from '@moldea.ai/repository';
 
 import { createCore } from './core.js';
 import { CoreOperationException } from './exceptions.js';

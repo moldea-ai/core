@@ -1,5 +1,6 @@
 import { Exception } from 'error-message-utils';
 
+// stable configuration and operation failure codes
 export type ICoreConfigurationErrorCode =
   | 'DUPLICATE_ADAPTER_ID'
   | 'RESERVED_ADAPTER_ID'
@@ -18,6 +19,7 @@ export type ICoreOperation =
   | 'inspect-project'
   | 'validate-adapter';
 
+// safe construction options for exported Core exceptions
 export interface ICoreConfigurationExceptionOptions {
   readonly code: ICoreConfigurationErrorCode;
   readonly operation: ICoreOperation;
@@ -62,6 +64,7 @@ const attachCause = (exception: Error, cause: unknown): void => {
   });
 };
 
+/** Represents invalid immutable Core configuration. */
 export class CoreConfigurationException extends Exception {
   public override readonly code: ICoreConfigurationErrorCode;
 
@@ -69,6 +72,7 @@ export class CoreConfigurationException extends Exception {
 
   public readonly adapterId: string | null;
 
+  /** Creates a configuration exception with safe adapter metadata. */
   public constructor(options: ICoreConfigurationExceptionOptions) {
     super(CONFIGURATION_ERROR_MESSAGES[options.code], options.code);
     this.code = options.code;
@@ -79,6 +83,7 @@ export class CoreConfigurationException extends Exception {
   }
 }
 
+/** Represents an operational failure that prevented Core from completing. */
 export class CoreOperationException extends Exception {
   public override readonly code: ICoreOperationErrorCode;
 
@@ -92,6 +97,7 @@ export class CoreOperationException extends Exception {
 
   public readonly limit: string | null;
 
+  /** Creates an operation exception with safe retry and scope metadata. */
   public constructor(options: ICoreOperationExceptionOptions) {
     super(OPERATION_ERROR_MESSAGES[options.code], options.code);
     this.code = options.code;

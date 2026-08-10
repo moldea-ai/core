@@ -1,5 +1,6 @@
 import type { IRepositoryPath } from '@moldea.ai/repository';
 
+// scalar-based normalized source coordinates
 export interface ISourcePosition {
   readonly line: number;
   readonly column: number;
@@ -11,6 +12,7 @@ export interface ISourceRange {
   readonly end: ISourcePosition;
 }
 
+// diagnostic entity and JSON-safe metadata contracts
 export type ICapabilityKind = 'tool' | 'skill';
 
 export interface IDiagnosticEntity {
@@ -24,6 +26,7 @@ export interface IDiagnosticEntity {
 
 export type IDiagnosticDetails = Readonly<Record<string, string | number | boolean | null>>;
 
+// closed repository-format version 1 structural diagnostic catalog
 export type ICoreDiagnosticCode =
   | 'MOLDEA_MANIFEST_MISSING'
   | 'MOLDEA_MANIFEST_PATH_INVALID'
@@ -108,6 +111,7 @@ export type ICoreDiagnosticCode =
   | 'MOLDEA_MIRROR_SYMLINK'
   | 'MOLDEA_MIRROR_STALE';
 
+// Core-owned and adapter-owned diagnostic shapes
 export interface ICoreDiagnostic {
   readonly source: 'core';
   readonly code: ICoreDiagnosticCode;
