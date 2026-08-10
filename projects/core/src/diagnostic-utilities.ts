@@ -25,9 +25,16 @@ const CORE_DIAGNOSTIC_MESSAGES: Partial<Record<ICoreDiagnosticCode, string>> = {
   MOLDEA_DECISION_FILENAME_INVALID: 'The decision path or filename is invalid.',
   MOLDEA_DECISION_FRONTMATTER_INVALID: 'The decision frontmatter is invalid.',
   MOLDEA_DECISION_FRONTMATTER_MISSING: 'The decision frontmatter or its delimiters are missing.',
+  MOLDEA_DECISION_ID_DUPLICATE: 'The decision ID is duplicated.',
   MOLDEA_DECISION_PROPERTY_UNKNOWN: 'The decision frontmatter contains an unknown property.',
+  MOLDEA_DECISION_REFERENCE_MISSING: 'The referenced decision does not exist.',
   MOLDEA_DECISION_SELF_SUPERSESSION: 'The decision supersedes itself.',
   MOLDEA_DECISION_STATUS_INVALID: 'The decision status is invalid.',
+  MOLDEA_DECISION_SUPERSEDED_ORPHAN:
+    'The superseded decision has no active supersession relationship.',
+  MOLDEA_DECISION_SUPERSESSION_CYCLE: 'The decision supersession graph contains a cycle.',
+  MOLDEA_DECISION_SUPERSESSION_STATUS_INVALID:
+    'The decision supersession relationship has inconsistent statuses.',
   MOLDEA_DECISION_TIMESTAMP_MISMATCH:
     'The decision filename timestamp and createdAt value do not match.',
   MOLDEA_ENTRY_TYPE_INVALID: 'The repository entry type is invalid.',

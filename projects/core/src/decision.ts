@@ -7,6 +7,7 @@ import {
   validateDecisionFrontmatter,
 } from './decision-validation.js';
 import { createCoreDiagnosticCollector } from './diagnostic-utilities.js';
+import type { ICoreOperation } from './exceptions.js';
 import { parseDecisionIdFromPath } from './format-validation.js';
 import { freezeRecursively } from './immutable.js';
 import type { ICoreOptionsSnapshot } from './options.js';
@@ -18,6 +19,7 @@ import { parseStrictYaml } from './yaml.js';
  * Parses and validates one complete decision document without resolving cross-file relationships.
  * @param input The canonical logical path and exact decision text or bytes.
  * @param options The immutable Core limits and adapter snapshots.
+ * @param operation The owning public or repository-level operation for typed failures.
  * @returns A frozen all-or-nothing decision parse result.
  * @throws
  * - INVALID_REPOSITORY_PATH: The repository path is invalid.
@@ -27,10 +29,11 @@ import { parseStrictYaml } from './yaml.js';
 export const parseDecisionDocument = async (
   input: ITextDocumentInput,
   options: ICoreOptionsSnapshot,
+  operation: Extract<ICoreOperation, 'parse-decision' | 'inspect-project'> = 'parse-decision',
 ): Promise<IDecisionParseResult> => {
-  const normalized = normalizeTextDocument(input, options.limits, 'parse-decision');
+  const normalized = normalizeTextDocument(input, options.limits, operation);
   const path = parseRepositoryPath(input.path);
-  const diagnostics = createCoreDiagnosticCollector(options.limits, 'parse-decision');
+  const diagnostics = createCoreDiagnosticCollector(options.limits, operation);
   const decisionId = parseDecisionIdFromPath(path);
 
   if (decisionId === null) {

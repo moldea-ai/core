@@ -1,0 +1,242 @@
+{
+  "cases": [
+    {
+      "name": "complete active chain",
+      "decisions": [
+        {
+          "id": "1767225600002",
+          "slug": "newest",
+          "status": "accepted",
+          "supersedes": ["1767225600001"]
+        },
+        {
+          "id": "1767225600000",
+          "slug": "oldest",
+          "status": "superseded"
+        },
+        {
+          "id": "1767225600001",
+          "slug": "middle",
+          "status": "superseded",
+          "supersedes": ["1767225600000"]
+        }
+      ],
+      "expectedDiagnostics": []
+    },
+    {
+      "name": "historical proposed intent",
+      "decisions": [
+        {
+          "id": "1767225600000",
+          "slug": "accepted-target",
+          "status": "accepted"
+        },
+        {
+          "id": "1767225600001",
+          "slug": "proposal",
+          "status": "proposed",
+          "supersedes": ["1767225600000"]
+        }
+      ],
+      "expectedDiagnostics": []
+    },
+    {
+      "name": "missing reference",
+      "decisions": [
+        {
+          "id": "1767225600001",
+          "slug": "source",
+          "status": "accepted",
+          "supersedes": ["1767225600999"]
+        }
+      ],
+      "expectedDiagnostics": [
+        {
+          "code": "MOLDEA_DECISION_REFERENCE_MISSING",
+          "path": "/moldea/decisions/1767225600001-source.md",
+          "pointer": "/supersedes",
+          "decisionId": "1767225600001",
+          "details": { "referencedDecisionId": "1767225600999" }
+        }
+      ]
+    },
+    {
+      "name": "active status mismatch",
+      "decisions": [
+        {
+          "id": "1767225600000",
+          "slug": "accepted-target",
+          "status": "accepted"
+        },
+        {
+          "id": "1767225600001",
+          "slug": "active-source",
+          "status": "accepted",
+          "supersedes": ["1767225600000"]
+        }
+      ],
+      "expectedDiagnostics": [
+        {
+          "code": "MOLDEA_DECISION_SUPERSESSION_STATUS_INVALID",
+          "path": "/moldea/decisions/1767225600001-active-source.md",
+          "pointer": "/supersedes",
+          "decisionId": "1767225600001",
+          "details": {
+            "referencedDecisionId": "1767225600000",
+            "sourceStatus": "accepted",
+            "targetStatus": "accepted"
+          }
+        }
+      ]
+    },
+    {
+      "name": "superseded target with historical incoming edges only",
+      "decisions": [
+        {
+          "id": "1767225600000",
+          "slug": "orphan",
+          "status": "superseded"
+        },
+        {
+          "id": "1767225600001",
+          "slug": "proposal",
+          "status": "proposed",
+          "supersedes": ["1767225600000"]
+        },
+        {
+          "id": "1767225600002",
+          "slug": "rejection",
+          "status": "rejected",
+          "supersedes": ["1767225600000"]
+        }
+      ],
+      "expectedDiagnostics": [
+        {
+          "code": "MOLDEA_DECISION_SUPERSEDED_ORPHAN",
+          "path": "/moldea/decisions/1767225600000-orphan.md",
+          "pointer": null,
+          "decisionId": "1767225600000",
+          "details": {}
+        }
+      ]
+    },
+    {
+      "name": "three-node historical cycle",
+      "decisions": [
+        {
+          "id": "1767225600002",
+          "slug": "third",
+          "status": "proposed",
+          "supersedes": ["1767225600000"]
+        },
+        {
+          "id": "1767225600000",
+          "slug": "first",
+          "status": "proposed",
+          "supersedes": ["1767225600001"]
+        },
+        {
+          "id": "1767225600001",
+          "slug": "second",
+          "status": "rejected",
+          "supersedes": ["1767225600002"]
+        }
+      ],
+      "expectedDiagnostics": [
+        {
+          "code": "MOLDEA_DECISION_SUPERSESSION_CYCLE",
+          "path": "/moldea/decisions/1767225600000-first.md",
+          "pointer": "/supersedes",
+          "decisionId": "1767225600000",
+          "details": {
+            "cycleRepresentativeDecisionId": "1767225600000",
+            "cycleSize": 3
+          }
+        },
+        {
+          "code": "MOLDEA_DECISION_SUPERSESSION_CYCLE",
+          "path": "/moldea/decisions/1767225600001-second.md",
+          "pointer": "/supersedes",
+          "decisionId": "1767225600001",
+          "details": {
+            "cycleRepresentativeDecisionId": "1767225600000",
+            "cycleSize": 3
+          }
+        },
+        {
+          "code": "MOLDEA_DECISION_SUPERSESSION_CYCLE",
+          "path": "/moldea/decisions/1767225600002-third.md",
+          "pointer": "/supersedes",
+          "decisionId": "1767225600002",
+          "details": {
+            "cycleRepresentativeDecisionId": "1767225600000",
+            "cycleSize": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "duplicate decision IDs",
+      "decisions": [
+        {
+          "id": "1767225600000",
+          "slug": "first",
+          "status": "accepted"
+        },
+        {
+          "id": "1767225600000",
+          "slug": "second",
+          "status": "accepted"
+        }
+      ],
+      "expectedDiagnostics": [
+        {
+          "code": "MOLDEA_DECISION_ID_DUPLICATE",
+          "path": "/moldea/decisions/1767225600000-first.md",
+          "pointer": null,
+          "decisionId": "1767225600000",
+          "details": { "occurrences": 2 }
+        },
+        {
+          "code": "MOLDEA_DECISION_ID_DUPLICATE",
+          "path": "/moldea/decisions/1767225600000-second.md",
+          "pointer": null,
+          "decisionId": "1767225600000",
+          "details": { "occurrences": 2 }
+        }
+      ]
+    },
+    {
+      "name": "invalid target suppresses dependent reference diagnostics",
+      "decisions": [
+        {
+          "id": "1767225600000",
+          "slug": "invalid-target",
+          "content": "---\nstatus: invalid\ncreatedAt: invalid\n---\nBody.\n"
+        },
+        {
+          "id": "1767225600001",
+          "slug": "source",
+          "status": "accepted",
+          "supersedes": ["1767225600000"]
+        }
+      ],
+      "expectedDiagnostics": [
+        {
+          "code": "MOLDEA_DECISION_STATUS_INVALID",
+          "path": "/moldea/decisions/1767225600000-invalid-target.md",
+          "pointer": "/status",
+          "decisionId": "1767225600000",
+          "details": {}
+        },
+        {
+          "code": "MOLDEA_DECISION_CREATED_AT_INVALID",
+          "path": "/moldea/decisions/1767225600000-invalid-target.md",
+          "pointer": "/createdAt",
+          "decisionId": "1767225600000",
+          "details": {}
+        }
+      ]
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 
 Source-neutral, deterministic interpretation of the `moldea` repository format.
 
-The current `0.0.0` foundation accepts caller-supplied text documents and does not access a filesystem, Git provider, or network. Invalid document content produces stable diagnostics, while invalid configuration and operational failures use typed exceptions. Strict version 1 manifest and decision parsing are available now. Core also contains the internal deterministic canonical-discovery layer exercised through `@moldea.ai/repository/memory`; public repository inspection through `IRepositoryReader` remains reserved until the complete all-or-nothing behavior is implemented.
+The current `0.0.0` public foundation accepts caller-supplied text documents and does not access a filesystem, Git provider, or network. Invalid document content produces stable diagnostics, while invalid configuration and operational failures use typed exceptions. Strict version 1 manifest and decision parsing are available now. Core also contains internal deterministic canonical-discovery and decision-graph layers exercised only through `IRepositoryReader` and `@moldea.ai/repository/memory`; public repository inspection remains reserved until the complete all-or-nothing behavior is implemented.
 
 ## Public entry points
 
@@ -65,6 +65,12 @@ const result = await createCore().parseDecision({
 ```
 
 Decision parsing validates the canonical timestamp-slug path, exact frontmatter delimiters, strict YAML metadata, status, canonical UTC `createdAt`, filename timestamp equality, supersession IDs, and non-empty Markdown body. A valid result preserves the exact normalized body and complete normalized asset, sorts supersession IDs, and includes a SHA-256 digest. It does not read other decisions or validate reference existence, duplicate IDs across files, supersession graphs, status consistency, or manifest relationships.
+
+## Internal decision-graph validation
+
+Core's repository-level foundation composes canonical discovery with exact decision reads through `IRepositoryReader`. It parses each discovered decision once and deterministically validates project-wide ID uniqueness, missing supersession references, cycles, active and historical status consistency, and orphaned superseded decisions. Invalid or ambiguous decision nodes do not produce dependent graph cascades, while unrelated trustworthy graph rules continue to run.
+
+This layer is intentionally internal. Manifest and agent decision relationships, final project indexing, adapter execution, and the public `inspectProject` operation remain deferred until universal repository validation can produce one complete trustworthy project index.
 
 ## Development
 
