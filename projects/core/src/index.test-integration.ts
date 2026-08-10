@@ -279,7 +279,7 @@ describe('published Core package artifacts', () => {
         )}\n`,
         'utf8',
       );
-      execFileSync(packageManagerEntrypoint, ['install', '--ignore-scripts', '--offline'], {
+      execFileSync(packageManagerEntrypoint, ['install', '--ignore-scripts', '--prefer-offline'], {
         cwd: consumerDirectory,
         encoding: 'utf8',
         env: { ...process.env, CI: 'true' },
