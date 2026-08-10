@@ -32,9 +32,14 @@ describe('Core constants and construction', () => {
     const core = createCore();
 
     expect(Object.isFrozen(core)).toBe(true);
-    expect(Object.keys(core).sort()).toStrictEqual(['calculateContentDigest', 'normalizeText']);
+    expect(Object.keys(core).sort()).toStrictEqual([
+      'calculateContentDigest',
+      'normalizeText',
+      'parseManifest',
+    ]);
     expect(typeof core.calculateContentDigest).toBe('function');
     expect(typeof core.normalizeText).toBe('function');
+    expect(typeof core.parseManifest).toBe('function');
   });
 
   test('copies resource limits without freezing caller-owned configuration', () => {
@@ -172,6 +177,9 @@ describe('Core constants and construction', () => {
       }),
     );
     await expect(core.calculateContentDigest({ content: 1 } as never)).rejects.toBeInstanceOf(
+      CoreOperationException,
+    );
+    await expect(core.parseManifest({ content: 1 } as never)).rejects.toBeInstanceOf(
       CoreOperationException,
     );
   });

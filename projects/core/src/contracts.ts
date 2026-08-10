@@ -172,4 +172,15 @@ export interface ICore {
    * - RESOURCE_LIMIT_EXCEEDED: A Core resource limit was exceeded.
    */
   calculateContentDigest(input: ITextDocumentInput): Promise<IContentDigestResult>;
+
+  /**
+   * Parses and validates one complete version 1 manifest document.
+   * @param input The canonical logical path and exact manifest text or bytes.
+   * @returns A promise resolving to the frozen all-or-nothing manifest result.
+   * @throws
+   * - INVALID_REPOSITORY_PATH: The repository path is invalid.
+   * - INVALID_ARGUMENT: The Core operation received an invalid argument.
+   * - RESOURCE_LIMIT_EXCEEDED: A Core resource limit was exceeded.
+   */
+  parseManifest(input: ITextDocumentInput): Promise<IManifestParseResult>;
 }

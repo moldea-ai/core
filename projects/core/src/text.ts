@@ -8,24 +8,16 @@ import type {
   ITextDocumentInput,
   ITextNormalizationResult,
 } from './contracts.js';
-import type { ICoreDiagnostic, ICoreDiagnosticCode, ISourceRange } from './diagnostics.js';
+import {
+  createCoreDiagnosticCollector,
+  type ICoreDiagnosticCollector,
+} from './diagnostic-utilities.js';
+import type { ICoreDiagnostic } from './diagnostics.js';
 import { CoreOperationException, type ICoreOperation } from './exceptions.js';
-import { createNullPrototypeRecord, freezeRecursively } from './immutable.js';
+import { freezeRecursively } from './immutable.js';
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
-
-const TEXT_DIAGNOSTIC_MESSAGES = {
-  MOLDEA_TEXT_INVALID_UNICODE:
-    'The text document contains an invalid Unicode scalar representation.',
-  MOLDEA_TEXT_INVALID_UTF8: 'The text document is not valid UTF-8.',
-  MOLDEA_TEXT_NUL_FORBIDDEN: 'The text document contains a forbidden NUL character.',
-} as const satisfies Readonly<
-  Record<
-    'MOLDEA_TEXT_INVALID_UNICODE' | 'MOLDEA_TEXT_INVALID_UTF8' | 'MOLDEA_TEXT_NUL_FORBIDDEN',
-    string
-  >
->;
 
 const isRecord = (value: unknown): value is Readonly<Record<string, unknown>> => {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -98,40 +90,29 @@ const countUnicodeScalars = (value: string): number => {
  * Collects every normalized NUL location or rejects when the diagnostic budget is exhausted.
  * @param value The normalized scalar text to inspect.
  * @param path The logical document path attached to each diagnostic.
- * @param limits The immutable Core resource limits.
- * @param operation The public operation requesting validation.
- * @returns Frozen structural diagnostics for every NUL scalar.
+ * @param diagnostics The operation collector receiving every NUL diagnostic.
  * @throws
  * - RESOURCE_LIMIT_EXCEEDED: A Core resource limit was exceeded.
  */
 const collectNulDiagnostics = (
   value: string,
   path: IRepositoryPath,
-  limits: ICoreResourceLimits,
-  operation: ICoreOperation,
-): readonly ICoreDiagnostic[] => {
-  const diagnostics: ICoreDiagnostic[] = [];
+  diagnostics: ICoreDiagnosticCollector,
+): void => {
   let column = 1;
   let line = 1;
   let offset = 0;
 
   for (const scalar of value) {
     if (scalar === '\0') {
-      if (diagnostics.length >= limits.maxDiagnostics) {
-        throw new CoreOperationException({
-          code: 'RESOURCE_LIMIT_EXCEEDED',
-          limit: 'maxDiagnostics',
-          operation,
-          retryable: false,
-        });
-      }
-
-      diagnostics.push(
-        createDiagnostic('MOLDEA_TEXT_NUL_FORBIDDEN', path, {
+      diagnostics.add({
+        code: 'MOLDEA_TEXT_NUL_FORBIDDEN',
+        path,
+        range: {
           end: { column: column + 1, line, offset: offset + 1 },
           start: { column, line, offset },
-        }),
-      );
+        },
+      });
     }
 
     if (scalar === '\n') {
@@ -143,31 +124,6 @@ const collectNulDiagnostics = (
 
     offset += 1;
   }
-
-  return diagnostics;
-};
-
-const createDiagnostic = (
-  code: ICoreDiagnosticCode,
-  path: IRepositoryPath,
-  range: ISourceRange | null = null,
-): ICoreDiagnostic => {
-  const message = TEXT_DIAGNOSTIC_MESSAGES[code as keyof typeof TEXT_DIAGNOSTIC_MESSAGES];
-
-  if (message === undefined) {
-    throw new Error('The requested text diagnostic is not implemented.');
-  }
-
-  return freezeRecursively({
-    code,
-    details: createNullPrototypeRecord([]),
-    entity: null,
-    message,
-    path,
-    pointer: null,
-    range,
-    source: 'core' as const,
-  });
 };
 
 const invalidArgument = (operation: ICoreOperation): never => {
@@ -182,33 +138,21 @@ const enforceFileLimit = (
   byteLength: number,
   limits: ICoreResourceLimits,
   operation: ICoreOperation,
+  limit: 'maxFileBytes' | 'maxManifestBytes',
 ): void => {
-  if (byteLength <= limits.maxFileBytes) {
+  if (byteLength <= limits[limit]) {
     return;
   }
 
   throw new CoreOperationException({
     code: 'RESOURCE_LIMIT_EXCEEDED',
-    limit: 'maxFileBytes',
+    limit,
     operation,
     retryable: false,
   });
 };
 
-const invalidResult = (
-  diagnostics: readonly ICoreDiagnostic[],
-  limits: ICoreResourceLimits,
-  operation: ICoreOperation,
-): ITextNormalizationResult => {
-  if (diagnostics.length > limits.maxDiagnostics) {
-    throw new CoreOperationException({
-      code: 'RESOURCE_LIMIT_EXCEEDED',
-      limit: 'maxDiagnostics',
-      operation,
-      retryable: false,
-    });
-  }
-
+const invalidResult = (diagnostics: readonly ICoreDiagnostic[]): ITextNormalizationResult => {
   return freezeRecursively({
     diagnostics: [...diagnostics],
     text: null,
@@ -221,6 +165,8 @@ const invalidResult = (
  * @param input The untrusted public text-document input.
  * @param limits The immutable Core resource limits.
  * @param operation The public operation requesting the input.
+ * @param limit The source-byte limit applied by the operation.
+ * @param diagnostics The operation collector receiving text diagnostics.
  * @returns Decoded text or a frozen structural failure result.
  * @throws
  * - INVALID_REPOSITORY_PATH: The repository path is invalid.
@@ -231,6 +177,8 @@ const readInput = (
   input: ITextDocumentInput,
   limits: ICoreResourceLimits,
   operation: ICoreOperation,
+  limit: 'maxFileBytes' | 'maxManifestBytes',
+  diagnostics: ICoreDiagnosticCollector,
 ): { readonly path: IRepositoryPath; readonly value: string } | ITextNormalizationResult => {
   if (!isRecord(input)) {
     return invalidArgument(operation);
@@ -249,27 +197,25 @@ const readInput = (
   const path = parseRepositoryPath(pathCandidate);
 
   if (typeof content === 'string') {
-    const byteLength = measureScalarUtf8ByteLength(content, limits.maxFileBytes);
+    const byteLength = measureScalarUtf8ByteLength(content, limits[limit]);
 
     if (byteLength === null) {
-      return invalidResult(
-        [createDiagnostic('MOLDEA_TEXT_INVALID_UNICODE', path)],
-        limits,
-        operation,
-      );
+      diagnostics.add({ code: 'MOLDEA_TEXT_INVALID_UNICODE', path });
+      return invalidResult(diagnostics.finalize());
     }
 
-    enforceFileLimit(byteLength, limits, operation);
+    enforceFileLimit(byteLength, limits, operation, limit);
     return { path, value: content };
   }
 
-  enforceFileLimit(content.byteLength, limits, operation);
+  enforceFileLimit(content.byteLength, limits, operation, limit);
   const bytes = new Uint8Array(content);
 
   try {
     return { path, value: decoder.decode(bytes) };
   } catch {
-    return invalidResult([createDiagnostic('MOLDEA_TEXT_INVALID_UTF8', path)], limits, operation);
+    diagnostics.add({ code: 'MOLDEA_TEXT_INVALID_UTF8', path });
+    return invalidResult(diagnostics.finalize());
   }
 };
 
@@ -278,6 +224,7 @@ const readInput = (
  * @param input The logical path and decoded string or exact source bytes.
  * @param limits The immutable Core resource limits.
  * @param operation The public Core operation requesting normalization.
+ * @param limit The source-byte limit applied by the operation.
  * @returns A frozen normalized result or structural text diagnostics.
  * @throws
  * - INVALID_REPOSITORY_PATH: The repository path is invalid.
@@ -288,8 +235,10 @@ export const normalizeTextDocument = (
   input: ITextDocumentInput,
   limits: ICoreResourceLimits,
   operation: ICoreOperation,
+  limit: 'maxFileBytes' | 'maxManifestBytes' = 'maxFileBytes',
 ): ITextNormalizationResult => {
-  const decoded = readInput(input, limits, operation);
+  const diagnostics = createCoreDiagnosticCollector(limits, operation);
+  const decoded = readInput(input, limits, operation, limit, diagnostics);
 
   if ('valid' in decoded) {
     return decoded;
@@ -299,10 +248,10 @@ export const normalizeTextDocument = (
     ? decoded.value.slice(1)
     : decoded.value;
   const value = withoutLeadingBom.replace(/\r\n?/gu, '\n');
-  const diagnostics = collectNulDiagnostics(value, decoded.path, limits, operation);
+  collectNulDiagnostics(value, decoded.path, diagnostics);
 
-  if (diagnostics.length > 0) {
-    return invalidResult(diagnostics, limits, operation);
+  if (diagnostics.size > 0) {
+    return invalidResult(diagnostics.finalize());
   }
 
   const text: INormalizedText = freezeRecursively({
@@ -326,6 +275,20 @@ const toLowercaseHex = (bytes: Uint8Array): string => {
   }
 
   return value;
+};
+
+/**
+ * Calculates the canonical digest for already-normalized text.
+ * @param text The validated normalized text to encode and hash.
+ * @returns A promise resolving to the canonical lowercase SHA-256 digest.
+ */
+export const calculateNormalizedTextDigest = async (
+  text: INormalizedText,
+): Promise<IContentDigest> => {
+  const bytes = encoder.encode(text.value);
+  const hash = new Uint8Array(await globalThis.crypto.subtle.digest('SHA-256', bytes));
+
+  return `sha256:${toLowercaseHex(hash)}` as IContentDigest;
 };
 
 /**
@@ -353,9 +316,7 @@ export const calculateContentDigest = async (
     });
   }
 
-  const bytes = encoder.encode(normalized.text.value);
-  const hash = new Uint8Array(await globalThis.crypto.subtle.digest('SHA-256', bytes));
-  const digest = `sha256:${toLowercaseHex(hash)}` as IContentDigest;
+  const digest = await calculateNormalizedTextDigest(normalized.text);
 
   return freezeRecursively({
     diagnostics: [],

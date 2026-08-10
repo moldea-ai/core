@@ -32,4 +32,27 @@ describe('Core with the immutable memory repository reader', () => {
     });
     expect(digested.digest).toMatch(/^sha256:[0-9a-f]{64}$/u);
   });
+
+  test('parses exact manifest bytes supplied by the memory reader', async () => {
+    const manifestPath = parseRepositoryPath('/moldea/moldea.yaml');
+    const reader = createMemoryRepositoryReader([
+      {
+        content: new TextEncoder().encode('\ufeffversion: 1\r\n'),
+        path: manifestPath,
+        type: 'file',
+      },
+    ]);
+    const bytes = await reader.readFile(manifestPath);
+    const result = await createCore().parseManifest({ content: bytes, path: manifestPath });
+
+    expect(result).toMatchObject({
+      asset: {
+        content: 'version: 1\n',
+        digest: 'sha256:09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847',
+      },
+      diagnostics: [],
+      manifest: { version: 1 },
+      valid: true,
+    });
+  });
 });

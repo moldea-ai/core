@@ -153,8 +153,10 @@ const options: ICoreOptions = { adapters: [adapter], limits: { maxFileBytes: 102
 const core: ICore = createCore(options);
 const input: ITextDocumentInput = { content: 'project\n', path };
 const normalized: ITextNormalizationResult = core.normalizeText(input);
-// @ts-expect-error Manifest parsing is exposed only after its behavior is implemented.
-void core.parseManifest;
+const parsedManifest: Promise<IManifestParseResult> = core.parseManifest({
+  content: 'version: 1\n',
+  path: parseRepositoryPath('/moldea/moldea.yaml'),
+});
 // @ts-expect-error Decision parsing is exposed only after its behavior is implemented.
 void core.parseDecision;
 // @ts-expect-error Repository inspection is exposed only after its behavior is implemented.
@@ -180,6 +182,7 @@ void [
   adapterSurface,
   DEFAULT_CORE_RESOURCE_LIMITS,
   normalized,
+  parsedManifest,
   configurationException,
   operationException,
   removedHandoffSurface,

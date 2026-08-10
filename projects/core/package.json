@@ -47,7 +47,8 @@
   },
   "dependencies": {
     "@moldea.ai/repository": "workspace:^1.0.0",
-    "error-message-utils": "1.2.11"
+    "error-message-utils": "1.2.11",
+    "yaml": "2.9.0"
   },
   "devDependencies": {
     "@types/node": "22.20.1",

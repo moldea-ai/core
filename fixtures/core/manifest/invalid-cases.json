@@ -1,0 +1,112 @@
+[
+  {
+    "name": "non-mapping root",
+    "content": "- version\n- 1\n",
+    "codes": ["MOLDEA_MANIFEST_ROOT_INVALID"]
+  },
+  {
+    "name": "missing version",
+    "content": "agents: {}\n",
+    "codes": ["MOLDEA_MANIFEST_VERSION_MISSING"]
+  },
+  {
+    "name": "unsupported version",
+    "content": "version: 2\n",
+    "codes": ["MOLDEA_MANIFEST_VERSION_UNSUPPORTED"]
+  },
+  {
+    "name": "unknown top-level property",
+    "content": "version: 1\nhandoffs: {}\n",
+    "codes": ["MOLDEA_MANIFEST_PROPERTY_UNKNOWN"]
+  },
+  {
+    "name": "duplicate YAML key",
+    "content": "version: 1\nversion: 1\n",
+    "codes": ["MOLDEA_YAML_DUPLICATE_KEY"]
+  },
+  {
+    "name": "anchor and alias",
+    "content": "version: 1\ncontext: &relationships {}\ndecisions: *relationships\n",
+    "codes": ["MOLDEA_YAML_FEATURE_UNSUPPORTED", "MOLDEA_YAML_FEATURE_UNSUPPORTED"]
+  },
+  {
+    "name": "multiple documents",
+    "content": "version: 1\n---\nversion: 1\n",
+    "codes": ["MOLDEA_YAML_MULTIPLE_DOCUMENTS"]
+  },
+  {
+    "name": "undeclared variable provider",
+    "content": "version: 1\nagents:\n  agent:\n    framework:\n      id: custom\n    bindings:\n      variableProviders:\n        UNKNOWN:\n          path: /src/time.ts\n",
+    "codes": ["MOLDEA_VARIABLE_PROVIDER_UNDECLARED"]
+  },
+  {
+    "name": "invalid capability description",
+    "content": "version: 1\nagents:\n  agent:\n    framework:\n      id: custom\n    tools:\n      lookup:\n        name: lookup\n        description: ' padded'\n        implementation:\n          path: /src/lookup.ts\n",
+    "codes": ["MOLDEA_CAPABILITY_DESCRIPTION_INVALID"]
+  },
+  {
+    "name": "invalid agent ID",
+    "content": "version: 1\nagents:\n  Invalid:\n    framework: { id: custom }\n",
+    "codes": ["MOLDEA_ID_INVALID"]
+  },
+  {
+    "name": "reserved agent ID",
+    "content": "version: 1\nagents:\n  con:\n    framework: { id: custom }\n",
+    "codes": ["MOLDEA_ID_RESERVED"]
+  },
+  {
+    "name": "empty context relationship",
+    "content": "version: 1\ncontext:\n  /moldea/project.md: {}\n",
+    "codes": ["MOLDEA_CONTEXT_RELATIONSHIP_EMPTY"]
+  },
+  {
+    "name": "invalid decision relationship path",
+    "content": "version: 1\ndecisions:\n  /moldea/decisions/not-valid.md:\n    affectedBy: [/src/**]\n",
+    "codes": ["MOLDEA_DECISION_FILENAME_INVALID"]
+  },
+  {
+    "name": "invalid impact glob",
+    "content": "version: 1\nagents:\n  agent:\n    framework: { id: custom }\n    affectedBy: [/src/**x]\n",
+    "codes": ["MOLDEA_GLOB_INVALID"]
+  },
+  {
+    "name": "duplicate exact impact path",
+    "content": "version: 1\nagents:\n  agent:\n    framework: { id: custom }\n    affectedBy: [/src/file.ts, /src/file.ts]\n",
+    "codes": ["MOLDEA_PATH_DUPLICATE"]
+  },
+  {
+    "name": "mirror inside canonical content",
+    "content": "version: 1\nagents:\n  agent:\n    framework: { id: custom }\n    mirrors: [/moldea/project.md]\n",
+    "codes": ["MOLDEA_MIRROR_PATH_INSIDE_MOLDEA"]
+  },
+  {
+    "name": "symbol on canonical reference",
+    "content": "version: 1\nagents:\n  agent:\n    framework: { id: custom }\n    bindings:\n      runtimeAgent:\n        path: /moldea/project.md\n        symbol: project\n",
+    "codes": ["MOLDEA_SYMBOL_FORBIDDEN"]
+  },
+  {
+    "name": "invalid variable ID",
+    "content": "version: 1\nagents:\n  agent:\n    framework: { id: custom }\n    variables:\n      current:\n        description: Current value.\n",
+    "codes": ["MOLDEA_VARIABLE_ID_INVALID"]
+  },
+  {
+    "name": "missing skill implementation",
+    "content": "version: 1\nagents:\n  agent:\n    framework: { id: custom }\n    skills:\n      process:\n        name: process\n        description: Applies the required process.\n",
+    "codes": ["MOLDEA_SKILL_IMPLEMENTATION_MISSING"]
+  },
+  {
+    "name": "null optional mapping",
+    "content": "version: 1\nagents: null\n",
+    "codes": ["MOLDEA_MANIFEST_VALUE_INVALID"]
+  },
+  {
+    "name": "unknown framework property",
+    "content": "version: 1\nagents:\n  agent:\n    framework:\n      id: custom\n      runtime: custom\n",
+    "codes": ["MOLDEA_MANIFEST_PROPERTY_UNKNOWN"]
+  },
+  {
+    "name": "unsupported handoffs property",
+    "content": "version: 1\nagents:\n  agent:\n    framework: { id: custom }\n    handoffs: {}\n",
+    "codes": ["MOLDEA_MANIFEST_PROPERTY_UNKNOWN"]
+  }
+]

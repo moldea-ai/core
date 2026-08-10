@@ -6,7 +6,7 @@ export default createLibraryConfig({
     format: 'src/format.ts',
     index: 'src/index.ts',
   },
-  externalPackages: ['@moldea.ai/repository', 'error-message-utils'],
+  externalPackages: ['@moldea.ai/repository', 'error-message-utils', 'yaml'],
   platform: 'environment-neutral',
   rootDirectory: import.meta.dirname,
 });
