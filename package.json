@@ -1,39 +1,47 @@
 {
-  "name": "@moldea.ai/core",
-  "version": "1.0.0",
-  "description": "",
-  "homepage": "https://github.com/moldea-ai/core#readme",
+  "name": "moldea.ai",
+  "version": "0.0.0",
+  "description": "The monorepo for the first-class and shared internal packages that implement the open moldea ecosystem.",
+  "private": true,
+  "homepage": "https://github.com/moldea-ai/packages#readme",
   "bugs": {
-    "url": "https://github.com/moldea-ai/core/issues"
+    "url": "https://github.com/moldea-ai/packages/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/moldea-ai/core.git"
+    "url": "git+https://github.com/moldea-ai/packages.git"
   },
   "license": "MIT",
   "author": "Jesus Graterol",
   "type": "module",
-  "main": "index.js",
-  "scripts": {
-    "build": "rm -rf dist && tsc -p tsconfig.build.json",
-    "lint": "eslint src",
-    "test": "npm run test:unit",
-    "test:integration": "npm run build && vitest run --config vitest/test-integration.config.ts",
-    "test:unit": "npm run build && vitest run --config vitest/test-unit.config.ts",
-    "test:bench": "npm run build && vitest bench"
+  "packageManager": "pnpm@11.9.0",
+  "engines": {
+    "node": "^24.15.0",
+    "pnpm": "11.9.0"
   },
-  "dependencies": {
-    "error-message-utils": "1.2.11",
-    "zod": "4.4.3"
+  "scripts": {
+    "build": "turbo run build",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint .",
+    "test": "pnpm test:root && turbo run test",
+    "test:integration": "turbo run test:integration",
+    "test:root": "vitest run",
+    "test:unit": "pnpm test:root && turbo run test:unit",
+    "typecheck": "pnpm typecheck:root && turbo run typecheck",
+    "typecheck:root": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
-    "@types/node": "26.2.0",
+    "@types/node": "22.20.1",
     "eslint": "10.8.1",
     "eslint-config-prettier": "10.1.8",
+    "globals": "17.9.0",
     "prettier": "3.9.6",
+    "turbo": "2.10.9",
     "typescript": "6.0.3",
     "typescript-eslint": "8.66.0",
+    "vite": "8.2.1",
     "vitest": "4.1.10"
   }
 }
