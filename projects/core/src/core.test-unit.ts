@@ -35,10 +35,12 @@ describe('Core constants and construction', () => {
     expect(Object.keys(core).sort()).toStrictEqual([
       'calculateContentDigest',
       'normalizeText',
+      'parseDecision',
       'parseManifest',
     ]);
     expect(typeof core.calculateContentDigest).toBe('function');
     expect(typeof core.normalizeText).toBe('function');
+    expect(typeof core.parseDecision).toBe('function');
     expect(typeof core.parseManifest).toBe('function');
   });
 
@@ -180,6 +182,9 @@ describe('Core constants and construction', () => {
       CoreOperationException,
     );
     await expect(core.parseManifest({ content: 1 } as never)).rejects.toBeInstanceOf(
+      CoreOperationException,
+    );
+    await expect(core.parseDecision({ content: 1 } as never)).rejects.toBeInstanceOf(
       CoreOperationException,
     );
   });

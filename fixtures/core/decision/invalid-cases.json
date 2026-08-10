@@ -1,0 +1,98 @@
+[
+  {
+    "name": "invalid filename",
+    "path": "/moldea/decisions/not-valid.md",
+    "content": "---\nstatus: accepted\ncreatedAt: \"2026-08-07T19:42:03.456Z\"\n---\nBody.\n",
+    "codes": ["MOLDEA_DECISION_FILENAME_INVALID"]
+  },
+  {
+    "name": "content before opening delimiter",
+    "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+    "content": "intro\n---\nstatus: accepted\ncreatedAt: \"2026-08-07T19:42:03.456Z\"\n---\nBody.\n",
+    "codes": ["MOLDEA_DECISION_FRONTMATTER_MISSING"]
+  },
+  {
+    "name": "missing closing delimiter",
+    "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+    "content": "---\nstatus: accepted\ncreatedAt: \"2026-08-07T19:42:03.456Z\"\nBody.\n",
+    "codes": ["MOLDEA_DECISION_FRONTMATTER_MISSING"]
+  },
+  {
+    "name": "indented closing delimiter",
+    "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+    "content": "---\nstatus: accepted\ncreatedAt: \"2026-08-07T19:42:03.456Z\"\n ---\nBody.\n",
+    "codes": ["MOLDEA_DECISION_FRONTMATTER_MISSING"]
+  },
+  {
+    "name": "non-mapping frontmatter",
+    "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+    "content": "---\n- accepted\n- 2026-08-07T19:42:03.456Z\n---\nBody.\n",
+    "codes": ["MOLDEA_DECISION_FRONTMATTER_INVALID"]
+  },
+  {
+    "name": "unknown property",
+    "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+    "content": "---\nstatus: accepted\ncreatedAt: \"2026-08-07T19:42:03.456Z\"\nrationale: durable\n---\nBody.\n",
+    "codes": ["MOLDEA_DECISION_PROPERTY_UNKNOWN"]
+  },
+  {
+    "name": "missing status",
+    "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+    "content": "---\ncreatedAt: \"2026-08-07T19:42:03.456Z\"\n---\nBody.\n",
+    "codes": ["MOLDEA_DECISION_STATUS_INVALID"]
+  },
+  {
+    "name": "invalid status",
+    "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+    "content": "---\nstatus: active\ncreatedAt: \"2026-08-07T19:42:03.456Z\"\n---\nBody.\n",
+    "codes": ["MOLDEA_DECISION_STATUS_INVALID"]
+  },
+  {
+    "name": "invalid createdAt",
+    "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+    "content": "---\nstatus: accepted\ncreatedAt: \"2026-02-30T00:00:00.000Z\"\n---\nBody.\n",
+    "codes": ["MOLDEA_DECISION_CREATED_AT_INVALID"]
+  },
+  {
+    "name": "timestamp mismatch",
+    "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+    "content": "---\nstatus: accepted\ncreatedAt: \"2026-08-07T19:42:03.457Z\"\n---\nBody.\n",
+    "codes": ["MOLDEA_DECISION_TIMESTAMP_MISMATCH"]
+  },
+  {
+    "name": "empty supersedes",
+    "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+    "content": "---\nstatus: accepted\ncreatedAt: \"2026-08-07T19:42:03.456Z\"\nsupersedes: []\n---\nBody.\n",
+    "codes": ["MOLDEA_DECISION_FRONTMATTER_INVALID"]
+  },
+  {
+    "name": "invalid supersedes ID",
+    "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+    "content": "---\nstatus: accepted\ncreatedAt: \"2026-08-07T19:42:03.456Z\"\nsupersedes: [1784000000000]\n---\nBody.\n",
+    "codes": ["MOLDEA_DECISION_FRONTMATTER_INVALID"]
+  },
+  {
+    "name": "duplicate supersedes ID",
+    "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+    "content": "---\nstatus: accepted\ncreatedAt: \"2026-08-07T19:42:03.456Z\"\nsupersedes: [\"1784000000000\", \"1784000000000\"]\n---\nBody.\n",
+    "codes": ["MOLDEA_ID_DUPLICATE"]
+  },
+  {
+    "name": "self supersession",
+    "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+    "content": "---\nstatus: accepted\ncreatedAt: \"2026-08-07T19:42:03.456Z\"\nsupersedes: [\"1786131723456\"]\n---\nBody.\n",
+    "codes": ["MOLDEA_DECISION_SELF_SUPERSESSION"]
+  },
+  {
+    "name": "empty body",
+    "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+    "content": "---\nstatus: accepted\ncreatedAt: \"2026-08-07T19:42:03.456Z\"\n---\n  \n",
+    "codes": ["MOLDEA_DECISION_BODY_EMPTY"]
+  },
+  {
+    "name": "duplicate YAML key",
+    "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+    "content": "---\nstatus: accepted\nstatus: rejected\ncreatedAt: \"2026-08-07T19:42:03.456Z\"\n---\nBody.\n",
+    "codes": ["MOLDEA_YAML_DUPLICATE_KEY"]
+  }
+]

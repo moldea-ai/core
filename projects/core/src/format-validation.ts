@@ -94,6 +94,15 @@ export const isCanonicalManifestPath = (path: IRepositoryPath): boolean => {
   return path === '/moldea/moldea.yaml';
 };
 
+/** Extracts the stable millisecond ID from one canonical immediate decision path. */
+export const parseDecisionIdFromPath = (path: IRepositoryPath): string | null => {
+  const match = /^\/moldea\/decisions\/(\d{13})-([a-z0-9]+(?:-[a-z0-9]+)*)\.md$/u.exec(path);
+  const id = match?.[1];
+  const slug = match?.[2];
+
+  return id !== undefined && slug !== undefined && isStableId(slug) ? id : null;
+};
+
 /** Determines whether a path is an allowed focused-context relationship key. */
 export const isContextPath = (path: IRepositoryPath, allowProject: boolean): boolean => {
   if (allowProject && path === '/moldea/project.md') {
@@ -105,10 +114,7 @@ export const isContextPath = (path: IRepositoryPath, allowProject: boolean): boo
 
 /** Determines whether a path has the canonical immediate decision filename shape. */
 export const isDecisionPath = (path: IRepositoryPath): boolean => {
-  const match = /^\/moldea\/decisions\/\d{13}-([a-z0-9]+(?:-[a-z0-9]+)*)\.md$/u.exec(path);
-  const slug = match?.[1];
-
-  return slug !== undefined && isStableId(slug);
+  return parseDecisionIdFromPath(path) !== null;
 };
 
 /** Determines whether a path is canonical runtime guidance. */

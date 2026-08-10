@@ -229,6 +229,7 @@ describe('published Core package artifacts', () => {
     expect(indexDeclaration).toContain('createCore');
     expect(indexDeclaration).not.toContain('IYaml');
     expect(formatDeclaration).toContain('IMoldeaManifestV1');
+    expect(formatDeclaration).toContain('IParsedDecision');
     expect(formatDeclaration).not.toContain('IHandoffManifestEntry');
     expect(adapterDeclaration).toContain('inspect(');
     expect(adapterDeclaration).toContain('IFrameworkAdapterEvidence');
@@ -236,6 +237,7 @@ describe('published Core package artifacts', () => {
     expect(allDeclarations).not.toMatch(/from ['"]yaml['"]/u);
     expect(allDeclarations).not.toContain('ParsedNode');
     expect(allDeclarations).not.toContain('packages/');
+    expect(allDeclarations).toContain('parseDecision');
   });
 
   test('installs real Core and Repository tarballs and typechecks a consumer', () => {
@@ -317,26 +319,50 @@ describe('published Core package artifacts', () => {
           [
             "import { createCore } from '@moldea.ai/core';",
             "import { parseRepositoryPath } from '@moldea.ai/repository';",
-            "const result = await createCore().parseManifest({ content: 'version: 1\\n', path: parseRepositoryPath('/moldea/moldea.yaml') });",
-            'console.log(JSON.stringify(result));',
+            'const core = createCore();',
+            "const manifest = await core.parseManifest({ content: 'version: 1\\n', path: parseRepositoryPath('/moldea/moldea.yaml') });",
+            "const decision = await core.parseDecision({ content: '---\\nstatus: accepted\\ncreatedAt: \"2026-08-07T19:42:03.456Z\"\\n---\\nBody.\\n', path: parseRepositoryPath('/moldea/decisions/1786131723456-use-postgresql.md') });",
+            'console.log(JSON.stringify({ decision, manifest }));',
           ].join(''),
         ],
         { cwd: consumerDirectory, encoding: 'utf8' },
       );
       const runtimeResult = JSON.parse(runtimeOutput) as {
-        readonly asset: { readonly digest: string } | null;
-        readonly diagnostics: readonly unknown[];
-        readonly manifest: { readonly version: number } | null;
-        readonly valid: boolean;
+        readonly decision: {
+          readonly decision: {
+            readonly asset: { readonly digest: string };
+            readonly id: string;
+          } | null;
+          readonly diagnostics: readonly unknown[];
+          readonly valid: boolean;
+        };
+        readonly manifest: {
+          readonly asset: { readonly digest: string } | null;
+          readonly diagnostics: readonly unknown[];
+          readonly manifest: { readonly version: number } | null;
+          readonly valid: boolean;
+        };
       };
 
       expect(runtimeResult).toMatchObject({
-        asset: {
-          digest: 'sha256:09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847',
+        decision: {
+          decision: {
+            asset: {
+              digest: 'sha256:2fe38755065f6267d0a90af76cd089532b959ecfa8e2699990b9f5bfce8fe304',
+            },
+            id: '1786131723456',
+          },
+          diagnostics: [],
+          valid: true,
         },
-        diagnostics: [],
-        manifest: { version: 1 },
-        valid: true,
+        manifest: {
+          asset: {
+            digest: 'sha256:09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847',
+          },
+          diagnostics: [],
+          manifest: { version: 1 },
+          valid: true,
+        },
       });
     } finally {
       rmSync(consumerDirectory, { force: true, recursive: true });

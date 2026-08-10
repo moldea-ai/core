@@ -157,8 +157,10 @@ const parsedManifest: Promise<IManifestParseResult> = core.parseManifest({
   content: 'version: 1\n',
   path: parseRepositoryPath('/moldea/moldea.yaml'),
 });
-// @ts-expect-error Decision parsing is exposed only after its behavior is implemented.
-void core.parseDecision;
+const parsedDecision: Promise<IDecisionParseResult> = core.parseDecision({
+  content: '---\nstatus: accepted\ncreatedAt: "2026-08-07T19:42:03.456Z"\n---\nBody.\n',
+  path: parseRepositoryPath('/moldea/decisions/1786131723456-use-postgresql.md'),
+});
 // @ts-expect-error Repository inspection is exposed only after its behavior is implemented.
 void core.inspectProject;
 const configurationException = new CoreConfigurationException({
@@ -182,6 +184,7 @@ void [
   adapterSurface,
   DEFAULT_CORE_RESOURCE_LIMITS,
   normalized,
+  parsedDecision,
   parsedManifest,
   configurationException,
   operationException,

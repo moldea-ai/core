@@ -2,7 +2,7 @@
 
 Source-neutral, deterministic interpretation of the `moldea` repository format.
 
-The current `0.0.0` foundation accepts caller-supplied text documents and does not access a filesystem, Git provider, or network. Invalid document content produces stable diagnostics, while invalid configuration and operational failures use typed exceptions. Strict version 1 manifest parsing is available now; decision parsing and repository inspection through `IRepositoryReader` remain reserved for later behavioral slices.
+The current `0.0.0` foundation accepts caller-supplied text documents and does not access a filesystem, Git provider, or network. Invalid document content produces stable diagnostics, while invalid configuration and operational failures use typed exceptions. Strict version 1 manifest and decision parsing are available now; repository inspection through `IRepositoryReader` remains reserved for a later behavioral slice.
 
 ## Public entry points
 
@@ -44,6 +44,27 @@ const result = await createCore().parseManifest({
 ```
 
 Manifest parsing validates the canonical path, strict UTF-8 and normalized text, the supported YAML 1.2 Core Schema subset, and every version 1 rule that can be established from the document alone. It rejects directives, anchors, aliases, merge keys, custom tags, duplicate keys, unknown properties, invalid values, unavailable configured framework adapters, and non-canonical relationships. A result includes both the normalized manifest asset and deeply immutable manifest value only when the complete document is valid. It does not read the repository or check whether referenced files exist.
+
+## Decision parsing
+
+```typescript
+import { createCore } from '@moldea.ai/core';
+import { parseRepositoryPath } from '@moldea.ai/repository';
+
+const result = await createCore().parseDecision({
+  content: [
+    '---',
+    'status: accepted',
+    'createdAt: "2026-08-07T19:42:03.456Z"',
+    '---',
+    'Use the accepted implementation.',
+    '',
+  ].join('\n'),
+  path: parseRepositoryPath('/moldea/decisions/1786131723456-use-postgresql.md'),
+});
+```
+
+Decision parsing validates the canonical timestamp-slug path, exact frontmatter delimiters, strict YAML metadata, status, canonical UTC `createdAt`, filename timestamp equality, supersession IDs, and non-empty Markdown body. A valid result preserves the exact normalized body and complete normalized asset, sorts supersession IDs, and includes a SHA-256 digest. It does not read other decisions or validate reference existence, duplicate IDs across files, supersession graphs, status consistency, or manifest relationships.
 
 ## Development
 

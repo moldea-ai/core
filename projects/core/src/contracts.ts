@@ -183,4 +183,15 @@ export interface ICore {
    * - RESOURCE_LIMIT_EXCEEDED: A Core resource limit was exceeded.
    */
   parseManifest(input: ITextDocumentInput): Promise<IManifestParseResult>;
+
+  /**
+   * Parses and validates one complete decision document.
+   * @param input The canonical logical path and exact decision text or bytes.
+   * @returns A promise resolving to the frozen all-or-nothing decision result.
+   * @throws
+   * - INVALID_REPOSITORY_PATH: The repository path is invalid.
+   * - INVALID_ARGUMENT: The Core operation received an invalid argument.
+   * - RESOURCE_LIMIT_EXCEEDED: A Core resource limit was exceeded.
+   */
+  parseDecision(input: ITextDocumentInput): Promise<IDecisionParseResult>;
 }

@@ -1,4 +1,5 @@
 import type { ICore, ICoreOptions, ITextDocumentInput } from './contracts.js';
+import { parseDecisionDocument } from './decision.js';
 import { freezeRecursively } from './immutable.js';
 import { parseManifestDocument } from './manifest.js';
 import { normalizeCoreOptions } from './options.js';
@@ -22,6 +23,7 @@ export const createCore = (options?: ICoreOptions): ICore => {
       calculateContentDigest(input, snapshot.limits),
     normalizeText: (input: ITextDocumentInput) =>
       normalizeTextDocument(input, snapshot.limits, 'normalize-text'),
+    parseDecision: (input: ITextDocumentInput) => parseDecisionDocument(input, snapshot),
     parseManifest: (input: ITextDocumentInput) => parseManifestDocument(input, snapshot),
   });
 };

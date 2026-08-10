@@ -18,7 +18,16 @@ const CORE_DIAGNOSTIC_MESSAGES: Partial<Record<ICoreDiagnosticCode, string>> = {
   MOLDEA_CAPABILITY_DESCRIPTION_MISSING: 'The capability description is missing.',
   MOLDEA_CONTEXT_PATH_INVALID: 'The context relationship path is invalid.',
   MOLDEA_CONTEXT_RELATIONSHIP_EMPTY: 'The declared relationship has no bindings or impact paths.',
+  MOLDEA_DECISION_BODY_EMPTY: 'The decision Markdown body is empty.',
+  MOLDEA_DECISION_CREATED_AT_INVALID: 'The decision createdAt value is invalid.',
   MOLDEA_DECISION_FILENAME_INVALID: 'The decision path or filename is invalid.',
+  MOLDEA_DECISION_FRONTMATTER_INVALID: 'The decision frontmatter is invalid.',
+  MOLDEA_DECISION_FRONTMATTER_MISSING: 'The decision frontmatter or its delimiters are missing.',
+  MOLDEA_DECISION_PROPERTY_UNKNOWN: 'The decision frontmatter contains an unknown property.',
+  MOLDEA_DECISION_SELF_SUPERSESSION: 'The decision supersedes itself.',
+  MOLDEA_DECISION_STATUS_INVALID: 'The decision status is invalid.',
+  MOLDEA_DECISION_TIMESTAMP_MISMATCH:
+    'The decision filename timestamp and createdAt value do not match.',
   MOLDEA_FRAMEWORK_ADAPTER_FORMAT_UNSUPPORTED:
     'The configured framework adapter does not support the repository format version.',
   MOLDEA_FRAMEWORK_ADAPTER_UNAVAILABLE: 'The declared framework adapter is unavailable.',

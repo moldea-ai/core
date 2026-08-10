@@ -10,6 +10,7 @@ import {
   isSimpleGlob,
   isStableId,
   isVariableId,
+  parseDecisionIdFromPath,
   sortRepositoryReferences,
 } from './format-validation.js';
 
@@ -42,6 +43,19 @@ describe('Core manifest-format validation', () => {
     ['/moldea/decisions/nested/1786050123456-valid-slug.md', false],
   ])('isDecisionPath(%s) -> %s', (candidate, expected) => {
     expect(isDecisionPath(parseRepositoryPath(candidate))).toBe(expected);
+  });
+
+  test('extracts only canonical immediate decision IDs', () => {
+    expect(
+      parseDecisionIdFromPath(
+        parseRepositoryPath('/moldea/decisions/1786131723456-use-postgresql.md'),
+      ),
+    ).toBe('1786131723456');
+    expect(
+      parseDecisionIdFromPath(
+        parseRepositoryPath('/moldea/decisions/nested/1786131723456-use-postgresql.md'),
+      ),
+    ).toBeNull();
   });
 
   test.each([

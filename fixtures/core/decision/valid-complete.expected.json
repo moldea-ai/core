@@ -1,0 +1,8 @@
+{
+  "id": "1786131723456",
+  "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+  "status": "accepted",
+  "createdAt": "2026-08-07T19:42:03.456Z",
+  "supersedes": ["1784000000000", "1785000000000"],
+  "body": "\n# Use PostgreSQL\n\nUse PostgreSQL for durable project state.\n"
+}
