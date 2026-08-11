@@ -4,7 +4,7 @@ The `packages` project is the open-source package monorepo for `moldea`. It deve
 
 The repository is intentionally separate from the hosted [`platform`](https://github.com/moldea-ai/platform) monorepo. It contains reusable package products and their shared development infrastructure, not Cloud applications, hosted APIs, runtime infrastructure, or deployment configuration.
 
-`@moldea.ai/repository` is the first implemented package, and `@moldea.ai/core` is being built against its public reader contract and memory implementation. Additional package directories are introduced progressively in the specified implementation order rather than created as placeholders.
+`@moldea.ai/repository` and `@moldea.ai/core` now provide the source-neutral reader and universal interpretation foundations. `@moldea.ai/repository-fs` is the next active package and currently exposes its option and resource-limit foundation while coherent filesystem reader behavior is built behind that boundary. Additional package directories are introduced progressively in the specified implementation order rather than created as placeholders.
 
 ## Specifications
 
@@ -34,6 +34,7 @@ packages/                      # Private shared implementation packages
 projects/
   core/                        # Deterministic repository-format interpretation
   repository/                  # Source-neutral reader contract and memory reader
+  repository-fs/               # Explicit local-filesystem repository reader
 eslint.config.js
 package.json
 pnpm-lock.yaml
@@ -127,4 +128,4 @@ Generated files are not edited directly. Update the documented canonical source 
 
 ## Initial implementation sequence
 
-The first implementation project is `@moldea.ai/repository`, followed by its in-memory reader and shared conformance suite. Core then begins against the memory reader before source-specific filesystem support is introduced. The CLI and official adapters are composed only after their foundational packages and compatibility claims are available.
+The first implementation project was `@moldea.ai/repository`, followed by its in-memory reader and shared conformance suite. Core's universal behavior was then completed through that memory-reader boundary. `@moldea.ai/repository-fs` is now being implemented before the CLI and official adapters are composed from their completed foundational packages and compatibility claims.
