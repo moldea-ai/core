@@ -1,0 +1,263 @@
+{
+  "cases": [
+    {
+      "name": "normalized matching mirrors",
+      "manifest": "version: 1\nagents:\n  zeta:\n    framework:\n      id: custom\n    mirrors:\n      - /apps/zeta.md\n  alpha:\n    framework:\n      id: custom\n    mirrors:\n      - /apps/alpha-crlf.md\n      - /apps/alpha-cr.md\n",
+      "entries": [
+        {
+          "path": "/moldea/agents/zeta/description.md",
+          "type": "file",
+          "text": "Zeta agent.\n"
+        },
+        {
+          "path": "/moldea/agents/zeta/instruction.md",
+          "type": "file",
+          "text": "You are the `zeta` agent.\n"
+        },
+        {
+          "path": "/moldea/agents/alpha/description.md",
+          "type": "file",
+          "text": "Alpha agent.\n"
+        },
+        {
+          "path": "/moldea/agents/alpha/instruction.md",
+          "type": "file",
+          "text": "You are the `alpha` agent.\nHandle café requests.\n"
+        },
+        {
+          "path": "/apps/zeta.md",
+          "type": "file",
+          "text": "You are the `zeta` agent.\r"
+        },
+        {
+          "path": "/apps/alpha-crlf.md",
+          "type": "file",
+          "text": "﻿You are the `alpha` agent.\r\nHandle café requests.\r\n"
+        },
+        {
+          "path": "/apps/alpha-cr.md",
+          "type": "file",
+          "text": "You are the `alpha` agent.\rHandle café requests.\r"
+        }
+      ],
+      "expectedAgentMirrors": [
+        {
+          "id": "alpha",
+          "mirrors": [
+            {
+              "path": "/apps/alpha-cr.md",
+              "digest": "sha256:26d3cbfcfc24d9661a8f7e602630d6eeefb5a5efeed7e3b3b9a668367f840ba7",
+              "canonicalDigest": "sha256:26d3cbfcfc24d9661a8f7e602630d6eeefb5a5efeed7e3b3b9a668367f840ba7"
+            },
+            {
+              "path": "/apps/alpha-crlf.md",
+              "digest": "sha256:26d3cbfcfc24d9661a8f7e602630d6eeefb5a5efeed7e3b3b9a668367f840ba7",
+              "canonicalDigest": "sha256:26d3cbfcfc24d9661a8f7e602630d6eeefb5a5efeed7e3b3b9a668367f840ba7"
+            }
+          ]
+        },
+        {
+          "id": "zeta",
+          "mirrors": [
+            {
+              "path": "/apps/zeta.md",
+              "digest": "sha256:875a2877c0332d079797634c1e2a7b01dcccaa285b63c7fc4dba494ca1accbfa",
+              "canonicalDigest": "sha256:875a2877c0332d079797634c1e2a7b01dcccaa285b63c7fc4dba494ca1accbfa"
+            }
+          ]
+        }
+      ],
+      "expectedDiagnostics": []
+    },
+    {
+      "name": "missing, wrong-type, symlink, and stale mirrors",
+      "manifest": "version: 1\nagents:\n  alpha:\n    framework:\n      id: custom\n    mirrors:\n      - /mirrors/f-empty.md\n      - /mirrors/e-stale-unicode.md\n      - /mirrors/d-stale-space.md\n      - /mirrors/c-link.md\n      - /mirrors/b-directory\n      - /mirrors/a-missing.md\n",
+      "entries": [
+        {
+          "path": "/moldea/agents/alpha/description.md",
+          "type": "file",
+          "text": "Alpha agent.\n"
+        },
+        {
+          "path": "/moldea/agents/alpha/instruction.md",
+          "type": "file",
+          "text": "You are the `alpha` agent.\nHandle café requests.\n"
+        },
+        {
+          "path": "/mirrors/b-directory",
+          "type": "directory"
+        },
+        {
+          "path": "/mirrors/c-link.md",
+          "type": "symlink"
+        },
+        {
+          "path": "/mirrors/d-stale-space.md",
+          "type": "file",
+          "text": "You are the `alpha` agent.\nHandle café requests. \n"
+        },
+        {
+          "path": "/mirrors/e-stale-unicode.md",
+          "type": "file",
+          "text": "You are the `alpha` agent.\nHandle café requests.\n"
+        },
+        {
+          "path": "/mirrors/f-empty.md",
+          "type": "file",
+          "text": ""
+        }
+      ],
+      "expectedAgentMirrors": [
+        {
+          "id": "alpha",
+          "mirrors": []
+        }
+      ],
+      "expectedDiagnostics": [
+        {
+          "code": "MOLDEA_MIRROR_MISSING",
+          "details": {
+            "mirrorPath": "/mirrors/a-missing.md"
+          },
+          "entity": {
+            "agentId": "alpha"
+          },
+          "message": "The declared mirror does not exist.",
+          "path": "/moldea/moldea.yaml",
+          "pointer": "/agents/alpha/mirrors/0",
+          "range": null
+        },
+        {
+          "code": "MOLDEA_MIRROR_NOT_FILE",
+          "details": {
+            "actualType": "directory",
+            "mirrorPath": "/mirrors/b-directory"
+          },
+          "entity": {
+            "agentId": "alpha"
+          },
+          "message": "The declared mirror is not a regular file.",
+          "path": "/moldea/moldea.yaml",
+          "pointer": "/agents/alpha/mirrors/1",
+          "range": null
+        },
+        {
+          "code": "MOLDEA_MIRROR_SYMLINK",
+          "details": {
+            "actualType": "symlink",
+            "mirrorPath": "/mirrors/c-link.md"
+          },
+          "entity": {
+            "agentId": "alpha"
+          },
+          "message": "The declared mirror is a symlink.",
+          "path": "/moldea/moldea.yaml",
+          "pointer": "/agents/alpha/mirrors/2",
+          "range": null
+        },
+        {
+          "code": "MOLDEA_MIRROR_STALE",
+          "details": {
+            "mirrorPath": "/mirrors/d-stale-space.md"
+          },
+          "entity": {
+            "agentId": "alpha"
+          },
+          "message": "The declared mirror differs from its canonical instruction.",
+          "path": "/moldea/moldea.yaml",
+          "pointer": "/agents/alpha/mirrors/3",
+          "range": null
+        },
+        {
+          "code": "MOLDEA_MIRROR_STALE",
+          "details": {
+            "mirrorPath": "/mirrors/e-stale-unicode.md"
+          },
+          "entity": {
+            "agentId": "alpha"
+          },
+          "message": "The declared mirror differs from its canonical instruction.",
+          "path": "/moldea/moldea.yaml",
+          "pointer": "/agents/alpha/mirrors/4",
+          "range": null
+        },
+        {
+          "code": "MOLDEA_MIRROR_STALE",
+          "details": {
+            "mirrorPath": "/mirrors/f-empty.md"
+          },
+          "entity": {
+            "agentId": "alpha"
+          },
+          "message": "The declared mirror differs from its canonical instruction.",
+          "path": "/moldea/moldea.yaml",
+          "pointer": "/agents/alpha/mirrors/5",
+          "range": null
+        }
+      ]
+    },
+    {
+      "name": "strict mirror text failures",
+      "manifest": "version: 1\nagents:\n  alpha:\n    framework:\n      id: custom\n    mirrors:\n      - /mirrors/b-nul.md\n      - /mirrors/a-invalid-utf8.md\n",
+      "entries": [
+        {
+          "path": "/moldea/agents/alpha/description.md",
+          "type": "file",
+          "text": "Alpha agent.\n"
+        },
+        {
+          "path": "/moldea/agents/alpha/instruction.md",
+          "type": "file",
+          "text": "You are the `alpha` agent.\n"
+        },
+        {
+          "path": "/mirrors/a-invalid-utf8.md",
+          "type": "file",
+          "bytes": [255]
+        },
+        {
+          "path": "/mirrors/b-nul.md",
+          "type": "file",
+          "text": "before\u0000after"
+        }
+      ],
+      "expectedAgentMirrors": [
+        {
+          "id": "alpha",
+          "mirrors": []
+        }
+      ],
+      "expectedDiagnostics": [
+        {
+          "code": "MOLDEA_TEXT_INVALID_UTF8",
+          "details": {},
+          "entity": null,
+          "message": "The text document is not valid UTF-8.",
+          "path": "/mirrors/a-invalid-utf8.md",
+          "pointer": null,
+          "range": null
+        },
+        {
+          "code": "MOLDEA_TEXT_NUL_FORBIDDEN",
+          "details": {},
+          "entity": null,
+          "message": "The text document contains a forbidden NUL character.",
+          "path": "/mirrors/b-nul.md",
+          "pointer": null,
+          "range": {
+            "start": {
+              "line": 1,
+              "column": 7,
+              "offset": 6
+            },
+            "end": {
+              "line": 1,
+              "column": 8,
+              "offset": 7
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -78,7 +78,9 @@ Repository references, bindings, capability implementations, unresolved-requirem
 
 Core now also contains internal readers for every discovered runtime-guidance file and for convention-owned registered-agent assets. Runtime guidance is normalized, digested, checked for non-whitespace content, and reconciled with each agent's optional framework guidance path. Registered agents are reconciled with exact directories, mandatory descriptions and instructions, optional handoff descriptions, Unicode-whitespace-trimmed description limits, forbidden runtime-variable delimiters, opening instruction identity, and complete runtime-placeholder grammar and declaration usage. Placeholder diagnostics preserve scalar-aware source ranges and deterministic declaration pointers. Unregistered directories and missing registered assets produce deterministic diagnostics without rereading unregistered content or cascading from discovery-owned failures.
 
-These layers remain intentionally internal. Mirrors, final project indexing, adapter execution, and the public `inspectProject` operation remain deferred until universal repository validation can produce one complete trustworthy project index.
+Declared mirrors are resolved through the same inspection reader and compared with their owning canonical instruction after strict text decoding and repository-format normalization. One leading byte-order mark and CRLF or CR line endings are normalized; all other content differences remain significant. Only exact normalized matches retain mirror and canonical digests. Missing, non-file, symlink, stale, and invalid-text mirrors produce deterministic diagnostics, while an unavailable canonical instruction suppresses mirror lookups and dependent diagnostics.
+
+These layers remain intentionally internal. Final project indexing, adapter execution, and the public `inspectProject` operation remain deferred until universal repository validation can produce one complete trustworthy project index.
 
 ## Development
 
