@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { execFileSync } from 'node:child_process';
+import { execFileSync, type ExecFileSyncOptionsWithStringEncoding } from 'node:child_process';
 import {
   copyFileSync,
   mkdtempSync,
@@ -32,6 +32,21 @@ interface IPackDryRunResult {
   readonly version: string;
 }
 
+/** Executes native or JavaScript package-manager entrypoints without a platform shell. */
+const runPackageManager = (
+  packageManagerEntrypoint: string,
+  commandArguments: readonly string[],
+  options: ExecFileSyncOptionsWithStringEncoding,
+): string => {
+  const isJavaScriptEntrypoint = /\.(?:c|m)?js$/u.test(packageManagerEntrypoint);
+
+  return execFileSync(
+    isJavaScriptEntrypoint ? process.execPath : packageManagerEntrypoint,
+    isJavaScriptEntrypoint ? [packageManagerEntrypoint, ...commandArguments] : commandArguments,
+    options,
+  );
+};
+
 const readDistributionFiles = (extension: string): readonly string[] => {
   return readdirSync(distributionDirectory, { recursive: true })
     .filter(
@@ -58,7 +73,7 @@ const packPackageTarball = (packageDirectory: string, packDirectory: string): st
 
   const existingFiles = new Set(readdirSync(packDirectory));
 
-  execFileSync(packageManagerEntrypoint, ['pack', '--pack-destination', packDirectory], {
+  runPackageManager(packageManagerEntrypoint, ['pack', '--pack-destination', packDirectory], {
     cwd: packageDirectory,
     encoding: 'utf8',
   });
@@ -116,7 +131,7 @@ describe('published Core package artifacts', () => {
       throw new Error('The package-manager entrypoint is unavailable.');
     }
 
-    const output = execFileSync(packageManagerEntrypoint, ['pack', '--dry-run', '--json'], {
+    const output = runPackageManager(packageManagerEntrypoint, ['pack', '--dry-run', '--json'], {
       cwd: projectDirectory,
       encoding: 'utf8',
     });
@@ -189,7 +204,7 @@ describe('published Core package artifacts', () => {
     const packDirectory = mkdtempSync(path.join(tmpdir(), 'moldea-core-pack-'));
 
     try {
-      execFileSync(packageManagerEntrypoint, ['pack', '--pack-destination', packDirectory], {
+      runPackageManager(packageManagerEntrypoint, ['pack', '--pack-destination', packDirectory], {
         cwd: projectDirectory,
         encoding: 'utf8',
       });
@@ -302,11 +317,15 @@ describe('published Core package artifacts', () => {
         )}\n`,
         'utf8',
       );
-      execFileSync(packageManagerEntrypoint, ['install', '--ignore-scripts', '--prefer-offline'], {
-        cwd: consumerDirectory,
-        encoding: 'utf8',
-        env: { ...process.env, CI: 'true' },
-      });
+      runPackageManager(
+        packageManagerEntrypoint,
+        ['install', '--ignore-scripts', '--prefer-offline'],
+        {
+          cwd: consumerDirectory,
+          encoding: 'utf8',
+          env: { ...process.env, CI: 'true' },
+        },
+      );
       execFileSync(process.execPath, [typescriptEntrypoint, '--project', 'tsconfig.json'], {
         cwd: consumerDirectory,
         encoding: 'utf8',

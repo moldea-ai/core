@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { execFileSync } from 'node:child_process';
+import { execFileSync, type ExecFileSyncOptionsWithStringEncoding } from 'node:child_process';
 import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 
@@ -40,6 +40,21 @@ interface IPackDryRunResult {
   readonly name: string;
   readonly version: string;
 }
+
+/** Executes native or JavaScript package-manager entrypoints without a platform shell. */
+const runPackageManager = (
+  packageManagerEntrypoint: string,
+  commandArguments: readonly string[],
+  options: ExecFileSyncOptionsWithStringEncoding,
+): string => {
+  const isJavaScriptEntrypoint = /\.(?:c|m)?js$/u.test(packageManagerEntrypoint);
+
+  return execFileSync(
+    isJavaScriptEntrypoint ? process.execPath : packageManagerEntrypoint,
+    isJavaScriptEntrypoint ? [packageManagerEntrypoint, ...commandArguments] : commandArguments,
+    options,
+  );
+};
 
 const readDistributionFiles = (extension: string): readonly string[] => {
   return readdirSync(distributionDirectory, { recursive: true })
@@ -95,7 +110,7 @@ describe('published package artifacts', () => {
       throw new Error('The package-manager entrypoint is unavailable.');
     }
 
-    const output = execFileSync(packageManagerEntrypoint, ['pack', '--dry-run', '--json'], {
+    const output = runPackageManager(packageManagerEntrypoint, ['pack', '--dry-run', '--json'], {
       cwd: projectDirectory,
       encoding: 'utf8',
     });
