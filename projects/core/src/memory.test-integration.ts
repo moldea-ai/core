@@ -63,6 +63,9 @@ describe('Core with the immutable memory repository reader', () => {
     const fixtureBytes = readFileSync(
       new URL('../../../fixtures/core/decision/1786131723456-use-postgresql.md', import.meta.url),
     );
+    const normalizedFixtureContent = new TextDecoder()
+      .decode(fixtureBytes)
+      .replace(/\r\n?/gu, '\n');
     const reader = createMemoryRepositoryReader([
       {
         content: fixtureBytes,
@@ -76,7 +79,7 @@ describe('Core with the immutable memory repository reader', () => {
     expect(result).toMatchObject({
       decision: {
         asset: {
-          content: new TextDecoder().decode(fixtureBytes),
+          content: normalizedFixtureContent,
           digest: 'sha256:cd0a78b8f51833e8004b6b9ab5a257c5019ad32ce8568a85d8bf00f0496312a8',
         },
         body: '\n# Use PostgreSQL\n\nUse PostgreSQL for durable project state.\n',
