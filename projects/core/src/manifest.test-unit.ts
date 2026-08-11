@@ -7,14 +7,13 @@ import { describe, expect, test } from 'vitest';
 import { parseRepositoryPath, RepositoryPathException } from '@moldea.ai/repository';
 
 import type { IFrameworkAdapterResult } from './adapter.js';
-import type { ICoreDiagnosticCode } from './diagnostics.js';
 import { createCore } from './core.js';
 import { CoreOperationException } from './exceptions.js';
 
 interface IInvalidManifestCase {
   readonly name: string;
   readonly content: string;
-  readonly codes: readonly ICoreDiagnosticCode[];
+  readonly expectedDiagnostics: readonly unknown[];
 }
 
 const fixtureDirectory = path.resolve(
@@ -32,6 +31,8 @@ const readFixture = (fileName: string): string =>
 const invalidCases = JSON.parse(
   readFixture('invalid-cases.json'),
 ) as readonly IInvalidManifestCase[];
+const toJsonValue = (candidate: unknown): unknown =>
+  JSON.parse(JSON.stringify(candidate)) as unknown;
 
 describe('Core manifest parsing', () => {
   test('parses the minimal manifest into a frozen normalized asset', async () => {
@@ -162,13 +163,13 @@ describe('Core manifest parsing', () => {
 
   test.each(invalidCases)(
     'returns all-or-nothing diagnostics for $name',
-    async ({ content, codes }) => {
+    async ({ content, expectedDiagnostics }) => {
       const result = await createCore().parseManifest({ content, path: manifestPath });
 
       expect(result.valid).toBe(false);
       expect(result.asset).toBeNull();
       expect(result.manifest).toBeNull();
-      expect(result.diagnostics.map(({ code }) => code)).toStrictEqual(codes);
+      expect(toJsonValue(result.diagnostics)).toStrictEqual(expectedDiagnostics);
     },
   );
 

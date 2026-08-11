@@ -33,6 +33,7 @@ interface IProjectIndexFixture {
     readonly manifest: string;
     readonly entries: readonly IFixtureEntry[];
     readonly expectedFormatVersion: 1;
+    readonly expectedProjectFixture: string | null;
   }[];
 }
 
@@ -112,6 +113,22 @@ const reverseEnumeration = (repository: IRepositoryReader): IRepositoryReader =>
 
 const toJsonValue = (value: unknown): unknown => JSON.parse(JSON.stringify(value)) as unknown;
 
+const readExpectedProject = (fixtureCase: IProjectIndexFixture['cases'][number]): unknown => {
+  if (fixtureCase.expectedProjectFixture === null) {
+    return null;
+  }
+
+  return JSON.parse(
+    readFileSync(
+      new URL(
+        `../../../fixtures/core/project-index/${fixtureCase.expectedProjectFixture}`,
+        import.meta.url,
+      ),
+      'utf8',
+    ),
+  ) as unknown;
+};
+
 const getFixtureCase = (name: string): IProjectIndexFixture['cases'][number] => {
   const fixtureCase = fixture.cases.find((candidate) => candidate.name === name);
 
@@ -138,7 +155,7 @@ describe('Core universal project inspection through the memory repository reader
     expect(toJsonValue(result)).toStrictEqual({
       diagnostics: expectedDiagnostics,
       formatVersion: case_.expectedFormatVersion,
-      project: case_.name === 'complete universal project' ? completeExpectedProject : null,
+      project: readExpectedProject(case_),
     });
     expect(Object.isFrozen(result)).toBe(true);
     expect(Object.isFrozen(result.diagnostics)).toBe(true);

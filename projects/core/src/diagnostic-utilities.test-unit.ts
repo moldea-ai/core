@@ -5,6 +5,7 @@ import { parseRepositoryPath } from '@moldea.ai/repository';
 
 import { DEFAULT_CORE_RESOURCE_LIMITS } from './constants.js';
 import {
+  createCoreDiagnostic,
   createCoreDiagnosticCollector,
   normalizeDiagnosticDetails,
   normalizeDiagnostics,
@@ -12,6 +13,24 @@ import {
 import type { IAdapterDiagnostic } from './diagnostics.js';
 
 describe('Core diagnostic normalization', () => {
+  test('constructs the generic empty-text diagnostic from the exhaustive catalog', () => {
+    const diagnostic = createCoreDiagnostic({ code: 'MOLDEA_TEXT_EMPTY', path: null });
+
+    expect(JSON.parse(JSON.stringify(diagnostic))).toStrictEqual({
+      code: 'MOLDEA_TEXT_EMPTY',
+      details: {},
+      entity: null,
+      message: 'The required text document is empty.',
+      path: null,
+      pointer: null,
+      range: null,
+      source: 'core',
+    });
+    expect(Object.isFrozen(diagnostic)).toBe(true);
+    expect(Object.isFrozen(diagnostic.details)).toBe(true);
+    expect(Object.getPrototypeOf(diagnostic.details)).toBeNull();
+  });
+
   test('deduplicates, normalizes, and sorts diagnostics by the public contract', () => {
     const collector = createCoreDiagnosticCollector(
       { ...DEFAULT_CORE_RESOURCE_LIMITS, maxDiagnostics: 4 },

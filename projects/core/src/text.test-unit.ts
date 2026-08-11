@@ -176,12 +176,15 @@ describe('Core text normalization', () => {
     );
   });
 
-  test('revalidates forged repository paths without exposing content as a diagnostic', () => {
+  test.each([
+    ['path traversal', '/forged/../path'],
+    ['an unpaired surrogate', '/\ud800'],
+  ])('rejects forged repository paths containing %s before inspecting content', (_name, path) => {
     const core = createCore();
 
-    expect(() =>
-      core.normalizeText({ content: 'safe', path: '/forged/../path' as never }),
-    ).toThrowError(RepositoryPathException);
+    expect(() => core.normalizeText({ content: 'safe', path: path as never })).toThrowError(
+      RepositoryPathException,
+    );
   });
 });
 

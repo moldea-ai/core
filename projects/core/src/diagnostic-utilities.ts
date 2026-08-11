@@ -13,7 +13,7 @@ import { CoreOperationException, type ICoreOperation } from './exceptions.js';
 import { compareExactStrings } from './format-validation.js';
 import { createNullPrototypeRecord, freezeRecursively } from './immutable.js';
 
-const CORE_DIAGNOSTIC_MESSAGES: Partial<Record<ICoreDiagnosticCode, string>> = {
+const CORE_DIAGNOSTIC_MESSAGES: Record<ICoreDiagnosticCode, string> = {
   MOLDEA_AGENT_DESCRIPTION_INVALID: 'The agent description is invalid.',
   MOLDEA_AGENT_DESCRIPTION_MISSING: 'The agent description is missing.',
   MOLDEA_AGENT_DIRECTORY_MISSING: 'The registered agent directory is missing.',
@@ -86,6 +86,7 @@ const CORE_DIAGNOSTIC_MESSAGES: Partial<Record<ICoreDiagnosticCode, string>> = {
   MOLDEA_SKILL_IMPLEMENTATION_MISSING: 'The registered skill implementation is missing.',
   MOLDEA_SYMBOL_FORBIDDEN: 'A canonical moldea reference must not include a symbol.',
   MOLDEA_SYMBOL_INVALID: 'The repository-reference symbol is invalid.',
+  MOLDEA_TEXT_EMPTY: 'The required text document is empty.',
   MOLDEA_TEXT_INVALID_UNICODE:
     'The text document contains an invalid Unicode scalar representation.',
   MOLDEA_TEXT_INVALID_UTF8: 'The text document is not valid UTF-8.',

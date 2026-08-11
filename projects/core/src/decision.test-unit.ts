@@ -6,7 +6,6 @@ import { describe, expect, test } from 'vitest';
 
 import { parseRepositoryPath, RepositoryPathException } from '@moldea.ai/repository';
 
-import type { ICoreDiagnosticCode } from './diagnostics.js';
 import { createCore } from './core.js';
 import { CoreOperationException } from './exceptions.js';
 
@@ -14,7 +13,7 @@ interface IInvalidDecisionCase {
   readonly name: string;
   readonly path: string;
   readonly content: string;
-  readonly codes: readonly ICoreDiagnosticCode[];
+  readonly expectedDiagnostics: readonly unknown[];
 }
 
 const fixtureDirectory = path.resolve(
@@ -32,6 +31,8 @@ const invalidCases = JSON.parse(
   readFixture('invalid-cases.json'),
 ) as readonly IInvalidDecisionCase[];
 const completePath = parseRepositoryPath('/moldea/decisions/1786131723456-use-postgresql.md');
+const toJsonValue = (candidate: unknown): unknown =>
+  JSON.parse(JSON.stringify(candidate)) as unknown;
 
 describe('Core decision parsing', () => {
   test('parses a minimal decision into a frozen normalized asset', async () => {
@@ -79,7 +80,7 @@ describe('Core decision parsing', () => {
 
   test.each(invalidCases)(
     'returns all-or-nothing diagnostics for $name',
-    async ({ codes, content, path }) => {
+    async ({ content, expectedDiagnostics, path }) => {
       const result = await createCore().parseDecision({
         content,
         path: parseRepositoryPath(path),
@@ -87,7 +88,7 @@ describe('Core decision parsing', () => {
 
       expect(result.valid).toBe(false);
       expect(result.decision).toBeNull();
-      expect(result.diagnostics.map(({ code }) => code)).toStrictEqual(codes);
+      expect(toJsonValue(result.diagnostics)).toStrictEqual(expectedDiagnostics);
     },
   );
 

@@ -24,18 +24,13 @@ interface IProjectIndexFixture {
     readonly manifest: string;
     readonly entries: readonly IFixtureEntry[];
     readonly expectedFormatVersion: 1;
+    readonly expectedProjectFixture: string | null;
   }[];
 }
 
 const fixture = JSON.parse(
   readFileSync(new URL('../../../fixtures/core/project-index/cases.json', import.meta.url), 'utf8'),
 ) as IProjectIndexFixture;
-const completeExpectedProject = JSON.parse(
-  readFileSync(
-    new URL('../../../fixtures/core/project-index/complete.expected.json', import.meta.url),
-    'utf8',
-  ),
-) as unknown;
 const expectedDiagnosticsByCase = JSON.parse(
   readFileSync(
     new URL('../../../fixtures/core/project-index/diagnostics.expected.json', import.meta.url),
@@ -68,6 +63,22 @@ const createEntries = (
 const toJsonValue = (candidate: unknown): unknown =>
   JSON.parse(JSON.stringify(candidate)) as unknown;
 
+const readExpectedProject = (fixtureCase: IProjectIndexFixture['cases'][number]): unknown => {
+  if (fixtureCase.expectedProjectFixture === null) {
+    return null;
+  }
+
+  return JSON.parse(
+    readFileSync(
+      new URL(
+        `../../../fixtures/core/project-index/${fixtureCase.expectedProjectFixture}`,
+        import.meta.url,
+      ),
+      'utf8',
+    ),
+  ) as unknown;
+};
+
 describe('public Core project inspection', () => {
   test.each(fixture.cases)('returns the exact public result for $name', async (case_) => {
     const result = await createCore().inspectProject({
@@ -79,14 +90,12 @@ describe('public Core project inspection', () => {
       throw new TypeError(`The ${case_.name} diagnostic golden is required.`);
     }
 
-    const isComplete = case_.name === 'complete universal project';
-
     expect(toJsonValue(result)).toStrictEqual({
       diagnostics: expectedDiagnostics,
       evidence: [],
       formatVersion: case_.expectedFormatVersion,
-      project: isComplete ? completeExpectedProject : null,
-      valid: isComplete,
+      project: readExpectedProject(case_),
+      valid: case_.expectedProjectFixture !== null,
     });
     expect(Object.isFrozen(result)).toBe(true);
     expect(Object.isFrozen(result.diagnostics)).toBe(true);

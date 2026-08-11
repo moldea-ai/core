@@ -85,7 +85,99 @@
           "text": "export const schema = {};\n"
         }
       ],
-      "expectedFormatVersion": 1
+      "expectedFormatVersion": 1,
+      "expectedProjectFixture": "complete.expected.json"
+    },
+    {
+      "name": "minimal context-only project",
+      "manifest": "version: 1\n",
+      "entries": [
+        {
+          "path": "/moldea/project.md",
+          "type": "file",
+          "text": "# Context-only project\n"
+        },
+        {
+          "path": "/moldea/context/product.md",
+          "type": "file",
+          "text": "Product context.\n"
+        }
+      ],
+      "expectedFormatVersion": 1,
+      "expectedProjectFixture": "minimal-context.expected.json"
+    },
+    {
+      "name": "agent capability combinations",
+      "manifest": "version: 1\nagents:\n  both:\n    framework: { id: custom }\n    tools:\n      inspect:\n        name: inspectRecords\n        description: Inspects records when verification is required.\n        implementation: { path: /src/inspect.ts }\n    skills:\n      triage:\n        name: triage-records\n        description: Applies record triage when investigation is required.\n        implementation: { path: /.agents/skills/triage/SKILL.md }\n  neither:\n    framework: { id: custom }\n  skill-only:\n    framework: { id: custom }\n    skills:\n      document:\n        name: document-result\n        description: Documents verified results after work is complete.\n        implementation: { path: /.agents/skills/document/SKILL.md }\n  tool-only:\n    framework: { id: custom }\n    tools:\n      lookup:\n        name: lookupRecord\n        description: Retrieves a record when exact state is required.\n        implementation: { path: /src/lookup.ts }\n",
+      "entries": [
+        {
+          "path": "/moldea/project.md",
+          "type": "file",
+          "text": "# Capability project\n"
+        },
+        {
+          "path": "/moldea/agents/both/description.md",
+          "type": "file",
+          "text": "Uses tools and skills.\n"
+        },
+        {
+          "path": "/moldea/agents/both/instruction.md",
+          "type": "file",
+          "text": "You are the `both` agent.\n"
+        },
+        {
+          "path": "/moldea/agents/neither/description.md",
+          "type": "file",
+          "text": "Uses no registered capabilities.\n"
+        },
+        {
+          "path": "/moldea/agents/neither/instruction.md",
+          "type": "file",
+          "text": "You are the `neither` agent.\n"
+        },
+        {
+          "path": "/moldea/agents/skill-only/description.md",
+          "type": "file",
+          "text": "Uses one registered skill.\n"
+        },
+        {
+          "path": "/moldea/agents/skill-only/instruction.md",
+          "type": "file",
+          "text": "You are the `skill-only` agent.\n"
+        },
+        {
+          "path": "/moldea/agents/tool-only/description.md",
+          "type": "file",
+          "text": "Uses one registered tool.\n"
+        },
+        {
+          "path": "/moldea/agents/tool-only/instruction.md",
+          "type": "file",
+          "text": "You are the `tool-only` agent.\n"
+        },
+        {
+          "path": "/.agents/skills/document/SKILL.md",
+          "type": "file",
+          "text": "# Document result\n"
+        },
+        {
+          "path": "/.agents/skills/triage/SKILL.md",
+          "type": "file",
+          "text": "# Triage records\n"
+        },
+        {
+          "path": "/src/inspect.ts",
+          "type": "file",
+          "text": "export const inspectRecords = () => undefined;\n"
+        },
+        {
+          "path": "/src/lookup.ts",
+          "type": "file",
+          "text": "export const lookupRecord = () => undefined;\n"
+        }
+      ],
+      "expectedFormatVersion": 1,
+      "expectedProjectFixture": "capability-combinations.expected.json"
     },
     {
       "name": "independent invalid assets",
@@ -122,7 +214,8 @@
           "text": "\t\r\n"
         }
       ],
-      "expectedFormatVersion": 1
+      "expectedFormatVersion": 1,
+      "expectedProjectFixture": null
     },
     {
       "name": "invalid manifest with independent failures",
@@ -159,7 +252,8 @@
           "text": "You are the `rogue` agent.\n"
         }
       ],
-      "expectedFormatVersion": 1
+      "expectedFormatVersion": 1,
+      "expectedProjectFixture": null
     }
   ]
 }

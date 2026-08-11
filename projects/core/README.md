@@ -130,5 +130,4 @@ pnpm exec turbo run build --filter=@moldea.ai/core
 pnpm exec turbo run test --filter=@moldea.ai/core
 ```
 
-Unit and integration tests are colocated with their source. Repository-level fixtures use the
-immutable reader from `@moldea.ai/repository/memory`.
+Unit and integration tests are colocated with their source. Repository-level fixtures use the immutable reader from `@moldea.ai/repository/memory`. Exact conformance goldens cover document diagnostics, context-only repositories, every tool and skill combination, complete project indexes, and the shared framework-adapter boundary.

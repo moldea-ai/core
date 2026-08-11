@@ -8,6 +8,7 @@ import {
   isDecisionPath,
   isNonEmptySingleLine,
   isRepositorySymbol,
+  isReservedId,
   isSimpleGlob,
   isStableId,
   isUnicodeScalarText,
@@ -36,6 +37,40 @@ describe('Core manifest-format validation', () => {
   ])('isStableId(%s) -> %s', (candidate, expected) => {
     expect(isStableId(candidate)).toBe(expected);
   });
+
+  test.each([
+    'con',
+    'prn',
+    'aux',
+    'nul',
+    'com1',
+    'com2',
+    'com3',
+    'com4',
+    'com5',
+    'com6',
+    'com7',
+    'com8',
+    'com9',
+    'lpt1',
+    'lpt2',
+    'lpt3',
+    'lpt4',
+    'lpt5',
+    'lpt6',
+    'lpt7',
+    'lpt8',
+    'lpt9',
+  ])('treats %s as a Windows-reserved ID', (candidate) => {
+    expect(isReservedId(candidate)).toBe(true);
+  });
+
+  test.each(['console', 'printer', 'com0', 'com10', 'lpt0', 'lpt10', 'null'])(
+    'does not overmatch the valid ID %s as Windows-reserved',
+    (candidate) => {
+      expect(isReservedId(candidate)).toBe(false);
+    },
+  );
 
   test.each([
     ['CURRENT_DATETIME', true],
