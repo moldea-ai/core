@@ -1,0 +1,136 @@
+{
+  "cases": [
+    {
+      "name": "resolved bindings, references, capabilities, and exact impacts",
+      "manifest": "version: 1\ncontext:\n  /moldea/project.md:\n    bindings:\n      - path: /src/shared.ts\n        symbol: projectBinding\n    affectedBy:\n      - /src/**\n      - /src/exact.ts\nunresolved:\n  architecture:\n    category: design\n    effect: informational\n    description: Architecture remains open.\n    resolution: Record the decision.\n    related:\n      - path: /src/shared.ts\nagents:\n  reviewer:\n    framework:\n      id: custom\n    variables:\n      REGION:\n        description: Deployment region.\n    bindings:\n      runtimeAgent:\n        path: /src/shared.ts\n      variableProviders:\n        REGION:\n          path: /src/shared.ts\n    tools:\n      deploy:\n        name: deploy\n        description: Deploys changes when release approval is granted.\n        implementation:\n          path: /src/shared.ts\n          symbol: deploy\n        registration:\n          path: /src/shared.ts\n          symbol: deployTool\n        affectedBy:\n          - /tools/**\n          - /src/exact.ts\n    skills:\n      audit:\n        name: audit\n        description: Audits changes when repository verification is required.\n        implementation:\n          path: /src/shared.ts\n        affectedBy:\n          - /skills/**\n          - /src/exact.ts\n    affectedBy:\n      - /agents/**\n      - /src/exact.ts\n    unresolved:\n      verification:\n        category: testing\n        effect: warning\n        description: Verification remains incomplete.\n        resolution: Complete verification.\n        related:\n          - path: /src/shared.ts\n",
+      "entries": [
+        {
+          "content": "export const shared = true;\n",
+          "path": "/src/shared.ts",
+          "type": "file"
+        },
+        {
+          "content": "export const exact = true;\n",
+          "path": "/src/exact.ts",
+          "type": "file"
+        }
+      ],
+      "expectedDiagnostics": []
+    },
+    {
+      "name": "missing, directory, and symlink targets",
+      "manifest": "version: 1\ncontext:\n  /moldea/project.md:\n    bindings:\n      - path: /src/c-link.ts\n      - path: /src/b-missing.ts\n      - path: /src/a-directory\n    affectedBy:\n      - /impact/c-link.ts\n      - /impact/b-directory\n      - /impact/a-missing.ts\n      - /impact/**\nagents:\n  reviewer:\n    framework:\n      id: custom\n    tools:\n      deploy:\n        name: deploy\n        description: Deploys changes when release approval is granted.\n        implementation:\n          path: /tools/missing.ts\n    skills:\n      audit:\n        name: audit\n        description: Audits changes when repository verification is required.\n        implementation:\n          path: /skills/link.ts\n",
+      "entries": [
+        {
+          "path": "/src/a-directory",
+          "type": "directory"
+        },
+        {
+          "path": "/src/c-link.ts",
+          "type": "symlink"
+        },
+        {
+          "path": "/impact/b-directory",
+          "type": "directory"
+        },
+        {
+          "path": "/impact/c-link.ts",
+          "type": "symlink"
+        },
+        {
+          "path": "/skills/link.ts",
+          "type": "symlink"
+        }
+      ],
+      "expectedDiagnostics": [
+        {
+          "code": "MOLDEA_SKILL_IMPLEMENTATION_MISSING",
+          "details": {
+            "actualType": "symlink",
+            "reason": "symlink",
+            "referencedPath": "/skills/link.ts"
+          },
+          "entity": {
+            "agentId": "reviewer",
+            "capabilityId": "audit",
+            "capabilityKind": "skill"
+          },
+          "path": "/moldea/moldea.yaml",
+          "pointer": "/agents/reviewer/skills/audit/implementation"
+        },
+        {
+          "code": "MOLDEA_TOOL_IMPLEMENTATION_MISSING",
+          "details": {
+            "reason": "missing",
+            "referencedPath": "/tools/missing.ts"
+          },
+          "entity": {
+            "agentId": "reviewer",
+            "capabilityId": "deploy",
+            "capabilityKind": "tool"
+          },
+          "path": "/moldea/moldea.yaml",
+          "pointer": "/agents/reviewer/tools/deploy/implementation"
+        },
+        {
+          "code": "MOLDEA_IMPACT_PATH_MISSING",
+          "details": {
+            "impactPath": "/impact/a-missing.ts"
+          },
+          "entity": null,
+          "path": "/moldea/moldea.yaml",
+          "pointer": "/context/~1moldea~1project.md/affectedBy/1"
+        },
+        {
+          "code": "MOLDEA_IMPACT_PATH_NOT_FILE",
+          "details": {
+            "actualType": "directory",
+            "impactPath": "/impact/b-directory"
+          },
+          "entity": null,
+          "path": "/moldea/moldea.yaml",
+          "pointer": "/context/~1moldea~1project.md/affectedBy/2"
+        },
+        {
+          "code": "MOLDEA_IMPACT_PATH_NOT_FILE",
+          "details": {
+            "actualType": "symlink",
+            "impactPath": "/impact/c-link.ts"
+          },
+          "entity": null,
+          "path": "/moldea/moldea.yaml",
+          "pointer": "/context/~1moldea~1project.md/affectedBy/3"
+        },
+        {
+          "code": "MOLDEA_REFERENCE_NOT_FILE",
+          "details": {
+            "actualType": "directory",
+            "referencedPath": "/src/a-directory"
+          },
+          "entity": null,
+          "path": "/moldea/moldea.yaml",
+          "pointer": "/context/~1moldea~1project.md/bindings/0"
+        },
+        {
+          "code": "MOLDEA_REFERENCE_MISSING",
+          "details": {
+            "referencedPath": "/src/b-missing.ts"
+          },
+          "entity": null,
+          "path": "/moldea/moldea.yaml",
+          "pointer": "/context/~1moldea~1project.md/bindings/1"
+        },
+        {
+          "code": "MOLDEA_REFERENCE_SYMLINK",
+          "details": {
+            "actualType": "symlink",
+            "referencedPath": "/src/c-link.ts"
+          },
+          "entity": null,
+          "path": "/moldea/moldea.yaml",
+          "pointer": "/context/~1moldea~1project.md/bindings/2"
+        }
+      ]
+    }
+  ]
+}
