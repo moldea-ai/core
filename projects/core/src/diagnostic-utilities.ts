@@ -81,8 +81,12 @@ const CORE_DIAGNOSTIC_MESSAGES: Partial<Record<ICoreDiagnosticCode, string>> = {
   MOLDEA_TEXT_NUL_FORBIDDEN: 'The text document contains a forbidden NUL character.',
   MOLDEA_TOOL_IMPLEMENTATION_MISSING: 'The registered tool implementation is missing.',
   MOLDEA_VARIABLE_ID_INVALID: 'The runtime-variable ID is invalid.',
+  MOLDEA_VARIABLE_PLACEHOLDER_MALFORMED:
+    'The agent instruction contains a malformed runtime-variable placeholder.',
   MOLDEA_VARIABLE_PROVIDER_UNDECLARED:
     'A variable-provider binding exists for an undeclared variable.',
+  MOLDEA_VARIABLE_UNDECLARED: 'The agent instruction references an undeclared runtime variable.',
+  MOLDEA_VARIABLE_UNUSED: 'The declared runtime variable is unused by the agent instruction.',
   MOLDEA_YAML_DUPLICATE_KEY: 'The YAML document contains a duplicate mapping key.',
   MOLDEA_YAML_FEATURE_UNSUPPORTED: 'The YAML document uses an unsupported feature.',
   MOLDEA_YAML_MALFORMED: 'The YAML document is malformed.',

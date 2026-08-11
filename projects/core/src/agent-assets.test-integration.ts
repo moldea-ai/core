@@ -28,9 +28,12 @@ interface IFixtureEntry {
 
 interface IExpectedDiagnostic {
   readonly code: string;
-  readonly details: Readonly<Record<string, string>>;
-  readonly entity: Readonly<Record<string, string>>;
+  readonly details: Readonly<Record<string, string | number>>;
+  readonly entity: Readonly<Record<string, string>> | null;
+  readonly message: string;
   readonly path: string;
+  readonly pointer: string | null;
+  readonly range: ICoreDiagnostic['range'];
 }
 
 interface IAgentAssetFixture {
@@ -91,11 +94,14 @@ const reverseEnumeration = (repository: IRepositoryReader): IRepositoryReader =>
 });
 
 const simplifyDiagnostics = (diagnostics: readonly ICoreDiagnostic[]) => {
-  return diagnostics.map(({ code, details, entity, path }) => ({
+  return diagnostics.map(({ code, details, entity, message, path, pointer, range }) => ({
     code,
     details: { ...details },
     entity: entity === null ? null : { ...entity },
+    message,
     path,
+    pointer,
+    range,
   }));
 };
 
@@ -292,6 +298,92 @@ describe('Core agent assets through the memory repository reader', () => {
         instruction: null,
       },
     ]);
+  });
+
+  test('validates placeholders even when instruction identity is invalid', async () => {
+    const instructionPath = parseRepositoryPath('/moldea/agents/alpha/instruction.md');
+    const manifest =
+      'version: 1\nagents:\n  alpha:\n    framework:\n      id: custom\n    variables:\n      DECLARED:\n        description: Declared value.\n';
+    const repository = createMemoryRepositoryReader([
+      { content: manifest, path: manifestPath, type: 'file' },
+      { content: '# Project\n', path: '/moldea/project.md', type: 'file' },
+      {
+        content: 'Introduction.\nYou are the `alpha` agent. {{UNKNOWN}}\n',
+        path: instructionPath,
+        type: 'file',
+      },
+      {
+        content: 'Alpha agent.\n',
+        path: '/moldea/agents/alpha/description.md',
+        type: 'file',
+      },
+    ]);
+    const result = await inspectFixture(repository, manifest);
+
+    expect(result.diagnostics).toMatchObject([
+      { code: 'MOLDEA_AGENT_IDENTITY_INVALID', path: instructionPath },
+      {
+        code: 'MOLDEA_VARIABLE_UNDECLARED',
+        entity: { agentId: 'alpha', variableId: 'UNKNOWN' },
+        path: instructionPath,
+      },
+      {
+        code: 'MOLDEA_VARIABLE_UNUSED',
+        entity: { agentId: 'alpha', variableId: 'DECLARED' },
+        path: manifestPath,
+      },
+    ]);
+  });
+
+  test('skips placeholder validation when an instruction asset is unavailable', async () => {
+    const manifest =
+      'version: 1\nagents:\n  empty:\n    framework:\n      id: custom\n    variables:\n      VALUE:\n        description: Runtime value.\n  invalid:\n    framework:\n      id: custom\n    variables:\n      VALUE:\n        description: Runtime value.\n  missing:\n    framework:\n      id: custom\n    variables:\n      VALUE:\n        description: Runtime value.\n';
+    const repository = createMemoryRepositoryReader([
+      { content: manifest, path: manifestPath, type: 'file' },
+      { content: '# Project\n', path: '/moldea/project.md', type: 'file' },
+      {
+        content: 'Empty agent.',
+        path: '/moldea/agents/empty/description.md',
+        type: 'file',
+      },
+      {
+        content: '\u0085\u2003\n',
+        path: '/moldea/agents/empty/instruction.md',
+        type: 'file',
+      },
+      {
+        content: 'Invalid agent.',
+        path: '/moldea/agents/invalid/description.md',
+        type: 'file',
+      },
+      {
+        content: Uint8Array.from([0xff]),
+        path: '/moldea/agents/invalid/instruction.md',
+        type: 'file',
+      },
+      {
+        content: 'Missing agent.',
+        path: '/moldea/agents/missing/description.md',
+        type: 'file',
+      },
+    ]);
+    const result = await inspectFixture(repository, manifest);
+
+    expect(result.diagnostics).toMatchObject([
+      {
+        code: 'MOLDEA_AGENT_INSTRUCTION_EMPTY',
+        path: '/moldea/agents/empty/instruction.md',
+      },
+      {
+        code: 'MOLDEA_TEXT_INVALID_UTF8',
+        path: '/moldea/agents/invalid/instruction.md',
+      },
+      {
+        code: 'MOLDEA_AGENT_INSTRUCTION_MISSING',
+        path: '/moldea/agents/missing/instruction.md',
+      },
+    ]);
+    expect(result.diagnostics.some(({ code }) => code === 'MOLDEA_VARIABLE_UNUSED')).toBe(false);
   });
 
   test('retains unrelated validation after strict text failures', async () => {

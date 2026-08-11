@@ -17,6 +17,9 @@ import type { IAgentManifestEntry, IMoldeaManifestV1 } from './format.js';
 import { freezeRecursively } from './immutable.js';
 import type { ICoreOptionsSnapshot } from './options.js';
 import { readRepositoryTextAsset } from './repository-text.js';
+import { validateRuntimePlaceholders } from './runtime-placeholder-validation.js';
+
+const MANIFEST_PATH = parseRepositoryPath('/moldea/moldea.yaml');
 
 // internal agent assets retained even when later validation is still required
 export interface IInspectedAgentAssets {
@@ -90,6 +93,7 @@ const readInstruction = async (
   repository: IRepositoryReader,
   path: IRepositoryPath,
   agentId: string,
+  declaration: IAgentManifestEntry,
   options: ICoreOptionsSnapshot,
   collector: ICoreDiagnosticCollector,
   signal?: AbortSignal,
@@ -103,6 +107,19 @@ const readInstruction = async (
 
   const validation = validateAgentInstruction(readResult.asset, agentId, options.limits);
   addDiagnostics(collector, validation.diagnostics);
+
+  if (validation.instruction !== null) {
+    addDiagnostics(
+      collector,
+      validateRuntimePlaceholders(
+        MANIFEST_PATH,
+        agentId,
+        validation.instruction,
+        declaration.variables ?? {},
+        options.limits,
+      ),
+    );
+  }
 
   return validation.instruction;
 };
@@ -224,6 +241,7 @@ export const inspectAgentAssets = async (
         repository,
         discovered.instruction,
         agentId,
+        declaration,
         options,
         collector,
         signal,

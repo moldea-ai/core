@@ -92,7 +92,10 @@
           "entity": {
             "agentId": "absent"
           },
-          "path": "/moldea/agents/absent"
+          "message": "The registered agent directory is missing.",
+          "path": "/moldea/agents/absent",
+          "pointer": null,
+          "range": null
         },
         {
           "code": "MOLDEA_AGENT_INSTRUCTION_MISSING",
@@ -100,7 +103,10 @@
           "entity": {
             "agentId": "description-only"
           },
-          "path": "/moldea/agents/description-only/instruction.md"
+          "message": "The agent instruction is missing.",
+          "path": "/moldea/agents/description-only/instruction.md",
+          "pointer": null,
+          "range": null
         },
         {
           "code": "MOLDEA_AGENT_DESCRIPTION_MISSING",
@@ -108,7 +114,10 @@
           "entity": {
             "agentId": "partial"
           },
-          "path": "/moldea/agents/partial/description.md"
+          "message": "The agent description is missing.",
+          "path": "/moldea/agents/partial/description.md",
+          "pointer": null,
+          "range": null
         },
         {
           "code": "MOLDEA_AGENT_DIRECTORY_UNREGISTERED",
@@ -116,7 +125,10 @@
           "entity": {
             "agentId": "rogue"
           },
-          "path": "/moldea/agents/rogue"
+          "message": "The agent directory is not registered.",
+          "path": "/moldea/agents/rogue",
+          "pointer": null,
+          "range": null
         }
       ]
     },
@@ -157,7 +169,10 @@
           "entity": {
             "agentId": "alpha"
           },
-          "path": "/moldea/agents/alpha/description.md"
+          "message": "The agent description is invalid.",
+          "path": "/moldea/agents/alpha/description.md",
+          "pointer": null,
+          "range": null
         },
         {
           "code": "MOLDEA_AGENT_HANDOFF_DESCRIPTION_INVALID",
@@ -167,7 +182,10 @@
           "entity": {
             "agentId": "alpha"
           },
-          "path": "/moldea/agents/alpha/handoff-description.md"
+          "message": "The agent handoff description is invalid.",
+          "path": "/moldea/agents/alpha/handoff-description.md",
+          "pointer": null,
+          "range": null
         },
         {
           "code": "MOLDEA_AGENT_IDENTITY_INVALID",
@@ -177,7 +195,121 @@
           "entity": {
             "agentId": "alpha"
           },
-          "path": "/moldea/agents/alpha/instruction.md"
+          "message": "The agent instruction identity is invalid.",
+          "path": "/moldea/agents/alpha/instruction.md",
+          "pointer": null,
+          "range": null
+        }
+      ]
+    },
+    {
+      "name": "runtime placeholder validation",
+      "manifest": "version: 1\nagents:\n  alpha:\n    framework:\n      id: custom\n    variables:\n      USED:\n        description: Used runtime value.\n      UNUSED:\n        description: Unused runtime value.\n",
+      "entries": [
+        {
+          "path": "/moldea/agents/alpha/description.md",
+          "type": "file",
+          "text": "Alpha agent.\n"
+        },
+        {
+          "path": "/moldea/agents/alpha/instruction.md",
+          "type": "file",
+          "text": "You are the `alpha` agent.\n😀 {{USED}}{{UNKNOWN}} {{bad}} }}\n"
+        }
+      ],
+      "expectedAgents": [
+        {
+          "id": "alpha",
+          "description": "Alpha agent.",
+          "instruction": "You are the `alpha` agent.\n😀 {{USED}}{{UNKNOWN}} {{bad}} }}\n",
+          "handoffDescription": null
+        }
+      ],
+      "expectedDiagnostics": [
+        {
+          "code": "MOLDEA_VARIABLE_UNDECLARED",
+          "details": {
+            "occurrences": 1
+          },
+          "entity": {
+            "agentId": "alpha",
+            "variableId": "UNKNOWN"
+          },
+          "message": "The agent instruction references an undeclared runtime variable.",
+          "path": "/moldea/agents/alpha/instruction.md",
+          "pointer": null,
+          "range": {
+            "end": {
+              "column": 22,
+              "line": 2,
+              "offset": 48
+            },
+            "start": {
+              "column": 11,
+              "line": 2,
+              "offset": 37
+            }
+          }
+        },
+        {
+          "code": "MOLDEA_VARIABLE_PLACEHOLDER_MALFORMED",
+          "details": {
+            "reason": "invalid-variable-id"
+          },
+          "entity": {
+            "agentId": "alpha"
+          },
+          "message": "The agent instruction contains a malformed runtime-variable placeholder.",
+          "path": "/moldea/agents/alpha/instruction.md",
+          "pointer": null,
+          "range": {
+            "end": {
+              "column": 30,
+              "line": 2,
+              "offset": 56
+            },
+            "start": {
+              "column": 23,
+              "line": 2,
+              "offset": 49
+            }
+          }
+        },
+        {
+          "code": "MOLDEA_VARIABLE_PLACEHOLDER_MALFORMED",
+          "details": {
+            "reason": "unmatched-closing"
+          },
+          "entity": {
+            "agentId": "alpha"
+          },
+          "message": "The agent instruction contains a malformed runtime-variable placeholder.",
+          "path": "/moldea/agents/alpha/instruction.md",
+          "pointer": null,
+          "range": {
+            "end": {
+              "column": 33,
+              "line": 2,
+              "offset": 59
+            },
+            "start": {
+              "column": 31,
+              "line": 2,
+              "offset": 57
+            }
+          }
+        },
+        {
+          "code": "MOLDEA_VARIABLE_UNUSED",
+          "details": {},
+          "entity": {
+            "agentId": "alpha",
+            "variableId": "UNUSED"
+          },
+          "message": "The declared runtime variable is unused by the agent instruction.",
+          "path": "/moldea/moldea.yaml",
+          "pointer": "/agents/alpha/variables/UNUSED",
+          "range": null
         }
       ]
     }
