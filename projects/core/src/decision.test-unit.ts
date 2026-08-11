@@ -37,12 +37,13 @@ describe('Core decision parsing', () => {
   test('parses a minimal decision into a frozen normalized asset', async () => {
     const path = parseRepositoryPath('/moldea/decisions/1767225600000-adopt-core.md');
     const content = readFixture('1767225600000-adopt-core.md');
+    const normalizedContent = content.replace(/\r\n?/gu, '\n');
     const result = await createCore().parseDecision({ content, path });
 
     expect(result).toStrictEqual({
       decision: {
         asset: {
-          content,
+          content: normalizedContent,
           digest: 'sha256:b88db2c192a4a0a19c5ceed8a99aaecac794420dfbed7a3e85d8bccf07ba13ad',
           path,
           scalarLength: 139,
@@ -66,13 +67,14 @@ describe('Core decision parsing', () => {
 
   test('normalizes every decision field while preserving the exact body', async () => {
     const content = readFixture('1786131723456-use-postgresql.md');
+    const normalizedContent = content.replace(/\r\n?/gu, '\n');
     const expected = JSON.parse(readFixture('valid-complete.expected.json')) as unknown;
     const result = await createCore().parseDecision({ content, path: completePath });
 
     expect(result.valid).toBe(true);
     expect(result.decision).toMatchObject(expected as object);
     expect(result.decision?.supersedes).toStrictEqual(['1784000000000', '1785000000000']);
-    expect(result.decision?.asset.content).toBe(content);
+    expect(result.decision?.asset.content).toBe(normalizedContent);
   });
 
   test.each(invalidCases)(

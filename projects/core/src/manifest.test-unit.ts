@@ -36,11 +36,12 @@ const invalidCases = JSON.parse(
 describe('Core manifest parsing', () => {
   test('parses the minimal manifest into a frozen normalized asset', async () => {
     const content = readFixture('valid-minimal.yaml');
+    const normalizedContent = content.replace(/\r\n?/gu, '\n');
     const result = await createCore().parseManifest({ content, path: manifestPath });
 
     expect(result).toStrictEqual({
       asset: {
-        content,
+        content: normalizedContent,
         digest: 'sha256:09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847',
         path: manifestPath,
         scalarLength: 11,
