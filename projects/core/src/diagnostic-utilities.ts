@@ -13,7 +13,14 @@ import { compareExactStrings } from './format-validation.js';
 import { createNullPrototypeRecord, freezeRecursively } from './immutable.js';
 
 const CORE_DIAGNOSTIC_MESSAGES: Partial<Record<ICoreDiagnosticCode, string>> = {
+  MOLDEA_AGENT_DESCRIPTION_INVALID: 'The agent description is invalid.',
+  MOLDEA_AGENT_DESCRIPTION_MISSING: 'The agent description is missing.',
+  MOLDEA_AGENT_DIRECTORY_MISSING: 'The registered agent directory is missing.',
+  MOLDEA_AGENT_DIRECTORY_UNREGISTERED: 'The agent directory is not registered.',
   MOLDEA_AGENT_HANDOFF_DESCRIPTION_INVALID: 'The agent handoff description is invalid.',
+  MOLDEA_AGENT_IDENTITY_INVALID: 'The agent instruction identity is invalid.',
+  MOLDEA_AGENT_INSTRUCTION_EMPTY: 'The agent instruction is empty.',
+  MOLDEA_AGENT_INSTRUCTION_MISSING: 'The agent instruction is missing.',
   MOLDEA_CANONICAL_ASSET_SYMLINK: 'The canonical asset is a symlink.',
   MOLDEA_CANONICAL_PATH_UNRECOGNIZED: 'The canonical path is unrecognized.',
   MOLDEA_CAPABILITY_DESCRIPTION_INVALID: 'The capability description is invalid.',
@@ -63,6 +70,8 @@ const CORE_DIAGNOSTIC_MESSAGES: Partial<Record<ICoreDiagnosticCode, string>> = {
   MOLDEA_PATTERN_DUPLICATE: 'The impact pattern is duplicated.',
   MOLDEA_PROJECT_FILE_MISSING: 'The project file is missing.',
   MOLDEA_REFERENCE_MISSING: 'The referenced repository path does not exist.',
+  MOLDEA_RUNTIME_GUIDANCE_EMPTY: 'The runtime guidance is empty.',
+  MOLDEA_RUNTIME_GUIDANCE_MISSING: 'The referenced runtime guidance does not exist.',
   MOLDEA_SKILL_IMPLEMENTATION_MISSING: 'The registered skill implementation is missing.',
   MOLDEA_SYMBOL_FORBIDDEN: 'A canonical moldea reference must not include a symbol.',
   MOLDEA_SYMBOL_INVALID: 'The repository-reference symbol is invalid.',

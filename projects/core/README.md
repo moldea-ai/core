@@ -72,7 +72,9 @@ Core's repository-level foundation composes canonical discovery with exact decis
 
 The internal relationship layer also validates top-level and per-agent context and decision paths against canonical discovery and the parsed decision graph. Context targets must exist, and decision targets must exist and be accepted. Discovery and document diagnostics retain ownership of invalid targets so dependent missing or inactive diagnostics do not cascade.
 
-These layers remain intentionally internal. Relationship bindings and impact paths, final project indexing, adapter execution, and the public `inspectProject` operation remain deferred until universal repository validation can produce one complete trustworthy project index.
+Core now also contains internal readers for every discovered runtime-guidance file and for convention-owned registered-agent assets. Runtime guidance is normalized, digested, checked for non-whitespace content, and reconciled with each agent's optional framework guidance path. Registered agents are reconciled with exact directories, mandatory descriptions and instructions, optional handoff descriptions, Unicode-whitespace-trimmed description limits, forbidden runtime-variable delimiters, and opening instruction identity. Unregistered directories and missing registered assets produce deterministic diagnostics without rereading unregistered content or cascading from discovery-owned failures.
+
+These layers remain intentionally internal. Runtime placeholders, relationship bindings and impact paths, mirrors, final project indexing, adapter execution, and the public `inspectProject` operation remain deferred until universal repository validation can produce one complete trustworthy project index.
 
 ## Development
 

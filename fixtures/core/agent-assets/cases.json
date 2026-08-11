@@ -1,0 +1,185 @@
+{
+  "cases": [
+    {
+      "name": "complete sorted registered agents",
+      "manifest": "version: 1\nagents:\n  zeta:\n    framework:\n      id: custom\n  alpha:\n    framework:\n      id: custom\n",
+      "entries": [
+        {
+          "path": "/moldea/agents/zeta/instruction.md",
+          "type": "file",
+          "text": "You are the `zeta` agent.\n"
+        },
+        {
+          "path": "/moldea/agents/alpha/handoff-description.md",
+          "type": "file",
+          "text": "Route requests to alpha. "
+        },
+        {
+          "path": "/moldea/agents/zeta/description.md",
+          "type": "file",
+          "text": "Zeta agent.\n"
+        },
+        {
+          "path": "/moldea/agents/alpha/instruction.md",
+          "type": "file",
+          "text": "# Purpose\n\nYou are the `alpha` agent.\n"
+        },
+        {
+          "path": "/moldea/agents/alpha/description.md",
+          "type": "file",
+          "text": "  Alpha agent 😀.\n"
+        }
+      ],
+      "expectedAgents": [
+        {
+          "id": "alpha",
+          "description": "Alpha agent 😀.",
+          "instruction": "# Purpose\n\nYou are the `alpha` agent.\n",
+          "handoffDescription": "Route requests to alpha."
+        },
+        {
+          "id": "zeta",
+          "description": "Zeta agent.",
+          "instruction": "You are the `zeta` agent.\n",
+          "handoffDescription": null
+        }
+      ],
+      "expectedDiagnostics": []
+    },
+    {
+      "name": "missing and unregistered agent assets",
+      "manifest": "version: 1\nagents:\n  partial:\n    framework:\n      id: custom\n  description-only:\n    framework:\n      id: custom\n  absent:\n    framework:\n      id: custom\n",
+      "entries": [
+        {
+          "path": "/moldea/agents/description-only/description.md",
+          "type": "file",
+          "text": "Description-only agent.\n"
+        },
+        {
+          "path": "/moldea/agents/partial/instruction.md",
+          "type": "file",
+          "text": "You are the `partial` agent.\n"
+        },
+        {
+          "path": "/moldea/agents/rogue",
+          "type": "directory"
+        }
+      ],
+      "expectedAgents": [
+        {
+          "id": "absent",
+          "description": null,
+          "instruction": null,
+          "handoffDescription": null
+        },
+        {
+          "id": "description-only",
+          "description": "Description-only agent.",
+          "instruction": null,
+          "handoffDescription": null
+        },
+        {
+          "id": "partial",
+          "description": null,
+          "instruction": "You are the `partial` agent.\n",
+          "handoffDescription": null
+        }
+      ],
+      "expectedDiagnostics": [
+        {
+          "code": "MOLDEA_AGENT_DIRECTORY_MISSING",
+          "details": {},
+          "entity": {
+            "agentId": "absent"
+          },
+          "path": "/moldea/agents/absent"
+        },
+        {
+          "code": "MOLDEA_AGENT_INSTRUCTION_MISSING",
+          "details": {},
+          "entity": {
+            "agentId": "description-only"
+          },
+          "path": "/moldea/agents/description-only/instruction.md"
+        },
+        {
+          "code": "MOLDEA_AGENT_DESCRIPTION_MISSING",
+          "details": {},
+          "entity": {
+            "agentId": "partial"
+          },
+          "path": "/moldea/agents/partial/description.md"
+        },
+        {
+          "code": "MOLDEA_AGENT_DIRECTORY_UNREGISTERED",
+          "details": {},
+          "entity": {
+            "agentId": "rogue"
+          },
+          "path": "/moldea/agents/rogue"
+        }
+      ]
+    },
+    {
+      "name": "invalid registered agent content",
+      "manifest": "version: 1\nagents:\n  alpha:\n    framework:\n      id: custom\n",
+      "entries": [
+        {
+          "path": "/moldea/agents/alpha/description.md",
+          "type": "file",
+          "text": "Uses {{FORBIDDEN}}."
+        },
+        {
+          "path": "/moldea/agents/alpha/instruction.md",
+          "type": "file",
+          "text": "Introduction.\nYou are the `alpha` agent.\n"
+        },
+        {
+          "path": "/moldea/agents/alpha/handoff-description.md",
+          "type": "file",
+          "text": " \n"
+        }
+      ],
+      "expectedAgents": [
+        {
+          "id": "alpha",
+          "description": null,
+          "instruction": "Introduction.\nYou are the `alpha` agent.\n",
+          "handoffDescription": null
+        }
+      ],
+      "expectedDiagnostics": [
+        {
+          "code": "MOLDEA_AGENT_DESCRIPTION_INVALID",
+          "details": {
+            "reason": "runtime-variable-delimiter"
+          },
+          "entity": {
+            "agentId": "alpha"
+          },
+          "path": "/moldea/agents/alpha/description.md"
+        },
+        {
+          "code": "MOLDEA_AGENT_HANDOFF_DESCRIPTION_INVALID",
+          "details": {
+            "reason": "empty"
+          },
+          "entity": {
+            "agentId": "alpha"
+          },
+          "path": "/moldea/agents/alpha/handoff-description.md"
+        },
+        {
+          "code": "MOLDEA_AGENT_IDENTITY_INVALID",
+          "details": {
+            "reason": "misplaced"
+          },
+          "entity": {
+            "agentId": "alpha"
+          },
+          "path": "/moldea/agents/alpha/instruction.md"
+        }
+      ]
+    }
+  ]
+}
