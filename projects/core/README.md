@@ -66,11 +66,13 @@ const result = await createCore().parseDecision({
 
 Decision parsing validates the canonical timestamp-slug path, exact frontmatter delimiters, strict YAML metadata, status, canonical UTC `createdAt`, filename timestamp equality, supersession IDs, and non-empty Markdown body. A valid result preserves the exact normalized body and complete normalized asset, sorts supersession IDs, and includes a SHA-256 digest. It does not read other decisions or validate reference existence, duplicate IDs across files, supersession graphs, status consistency, or manifest relationships.
 
-## Internal decision-graph validation
+## Internal repository validation
 
 Core's repository-level foundation composes canonical discovery with exact decision reads through `IRepositoryReader`. It parses each discovered decision once and deterministically validates project-wide ID uniqueness, missing supersession references, cycles, active and historical status consistency, and orphaned superseded decisions. Invalid or ambiguous decision nodes do not produce dependent graph cascades, while unrelated trustworthy graph rules continue to run.
 
-This layer is intentionally internal. Manifest and agent decision relationships, final project indexing, adapter execution, and the public `inspectProject` operation remain deferred until universal repository validation can produce one complete trustworthy project index.
+The internal relationship layer also validates top-level and per-agent context and decision paths against canonical discovery and the parsed decision graph. Context targets must exist, and decision targets must exist and be accepted. Discovery and document diagnostics retain ownership of invalid targets so dependent missing or inactive diagnostics do not cascade.
+
+These layers remain intentionally internal. Relationship bindings and impact paths, final project indexing, adapter execution, and the public `inspectProject` operation remain deferred until universal repository validation can produce one complete trustworthy project index.
 
 ## Development
 

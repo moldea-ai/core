@@ -28,6 +28,7 @@ const CORE_DIAGNOSTIC_MESSAGES: Partial<Record<ICoreDiagnosticCode, string>> = {
   MOLDEA_DECISION_ID_DUPLICATE: 'The decision ID is duplicated.',
   MOLDEA_DECISION_PROPERTY_UNKNOWN: 'The decision frontmatter contains an unknown property.',
   MOLDEA_DECISION_REFERENCE_MISSING: 'The referenced decision does not exist.',
+  MOLDEA_DECISION_RELATIONSHIP_INACTIVE: 'The referenced decision is not accepted.',
   MOLDEA_DECISION_SELF_SUPERSESSION: 'The decision supersedes itself.',
   MOLDEA_DECISION_STATUS_INVALID: 'The decision status is invalid.',
   MOLDEA_DECISION_SUPERSEDED_ORPHAN:
@@ -61,6 +62,7 @@ const CORE_DIAGNOSTIC_MESSAGES: Partial<Record<ICoreDiagnosticCode, string>> = {
   MOLDEA_PATH_INVALID: 'The manifest logical path is invalid.',
   MOLDEA_PATTERN_DUPLICATE: 'The impact pattern is duplicated.',
   MOLDEA_PROJECT_FILE_MISSING: 'The project file is missing.',
+  MOLDEA_REFERENCE_MISSING: 'The referenced repository path does not exist.',
   MOLDEA_SKILL_IMPLEMENTATION_MISSING: 'The registered skill implementation is missing.',
   MOLDEA_SYMBOL_FORBIDDEN: 'A canonical moldea reference must not include a symbol.',
   MOLDEA_SYMBOL_INVALID: 'The repository-reference symbol is invalid.',

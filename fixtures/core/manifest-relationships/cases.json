@@ -1,0 +1,107 @@
+{
+  "cases": [
+    {
+      "name": "fully resolved relationships",
+      "manifest": "version: 1\ncontext:\n  /moldea/project.md:\n    affectedBy:\n      - /src/**\n  /moldea/context/security.md:\n    affectedBy:\n      - /src/security/**\ndecisions:\n  /moldea/decisions/1767225600000-accepted.md:\n    affectedBy:\n      - /src/**\nagents:\n  reviewer:\n    framework:\n      id: custom\n    context:\n      - /moldea/context/security.md\n    decisions:\n      - /moldea/decisions/1767225600000-accepted.md\n",
+      "contextPaths": ["/moldea/context/security.md"],
+      "decisions": [
+        {
+          "id": "1767225600000",
+          "slug": "accepted",
+          "status": "accepted"
+        }
+      ],
+      "expectedDiagnostics": []
+    },
+    {
+      "name": "missing global and agent relationships",
+      "manifest": "version: 1\ncontext:\n  /moldea/context/missing.md:\n    affectedBy:\n      - /src/**\ndecisions:\n  /moldea/decisions/1767225600000-missing.md:\n    affectedBy:\n      - /src/**\nagents:\n  reviewer:\n    framework:\n      id: custom\n    context:\n      - /moldea/context/missing.md\n    decisions:\n      - /moldea/decisions/1767225600000-missing.md\n",
+      "contextPaths": [],
+      "decisions": [],
+      "expectedDiagnostics": [
+        {
+          "code": "MOLDEA_REFERENCE_MISSING",
+          "details": {
+            "referencedPath": "/moldea/context/missing.md"
+          },
+          "entity": {
+            "agentId": "reviewer"
+          },
+          "path": "/moldea/moldea.yaml",
+          "pointer": "/agents/reviewer/context"
+        },
+        {
+          "code": "MOLDEA_DECISION_REFERENCE_MISSING",
+          "details": {
+            "referencedPath": "/moldea/decisions/1767225600000-missing.md"
+          },
+          "entity": {
+            "agentId": "reviewer",
+            "decisionId": "1767225600000"
+          },
+          "path": "/moldea/moldea.yaml",
+          "pointer": "/agents/reviewer/decisions"
+        },
+        {
+          "code": "MOLDEA_REFERENCE_MISSING",
+          "details": {
+            "referencedPath": "/moldea/context/missing.md"
+          },
+          "entity": null,
+          "path": "/moldea/moldea.yaml",
+          "pointer": "/context/~1moldea~1context~1missing.md"
+        },
+        {
+          "code": "MOLDEA_DECISION_REFERENCE_MISSING",
+          "details": {
+            "referencedPath": "/moldea/decisions/1767225600000-missing.md"
+          },
+          "entity": {
+            "decisionId": "1767225600000"
+          },
+          "path": "/moldea/moldea.yaml",
+          "pointer": "/decisions/~1moldea~1decisions~11767225600000-missing.md"
+        }
+      ]
+    },
+    {
+      "name": "inactive global and agent decision relationships",
+      "manifest": "version: 1\ndecisions:\n  /moldea/decisions/1767225600001-proposed.md:\n    affectedBy:\n      - /src/**\nagents:\n  reviewer:\n    framework:\n      id: custom\n    decisions:\n      - /moldea/decisions/1767225600001-proposed.md\n",
+      "contextPaths": [],
+      "decisions": [
+        {
+          "id": "1767225600001",
+          "slug": "proposed",
+          "status": "proposed"
+        }
+      ],
+      "expectedDiagnostics": [
+        {
+          "code": "MOLDEA_DECISION_RELATIONSHIP_INACTIVE",
+          "details": {
+            "referencedPath": "/moldea/decisions/1767225600001-proposed.md",
+            "targetStatus": "proposed"
+          },
+          "entity": {
+            "agentId": "reviewer",
+            "decisionId": "1767225600001"
+          },
+          "path": "/moldea/moldea.yaml",
+          "pointer": "/agents/reviewer/decisions"
+        },
+        {
+          "code": "MOLDEA_DECISION_RELATIONSHIP_INACTIVE",
+          "details": {
+            "referencedPath": "/moldea/decisions/1767225600001-proposed.md",
+            "targetStatus": "proposed"
+          },
+          "entity": {
+            "decisionId": "1767225600001"
+          },
+          "path": "/moldea/moldea.yaml",
+          "pointer": "/decisions/~1moldea~1decisions~11767225600001-proposed.md"
+        }
+      ]
+    }
+  ]
+}
