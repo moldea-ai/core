@@ -2,7 +2,7 @@
 
 Source-neutral, deterministic interpretation of the `moldea` repository format.
 
-The current `0.0.0` public foundation accepts caller-supplied text documents and does not access a filesystem, Git provider, or network. Invalid document content produces stable diagnostics, while invalid configuration and operational failures use typed exceptions. Strict version 1 manifest and decision parsing are available now. Core also contains internal deterministic canonical-discovery and decision-graph layers exercised only through `IRepositoryReader` and `@moldea.ai/repository/memory`; public repository inspection remains reserved until the complete all-or-nothing behavior is implemented.
+The current `0.0.1` public foundation accepts caller-supplied text documents and does not access a filesystem, Git provider, or network. Invalid document content produces stable diagnostics, while invalid configuration and operational failures use typed exceptions. Strict version 1 manifest and decision parsing are available now. Core also contains internal deterministic canonical-discovery and decision-graph layers exercised only through `IRepositoryReader` and `@moldea.ai/repository/memory`; public repository inspection remains reserved until the complete all-or-nothing behavior is implemented.
 
 ## Public entry points
 
