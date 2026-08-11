@@ -5,10 +5,22 @@ import type { IRepositoryReference } from './format.js';
 const STABLE_ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
 const VARIABLE_ID_PATTERN = /^[A-Z][A-Z0-9_]*$/u;
 const WINDOWS_RESERVED_ID_PATTERN = /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])$/u;
-const LINE_BREAK_PATTERN = /[\r\n\u0085\u2028\u2029]/u;
+const LINE_BREAK_CHARACTERS = [
+  '\r',
+  '\n',
+  '\u000b',
+  '\u000c',
+  '\u0085',
+  '\u2028',
+  '\u2029',
+] as const;
 const UNSUPPORTED_GLOB_PATTERN = /[!?[\]{}]/u;
 const NON_WHITESPACE_PATTERN = /[^\p{White_Space}]/u;
 const EDGE_WHITESPACE_PATTERN = /(?:^\p{White_Space}|\p{White_Space}$)/u;
+
+const hasLineBreak = (value: string): boolean => {
+  return LINE_BREAK_CHARACTERS.some((lineBreak) => value.includes(lineBreak));
+};
 
 /** Compares strings by exact Unicode code-point order without locale behavior. */
 export const compareExactStrings = (left: string, right: string): number => {
@@ -53,7 +65,7 @@ export const hasNonWhitespace = (value: string): boolean => NON_WHITESPACE_PATTE
 
 /** Determines whether a string is non-empty and contains no line break. */
 export const isNonEmptySingleLine = (value: string): boolean => {
-  return value.length > 0 && !LINE_BREAK_PATTERN.test(value);
+  return value.length > 0 && !hasLineBreak(value);
 };
 
 /** Determines whether a value satisfies stable moldea ID syntax. */
@@ -77,7 +89,7 @@ export const isCapabilityDescription = (value: string): boolean => {
     scalarLength >= 1 &&
     scalarLength <= 1_000 &&
     !EDGE_WHITESPACE_PATTERN.test(value) &&
-    !LINE_BREAK_PATTERN.test(value) &&
+    !hasLineBreak(value) &&
     !value.includes('\0') &&
     !value.includes('{{') &&
     !value.includes('}}')

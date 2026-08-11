@@ -6,6 +6,7 @@ import { parseRepositoryPath } from '@moldea.ai/repository';
 import {
   isCapabilityDescription,
   isDecisionPath,
+  isNonEmptySingleLine,
   isRepositorySymbol,
   isSimpleGlob,
   isStableId,
@@ -71,10 +72,24 @@ describe('Core manifest-format validation', () => {
     expect(isSimpleGlob(candidate)).toBe(expected);
   });
 
+  test.each([
+    ['carriage return', '\r'],
+    ['line feed', '\n'],
+    ['vertical tab', '\u000b'],
+    ['form feed', '\u000c'],
+    ['next line', '\u0085'],
+    ['line separator', '\u2028'],
+    ['paragraph separator', '\u2029'],
+  ])('rejects %s in single-line values', (_name, lineBreak) => {
+    expect(isNonEmptySingleLine(`before${lineBreak}after`)).toBe(false);
+  });
+
   test('validates capability descriptions with Unicode whitespace and scalar limits', () => {
     expect(isCapabilityDescription('Retrieves order details.')).toBe(true);
     expect(isCapabilityDescription('\u2007Padded')).toBe(false);
     expect(isCapabilityDescription('Padded\u205f')).toBe(false);
+    expect(isCapabilityDescription('line\u000bbreak')).toBe(false);
+    expect(isCapabilityDescription('line\u000cbreak')).toBe(false);
     expect(isCapabilityDescription('line\u0085break')).toBe(false);
     expect(isCapabilityDescription('escaped\0nul')).toBe(false);
     expect(isCapabilityDescription('{{VALUE}}')).toBe(false);
@@ -82,8 +97,10 @@ describe('Core manifest-format validation', () => {
     expect(isCapabilityDescription('😀'.repeat(1_001))).toBe(false);
   });
 
-  test('rejects NUL in parsed repository symbols', () => {
+  test('rejects line breaks and NUL in parsed repository symbols', () => {
     expect(isRepositorySymbol('symbol')).toBe(true);
+    expect(isRepositorySymbol('line\u000bbreak')).toBe(false);
+    expect(isRepositorySymbol('line\u000cbreak')).toBe(false);
     expect(isRepositorySymbol('escaped\0nul')).toBe(false);
   });
 

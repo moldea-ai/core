@@ -311,6 +311,32 @@ describe('Core manifest parsing', () => {
     ]);
   });
 
+  test.each([
+    ['vertical tab', '\u000b'],
+    ['form feed', '\u000c'],
+  ])('rejects %s in capability descriptions', async (_name, lineBreak) => {
+    const result = await createCore().parseManifest({
+      content: [
+        'version: 1',
+        'agents:',
+        '  agent:',
+        '    framework: { id: custom }',
+        '    tools:',
+        '      lookup:',
+        '        name: lookup',
+        `        description: ${JSON.stringify(`before${lineBreak}after`)}`,
+        '        implementation:',
+        '          path: /src/tool.ts',
+        '',
+      ].join('\n'),
+      path: manifestPath,
+    });
+
+    expect(result.diagnostics.map(({ code }) => code)).toStrictEqual([
+      'MOLDEA_CAPABILITY_DESCRIPTION_INVALID',
+    ]);
+  });
+
   test('validates configured framework availability without invoking adapters', async () => {
     let inspectionCount = 0;
     const inspect = (): Promise<IFrameworkAdapterResult> => {

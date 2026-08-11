@@ -61,7 +61,7 @@ const reader = createMemoryRepositoryReader([
   {
     path: '/moldea/moldea.yaml',
     type: 'file',
-    content: 'format: 1\n',
+    content: 'version: 1\n',
   },
   {
     path: '/empty-directory',
