@@ -149,7 +149,7 @@ export interface IMoldeaProjectIndex {
   readonly unresolved: Readonly<Record<string, IUnresolvedRequirementManifestEntry>>;
 }
 
-// immutable document-level Core operations available in the current behavioral slice
+// immutable source-neutral Core operations
 export interface ICore {
   /**
    * Validates and normalizes one supplied text document.
@@ -194,4 +194,24 @@ export interface ICore {
    * - RESOURCE_LIMIT_EXCEEDED: A Core resource limit was exceeded.
    */
   parseDecision(input: ITextDocumentInput): Promise<IDecisionParseResult>;
+
+  /**
+   * Inspects one coherent repository snapshot through universal and configured adapter validation.
+   * @param input The source-neutral reader and optional shared cancellation signal.
+   * @returns A promise resolving to the frozen all-or-nothing project inspection result.
+   * @throws
+   * - INVALID_ARGUMENT: The Core operation received an invalid argument.
+   * - INVALID_REPOSITORY_PATH: A repository path is invalid.
+   * - ENTRY_NOT_FOUND: A discovered file disappeared from the reader snapshot.
+   * - ENTRY_NOT_FILE: A discovered file changed type during inspection.
+   * - ENTRY_NOT_DIRECTORY: A discovered directory changed type during inspection.
+   * - ACCESS_DENIED: Access to the repository source was denied.
+   * - SOURCE_UNAVAILABLE: The repository source is unavailable.
+   * - SNAPSHOT_CHANGED: The repository snapshot changed during inspection.
+   * - INVALID_SOURCE_DATA: The repository reader returned invalid contract data.
+   * - RESOURCE_LIMIT_EXCEEDED: A Core or repository resource limit was exceeded.
+   * - ABORTED: Project inspection or a repository operation was aborted.
+   * - ADAPTER_EXECUTION_FAILED: A framework adapter failed or returned an invalid result.
+   */
+  inspectProject(input: IProjectInspectionInput): Promise<IProjectInspectionResult>;
 }

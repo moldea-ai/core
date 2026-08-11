@@ -2,11 +2,7 @@ import { parseRepositoryPath, type IRepositoryEntry } from '@moldea.ai/repositor
 
 import { inspectAgentAssets, type IInspectedAgentAssets } from './agent-assets.js';
 import { discoverCanonicalAssets } from './canonical-discovery.js';
-import type {
-  IIndexedManifest,
-  IMoldeaProjectIndex,
-  IProjectInspectionInput,
-} from './contracts.js';
+import type { IIndexedManifest, IMoldeaProjectIndex } from './contracts.js';
 import { readDecisionGraph } from './decision-graph.js';
 import {
   createCoreDiagnosticCollector,
@@ -21,7 +17,7 @@ import { inspectMirrors, type IAgentMirrorInspection } from './mirrors.js';
 import type { ICoreOptionsSnapshot } from './options.js';
 import { readProjectAssets, readProjectFile } from './project-assets.js';
 import { createProjectIndex } from './project-index.js';
-import { createRepositoryInspectionSession } from './repository-inspection-session.js';
+import type { IRepositoryInspectionSession } from './repository-inspection-session.js';
 import { validateRepositoryReferences } from './repository-reference-validation.js';
 import { readRuntimeGuidance } from './runtime-guidance.js';
 
@@ -36,6 +32,12 @@ export interface IUniversalProjectInspectionResult {
   readonly diagnostics: readonly ICoreDiagnostic[];
 }
 
+// shared inspection state supplied by the public repository-level orchestrator
+export interface IUniversalProjectInspectionContext {
+  readonly session: IRepositoryInspectionSession;
+  readonly signal?: AbortSignal;
+}
+
 const addDiagnostics = (
   collector: ICoreDiagnosticCollector,
   diagnostics: readonly ICoreDiagnostic[],
@@ -47,7 +49,7 @@ const addDiagnostics = (
 
 /**
  * Executes every universal repository-format phase before framework adapter validation.
- * @param input The source-neutral repository snapshot and optional cancellation signal.
+ * @param context The shared inspection session and optional cancellation signal.
  * @param options The immutable Core configuration snapshot.
  * @returns The frozen provisional index only when no universal diagnostic remains.
  * @throws
@@ -63,11 +65,10 @@ const addDiagnostics = (
  * - ABORTED: Project inspection or a repository operation was aborted.
  */
 export const inspectUniversalProject = async (
-  input: IProjectInspectionInput,
+  context: IUniversalProjectInspectionContext,
   options: ICoreOptionsSnapshot,
 ): Promise<IUniversalProjectInspectionResult> => {
-  const { repository, signal } = input;
-  const session = createRepositoryInspectionSession(repository, options.limits, signal);
+  const { session, signal } = context;
   const collector = createCoreDiagnosticCollector(options.limits, 'inspect-project');
   const operationOptions = signal === undefined ? undefined : { signal };
   const moldeaRoot = await session.reader.getEntry(MOLDEA_ROOT, operationOptions);

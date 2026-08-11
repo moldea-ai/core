@@ -15,8 +15,10 @@ import {
   type IMemoryRepositoryEntry,
 } from '@moldea.ai/repository/memory';
 
-import { normalizeCoreOptions } from './options.js';
-import { inspectUniversalProject } from './universal-project-inspection.js';
+import type { IProjectInspectionInput } from './contracts.js';
+import { normalizeCoreOptions, type ICoreOptionsSnapshot } from './options.js';
+import { createRepositoryInspectionSession } from './repository-inspection-session.js';
+import { inspectUniversalProject as inspectUniversalProjectWithSession } from './universal-project-inspection.js';
 
 interface IFixtureEntry {
   readonly path: string;
@@ -51,6 +53,23 @@ const expectedDiagnosticsByCase = JSON.parse(
 ) as Readonly<Record<string, readonly unknown[]>>;
 const options = normalizeCoreOptions(undefined);
 const manifestPath = parseRepositoryPath('/moldea/moldea.yaml');
+
+/** Executes the internal universal phase with the same session ownership as public inspection. */
+const inspectUniversalProject = async (
+  input: IProjectInspectionInput,
+  inspectionOptions: ICoreOptionsSnapshot,
+) => {
+  const session = createRepositoryInspectionSession(
+    input.repository,
+    inspectionOptions.limits,
+    input.signal,
+  );
+
+  return await inspectUniversalProjectWithSession(
+    { session, ...(input.signal === undefined ? {} : { signal: input.signal }) },
+    inspectionOptions,
+  );
+};
 
 const createEntries = (
   fixtureCase: IProjectIndexFixture['cases'][number],

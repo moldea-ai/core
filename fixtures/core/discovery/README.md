@@ -5,4 +5,4 @@ These fixtures exercise version 1 canonical `/moldea/**` discovery through the i
 - `valid-project.json` contains a populated canonical inventory in deliberately noncanonical input order.
 - `invalid-layouts.json` contains missing-foundation, wrong-type, symlink, and unrecognized-path cases with exact expected discovery diagnostics.
 
-The discovery slice does not expose `inspectProject`. Its inventory composes with the cross-file validation and provisional-index cases under `fixtures/core/project-index`; framework-adapter execution and the public inspection boundary remain deferred.
+The focused discovery suite remains internal, while its inventory composes with cross-file validation and provisional indexing under `fixtures/core/project-index`. Public `inspectProject` coverage and framework-adapter composition live under `fixtures/core/adapter-contract` and their colocated integration suites.

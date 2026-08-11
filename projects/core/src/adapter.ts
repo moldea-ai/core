@@ -13,6 +13,17 @@ export interface IFrameworkAdapter {
    * Inspects the trusted provisional project through the supplied budget-aware reader.
    * @param context The immutable project, matching agents, reader, and cancellation signal.
    * @returns A promise resolving to deterministic evidence and adapter diagnostics.
+   * @throws
+   * - INVALID_REPOSITORY_PATH: An adapter repository path is invalid.
+   * - ENTRY_NOT_FOUND: A requested repository entry is absent.
+   * - ENTRY_NOT_FILE: A requested repository entry is not a regular file.
+   * - ENTRY_NOT_DIRECTORY: A requested repository entry is not a directory.
+   * - ACCESS_DENIED: Access to the repository source was denied.
+   * - SOURCE_UNAVAILABLE: The repository source is unavailable.
+   * - SNAPSHOT_CHANGED: The repository snapshot changed during inspection.
+   * - INVALID_SOURCE_DATA: The repository reader returned invalid contract data.
+   * - RESOURCE_LIMIT_EXCEEDED: A Core or repository resource limit was exceeded.
+   * - ABORTED: Adapter inspection or a repository operation was aborted.
    */
   inspect(context: IFrameworkAdapterContext): Promise<IFrameworkAdapterResult>;
 }

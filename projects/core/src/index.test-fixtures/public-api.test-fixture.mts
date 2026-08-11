@@ -1,4 +1,4 @@
-import { parseRepositoryPath } from '@moldea.ai/repository';
+import { parseRepositoryPath, type IRepositoryReader } from '@moldea.ai/repository';
 import {
   CoreConfigurationException,
   CoreOperationException,
@@ -142,6 +142,7 @@ declare const rootSurface: IRootSurface;
 declare const formatSurface: IFormatSurface;
 declare const adapterSurface: IAdapterSurface;
 declare const removedHandoffSurface: IRemovedHandoffSurface;
+declare const repository: IRepositoryReader;
 
 const path = parseRepositoryPath('/moldea/project.md');
 const adapter: IFrameworkAdapter = {
@@ -161,8 +162,7 @@ const parsedDecision: Promise<IDecisionParseResult> = core.parseDecision({
   content: '---\nstatus: accepted\ncreatedAt: "2026-08-07T19:42:03.456Z"\n---\nBody.\n',
   path: parseRepositoryPath('/moldea/decisions/1786131723456-use-postgresql.md'),
 });
-// @ts-expect-error Repository inspection is exposed only after its behavior is implemented.
-void core.inspectProject;
+const inspectedProject: Promise<IProjectInspectionResult> = core.inspectProject({ repository });
 const configurationException = new CoreConfigurationException({
   code: 'INVALID_RESOURCE_LIMIT',
   operation: 'create-core',
@@ -184,6 +184,7 @@ void [
   adapterSurface,
   DEFAULT_CORE_RESOURCE_LIMITS,
   normalized,
+  inspectedProject,
   parsedDecision,
   parsedManifest,
   configurationException,

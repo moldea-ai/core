@@ -1,0 +1,55 @@
+[
+  {
+    "agentId": "beta",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "language": "typescript"
+    },
+    "kind": "agent-definition",
+    "references": [
+      {
+        "path": "/src/evidence.ts"
+      }
+    ],
+    "runtimeName": "BetaRuntime",
+    "source": "alpha-adapter"
+  },
+  {
+    "agentId": "alpha",
+    "capabilityId": "audit",
+    "capabilityKind": "tool",
+    "details": {
+      "constructor": "safe",
+      "detected": true,
+      "symbol": "auditRequests"
+    },
+    "kind": "tool-registration",
+    "references": [
+      {
+        "path": "/src/audit.ts"
+      },
+      {
+        "path": "/src/evidence.ts"
+      }
+    ],
+    "runtimeName": "auditRequests",
+    "source": "alpha-adapter"
+  },
+  {
+    "agentId": "zeta",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "language": "typescript"
+    },
+    "kind": "language",
+    "references": [
+      {
+        "path": "/src/evidence.ts"
+      }
+    ],
+    "runtimeName": null,
+    "source": "zeta-adapter"
+  }
+]

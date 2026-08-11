@@ -4,6 +4,7 @@ import type { ICoreResourceLimits } from './contracts.js';
 import type {
   ICoreDiagnostic,
   ICoreDiagnosticCode,
+  IDiagnostic,
   IDiagnosticDetails,
   IDiagnosticEntity,
   ISourceRange,
@@ -136,7 +137,12 @@ const compareNullableStrings = (left: string | null, right: string | null): numb
   return right === null ? 1 : compareExactStrings(left, right);
 };
 
-const normalizeDetails = (
+/**
+ * Normalizes trusted JSON-scalar diagnostic metadata.
+ * @param details The optional detached metadata record.
+ * @returns A frozen null-prototype record with canonical key order.
+ */
+export const normalizeDiagnosticDetails = (
   details: Readonly<Record<string, string | number | boolean | null>> | undefined,
 ): IDiagnosticDetails => {
   const entries = Object.entries(details ?? {})
@@ -149,7 +155,12 @@ const normalizeDetails = (
   return freezeRecursively(createNullPrototypeRecord(entries));
 };
 
-const normalizeEntity = (
+/**
+ * Normalizes a trusted diagnostic entity into canonical key order.
+ * @param entity The optional diagnostic entity.
+ * @returns The frozen normalized entity or `null`.
+ */
+export const normalizeDiagnosticEntity = (
   entity: IDiagnosticEntity | null | undefined,
 ): IDiagnosticEntity | null => {
   if (entity === undefined || entity === null) {
@@ -164,7 +175,7 @@ const normalizeEntity = (
   return freezeRecursively(createNullPrototypeRecord(entries) as IDiagnosticEntity);
 };
 
-const serializeDiagnostic = (diagnostic: ICoreDiagnostic): string => {
+const serializeDiagnostic = (diagnostic: IDiagnostic): string => {
   return JSON.stringify({
     code: diagnostic.code,
     details: diagnostic.details,
@@ -200,7 +211,7 @@ const readEntityValue = (
   return entity?.[key] ?? '';
 };
 
-const compareDiagnostics = (left: ICoreDiagnostic, right: ICoreDiagnostic): number => {
+const compareDiagnostics = (left: IDiagnostic, right: IDiagnostic): number => {
   return (
     compareNullableStrings(left.path, right.path) ||
     compareRanges(left.range, right.range) ||
@@ -250,14 +261,52 @@ export const createCoreDiagnostic = (input: ICoreDiagnosticInput): ICoreDiagnost
 
   return freezeRecursively({
     code: input.code,
-    details: normalizeDetails(input.details),
-    entity: normalizeEntity(input.entity),
+    details: normalizeDiagnosticDetails(input.details),
+    entity: normalizeDiagnosticEntity(input.entity),
     message,
     path: input.path,
     pointer: input.pointer ?? null,
     range: input.range ?? null,
     source: 'core' as const,
   });
+};
+
+/**
+ * Deduplicates and sorts already-normalized Core and adapter diagnostics.
+ * @param candidates The immutable diagnostics to combine.
+ * @param limits The Core resource limits governing unique diagnostics.
+ * @param operation The operation reported by resource failures.
+ * @returns A frozen deterministic diagnostic collection.
+ * @throws
+ * - RESOURCE_LIMIT_EXCEEDED: The diagnostic limit was exceeded.
+ */
+export const normalizeDiagnostics = (
+  candidates: readonly IDiagnostic[],
+  limits: ICoreResourceLimits,
+  operation: ICoreOperation,
+): readonly IDiagnostic[] => {
+  const diagnostics = new Map<string, IDiagnostic>();
+
+  for (const diagnostic of candidates) {
+    const key = serializeDiagnostic(diagnostic);
+
+    if (diagnostics.has(key)) {
+      continue;
+    }
+
+    if (diagnostics.size >= limits.maxDiagnostics) {
+      throw new CoreOperationException({
+        code: 'RESOURCE_LIMIT_EXCEEDED',
+        limit: 'maxDiagnostics',
+        operation,
+        retryable: false,
+      });
+    }
+
+    diagnostics.set(key, diagnostic);
+  }
+
+  return freezeRecursively([...diagnostics.values()].sort(compareDiagnostics));
 };
 
 /**
@@ -293,7 +342,11 @@ export const createCoreDiagnosticCollector = (
       diagnostics.set(key, diagnostic);
     },
     finalize: (): readonly ICoreDiagnostic[] =>
-      freezeRecursively([...diagnostics.values()].sort(compareDiagnostics)),
+      normalizeDiagnostics(
+        [...diagnostics.values()],
+        limits,
+        operation,
+      ) as readonly ICoreDiagnostic[],
     get size(): number {
       return diagnostics.size;
     },

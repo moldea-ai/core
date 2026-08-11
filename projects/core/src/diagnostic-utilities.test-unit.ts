@@ -4,7 +4,12 @@ import { describe, expect, test } from 'vitest';
 import { parseRepositoryPath } from '@moldea.ai/repository';
 
 import { DEFAULT_CORE_RESOURCE_LIMITS } from './constants.js';
-import { createCoreDiagnosticCollector } from './diagnostic-utilities.js';
+import {
+  createCoreDiagnosticCollector,
+  normalizeDiagnosticDetails,
+  normalizeDiagnostics,
+} from './diagnostic-utilities.js';
+import type { IAdapterDiagnostic } from './diagnostics.js';
 
 describe('Core diagnostic normalization', () => {
   test('deduplicates, normalizes, and sorts diagnostics by the public contract', () => {
@@ -47,5 +52,35 @@ describe('Core diagnostic normalization', () => {
         operation: 'parse-manifest',
       }),
     );
+  });
+
+  test('combines Core and adapter diagnostics in deterministic public order', () => {
+    const collector = createCoreDiagnosticCollector(
+      DEFAULT_CORE_RESOURCE_LIMITS,
+      'inspect-project',
+    );
+    collector.add({
+      code: 'MOLDEA_MANIFEST_PATH_INVALID',
+      path: parseRepositoryPath('/zeta'),
+    });
+    const adapterDiagnostic: IAdapterDiagnostic = {
+      code: 'ALPHA_INVALID',
+      details: normalizeDiagnosticDetails({ zeta: -0, alpha: true }),
+      entity: null,
+      message: 'The adapter observation is invalid.',
+      path: null,
+      pointer: null,
+      range: null,
+      source: 'alpha',
+    };
+    const diagnostics = normalizeDiagnostics(
+      [collector.finalize()[0]!, adapterDiagnostic, adapterDiagnostic],
+      DEFAULT_CORE_RESOURCE_LIMITS,
+      'inspect-project',
+    );
+
+    expect(diagnostics.map(({ source }) => source)).toStrictEqual(['alpha', 'core']);
+    expect(diagnostics).toHaveLength(2);
+    expect({ ...diagnostics[0]?.details }).toStrictEqual({ alpha: true, zeta: 0 });
   });
 });

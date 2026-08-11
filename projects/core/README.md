@@ -2,7 +2,7 @@
 
 Source-neutral, deterministic interpretation of the `moldea` repository format.
 
-The current `0.0.1` public foundation accepts caller-supplied text documents and does not access a filesystem, Git provider, or network. Invalid document content produces stable diagnostics, while invalid configuration and operational failures use typed exceptions. Strict version 1 manifest and decision parsing are available now. Core also contains internal deterministic universal repository validation and provisional project indexing exercised only through `IRepositoryReader` and `@moldea.ai/repository/memory`; public repository inspection remains reserved until adapter execution is composed with this all-or-nothing behavior.
+The current `0.0.1` public foundation accepts caller-supplied text documents and source-neutral repository readers. It does not access a filesystem, Git provider, or network independently. Invalid repository content produces stable diagnostics, while invalid configuration and operational failures use typed exceptions. Strict version 1 manifest and decision parsing, complete repository inspection, deterministic project indexing, and all-or-nothing framework-adapter execution are available now.
 
 ## Public entry points
 
@@ -66,7 +66,26 @@ const result = await createCore().parseDecision({
 
 Decision parsing validates the canonical timestamp-slug path, exact frontmatter delimiters, strict YAML metadata, status, canonical UTC `createdAt`, filename timestamp equality, supersession IDs, and non-empty Markdown body. A valid result preserves the exact normalized body and complete normalized asset, sorts supersession IDs, and includes a SHA-256 digest. It does not read other decisions or validate reference existence, duplicate IDs across files, supersession graphs, status consistency, or manifest relationships.
 
-## Internal repository validation
+## Repository inspection
+
+```typescript
+import { createCore } from '@moldea.ai/core';
+import { createMemoryRepositoryReader } from '@moldea.ai/repository/memory';
+
+const repository = createMemoryRepositoryReader([
+  {
+    content: 'version: 1\n',
+    path: '/moldea/moldea.yaml',
+    type: 'file',
+  },
+  {
+    content: '# Project\n',
+    path: '/moldea/project.md',
+    type: 'file',
+  },
+]);
+const result = await createCore().inspectProject({ repository });
+```
 
 Core's repository-level foundation now includes one isolated reader session for each inspection. The session validates detached reader output, applies the shared entry and byte budgets, caches each successfully read source file once, returns a fresh byte array to every consumer, and preserves cancellation and repository-source failures. Its state is never shared across inspections.
 
@@ -82,7 +101,24 @@ Declared mirrors are resolved through the same inspection reader and compared wi
 
 Universal inspection now reads and parses the manifest, reads the project foundation, and then composes canonical discovery, focused-context reads, decision graphs, runtime guidance, registered-agent assets, manifest relationships, repository references, and mirrors through one coherent reader session. Exact foundation entries and file bytes are reused rather than requested twice. It aggregates diagnostics under one project-inspection limit and produces a deeply immutable, deterministic, JSON-safe provisional project index only when every universal phase succeeds. A supported format version remains available when it is independently trustworthy even if another manifest rule fails. Project and focused-context files must contain non-whitespace text; valid focused context retains its manifest relationship metadata, and all indexed assets retain normalized content, scalar and byte lengths, and SHA-256 digests.
 
-These layers remain intentionally internal. Framework-adapter execution, adapter evidence, and the public `inspectProject` operation remain deferred until adapter validation can be composed with the complete universal index.
+Framework adapters run only after every universal phase produces one complete trustworthy provisional index. Core groups agents by framework ID and invokes each applicable configured adapter exactly once in ascending adapter-ID order. Each adapter receives only its matching agents, the complete frozen project, the shared budget-aware reader, and the active signal. The built-in `custom` behavior requires no configured adapter and produces no framework evidence by itself.
+
+Core validates adapter evidence and diagnostics before retaining them. Evidence references must identify existing regular files; evidence and diagnostic identity, scope, namespace, ranges, pointers, entities, and JSON-scalar details must satisfy the public adapter contract. Core normalizes, deduplicates, sorts, and freezes valid adapter output. Adapter diagnostics retain valid evidence but withhold the project index. Any universal diagnostic prevents every adapter from running and returns empty evidence.
+
+The public result is all-or-nothing: `valid` is true exactly when diagnostics are empty, and `project` is non-null exactly when `valid` is true. A supported parsed format version may remain available after an unrelated universal diagnostic. Operational failures reject instead of returning a structural result.
+
+### Repository inspection failures
+
+`inspectProject` may reject with these `CoreOperationException` contracts:
+
+| Code                       | Stable message                                     | Trigger and metadata                                                                                                                                                                                                                                                                              | Cause and result behavior                                                                                                   |
+| -------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `INVALID_ARGUMENT`         | `The Core operation received an invalid argument.` | The inspection input, reader, or signal violates its runtime contract. `operation` is `inspect-project`; `retryable` is `false`.                                                                                                                                                                  | No structural result is returned.                                                                                           |
+| `ABORTED`                  | `The Core operation was aborted.`                  | The shared signal is already aborted or becomes aborted during Core or adapter work. `operation` is `inspect-project`; `retryable` is `false`.                                                                                                                                                    | The signal reason is preserved as `cause` when available; no partial result is returned.                                    |
+| `RESOURCE_LIMIT_EXCEEDED`  | `A Core resource limit was exceeded.`              | A shared entry, byte, file, manifest, or diagnostic budget is exceeded. `limit` identifies the budget; `retryable` is `false`.                                                                                                                                                                    | No partial project, evidence, or diagnostics are returned.                                                                  |
+| `ADAPTER_EXECUTION_FAILED` | `A framework adapter failed during inspection.`    | An adapter throws unexpectedly or returns malformed, unsafe, cyclic, incorrectly namespaced, ungrounded, or out-of-scope output. `adapterId` identifies the adapter; `operation` is `inspect-project` for invocation failures and `validate-adapter` for invalid results; `retryable` is `false`. | Unexpected failures are preserved as `cause`; malformed results use a safe validation cause. No partial result is returned. |
+
+`RepositoryPathException` and `RepositorySourceException` raised by the supplied reader or adapter-facing reader propagate unchanged. Core does not translate source access, snapshot, cancellation, or malformed-source failures into repository diagnostics or adapter failures.
 
 ## Development
 

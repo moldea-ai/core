@@ -233,6 +233,10 @@ describe('published Core package artifacts', () => {
 
   test('emits all public declarations without obsolete or private workspace types', () => {
     const indexDeclaration = readFileSync(path.join(distributionDirectory, 'index.d.ts'), 'utf8');
+    const contractsDeclaration = readFileSync(
+      path.join(distributionDirectory, 'contracts.d.ts'),
+      'utf8',
+    );
     const formatDeclaration = readFileSync(path.join(distributionDirectory, 'format.d.ts'), 'utf8');
     const adapterDeclaration = readFileSync(
       path.join(distributionDirectory, 'adapter.d.ts'),
@@ -242,6 +246,7 @@ describe('published Core package artifacts', () => {
 
     expect(indexDeclaration).toContain('IFrameworkAdapterEvidence');
     expect(indexDeclaration).toContain('createCore');
+    expect(contractsDeclaration).toContain('inspectProject');
     expect(indexDeclaration).not.toContain('IYaml');
     expect(formatDeclaration).toContain('IMoldeaManifestV1');
     expect(formatDeclaration).toContain('IParsedDecision');

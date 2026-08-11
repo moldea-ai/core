@@ -1,7 +1,11 @@
 // @vitest-environment node
 import { describe, expect, test } from 'vitest';
 
-import { parseRepositoryPath } from '@moldea.ai/repository';
+import {
+  parseRepositoryPath,
+  type IRepositoryEntry,
+  type IRepositoryReader,
+} from '@moldea.ai/repository';
 
 import type { IFrameworkAdapterResult } from './adapter.js';
 import { DEFAULT_CORE_RESOURCE_LIMITS, SUPPORTED_REPOSITORY_FORMAT_VERSIONS } from './constants.js';
@@ -12,6 +16,12 @@ import { normalizeCoreOptions } from './options.js';
 const emptyAdapterResult = (): IFrameworkAdapterResult => ({
   diagnostics: [],
   evidence: [],
+});
+
+const createEmptyEntryIterable = (): AsyncIterable<IRepositoryEntry> => ({
+  [Symbol.asyncIterator]: () => ({
+    next: () => Promise.resolve({ done: true, value: undefined }),
+  }),
 });
 
 describe('Core constants and construction', () => {
@@ -34,11 +44,13 @@ describe('Core constants and construction', () => {
     expect(Object.isFrozen(core)).toBe(true);
     expect(Object.keys(core).sort()).toStrictEqual([
       'calculateContentDigest',
+      'inspectProject',
       'normalizeText',
       'parseDecision',
       'parseManifest',
     ]);
     expect(typeof core.calculateContentDigest).toBe('function');
+    expect(typeof core.inspectProject).toBe('function');
     expect(typeof core.normalizeText).toBe('function');
     expect(typeof core.parseDecision).toBe('function');
     expect(typeof core.parseManifest).toBe('function');
@@ -168,7 +180,7 @@ describe('Core constants and construction', () => {
     );
   });
 
-  test('uses typed operation failures for invalid public document arguments', async () => {
+  test('uses typed operation failures for invalid public arguments', async () => {
     const core = createCore();
 
     expect(() => core.normalizeText(null as never)).toThrowError(
@@ -186,6 +198,50 @@ describe('Core constants and construction', () => {
     );
     await expect(core.parseDecision({ content: 1 } as never)).rejects.toBeInstanceOf(
       CoreOperationException,
+    );
+    await expect(core.inspectProject(null as never)).rejects.toMatchObject({
+      code: 'INVALID_ARGUMENT',
+      operation: 'inspect-project',
+      retryable: false,
+    });
+    await expect(
+      core.inspectProject({ repository: { getEntry: null } } as never),
+    ).rejects.toMatchObject({
+      code: 'INVALID_ARGUMENT',
+      operation: 'inspect-project',
+    });
+    await expect(
+      core.inspectProject({
+        repository: {
+          getEntry: () => Promise.resolve(null),
+          listEntries: createEmptyEntryIterable,
+          readFile: () => Promise.resolve(new Uint8Array()),
+        },
+        signal: null,
+      } as never),
+    ).rejects.toBeInstanceOf(CoreOperationException);
+  });
+
+  test('snapshots the repository input property before inspection', async () => {
+    const repository: IRepositoryReader = {
+      getEntry: () => Promise.resolve(null),
+      listEntries: createEmptyEntryIterable,
+      readFile: () => Promise.resolve(new Uint8Array()),
+    };
+    let repositoryReads = 0;
+    const input = Object.defineProperty({}, 'repository', {
+      enumerable: true,
+      get: () => {
+        repositoryReads += 1;
+        return repositoryReads === 1 ? repository : null;
+      },
+    });
+    const result = await createCore().inspectProject(input as never);
+
+    expect(repositoryReads).toBe(1);
+    expect(result.valid).toBe(false);
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({ code: 'MOLDEA_MANIFEST_MISSING' }),
     );
   });
 });

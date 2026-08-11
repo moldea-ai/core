@@ -8,4 +8,4 @@ These fixtures compose every universal version 1 repository-format phase through
 - The complete case includes project and focused context, runtime guidance, decisions, registered agents with an optional handoff description, relationships, repository references, unresolved requirements, and an exact instruction mirror.
 - Invalid cases preserve all-or-nothing indexing while retaining deterministic, path-ordered diagnostics without dependent cascades.
 
-The provisional index remains internal to Core. Framework-adapter execution, adapter evidence, and the public `inspectProject` operation are intentionally deferred.
+Core supplies this provisional index to configured adapters only after every universal phase succeeds. Public `inspectProject` returns the same index as authoritative project state only when final adapter diagnostics are also empty; adapter composition fixtures live under `fixtures/core/adapter-contract`.
