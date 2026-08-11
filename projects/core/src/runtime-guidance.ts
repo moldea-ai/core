@@ -53,7 +53,7 @@ const isBlockedPath = (path: IRepositoryPath, blockedPaths: ReadonlySet<string>)
  * Reads all discovered runtime guidance and validates every manifest guidance relationship.
  * @param repository The coherent source-neutral repository reader.
  * @param manifestPath The canonical manifest path used for relationship diagnostics.
- * @param manifest The normalized manifest declaring optional agent guidance paths.
+ * @param manifest The normalized manifest declaring optional agent guidance paths, when valid.
  * @param discovery The canonical inventory and path-owned structural diagnostics.
  * @param options The immutable Core configuration snapshot.
  * @param signal Optional cancellation forwarded to every repository read.
@@ -71,7 +71,7 @@ const isBlockedPath = (path: IRepositoryPath, blockedPaths: ReadonlySet<string>)
 export const readRuntimeGuidance = async (
   repository: IRepositoryReader,
   manifestPath: IRepositoryPath,
-  manifest: IMoldeaManifestV1,
+  manifest: IMoldeaManifestV1 | null,
   discovery: ICanonicalDiscoveryResult,
   options: ICoreOptionsSnapshot,
   signal?: AbortSignal,
@@ -101,8 +101,8 @@ export const readRuntimeGuidance = async (
     runtimes.push({ asset: result.asset });
   }
 
-  for (const agentId of Object.keys(manifest.agents ?? {}).sort(compareExactStrings)) {
-    const guidance = manifest.agents?.[agentId]?.framework.guidance;
+  for (const agentId of Object.keys(manifest?.agents ?? {}).sort(compareExactStrings)) {
+    const guidance = manifest?.agents?.[agentId]?.framework.guidance;
 
     if (
       guidance === undefined ||

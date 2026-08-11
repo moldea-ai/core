@@ -3,35 +3,38 @@ import { parseRepositoryPath } from '@moldea.ai/repository';
 import type { ICoreOptionsSnapshot } from './options.js';
 import type { IIndexedTextAsset, IManifestParseResult, ITextDocumentInput } from './contracts.js';
 import { createCoreDiagnosticCollector } from './diagnostic-utilities.js';
+import type { ICoreOperation } from './exceptions.js';
 import { isCanonicalManifestPath } from './format-validation.js';
 import { freezeRecursively } from './immutable.js';
-import { validateManifest } from './manifest-validation.js';
+import { detectSupportedManifestVersion, validateManifest } from './manifest-validation.js';
 import { createSourceLocator } from './source-location.js';
 import { calculateNormalizedTextDigest, normalizeTextDocument } from './text.js';
 import { parseStrictYaml } from './yaml.js';
 
+// richer manifest parse state retained only by repository inspection
+export interface IManifestDocumentInspectionResult extends IManifestParseResult {
+  readonly formatVersion: 1 | null;
+}
+
 /**
- * Parses and validates one complete version 1 manifest document.
+ * Inspects one complete manifest while retaining an independently trustworthy supported version.
  * @param input The canonical logical path and exact manifest text or bytes.
  * @param options The immutable Core limits and adapter snapshots.
- * @returns A frozen all-or-nothing manifest parse result.
+ * @param operation The owning public or repository-level operation for typed failures.
+ * @returns Frozen inspection state with all-or-nothing manifest assets and values.
  * @throws
  * - INVALID_REPOSITORY_PATH: The repository path is invalid.
  * - INVALID_ARGUMENT: The Core operation received an invalid argument.
  * - RESOURCE_LIMIT_EXCEEDED: A Core resource limit was exceeded.
  */
-export const parseManifestDocument = async (
+export const inspectManifestDocument = async (
   input: ITextDocumentInput,
   options: ICoreOptionsSnapshot,
-): Promise<IManifestParseResult> => {
-  const normalized = normalizeTextDocument(
-    input,
-    options.limits,
-    'parse-manifest',
-    'maxManifestBytes',
-  );
+  operation: Extract<ICoreOperation, 'parse-manifest' | 'inspect-project'> = 'parse-manifest',
+): Promise<IManifestDocumentInspectionResult> => {
+  const normalized = normalizeTextDocument(input, options.limits, operation, 'maxManifestBytes');
   const path = parseRepositoryPath(input.path);
-  const diagnostics = createCoreDiagnosticCollector(options.limits, 'parse-manifest');
+  const diagnostics = createCoreDiagnosticCollector(options.limits, operation);
 
   if (!isCanonicalManifestPath(path)) {
     diagnostics.add({ code: 'MOLDEA_MANIFEST_PATH_INVALID', path });
@@ -45,6 +48,7 @@ export const parseManifestDocument = async (
     return freezeRecursively({
       asset: null,
       diagnostics: diagnostics.finalize(),
+      formatVersion: null,
       manifest: null,
       valid: false,
     });
@@ -52,6 +56,7 @@ export const parseManifestDocument = async (
 
   const locator = createSourceLocator(normalized.text.value);
   const parsed = parseStrictYaml(normalized.text.value, path, locator, diagnostics);
+  const formatVersion = parsed.value === null ? null : detectSupportedManifestVersion(parsed.value);
   const manifest =
     parsed.valid && parsed.value !== null
       ? validateManifest(parsed.value, path, options.adapters, diagnostics)
@@ -61,6 +66,7 @@ export const parseManifestDocument = async (
     return freezeRecursively({
       asset: null,
       diagnostics: diagnostics.finalize(),
+      formatVersion,
       manifest: null,
       valid: false,
     });
@@ -78,7 +84,32 @@ export const parseManifestDocument = async (
   return freezeRecursively({
     asset,
     diagnostics: diagnostics.finalize(),
+    formatVersion,
     manifest,
     valid: true,
+  });
+};
+
+/**
+ * Parses and validates one complete version 1 manifest document.
+ * @param input The canonical logical path and exact manifest text or bytes.
+ * @param options The immutable Core limits and adapter snapshots.
+ * @returns A frozen all-or-nothing manifest parse result.
+ * @throws
+ * - INVALID_REPOSITORY_PATH: The repository path is invalid.
+ * - INVALID_ARGUMENT: The Core operation received an invalid argument.
+ * - RESOURCE_LIMIT_EXCEEDED: A Core resource limit was exceeded.
+ */
+export const parseManifestDocument = async (
+  input: ITextDocumentInput,
+  options: ICoreOptionsSnapshot,
+): Promise<IManifestParseResult> => {
+  const inspection = await inspectManifestDocument(input, options);
+
+  return freezeRecursively({
+    asset: inspection.asset,
+    diagnostics: inspection.diagnostics,
+    manifest: inspection.manifest,
+    valid: inspection.valid,
   });
 };

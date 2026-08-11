@@ -28,6 +28,7 @@ import type {
   IFrameworkManifestEntry,
   IMoldeaManifestV1,
   IRelationshipManifestEntry,
+  IRepositoryFormatVersion,
   IRepositoryReference,
   IRuntimeVariableManifestEntry,
   ISkillManifestEntry,
@@ -1050,6 +1051,23 @@ const findMappingProperty = (node: IYamlNode, property: string): IYamlNode | nul
   }
 
   return null;
+};
+
+/**
+ * Detects a supported repository-format version without treating the remaining manifest as valid.
+ * @param node The trustworthy strict-YAML manifest root.
+ * @returns The supported parsed version when its declaration is independently unambiguous.
+ */
+export const detectSupportedManifestVersion = (
+  node: IYamlNode,
+): IRepositoryFormatVersion | null => {
+  if (node.kind !== 'mapping') {
+    return null;
+  }
+
+  const versionNode = findMappingProperty(node, 'version');
+
+  return versionNode?.kind === 'scalar' && versionNode.value === 1n ? 1 : null;
 };
 
 const validateAgentOwnedIdUniqueness = (

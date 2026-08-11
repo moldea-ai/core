@@ -2,7 +2,7 @@
 
 Source-neutral, deterministic interpretation of the `moldea` repository format.
 
-The current `0.0.1` public foundation accepts caller-supplied text documents and does not access a filesystem, Git provider, or network. Invalid document content produces stable diagnostics, while invalid configuration and operational failures use typed exceptions. Strict version 1 manifest and decision parsing are available now. Core also contains internal deterministic canonical-discovery and decision-graph layers exercised only through `IRepositoryReader` and `@moldea.ai/repository/memory`; public repository inspection remains reserved until the complete all-or-nothing behavior is implemented.
+The current `0.0.1` public foundation accepts caller-supplied text documents and does not access a filesystem, Git provider, or network. Invalid document content produces stable diagnostics, while invalid configuration and operational failures use typed exceptions. Strict version 1 manifest and decision parsing are available now. Core also contains internal deterministic universal repository validation and provisional project indexing exercised only through `IRepositoryReader` and `@moldea.ai/repository/memory`; public repository inspection remains reserved until adapter execution is composed with this all-or-nothing behavior.
 
 ## Public entry points
 
@@ -80,7 +80,9 @@ Core now also contains internal readers for every discovered runtime-guidance fi
 
 Declared mirrors are resolved through the same inspection reader and compared with their owning canonical instruction after strict text decoding and repository-format normalization. One leading byte-order mark and CRLF or CR line endings are normalized; all other content differences remain significant. Only exact normalized matches retain mirror and canonical digests. Missing, non-file, symlink, stale, and invalid-text mirrors produce deterministic diagnostics, while an unavailable canonical instruction suppresses mirror lookups and dependent diagnostics.
 
-These layers remain intentionally internal. Final project indexing, adapter execution, and the public `inspectProject` operation remain deferred until universal repository validation can produce one complete trustworthy project index.
+Universal inspection now reads and parses the manifest, reads the project foundation, and then composes canonical discovery, focused-context reads, decision graphs, runtime guidance, registered-agent assets, manifest relationships, repository references, and mirrors through one coherent reader session. Exact foundation entries and file bytes are reused rather than requested twice. It aggregates diagnostics under one project-inspection limit and produces a deeply immutable, deterministic, JSON-safe provisional project index only when every universal phase succeeds. A supported format version remains available when it is independently trustworthy even if another manifest rule fails. Project and focused-context files must contain non-whitespace text; valid focused context retains its manifest relationship metadata, and all indexed assets retain normalized content, scalar and byte lengths, and SHA-256 digests.
+
+These layers remain intentionally internal. Framework-adapter execution, adapter evidence, and the public `inspectProject` operation remain deferred until adapter validation can be composed with the complete universal index.
 
 ## Development
 

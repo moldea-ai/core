@@ -50,6 +50,13 @@ export interface ICanonicalDiscoveryResult {
   readonly diagnostics: readonly ICoreDiagnostic[];
 }
 
+// exact foundation entries prelocated by an owning repository inspection
+export interface ICanonicalDiscoveryFoundationEntries {
+  readonly moldeaRoot: IRepositoryEntry | null;
+  readonly manifest: IRepositoryEntry | null;
+  readonly project: IRepositoryEntry | null;
+}
+
 interface IMutableDiscoveredAgentAssets {
   id: string;
   path: IRepositoryPath;
@@ -276,6 +283,7 @@ const checkFoundationListing = (
  * @param repository The coherent source-neutral repository reader.
  * @param limits The immutable Core limits governing diagnostic collection.
  * @param signal Optional cancellation forwarded to every repository operation.
+ * @param foundations Optional exact foundation entries already observed by this inspection.
  * @returns A deeply immutable inventory and its deterministic structural diagnostics.
  * @throws
  * - ENTRY_NOT_FOUND: The reader snapshot became inconsistent during discovery.
@@ -291,10 +299,14 @@ export const discoverCanonicalAssets = async (
   repository: IRepositoryReader,
   limits: ICoreResourceLimits,
   signal?: AbortSignal,
+  foundations?: ICanonicalDiscoveryFoundationEntries,
 ): Promise<ICanonicalDiscoveryResult> => {
   const diagnostics = createCoreDiagnosticCollector(limits, 'inspect-project');
   const working = createWorkingInventory();
-  const moldeaEntry = await readExactEntry(repository, MOLDEA_ROOT, signal);
+  const moldeaEntry =
+    foundations === undefined
+      ? await readExactEntry(repository, MOLDEA_ROOT, signal)
+      : foundations.moldeaRoot;
 
   if (moldeaEntry === null) {
     diagnostics.add({ code: 'MOLDEA_MANIFEST_MISSING', path: MANIFEST_PATH });
@@ -307,8 +319,14 @@ export const discoverCanonicalAssets = async (
     return finalizeResult(working, diagnostics);
   }
 
-  const manifestEntry = await readExactEntry(repository, MANIFEST_PATH, signal);
-  const projectEntry = await readExactEntry(repository, PROJECT_PATH, signal);
+  const manifestEntry =
+    foundations === undefined
+      ? await readExactEntry(repository, MANIFEST_PATH, signal)
+      : foundations.manifest;
+  const projectEntry =
+    foundations === undefined
+      ? await readExactEntry(repository, PROJECT_PATH, signal)
+      : foundations.project;
   retainFoundationEntry(
     manifestEntry,
     MANIFEST_PATH,

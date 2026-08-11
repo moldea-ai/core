@@ -252,4 +252,20 @@ describe('Core runtime guidance through the memory repository reader', () => {
 
     expect(result).toMatchObject({ diagnostics: [], runtimes: [], valid: true });
   });
+
+  test('validates discovered guidance content when the manifest is unavailable', async () => {
+    const emptyPath = parseRepositoryPath('/moldea/runtimes/empty.md');
+    const repository = createMemoryRepositoryReader([
+      { content: 'version: 1\nunknown: true\n', path: manifestPath, type: 'file' },
+      { content: '# Project\n', path: '/moldea/project.md', type: 'file' },
+      { content: '\t\r\n', path: emptyPath, type: 'file' },
+    ]);
+    const discovery = await discoverCanonicalAssets(repository, options.limits);
+    const result = await readRuntimeGuidance(repository, manifestPath, null, discovery, options);
+
+    expect(result.runtimes).toStrictEqual([]);
+    expect(result.diagnostics).toMatchObject([
+      { code: 'MOLDEA_RUNTIME_GUIDANCE_EMPTY', path: emptyPath },
+    ]);
+  });
 });
