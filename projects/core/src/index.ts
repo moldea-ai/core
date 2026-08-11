@@ -1,8 +1,11 @@
 // framework adapter evidence contracts
-export type { IFrameworkAdapterEvidence, IFrameworkAdapterEvidenceKind } from './adapter.js';
+export type { IFrameworkAdapterEvidence, IFrameworkAdapterEvidenceKind } from './adapter/index.js';
 
 // supported versions and default resource limits
-export { DEFAULT_CORE_RESOURCE_LIMITS, SUPPORTED_REPOSITORY_FORMAT_VERSIONS } from './constants.js';
+export {
+  DEFAULT_CORE_RESOURCE_LIMITS,
+  SUPPORTED_REPOSITORY_FORMAT_VERSIONS,
+} from './constants/index.js';
 
 // Core operation, result, and project-index contracts
 export type {
@@ -28,10 +31,10 @@ export type {
   ITextDocumentContent,
   ITextDocumentInput,
   ITextNormalizationResult,
-} from './contracts.js';
+} from './contracts/index.js';
 
 // Core construction
-export { createCore } from './core.js';
+export { createCore } from './core/index.js';
 
 // diagnostic contracts
 export type {
@@ -43,7 +46,7 @@ export type {
   IDiagnosticEntity,
   ISourcePosition,
   ISourceRange,
-} from './diagnostics.js';
+} from './diagnostics/index.js';
 
 // exception contracts
 export type {
@@ -52,7 +55,7 @@ export type {
   ICoreOperation,
   ICoreOperationErrorCode,
   ICoreOperationExceptionOptions,
-} from './exceptions.js';
+} from './exceptions/index.js';
 
 // exceptions
-export { CoreConfigurationException, CoreOperationException } from './exceptions.js';
+export { CoreConfigurationException, CoreOperationException } from './exceptions/index.js';

@@ -26,11 +26,11 @@
       "import": "./dist/index.js"
     },
     "./format": {
-      "types": "./dist/format.d.ts",
+      "types": "./dist/format/index.d.ts",
       "import": "./dist/format.js"
     },
     "./adapter": {
-      "types": "./dist/adapter.d.ts",
+      "types": "./dist/adapter/index.d.ts",
       "import": "./dist/adapter.js"
     }
   },

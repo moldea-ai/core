@@ -144,8 +144,10 @@ describe('published Core package artifacts', () => {
     expect(packResult).toMatchObject({ name: '@moldea.ai/core', version: '0.0.1' });
     for (const entryName of ['index', 'format', 'adapter']) {
       expect(packedPaths).toContain(`dist/${entryName}.js`);
-      expect(packedPaths).toContain(`dist/${entryName}.d.ts`);
     }
+    expect(packedPaths).toContain('dist/index.d.ts');
+    expect(packedPaths).toContain('dist/format/index.d.ts');
+    expect(packedPaths).toContain('dist/adapter/index.d.ts');
     expect(packedPaths).toContain('LICENSE');
     expect(packedPaths).toContain('README.md');
     expect(packedPaths).toContain('package.json');
@@ -234,12 +236,15 @@ describe('published Core package artifacts', () => {
   test('emits all public declarations without obsolete or private workspace types', () => {
     const indexDeclaration = readFileSync(path.join(distributionDirectory, 'index.d.ts'), 'utf8');
     const contractsDeclaration = readFileSync(
-      path.join(distributionDirectory, 'contracts.d.ts'),
+      path.join(distributionDirectory, 'contracts', 'index.d.ts'),
       'utf8',
     );
-    const formatDeclaration = readFileSync(path.join(distributionDirectory, 'format.d.ts'), 'utf8');
+    const formatDeclaration = readFileSync(
+      path.join(distributionDirectory, 'format', 'index.d.ts'),
+      'utf8',
+    );
     const adapterDeclaration = readFileSync(
-      path.join(distributionDirectory, 'adapter.d.ts'),
+      path.join(distributionDirectory, 'adapter', 'index.d.ts'),
       'utf8',
     );
     const allDeclarations = readDistributionFiles('.d.ts').join('\n');
