@@ -68,7 +68,9 @@ Decision parsing validates the canonical timestamp-slug path, exact frontmatter 
 
 ## Internal repository validation
 
-Core's repository-level foundation composes canonical discovery with exact decision reads through `IRepositoryReader`. It parses each discovered decision once and deterministically validates project-wide ID uniqueness, missing supersession references, cycles, active and historical status consistency, and orphaned superseded decisions. Invalid or ambiguous decision nodes do not produce dependent graph cascades, while unrelated trustworthy graph rules continue to run.
+Core's repository-level foundation now includes one isolated reader session for each inspection. The session validates detached reader output, applies the shared entry and byte budgets, caches each successfully read source file once, returns a fresh byte array to every consumer, and preserves cancellation and repository-source failures. Its state is never shared across inspections.
+
+Canonical discovery and exact decision reads can compose through this `IRepositoryReader` boundary. Core parses each discovered decision once and deterministically validates project-wide ID uniqueness, missing supersession references, cycles, active and historical status consistency, and orphaned superseded decisions. Invalid or ambiguous decision nodes do not produce dependent graph cascades, while unrelated trustworthy graph rules continue to run.
 
 The internal relationship layer also validates top-level and per-agent context and decision paths against canonical discovery and the parsed decision graph. Context targets must exist, and decision targets must exist and be accepted. Discovery and document diagnostics retain ownership of invalid targets so dependent missing or inactive diagnostics do not cascade.
 
