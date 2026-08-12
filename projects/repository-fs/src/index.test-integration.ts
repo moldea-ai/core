@@ -237,6 +237,11 @@ describe('published Repository FS package artifacts', () => {
     expect(indexDeclaration).not.toContain('createFilesystemDirectoryInventory');
     expect(indexDeclaration).not.toContain('createFilesystemDirectoryEntryCandidates');
     expect(indexDeclaration).not.toContain('registerFilesystemDirectoryIdentity');
+    expect(indexDeclaration).not.toContain('createVerifiedFilesystemInventory');
+    expect(indexDeclaration).not.toContain('verifyFilesystemDirectoryInventory');
+    expect(indexDeclaration).not.toContain('verifyFilesystemExactPathInventory');
+    expect(indexDeclaration).not.toContain('createFilesystemRegularFileFingerprint');
+    expect(indexDeclaration).not.toContain('IFilesystemRegularFileFingerprint');
     expect(indexDeclaration).not.toContain('IFilesystemInventory');
     expect(indexDeclaration).not.toContain('createFilesystemExactPathInventory');
     expect(indexDeclaration).not.toContain('createFilesystemExactPathSelectionPlan');

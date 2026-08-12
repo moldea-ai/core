@@ -2,7 +2,7 @@
 
 Node.js-specific foundations for exposing one explicitly selected local directory through the source-neutral repository contract.
 
-The current unpublished `0.0.1` foundation defines the complete version 1 option, selection, and resource-limit contracts. It validates and detaches caller options, internally canonicalizes an explicit filesystem root, and constructs strict private exact-path and recursive-directory inventories with safe common repository exceptions. The public reader factory is intentionally withheld until fingerprint verification and coherent reader behavior can be published together.
+The current unpublished `0.0.1` foundation defines the complete version 1 option, selection, and resource-limit contracts. It validates and detaches caller options, internally canonicalizes an explicit filesystem root, and constructs and verifies strict private exact-path and recursive-directory inventories with safe common repository exceptions. The public reader factory is intentionally withheld until coherent reader operations, verified file capture, and invalidation can be published together.
 
 Tarball and consumer-type checks are the release boundary for now. This package is not ready to publish to npm.
 
@@ -69,7 +69,13 @@ Directory construction recursively includes every representable regular file, di
 
 Each directory's native names are decoded strictly and ordered by exact logical path before traversal. Directory identities are tracked to reject physical aliases or cycles. Symlinks and junctions remain entries without recursion, unsupported entry types fail the complete operation, and `maxEntries` is enforced without truncating the inventory.
 
-These inventories remain private. They are not yet coherent reader snapshots because creation-time fingerprints, mutation verification, reader operations, caching, and invalidation are subsequent implementation phases.
+### Fingerprints and creation-time verification
+
+Every regular-file entry retains a private creation-time fingerprint containing stable identity, size, mode, and nanosecond modification metadata. Root and directory entries retain stable identities without membership timestamps, so unrelated sibling activity does not invalidate an exact-path selection.
+
+Exact-path verification rechecks required raw segment spellings, selected entry types, regular-file fingerprints, and required directory-component identities while continuing to ignore unrelated sibling content. Recursive verification rechecks every entry type, file fingerprint, traversed directory identity, and complete eligible child-name set after `.git` exclusion. A detected mismatch fails the complete operation with `SNAPSHOT_CHANGED`; partial verified inventories are never returned.
+
+Verified inventories remain private construction results rather than published readers. Frozen lookup and listing, lazy verified file capture, immutable caching, permanent invalidation, operation concurrency, and the public factory are subsequent implementation phases.
 
 ## Runtime support
 

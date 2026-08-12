@@ -5,8 +5,11 @@ import path from 'node:path';
 
 import { REPOSITORY_ROOT, type IRepositoryPath } from '@moldea.ai/repository';
 
-import { classifyFilesystemEntry } from '../entry-classification/index.js';
-import type { IFilesystemInventory, IFilesystemInventoryEntry } from '../inventory/index.js';
+import {
+  createFilesystemInventoryEntry,
+  type IFilesystemInventory,
+  type IFilesystemInventoryEntry,
+} from '../inventory/index.js';
 import type { IPreparedFilesystemRepositoryRoot } from '../root/index.js';
 import {
   throwFilesystemRepositoryCreationException,
@@ -62,7 +65,7 @@ const readDirectoryNames = async (
  * @param hostName The losslessly decoded source entry name.
  * @param logicalPath The exact safe logical path for the entry.
  * @param signal The live reader-creation cancellation signal.
- * @returns A promise resolving to the classified private inventory entry and source statistics.
+ * @returns A promise resolving to the classified entry with its applicable verification metadata.
  * @throws
  * - ABORTED: The repository operation was aborted.
  * - ACCESS_DENIED: Access to the repository source was denied.
@@ -75,10 +78,7 @@ const captureDirectoryChild = async (
   hostName: string,
   logicalPath: IRepositoryPath,
   signal: AbortSignal | undefined,
-): Promise<{
-  readonly entry: IFilesystemInventoryEntry;
-  readonly statistics: BigIntStats;
-}> => {
+): Promise<IFilesystemInventoryEntry> => {
   const hostPath = path.join(parentDirectory.hostPath, hostName);
 
   throwIfFilesystemRepositoryCreationAborted(signal, logicalPath);
@@ -95,20 +95,13 @@ const captureDirectoryChild = async (
 
   throwIfFilesystemRepositoryCreationAborted(signal, logicalPath);
 
-  return Object.freeze({
-    entry: Object.freeze({
-      hostPath,
-      path: logicalPath,
-      type: classifyFilesystemEntry(statistics, logicalPath),
-    }),
-    statistics,
-  });
+  return createFilesystemInventoryEntry(hostPath, logicalPath, statistics);
 };
 
 /**
  * Materializes one private recursive raw-directory inventory beneath a prepared root.
  * @param preparedRoot The validated fixed root and detached directory-selection options.
- * @returns A frozen root-inclusive inventory for later fingerprint construction.
+ * @returns A frozen root-inclusive inventory with private verification metadata.
  * @throws
  * - ABORTED: The repository operation was aborted.
  * - ACCESS_DENIED: Access to the repository source was denied.
@@ -126,6 +119,7 @@ export const createFilesystemDirectoryInventory = async (
 
   const rootEntry: IFilesystemInventoryEntry = Object.freeze({
     hostPath: preparedRoot.resolvedRootDirectory,
+    identity: preparedRoot.identity,
     path: REPOSITORY_ROOT,
     type: 'directory',
   });
@@ -142,10 +136,7 @@ export const createFilesystemDirectoryInventory = async (
 
   registerFilesystemDirectoryIdentity(
     registeredDirectoryIdentityKeys,
-    {
-      device: preparedRoot.identity.device,
-      inode: preparedRoot.identity.inode,
-    },
+    preparedRoot.identity,
     REPOSITORY_ROOT,
   );
 
@@ -179,7 +170,7 @@ export const createFilesystemDirectoryInventory = async (
         );
       }
 
-      const { entry, statistics } = await captureDirectoryChild(
+      const entry = await captureDirectoryChild(
         currentDirectory,
         candidate.hostName,
         candidate.path,
@@ -189,7 +180,7 @@ export const createFilesystemDirectoryInventory = async (
       if (entry.type === 'directory') {
         registerFilesystemDirectoryIdentity(
           registeredDirectoryIdentityKeys,
-          { device: statistics.dev, inode: statistics.ino },
+          entry.identity,
           entry.path,
         );
         pendingDirectories.push({

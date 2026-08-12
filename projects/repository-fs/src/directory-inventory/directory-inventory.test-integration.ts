@@ -60,14 +60,15 @@ describe('filesystem recursive directory inventory construction', () => {
 
     try {
       const inventory = await createInventory(temporaryDirectory);
+      const rootEntry = inventory.entries[0];
 
-      expect(inventory.entries).toStrictEqual([
-        {
-          hostPath: await realpath(temporaryDirectory),
-          path: parseRepositoryPath('/'),
-          type: 'directory',
-        },
-      ]);
+      expect(inventory.entries).toHaveLength(1);
+      expect(rootEntry).toMatchObject({
+        hostPath: await realpath(temporaryDirectory),
+        path: parseRepositoryPath('/'),
+        type: 'directory',
+      });
+      expect(rootEntry?.type === 'directory' && Object.isFrozen(rootEntry.identity)).toBe(true);
       expect(Object.isFrozen(inventory)).toBe(true);
       expect(Object.isFrozen(inventory.entries)).toBe(true);
       expect(inventory.entries.every(Object.isFrozen)).toBe(true);

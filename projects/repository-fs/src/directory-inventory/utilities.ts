@@ -3,9 +3,10 @@ import { Buffer } from 'node:buffer';
 import { parseRepositoryPath, type IRepositoryPath } from '@moldea.ai/repository';
 
 import { decodeFilesystemName } from '../filesystem-name/index.js';
+import type { IFilesystemDirectoryIdentity } from '../filesystem-fingerprint/index.js';
 import { throwFilesystemRepositoryCreationException } from '../source-exception/index.js';
 import { FILESYSTEM_GIT_CONTROL_ENTRY_NAME } from './constants.js';
-import type { IFilesystemDirectoryEntryCandidate, IFilesystemDirectoryIdentity } from './types.js';
+import type { IFilesystemDirectoryEntryCandidate } from './types.js';
 
 const gitControlEntryNameBytes = Buffer.from(FILESYSTEM_GIT_CONTROL_ENTRY_NAME, 'utf8');
 
@@ -71,7 +72,7 @@ export const registerFilesystemDirectoryIdentity = (
   identity: IFilesystemDirectoryIdentity,
   logicalPath: IRepositoryPath,
 ): void => {
-  const identityKey = `${identity.device}:${identity.inode}`;
+  const identityKey = `${identity.device}:${identity.inode}:${identity.birthtimeNanoseconds}`;
 
   if (registeredIdentityKeys.has(identityKey)) {
     return throwFilesystemRepositoryCreationException('INVALID_SOURCE_DATA', false, logicalPath);

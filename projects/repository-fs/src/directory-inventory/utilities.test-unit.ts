@@ -92,21 +92,26 @@ describe('filesystem directory inventory utilities', () => {
 
     registerFilesystemDirectoryIdentity(
       registeredIdentityKeys,
-      { device: 1n, inode: 1n },
+      { birthtimeNanoseconds: 1n, device: 1n, inode: 1n, mode: 1n },
       REPOSITORY_ROOT,
     );
     registerFilesystemDirectoryIdentity(
       registeredIdentityKeys,
-      { device: 1n, inode: 2n },
+      { birthtimeNanoseconds: 1n, device: 1n, inode: 2n, mode: 1n },
       parseRepositoryPath('/first'),
     );
+    registerFilesystemDirectoryIdentity(
+      registeredIdentityKeys,
+      { birthtimeNanoseconds: 2n, device: 1n, inode: 1n, mode: 1n },
+      parseRepositoryPath('/reused'),
+    );
 
-    expect(registeredIdentityKeys).toStrictEqual(new Set(['1:1', '1:2']));
+    expect(registeredIdentityKeys).toStrictEqual(new Set(['1:1:1', '1:2:1', '1:1:2']));
     expectToThrowCode(
       () =>
         registerFilesystemDirectoryIdentity(
           registeredIdentityKeys,
-          { device: 1n, inode: 1n },
+          { birthtimeNanoseconds: 1n, device: 1n, inode: 1n, mode: 2n },
           parseRepositoryPath('/alias'),
         ),
       'INVALID_SOURCE_DATA',

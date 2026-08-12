@@ -5,9 +5,3 @@ export interface IFilesystemDirectoryEntryCandidate {
   readonly hostName: string;
   readonly path: IRepositoryPath;
 }
-
-// stable directory identity fields used to prevent traversal aliases
-export interface IFilesystemDirectoryIdentity {
-  readonly device: bigint;
-  readonly inode: bigint;
-}

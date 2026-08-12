@@ -5,13 +5,16 @@ import path from 'node:path';
 
 import { REPOSITORY_ROOT, type IRepositoryPath } from '@moldea.ai/repository';
 
-import { classifyFilesystemEntry } from '../entry-classification/index.js';
 import type {
   IFilesystemExactPathSelectionPlan,
   IFilesystemExactPathSelectionPlanEntry,
 } from '../exact-path-selection/index.js';
 import { decodeFilesystemName } from '../filesystem-name/index.js';
-import type { IFilesystemInventory, IFilesystemInventoryEntry } from '../inventory/index.js';
+import {
+  createFilesystemInventoryEntry,
+  type IFilesystemInventory,
+  type IFilesystemInventoryEntry,
+} from '../inventory/index.js';
 import type { IPreparedFilesystemRepositoryRoot } from '../root/index.js';
 import {
   throwFilesystemRepositoryCreationException,
@@ -117,11 +120,7 @@ const captureMatchedEntry = async (
 
   throwIfFilesystemRepositoryCreationAborted(signal, plannedEntry.path);
 
-  return Object.freeze({
-    hostPath,
-    path: plannedEntry.path,
-    type: classifyFilesystemEntry(statistics, plannedEntry.path),
-  });
+  return createFilesystemInventoryEntry(hostPath, plannedEntry.path, statistics);
 };
 
 /**
@@ -208,7 +207,7 @@ const throwIfRequiredEntriesCollapse = async (
  * Materializes one private exact-path inventory beneath a prepared canonical root.
  * @param preparedRoot The validated fixed root and detached reader options.
  * @param selectionPlan The deterministic selected and synthesized logical path plan.
- * @returns A frozen root-inclusive inventory for later fingerprint construction.
+ * @returns A frozen root-inclusive inventory with private verification metadata.
  * @throws
  * - ABORTED: The repository operation was aborted.
  * - ACCESS_DENIED: Access to the repository source was denied.
@@ -236,6 +235,7 @@ export const createFilesystemExactPathInventory = async (
 
   const rootEntry: IFilesystemInventoryEntry = Object.freeze({
     hostPath: preparedRoot.resolvedRootDirectory,
+    identity: preparedRoot.identity,
     path: REPOSITORY_ROOT,
     type: 'directory',
   });

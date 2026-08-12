@@ -1,5 +1,5 @@
 // types
-export type { IFilesystemDirectoryEntryCandidate, IFilesystemDirectoryIdentity } from './types.js';
+export type { IFilesystemDirectoryEntryCandidate } from './types.js';
 
 // constants
 export { FILESYSTEM_GIT_CONTROL_ENTRY_NAME } from './constants.js';

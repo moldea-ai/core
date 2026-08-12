@@ -4,6 +4,11 @@ import { lstat, realpath } from 'node:fs/promises';
 import { RepositorySourceException } from '@moldea.ai/repository';
 
 import {
+  createFilesystemDirectoryIdentity,
+  hasSameFilesystemDirectoryIdentity,
+  type IFilesystemDirectoryIdentity,
+} from '../filesystem-fingerprint/index.js';
+import {
   normalizeFilesystemRepositoryOptions,
   type INormalizedFilesystemRepositoryReaderOptions,
 } from '../options/index.js';
@@ -14,17 +19,9 @@ import {
   throwObservedFilesystemRepositoryCreationError,
 } from '../source-exception/index.js';
 
-// stable resolved-root identity retained for later snapshot verification
-interface IFilesystemRootIdentity {
-  readonly birthtimeNanoseconds: bigint;
-  readonly device: bigint;
-  readonly inode: bigint;
-  readonly mode: bigint;
-}
-
 // private root preparation result for subsequent reader-construction phases
 export interface IPreparedFilesystemRepositoryRoot {
-  readonly identity: IFilesystemRootIdentity;
+  readonly identity: IFilesystemDirectoryIdentity;
   readonly options: INormalizedFilesystemRepositoryReaderOptions;
   readonly resolvedRootDirectory: string;
 }
@@ -46,27 +43,6 @@ const throwInitialRootError = (cause: unknown): never => {
   }
 
   return throwFilesystemRepositoryCreationException('SOURCE_UNAVAILABLE', true, null, cause);
-};
-
-const captureRootIdentity = (statistics: BigIntStats): IFilesystemRootIdentity => {
-  return Object.freeze({
-    birthtimeNanoseconds: statistics.birthtimeNs,
-    device: statistics.dev,
-    inode: statistics.ino,
-    mode: statistics.mode,
-  });
-};
-
-const hasSameRootIdentity = (
-  firstIdentity: IFilesystemRootIdentity,
-  secondIdentity: IFilesystemRootIdentity,
-): boolean => {
-  return (
-    firstIdentity.birthtimeNanoseconds === secondIdentity.birthtimeNanoseconds &&
-    firstIdentity.device === secondIdentity.device &&
-    firstIdentity.inode === secondIdentity.inode &&
-    firstIdentity.mode === secondIdentity.mode
-  );
 };
 
 /**
@@ -113,7 +89,7 @@ export const prepareFilesystemRepositoryRoot = async (
     return throwFilesystemRepositoryCreationException('ENTRY_NOT_DIRECTORY', false, null);
   }
 
-  const identity = captureRootIdentity(initialStatistics);
+  const identity = createFilesystemDirectoryIdentity(initialStatistics);
 
   throwIfFilesystemRepositoryCreationAborted(options.signal);
 
@@ -131,7 +107,10 @@ export const prepareFilesystemRepositoryRoot = async (
 
   if (
     !revalidatedStatistics.isDirectory() ||
-    !hasSameRootIdentity(identity, captureRootIdentity(revalidatedStatistics))
+    !hasSameFilesystemDirectoryIdentity(
+      identity,
+      createFilesystemDirectoryIdentity(revalidatedStatistics),
+    )
   ) {
     return throwFilesystemRepositoryCreationException('SNAPSHOT_CHANGED', true, null);
   }
