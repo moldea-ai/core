@@ -149,3 +149,49 @@ export const throwObservedFilesystemRepositoryCreationError = (
 
   return throwFilesystemRepositoryCreationException('SOURCE_UNAVAILABLE', true, path, cause);
 };
+
+/**
+ * Maps a host failure while operating on one previously verified filesystem entry.
+ * @param cause The unknown host filesystem failure.
+ * @param operation The reader operation that observed the failure.
+ * @param path The safe logical path affected by the failed observation.
+ * @throws
+ * - ACCESS_DENIED: Access to the repository source was denied.
+ * - SNAPSHOT_CHANGED: The repository snapshot changed during the operation.
+ * - SOURCE_UNAVAILABLE: The repository source is unavailable.
+ */
+export const throwObservedFilesystemRepositoryOperationError = (
+  cause: unknown,
+  operation: IFilesystemRepositoryOperation,
+  path: IRepositoryPath,
+): never => {
+  const errorCode = getNodeErrorCode(cause);
+
+  if (errorCode === 'ENOENT' || errorCode === 'ENOTDIR' || errorCode === 'ELOOP') {
+    return throwFilesystemRepositoryOperationException(
+      'SNAPSHOT_CHANGED',
+      operation,
+      true,
+      path,
+      cause,
+    );
+  }
+
+  if (errorCode === 'EACCES' || errorCode === 'EPERM') {
+    return throwFilesystemRepositoryOperationException(
+      'ACCESS_DENIED',
+      operation,
+      true,
+      path,
+      cause,
+    );
+  }
+
+  return throwFilesystemRepositoryOperationException(
+    'SOURCE_UNAVAILABLE',
+    operation,
+    true,
+    path,
+    cause,
+  );
+};

@@ -2,7 +2,7 @@
 
 Node.js-specific foundations for exposing one explicitly selected local directory through the source-neutral repository contract.
 
-The current unpublished `0.0.1` foundation defines the complete version 1 option, selection, and resource-limit contracts. It validates and detaches caller options, internally canonicalizes an explicit filesystem root, constructs and verifies strict private exact-path and recursive-directory inventories, and provides frozen lookup and recursive listing over those inventories with safe common repository exceptions. The public reader factory is intentionally withheld until verified file capture, immutable caching, invalidation, and operation coordination can be published together.
+The current unpublished `0.0.1` foundation defines the complete version 1 option, selection, and resource-limit contracts. It validates and detaches caller options, internally canonicalizes an explicit filesystem root, constructs and verifies strict private exact-path and recursive-directory inventories, provides frozen lookup and recursive listing, and captures verified file bytes into a private immutable cache. The public reader factory is intentionally withheld until permanent invalidation and operation coordination can be published with these completed internal behaviors.
 
 Tarball and consumer-type checks are the release boundary for now. This package is not ready to publish to npm.
 
@@ -77,7 +77,15 @@ Exact-path verification rechecks required raw segment spellings, selected entry 
 
 Verified inventories feed private frozen lookup and recursive-listing operations. These operations validate logical paths at runtime, return detached common entries without private filesystem metadata, honor operation cancellation, preserve exact prefix boundaries, and perform no additional host access. Missing lookup paths return `null`; missing and non-directory listing prefixes use the common `ENTRY_NOT_FOUND` and `ENTRY_NOT_DIRECTORY` contracts.
 
-Lazy verified file capture, immutable caching, permanent invalidation, operation concurrency, and the public factory remain subsequent implementation phases.
+### Verified file capture and caching
+
+Private file-read operations classify paths from the frozen inventory before host access. Missing paths use `ENTRY_NOT_FOUND`, while the root, directories, and symlinks use `ENTRY_NOT_FILE`. An already captured file is served entirely from the private cache.
+
+The first read of a regular file revalidates the resolved root and every frozen directory component with no-follow metadata, opens the selected file with the strongest no-follow behavior exposed by the runtime, and compares both the open handle and current path with the creation-time fingerprint. It enforces `maxFileBytes` and the remaining `maxCachedBytes` budget before allocating the exact expected length, reads in bounded chunks, and repeats handle and path-chain verification before committing bytes.
+
+Only a complete verified capture enters the cache. Failed, cancelled, oversized, truncated, replaced, redirected, or otherwise changed captures commit no bytes and consume no cache budget. Each captured path counts once, repeated reads perform no host access, and every result is a fresh `Uint8Array` detached from both the cache and every other caller result. Later host modification or deletion therefore cannot alter successfully cached bytes.
+
+Permanent invalidation, coordinated concurrent first reads, atomic concurrent reservations, the shared reader conformance boundary, and the public factory remain subsequent implementation phases.
 
 ## Runtime support
 

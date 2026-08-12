@@ -11,6 +11,7 @@ import {
   throwIfFilesystemRepositoryCreationAborted,
   throwIfFilesystemRepositoryOperationAborted,
   throwObservedFilesystemRepositoryCreationError,
+  throwObservedFilesystemRepositoryOperationError,
 } from './index.js';
 
 describe('filesystem repository exceptions', () => {
@@ -192,5 +193,36 @@ describe('filesystem repository exceptions', () => {
       retryable: true,
     });
     expect(JSON.stringify(rejection)).not.toContain('/private/host/root');
+  });
+
+  test.each([
+    ['ENOENT', 'SNAPSHOT_CHANGED', 'The repository snapshot changed during the operation.'],
+    ['ENOTDIR', 'SNAPSHOT_CHANGED', 'The repository snapshot changed during the operation.'],
+    ['ELOOP', 'SNAPSHOT_CHANGED', 'The repository snapshot changed during the operation.'],
+    ['EACCES', 'ACCESS_DENIED', 'Access to the repository source was denied.'],
+    ['EPERM', 'ACCESS_DENIED', 'Access to the repository source was denied.'],
+    ['EIO', 'SOURCE_UNAVAILABLE', 'The repository source is unavailable.'],
+  ])('maps observed operation error %s to %s', (nodeErrorCode, expectedCode, expectedMessage) => {
+    const logicalPath = parseRepositoryPath('/observed.txt');
+    const cause = Object.assign(new Error('/private/host/root/observed.txt'), {
+      code: nodeErrorCode,
+    });
+
+    expectToThrowCode(
+      () => throwObservedFilesystemRepositoryOperationError(cause, 'read-file', logicalPath),
+      expectedCode,
+      expectedMessage,
+    );
+
+    try {
+      throwObservedFilesystemRepositoryOperationError(cause, 'read-file', logicalPath);
+    } catch (error) {
+      expect(error).toMatchObject({
+        operation: 'read-file',
+        path: logicalPath,
+        retryable: true,
+      });
+      expect(JSON.stringify(error)).not.toContain('/private/host/root');
+    }
   });
 });
