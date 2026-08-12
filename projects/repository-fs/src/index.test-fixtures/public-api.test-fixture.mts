@@ -11,6 +11,12 @@ import {
 } from '@moldea.ai/repository-fs';
 // @ts-expect-error The reader factory is withheld until coherent reader behavior is implemented.
 import { createFilesystemRepositoryReader } from '@moldea.ai/repository-fs';
+import {
+  // @ts-expect-error Frozen inventory operations remain internal reader-building details.
+  getFilesystemRepositoryEntry,
+  // @ts-expect-error Frozen inventory operations remain internal reader-building details.
+  listFilesystemRepositoryEntries,
+} from '@moldea.ai/repository-fs';
 
 const selectedPath: IRepositoryPath = parseRepositoryPath('/moldea/moldea.yaml');
 const pathSelection: IFilesystemRepositoryPathSelection = {
@@ -31,5 +37,7 @@ const options: IFilesystemRepositoryReaderOptions = {
 
 void repositoryFilesystemDefault;
 void createFilesystemRepositoryReader;
+void getFilesystemRepositoryEntry;
+void listFilesystemRepositoryEntries;
 void selections;
 void options;

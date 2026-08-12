@@ -7,11 +7,13 @@ import { RepositorySourceException, parseRepositoryPath } from '@moldea.ai/repos
 import {
   getNodeErrorCode,
   throwFilesystemRepositoryCreationException,
+  throwFilesystemRepositoryOperationException,
   throwIfFilesystemRepositoryCreationAborted,
+  throwIfFilesystemRepositoryOperationAborted,
   throwObservedFilesystemRepositoryCreationError,
 } from './index.js';
 
-describe('filesystem repository creation exceptions', () => {
+describe('filesystem repository exceptions', () => {
   test('throws the common source contract with safe metadata', () => {
     const logicalPath = parseRepositoryPath('/safe.txt');
     const cause = new Error('/private/host/root/safe.txt');
@@ -52,6 +54,88 @@ describe('filesystem repository creation exceptions', () => {
       'ABORTED',
       'The repository operation was aborted.',
     );
+  });
+
+  test('throws the common operation contract with safe metadata', () => {
+    const logicalPath = parseRepositoryPath('/safe.txt');
+    const cause = new Error('/private/host/root/safe.txt');
+
+    expectToThrowCode(
+      () =>
+        throwFilesystemRepositoryOperationException(
+          'ENTRY_NOT_DIRECTORY',
+          'list-entries',
+          false,
+          logicalPath,
+          cause,
+        ),
+      'ENTRY_NOT_DIRECTORY',
+      'The requested repository entry is not a directory.',
+    );
+
+    let rejection: unknown;
+
+    try {
+      throwFilesystemRepositoryOperationException(
+        'ENTRY_NOT_DIRECTORY',
+        'list-entries',
+        false,
+        logicalPath,
+        cause,
+      );
+    } catch (error) {
+      rejection = error;
+    }
+
+    expect(rejection).toBeInstanceOf(RepositorySourceException);
+    expect(rejection).toMatchObject({
+      operation: 'list-entries',
+      path: logicalPath,
+      retryable: false,
+    });
+    expect(JSON.stringify(rejection)).not.toContain('/private/host/root');
+    expect(Object.keys(rejection as RepositorySourceException)).not.toContain('cause');
+  });
+
+  test('throws operation cancellation only for an aborted signal', () => {
+    const activeController = new AbortController();
+    const abortedController = new AbortController();
+    const logicalPath = parseRepositoryPath('/safe.txt');
+
+    abortedController.abort(new Error('/private/host/root/safe.txt'));
+
+    expect(() =>
+      throwIfFilesystemRepositoryOperationAborted(
+        activeController.signal,
+        'get-entry',
+        logicalPath,
+      ),
+    ).not.toThrow();
+    expectToThrowCode(
+      () =>
+        throwIfFilesystemRepositoryOperationAborted(
+          abortedController.signal,
+          'get-entry',
+          logicalPath,
+        ),
+      'ABORTED',
+      'The repository operation was aborted.',
+    );
+
+    try {
+      throwIfFilesystemRepositoryOperationAborted(
+        abortedController.signal,
+        'get-entry',
+        logicalPath,
+      );
+    } catch (error) {
+      expect(error).toMatchObject({
+        operation: 'get-entry',
+        path: logicalPath,
+        retryable: false,
+      });
+      expect(JSON.stringify(error)).not.toContain('/private/host/root');
+    }
   });
 
   test.each([

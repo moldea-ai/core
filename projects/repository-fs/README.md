@@ -2,7 +2,7 @@
 
 Node.js-specific foundations for exposing one explicitly selected local directory through the source-neutral repository contract.
 
-The current unpublished `0.0.1` foundation defines the complete version 1 option, selection, and resource-limit contracts. It validates and detaches caller options, internally canonicalizes an explicit filesystem root, and constructs and verifies strict private exact-path and recursive-directory inventories with safe common repository exceptions. The public reader factory is intentionally withheld until coherent reader operations, verified file capture, and invalidation can be published together.
+The current unpublished `0.0.1` foundation defines the complete version 1 option, selection, and resource-limit contracts. It validates and detaches caller options, internally canonicalizes an explicit filesystem root, constructs and verifies strict private exact-path and recursive-directory inventories, and provides frozen lookup and recursive listing over those inventories with safe common repository exceptions. The public reader factory is intentionally withheld until verified file capture, immutable caching, invalidation, and operation coordination can be published together.
 
 Tarball and consumer-type checks are the release boundary for now. This package is not ready to publish to npm.
 
@@ -75,7 +75,9 @@ Every regular-file entry retains a private creation-time fingerprint containing 
 
 Exact-path verification rechecks required raw segment spellings, selected entry types, regular-file fingerprints, and required directory-component identities while continuing to ignore unrelated sibling content. Recursive verification rechecks every entry type, file fingerprint, traversed directory identity, and complete eligible child-name set after `.git` exclusion. A detected mismatch fails the complete operation with `SNAPSHOT_CHANGED`; partial verified inventories are never returned.
 
-Verified inventories remain private construction results rather than published readers. Frozen lookup and listing, lazy verified file capture, immutable caching, permanent invalidation, operation concurrency, and the public factory are subsequent implementation phases.
+Verified inventories feed private frozen lookup and recursive-listing operations. These operations validate logical paths at runtime, return detached common entries without private filesystem metadata, honor operation cancellation, preserve exact prefix boundaries, and perform no additional host access. Missing lookup paths return `null`; missing and non-directory listing prefixes use the common `ENTRY_NOT_FOUND` and `ENTRY_NOT_DIRECTORY` contracts.
+
+Lazy verified file capture, immutable caching, permanent invalidation, operation concurrency, and the public factory remain subsequent implementation phases.
 
 ## Runtime support
 

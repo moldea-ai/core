@@ -34,7 +34,7 @@ export type IFilesystemInventoryEntry =
   | IFilesystemDirectoryInventoryEntry
   | IFilesystemSymlinkInventoryEntry;
 
-// private root-inclusive inventory retained for fingerprint and reader phases
+// private root-inclusive inventory ordered by exact logical path for later reader phases
 export interface IFilesystemInventory {
   readonly entries: readonly IFilesystemInventoryEntry[];
 }
