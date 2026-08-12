@@ -11,9 +11,9 @@ import { describe, expect, test } from 'vitest';
 import { parseRepositoryPath, type IRepositoryPath } from '@moldea.ai/repository';
 
 import { createFilesystemExactPathSelectionPlan } from '../exact-path-selection/index.js';
+import type { IFilesystemInventory } from '../inventory/index.js';
 import { prepareFilesystemRepositoryRoot } from '../root/index.js';
 import { createFilesystemExactPathInventory } from './index.js';
-import type { IFilesystemExactPathInventory } from './types.js';
 
 const createTemporaryDirectory = (): Promise<string> => {
   return mkdtemp(path.join(tmpdir(), 'moldea-repository-fs-exact-'));
@@ -23,7 +23,7 @@ const createInventory = async (
   rootDirectory: string,
   selectedPaths: readonly IRepositoryPath[],
   maxEntries = 100_000,
-): Promise<IFilesystemExactPathInventory> => {
+): Promise<IFilesystemInventory> => {
   const preparedRoot = await prepareFilesystemRepositoryRoot({
     limits: { maxEntries },
     rootDirectory,

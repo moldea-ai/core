@@ -234,6 +234,10 @@ describe('published Repository FS package artifacts', () => {
     expect(indexDeclaration).toContain('IFilesystemRepositoryReaderOptions');
     expect(indexDeclaration).toContain('DEFAULT_FILESYSTEM_REPOSITORY_RESOURCE_LIMITS');
     expect(indexDeclaration).not.toContain('prepareFilesystemRepositoryRoot');
+    expect(indexDeclaration).not.toContain('createFilesystemDirectoryInventory');
+    expect(indexDeclaration).not.toContain('createFilesystemDirectoryEntryCandidates');
+    expect(indexDeclaration).not.toContain('registerFilesystemDirectoryIdentity');
+    expect(indexDeclaration).not.toContain('IFilesystemInventory');
     expect(indexDeclaration).not.toContain('createFilesystemExactPathInventory');
     expect(indexDeclaration).not.toContain('createFilesystemExactPathSelectionPlan');
     expect(indexDeclaration).not.toContain('decodeFilesystemName');

@@ -1,9 +1,5 @@
 // types
-export type {
-  IFilesystemExactPathDirectoryNameMatch,
-  IFilesystemExactPathInventory,
-  IFilesystemExactPathInventoryEntry,
-} from './types.js';
+export type { IFilesystemExactPathDirectoryNameMatch } from './types.js';
 
 // inventory construction
 export { createFilesystemExactPathInventory } from './exact-path-inventory.js';

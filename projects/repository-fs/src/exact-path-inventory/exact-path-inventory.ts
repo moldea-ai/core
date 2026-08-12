@@ -11,13 +11,13 @@ import type {
   IFilesystemExactPathSelectionPlanEntry,
 } from '../exact-path-selection/index.js';
 import { decodeFilesystemName } from '../filesystem-name/index.js';
+import type { IFilesystemInventory, IFilesystemInventoryEntry } from '../inventory/index.js';
 import type { IPreparedFilesystemRepositoryRoot } from '../root/index.js';
 import {
   throwFilesystemRepositoryCreationException,
   throwIfFilesystemRepositoryCreationAborted,
   throwObservedFilesystemRepositoryCreationError,
 } from '../source-exception/index.js';
-import type { IFilesystemExactPathInventory, IFilesystemExactPathInventoryEntry } from './types.js';
 import {
   getMissingFilesystemExactPathDirectoryEntries,
   matchFilesystemExactPathDirectoryNames,
@@ -90,7 +90,7 @@ const captureMatchedEntry = async (
   plannedEntry: IFilesystemExactPathSelectionPlanEntry,
   encodedName: Buffer,
   signal: AbortSignal | undefined,
-): Promise<IFilesystemExactPathInventoryEntry> => {
+): Promise<IFilesystemInventoryEntry> => {
   const decodedName = decodeFilesystemName(encodedName, parentDirectory.logicalPath);
 
   if (decodedName !== plannedEntry.segment) {
@@ -221,7 +221,7 @@ const throwIfRequiredEntriesCollapse = async (
 export const createFilesystemExactPathInventory = async (
   preparedRoot: IPreparedFilesystemRepositoryRoot,
   selectionPlan: IFilesystemExactPathSelectionPlan,
-): Promise<IFilesystemExactPathInventory> => {
+): Promise<IFilesystemInventory> => {
   const childrenByParentPath = new Map<IRepositoryPath, IFilesystemExactPathSelectionPlanEntry[]>();
 
   for (const plannedEntry of selectionPlan.entries) {
@@ -234,12 +234,12 @@ export const createFilesystemExactPathInventory = async (
     }
   }
 
-  const rootEntry: IFilesystemExactPathInventoryEntry = Object.freeze({
+  const rootEntry: IFilesystemInventoryEntry = Object.freeze({
     hostPath: preparedRoot.resolvedRootDirectory,
     path: REPOSITORY_ROOT,
     type: 'directory',
   });
-  const entriesByPath = new Map<IRepositoryPath, IFilesystemExactPathInventoryEntry>([
+  const entriesByPath = new Map<IRepositoryPath, IFilesystemInventoryEntry>([
     [REPOSITORY_ROOT, rootEntry],
   ]);
   const pendingDirectories: IFilesystemDirectoryTraversal[] = [

@@ -2,7 +2,7 @@
 
 Node.js-specific foundations for exposing one explicitly selected local directory through the source-neutral repository contract.
 
-The current unpublished `0.0.1` foundation defines the complete version 1 option, selection, and resource-limit contracts. It validates and detaches caller options, internally canonicalizes an explicit filesystem root, and constructs strict private exact-path inventories with safe common repository exceptions. The public reader factory is intentionally withheld until fingerprint verification and coherent reader behavior can be published together.
+The current unpublished `0.0.1` foundation defines the complete version 1 option, selection, and resource-limit contracts. It validates and detaches caller options, internally canonicalizes an explicit filesystem root, and constructs strict private exact-path and recursive-directory inventories with safe common repository exceptions. The public reader factory is intentionally withheld until fingerprint verification and coherent reader behavior can be published together.
 
 Tarball and consumer-type checks are the release boundary for now. This package is not ready to publish to npm.
 
@@ -53,7 +53,9 @@ The host root must be non-empty absolute Unicode-scalar text without NUL. Intern
 
 Malformed logical paths use `RepositoryPathException`. Other invalid configuration and filesystem failures use `RepositorySourceException` from `@moldea.ai/repository`, with `operation: 'create-reader'` and no exposed host path. Root preparation currently maps absence, non-directory targets, access denial, source failure, cancellation, and detected replacement to their corresponding common codes.
 
-## Internal exact-path inventory
+## Internal inventories
+
+### Exact-path inventory
 
 Exact-path construction expands selected paths into a deterministic set of selected entries and required directory parents. The root does not count against `maxEntries`; every other selected or synthesized entry does. Entry limits are checked before filesystem traversal, and no partial inventory is returned on failure.
 
@@ -61,7 +63,13 @@ Required directory names are read as native bytes and matched against the exact 
 
 Entries are classified with no-follow `lstat` behavior as regular files, directories, or symlinks. Selected directories are not expanded recursively. Symlinks and junctions may be selected as entries but are never traversed for descendants, and unsupported filesystem entry types fail the complete construction operation.
 
-This inventory remains private. It is not yet a coherent reader snapshot because creation-time fingerprints, mutation verification, reader operations, caching, and invalidation are subsequent implementation phases.
+### Recursive directory inventory
+
+Directory construction recursively includes every representable regular file, directory, and symlink beneath the resolved root. Empty directories, hidden names, ignored-looking content, dependencies, caches, and nested repository content remain ordinary entries. An entry named exactly `.git` is omitted at every depth before decoding or traversal, while `.GIT`, `.gitignore`, `.gitattributes`, and `.github` remain visible.
+
+Each directory's native names are decoded strictly and ordered by exact logical path before traversal. Directory identities are tracked to reject physical aliases or cycles. Symlinks and junctions remain entries without recursion, unsupported entry types fail the complete operation, and `maxEntries` is enforced without truncating the inventory.
+
+These inventories remain private. They are not yet coherent reader snapshots because creation-time fingerprints, mutation verification, reader operations, caching, and invalidation are subsequent implementation phases.
 
 ## Runtime support
 
