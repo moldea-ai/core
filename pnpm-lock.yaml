@@ -54,6 +54,31 @@ importers:
         specifier: 2.9.0
         version: 2.9.0
 
+  projects/cli:
+    dependencies:
+      '@moldea.ai/core':
+        specifier: workspace:0.0.1
+        version: link:../core
+      '@moldea.ai/repository':
+        specifier: workspace:0.0.1
+        version: link:../repository
+      '@moldea.ai/repository-fs':
+        specifier: workspace:0.0.1
+        version: link:../repository-fs
+    devDependencies:
+      '@types/node':
+        specifier: 22.20.1
+        version: 22.20.1
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+      vite:
+        specifier: 8.2.1
+        version: 8.2.1(@types/node@22.20.1)(yaml@2.9.0)
+      vitest:
+        specifier: 4.1.10
+        version: 4.1.10(@types/node@22.20.1)(vite@8.2.1(@types/node@22.20.1)(yaml@2.9.0))
+
   projects/core:
     dependencies:
       '@moldea.ai/repository':

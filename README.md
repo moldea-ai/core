@@ -4,7 +4,7 @@ The `packages` project is the open-source package monorepo for `moldea`. It deve
 
 The repository is intentionally separate from the hosted [`platform`](https://github.com/moldea-ai/platform) monorepo. It contains reusable package products and their shared development infrastructure, not Cloud applications, hosted APIs, runtime infrastructure, or deployment configuration.
 
-`@moldea.ai/repository` and `@moldea.ai/core` now provide the source-neutral reader and universal interpretation foundations. `@moldea.ai/repository-fs` now exposes its cohesive immutable reader factory over strict exact-path and recursive-directory inventories, private filesystem fingerprints, creation-time verification, frozen lookup and listing, coordinated lazy file capture, atomic in-flight byte reservations, and permanent invalidation after snapshot loss. The filesystem reader passes the same source-neutral conformance contract as the in-memory reference reader. The canonical Runtime Compatibility Matrix is materialized with every approved adapter marked `planned`; this publishes the inventory without claiming runtime support before adapter implementations and fixtures exist.
+`@moldea.ai/repository` and `@moldea.ai/core` now provide the source-neutral reader and universal interpretation foundations. `@moldea.ai/repository-fs` now exposes its cohesive immutable reader factory over strict exact-path and recursive-directory inventories, private filesystem fingerprints, creation-time verification, frozen lookup and listing, coordinated lazy file capture, atomic in-flight byte reservations, and permanent invalidation after snapshot loss. The filesystem reader passes the same source-neutral conformance contract as the in-memory reference reader. The unpublished `@moldea.ai/cli` foundation now provides the `moldea` executable boundary, strict command parsing, resource validation, and deterministic help, version, and usage-error output without performing Git or repository inspection yet. The canonical Runtime Compatibility Matrix is materialized with every approved adapter marked `planned`; this publishes the inventory without claiming runtime support before adapter implementations and fixtures exist.
 
 ## Specifications
 
@@ -36,6 +36,7 @@ docs/
   runtime-compatibility.md     # Generated compatibility presentation
 packages/                      # Private shared implementation packages
 projects/
+  cli/                         # Read-only local command-line composition
   core/                        # Deterministic repository-format interpretation
   repository/                  # Source-neutral reader contract and memory reader
   repository-fs/               # Explicit local-filesystem repository reader
@@ -143,4 +144,4 @@ Generated files are not edited directly. Runtime compatibility changes begin in 
 
 ## Initial implementation sequence
 
-The first implementation project was `@moldea.ai/repository`, followed by its in-memory reader and shared conformance suite. Core's universal behavior was then completed through that memory-reader boundary. `@moldea.ai/repository-fs` is now being implemented before the CLI and official adapters are composed from their completed foundational packages and compatibility claims.
+The first implementation project was `@moldea.ai/repository`, followed by its in-memory reader and shared conformance suite. Core's universal behavior was then completed through that memory-reader boundary, followed by the coherent Repository FS implementation. CLI implementation is now underway from its executable and strict command-line foundation; Git working-tree composition, Core execution, compatibility reporting, and official adapters remain later ordered slices.
