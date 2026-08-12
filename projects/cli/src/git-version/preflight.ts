@@ -18,6 +18,8 @@ const mapGitProcessFailure = (reason: IGitProcessFailureReason): IMoldeaCliGitEr
   switch (reason) {
     case 'not-found':
       return 'GIT_NOT_FOUND';
+    case 'repository-not-found':
+      return 'GIT_COMMAND_FAILED';
     case 'access-denied':
       return 'GIT_ACCESS_DENIED';
     case 'output-limit-exceeded':

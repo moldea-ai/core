@@ -5,11 +5,21 @@ import {
   type ExecFileSyncOptionsWithStringEncoding,
   type SpawnSyncReturns,
 } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { gunzipSync } from 'node:zlib';
 import { describe, expect, test } from 'vitest';
+
+import { createGitProcessEnvironment } from '../git-process/index.js';
 
 const projectDirectory = path.resolve(import.meta.dirname, '..', '..');
 const projectsDirectory = path.dirname(projectDirectory);
@@ -58,13 +68,14 @@ const spawnPackageManager = (
   packageManagerEntrypoint: string,
   commandArguments: readonly string[],
   cwd: string,
+  environment: NodeJS.ProcessEnv = process.env,
 ): SpawnSyncReturns<string> => {
   const isJavaScriptEntrypoint = /\.(?:c|m)?js$/u.test(packageManagerEntrypoint);
 
   return spawnSync(
     isJavaScriptEntrypoint ? process.execPath : packageManagerEntrypoint,
     isJavaScriptEntrypoint ? [packageManagerEntrypoint, ...commandArguments] : commandArguments,
-    { cwd, encoding: 'utf8' },
+    { cwd, encoding: 'utf8', env: environment },
   );
 };
 
@@ -215,7 +226,25 @@ describe('published CLI package and executable', () => {
       throw new Error('The package-manager entrypoint is unavailable.');
     }
 
-    const consumerDirectory = mkdtempSync(path.join(tmpdir(), 'moldea-cli-consumer-'));
+    const testDirectory = mkdtempSync(path.join(tmpdir(), 'moldea-cli-consumer-'));
+    const consumerDirectory = path.join(testDirectory, 'consumer');
+    const gitHomeDirectory = path.join(testDirectory, 'home');
+    const gitConfigDirectory = path.join(testDirectory, 'config');
+    const gitHooksDirectory = path.join(testDirectory, 'hooks');
+    const gitEnvironment: NodeJS.ProcessEnv = createGitProcessEnvironment({
+      ...process.env,
+      HOME: gitHomeDirectory,
+      XDG_CONFIG_HOME: gitConfigDirectory,
+    });
+
+    for (const directory of [
+      consumerDirectory,
+      gitHomeDirectory,
+      gitConfigDirectory,
+      gitHooksDirectory,
+    ]) {
+      mkdirSync(directory, { recursive: true });
+    }
 
     try {
       const repositoryTarballName = packPackageTarball(
@@ -302,16 +331,44 @@ describe('published CLI package and executable', () => {
         '{"cliVersion":"0.0.1","command":null,"error":{"code":"INVALID_ARGUMENT","details":{},"message":"The command invocation is invalid.","path":null,"retryable":false,"source":"cli"},"result":null,"schemaVersion":1,"status":"error"}\n',
       );
 
-      const unavailableCommand = spawnPackageManager(
+      const nonRepositoryCommand = spawnPackageManager(
         packageManagerEntrypoint,
         ['exec', 'moldea', 'inspect', '--json'],
         consumerDirectory,
+        gitEnvironment,
       );
 
-      expect(unavailableCommand.status).toBe(3);
-      expect(unavailableCommand.stderr).toBe('');
-      expect(unavailableCommand.stdout).not.toContain(consumerDirectory);
-      expect(unavailableCommand.stdout).toContain('"code":"INTERNAL_ERROR"');
+      expect(nonRepositoryCommand.status).toBe(3);
+      expect(nonRepositoryCommand.stderr).toBe('');
+      expect(nonRepositoryCommand.stdout).not.toContain(consumerDirectory);
+      expect(nonRepositoryCommand.stdout).toContain('"code":"GIT_REPOSITORY_NOT_FOUND"');
+
+      execFileSync(
+        'git',
+        ['-c', `core.hooksPath=${gitHooksDirectory}`, '-c', 'init.defaultBranch=main', 'init'],
+        {
+          cwd: consumerDirectory,
+          encoding: 'utf8',
+          env: gitEnvironment,
+        },
+      );
+      execFileSync('git', ['config', '--local', 'core.sparseCheckout', 'false'], {
+        cwd: consumerDirectory,
+        encoding: 'utf8',
+        env: gitEnvironment,
+      });
+
+      const discoveredRepositoryCommand = spawnPackageManager(
+        packageManagerEntrypoint,
+        ['exec', 'moldea', 'inspect', '--json'],
+        consumerDirectory,
+        gitEnvironment,
+      );
+
+      expect(discoveredRepositoryCommand.status).toBe(3);
+      expect(discoveredRepositoryCommand.stderr).toBe('');
+      expect(discoveredRepositoryCommand.stdout).not.toContain(consumerDirectory);
+      expect(discoveredRepositoryCommand.stdout).toContain('"code":"INTERNAL_ERROR"');
 
       const installedExecutablePath = path.join(
         consumerDirectory,
@@ -322,7 +379,7 @@ describe('published CLI package and executable', () => {
         'moldea.js',
       );
       const environmentWithoutPath = Object.fromEntries(
-        Object.entries(process.env).filter(([name]) => name.toUpperCase() !== 'PATH'),
+        Object.entries(gitEnvironment).filter(([name]) => name.toUpperCase() !== 'PATH'),
       );
       const missingGitResult = spawnSync(
         process.execPath,
@@ -343,7 +400,7 @@ describe('published CLI package and executable', () => {
         '{"cliVersion":"0.0.1","command":"validate","error":{"code":"GIT_NOT_FOUND","details":{},"message":"The Git executable is unavailable.","path":null,"retryable":false,"source":"git"},"result":null,"schemaVersion":1,"status":"error"}\n',
       );
     } finally {
-      rmSync(consumerDirectory, { force: true, recursive: true });
+      rmSync(testDirectory, { force: true, recursive: true });
     }
   }, 30_000);
 });

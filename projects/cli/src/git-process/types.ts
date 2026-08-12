@@ -3,7 +3,11 @@ export type IGitProcessEnvironment = Readonly<Record<string, string>>;
 
 // reasons a Git subprocess can fail without exposing process diagnostics
 export type IGitProcessFailureReason =
-  'not-found' | 'access-denied' | 'output-limit-exceeded' | 'command-failed';
+  | 'not-found'
+  | 'repository-not-found'
+  | 'access-denied'
+  | 'output-limit-exceeded'
+  | 'command-failed';
 
 // completed Git subprocess output
 export interface IGitProcessCompletedResult {

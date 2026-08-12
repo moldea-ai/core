@@ -5,7 +5,7 @@ import type { MOLDEA_CLI_ERROR_DEFINITIONS } from './constants.js';
 // error codes observable through the current executable foundation
 export type IMoldeaCliErrorCode = keyof typeof MOLDEA_CLI_ERROR_DEFINITIONS;
 
-// Git-specific errors produced by the prerequisite preflight
+// Git-specific errors produced by CLI-owned Git operations
 export type IMoldeaCliGitErrorCode = Extract<IMoldeaCliErrorCode, `GIT_${string}`>;
 
 // safe error sources exposed by the CLI

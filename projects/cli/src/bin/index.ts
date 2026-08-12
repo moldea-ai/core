@@ -10,10 +10,12 @@ const executableDirectory = path.dirname(fileURLToPath(import.meta.url));
 const packageManifestPath = path.resolve(executableDirectory, '..', 'package.json');
 
 try {
+  const invocationDirectory = process.cwd();
   const packageMetadata = await loadMoldeaCliPackageMetadata(packageManifestPath);
   const executionResult = await runMoldeaCli({
     cliVersion: packageMetadata.version,
     commandLineArguments: process.argv.slice(2),
+    invocationDirectory,
   });
 
   if (executionResult.stdout.length > 0) {

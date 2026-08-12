@@ -105,4 +105,22 @@ describe('executeGitProcess', () => {
       executeGitProcess({ arguments: ['--version'], maxBufferBytes: 4096 }),
     ).resolves.toStrictEqual({ kind: 'failed', reason });
   });
+
+  test.each([
+    [
+      'fatal: not a git repository (or any of the parent directories): .git\n',
+      'repository-not-found',
+    ],
+    ["fatal: detected dubious ownership in repository at '/private/repository'\n", 'access-denied'],
+    ["fatal: cannot change to '/private/repository': Permission denied\n", 'access-denied'],
+    ["fatal: cannot change to '/private/repository': unknown failure\n", 'command-failed'],
+  ] as const)('normalizes bounded Git diagnostic signatures', async (stderr, reason) => {
+    execFileTestDouble.mockImplementation((_file, _arguments, _options, callback) => {
+      callback(createProcessError('128'), Buffer.alloc(0), Buffer.from(stderr));
+    });
+
+    await expect(
+      executeGitProcess({ arguments: ['rev-parse'], maxBufferBytes: 4096 }),
+    ).resolves.toStrictEqual({ kind: 'failed', reason });
+  });
 });

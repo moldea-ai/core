@@ -30,6 +30,17 @@ describe('CLI presentation formatters', () => {
 
   test.each([
     ['GIT_NOT_FOUND', 'git:GIT_NOT_FOUND The Git executable is unavailable.\n', false],
+    ['GIT_OUTPUT_INVALID', 'git:GIT_OUTPUT_INVALID Git returned invalid output.\n', false],
+    [
+      'GIT_REPOSITORY_NOT_FOUND',
+      'git:GIT_REPOSITORY_NOT_FOUND The selected path is not inside a Git repository.\n',
+      false,
+    ],
+    [
+      'GIT_SPARSE_CHECKOUT_UNSUPPORTED',
+      'git:GIT_SPARSE_CHECKOUT_UNSUPPORTED Sparse Git checkouts are unsupported.\n',
+      false,
+    ],
     ['GIT_VERSION_INVALID', 'git:GIT_VERSION_INVALID The Git version output is invalid.\n', false],
     [
       'GIT_VERSION_UNSUPPORTED',
@@ -38,6 +49,11 @@ describe('CLI presentation formatters', () => {
     ],
     ['GIT_ACCESS_DENIED', 'git:GIT_ACCESS_DENIED Git access was denied.\n', true],
     ['GIT_COMMAND_FAILED', 'git:GIT_COMMAND_FAILED The Git command failed.\n', true],
+    [
+      'GIT_WORK_TREE_REQUIRED',
+      'git:GIT_WORK_TREE_REQUIRED A usable Git working tree is required.\n',
+      false,
+    ],
   ] as const)('formats safe Git error %s', (code, expectedHumanError, isRetryable) => {
     expect(formatMoldeaCliHumanError(code)).toBe(expectedHumanError);
     expect(formatMoldeaCliJsonError(code, 'validate', '0.0.1')).toContain(

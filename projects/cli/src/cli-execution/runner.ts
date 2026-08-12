@@ -47,6 +47,7 @@ export const runMoldeaCli = async (
   try {
     return await executeCommand({
       cliVersion: options.cliVersion,
+      invocationDirectory: options.invocationDirectory,
       invocation: parseResult.invocation,
     });
   } catch {

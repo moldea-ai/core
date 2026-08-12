@@ -17,6 +17,21 @@ export const MOLDEA_CLI_ERROR_DEFINITIONS = Object.freeze({
     retryable: false,
     source: 'git',
   }),
+  GIT_OUTPUT_INVALID: Object.freeze({
+    message: 'Git returned invalid output.',
+    retryable: false,
+    source: 'git',
+  }),
+  GIT_REPOSITORY_NOT_FOUND: Object.freeze({
+    message: 'The selected path is not inside a Git repository.',
+    retryable: false,
+    source: 'git',
+  }),
+  GIT_SPARSE_CHECKOUT_UNSUPPORTED: Object.freeze({
+    message: 'Sparse Git checkouts are unsupported.',
+    retryable: false,
+    source: 'git',
+  }),
   GIT_VERSION_INVALID: Object.freeze({
     message: 'The Git version output is invalid.',
     retryable: false,
@@ -24,6 +39,11 @@ export const MOLDEA_CLI_ERROR_DEFINITIONS = Object.freeze({
   }),
   GIT_VERSION_UNSUPPORTED: Object.freeze({
     message: 'The installed Git version is unsupported.',
+    retryable: false,
+    source: 'git',
+  }),
+  GIT_WORK_TREE_REQUIRED: Object.freeze({
+    message: 'A usable Git working tree is required.',
     retryable: false,
     source: 'git',
   }),

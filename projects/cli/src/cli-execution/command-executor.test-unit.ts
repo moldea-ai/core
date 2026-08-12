@@ -2,7 +2,7 @@
 import { describe, expect, test, vi } from 'vitest';
 
 import type { IMoldeaCliCommand } from '../command-line/index.js';
-import type { IGitVersionPreflight } from '../git-version/index.js';
+import type { IGitWorkingTreeDiscovery } from '../git-working-tree/index.js';
 
 import { createMoldeaCliCommandExecutor } from './command-executor.js';
 import type { IMoldeaCliCommandExecutionInput } from './types.js';
@@ -13,6 +13,7 @@ const createCommandInput = (
   isJson = false,
 ): IMoldeaCliCommandExecutionInput => ({
   cliVersion: '0.0.1',
+  invocationDirectory: '/workspace',
   invocation: {
     command,
     options: {
@@ -32,40 +33,44 @@ const createCommandInput = (
 });
 
 describe('createMoldeaCliCommandExecutor', () => {
-  test.each(['validate', 'inspect'] as const)('preflights Git once for %s', async (command) => {
-    const gitVersionPreflight = vi.fn<IGitVersionPreflight>().mockResolvedValue(
-      Object.freeze({
-        kind: 'supported',
-        version: Object.freeze({ major: 2, minor: 30, patch: 0 }),
-      }),
-    );
-    const executeCommand = createMoldeaCliCommandExecutor(gitVersionPreflight);
+  test.each(['validate', 'inspect'] as const)(
+    'discovers the working tree once for %s',
+    async (command) => {
+      const workingTreeDiscovery = vi
+        .fn<IGitWorkingTreeDiscovery>()
+        .mockResolvedValue(Object.freeze({ kind: 'discovered', repositoryRoot: '/workspace' }));
+      const executeCommand = createMoldeaCliCommandExecutor(workingTreeDiscovery);
 
-    await expect(executeCommand(createCommandInput(command))).resolves.toStrictEqual({
-      exitCode: 3,
-      stderr: 'cli:INTERNAL_ERROR The command could not be completed.\n',
-      stdout: '',
-    });
-    expect(gitVersionPreflight).toHaveBeenCalledOnce();
-  });
+      await expect(executeCommand(createCommandInput(command))).resolves.toStrictEqual({
+        exitCode: 3,
+        stderr: 'cli:INTERNAL_ERROR The command could not be completed.\n',
+        stdout: '',
+      });
+      expect(workingTreeDiscovery).toHaveBeenCalledOnce();
+      expect(workingTreeDiscovery).toHaveBeenCalledWith({
+        invocationDirectory: '/workspace',
+        repositoryDirectory: null,
+      });
+    },
+  );
 
-  test('does not preflight Git for compatibility', async () => {
-    const gitVersionPreflight = vi.fn<IGitVersionPreflight>();
-    const executeCommand = createMoldeaCliCommandExecutor(gitVersionPreflight);
+  test('does not discover a working tree for compatibility', async () => {
+    const workingTreeDiscovery = vi.fn<IGitWorkingTreeDiscovery>();
+    const executeCommand = createMoldeaCliCommandExecutor(workingTreeDiscovery);
 
     await expect(executeCommand(createCommandInput('compatibility'))).resolves.toStrictEqual({
       exitCode: 3,
       stderr: 'cli:INTERNAL_ERROR The command could not be completed.\n',
       stdout: '',
     });
-    expect(gitVersionPreflight).not.toHaveBeenCalled();
+    expect(workingTreeDiscovery).not.toHaveBeenCalled();
   });
 
-  test('returns a safe human Git prerequisite error', async () => {
-    const gitVersionPreflight = vi
-      .fn<IGitVersionPreflight>()
+  test('returns a safe human Git discovery error', async () => {
+    const workingTreeDiscovery = vi
+      .fn<IGitWorkingTreeDiscovery>()
       .mockResolvedValue(Object.freeze({ errorCode: 'GIT_NOT_FOUND', kind: 'failed' }));
-    const executeCommand = createMoldeaCliCommandExecutor(gitVersionPreflight);
+    const executeCommand = createMoldeaCliCommandExecutor(workingTreeDiscovery);
 
     await expect(executeCommand(createCommandInput('validate'))).resolves.toStrictEqual({
       exitCode: 3,
@@ -74,11 +79,11 @@ describe('createMoldeaCliCommandExecutor', () => {
     });
   });
 
-  test('returns a safe JSON Git prerequisite error', async () => {
-    const gitVersionPreflight = vi
-      .fn<IGitVersionPreflight>()
+  test('returns a safe JSON Git discovery error', async () => {
+    const workingTreeDiscovery = vi
+      .fn<IGitWorkingTreeDiscovery>()
       .mockResolvedValue(Object.freeze({ errorCode: 'GIT_COMMAND_FAILED', kind: 'failed' }));
-    const executeCommand = createMoldeaCliCommandExecutor(gitVersionPreflight);
+    const executeCommand = createMoldeaCliCommandExecutor(workingTreeDiscovery);
 
     await expect(executeCommand(createCommandInput('inspect', true))).resolves.toStrictEqual({
       exitCode: 3,

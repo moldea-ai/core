@@ -10,6 +10,7 @@ export interface IMoldeaCliExecutionResult {
 // private command-dispatch input and seam used by later behavioral slices
 export interface IMoldeaCliCommandExecutionInput {
   readonly cliVersion: string;
+  readonly invocationDirectory: string;
   readonly invocation: IMoldeaCliCommandInvocation;
 }
 
@@ -23,4 +24,5 @@ export interface IRunMoldeaCliOptions {
   readonly cliVersion: string;
   readonly commandLineArguments: readonly string[];
   readonly executeCommand?: IMoldeaCliCommandExecutor;
+  readonly invocationDirectory: string;
 }

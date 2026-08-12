@@ -11,6 +11,7 @@ const ENCODER = new TextEncoder();
 describe('createGitVersionPreflight', () => {
   test.each([
     ['not-found', 'GIT_NOT_FOUND'],
+    ['repository-not-found', 'GIT_COMMAND_FAILED'],
     ['access-denied', 'GIT_ACCESS_DENIED'],
     ['output-limit-exceeded', 'GIT_VERSION_INVALID'],
     ['command-failed', 'GIT_COMMAND_FAILED'],

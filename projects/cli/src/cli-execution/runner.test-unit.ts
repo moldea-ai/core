@@ -6,12 +6,19 @@ import { MOLDEA_CLI_TOP_LEVEL_HELP } from '../presentation/index.js';
 import { runMoldeaCli } from './runner.js';
 import type { IMoldeaCliCommandExecutor } from './types.js';
 
+const INVOCATION_DIRECTORY = '/workspace';
+
 describe('runMoldeaCli', () => {
   test('returns top-level help without dispatching a command', async () => {
     const executeCommand = vi.fn<IMoldeaCliCommandExecutor>();
 
     await expect(
-      runMoldeaCli({ cliVersion: '0.0.1', commandLineArguments: [], executeCommand }),
+      runMoldeaCli({
+        cliVersion: '0.0.1',
+        commandLineArguments: [],
+        executeCommand,
+        invocationDirectory: INVOCATION_DIRECTORY,
+      }),
     ).resolves.toStrictEqual({
       exitCode: 0,
       stderr: '',
@@ -79,6 +86,7 @@ Options:
         cliVersion: '0.0.1',
         commandLineArguments: [command, '--help'],
         executeCommand,
+        invocationDirectory: INVOCATION_DIRECTORY,
       }),
     ).resolves.toStrictEqual({ exitCode: 0, stderr: '', stdout: expectedHelp });
     expect(executeCommand).not.toHaveBeenCalled();
@@ -92,6 +100,7 @@ Options:
         cliVersion: '0.0.1',
         commandLineArguments: ['--version'],
         executeCommand,
+        invocationDirectory: INVOCATION_DIRECTORY,
       }),
     ).resolves.toStrictEqual({ exitCode: 0, stderr: '', stdout: '0.0.1\n' });
     expect(executeCommand).not.toHaveBeenCalled();
@@ -99,7 +108,11 @@ Options:
 
   test('isolates human usage failures on stderr', async () => {
     await expect(
-      runMoldeaCli({ cliVersion: '0.0.1', commandLineArguments: ['unknown'] }),
+      runMoldeaCli({
+        cliVersion: '0.0.1',
+        commandLineArguments: ['unknown'],
+        invocationDirectory: INVOCATION_DIRECTORY,
+      }),
     ).resolves.toStrictEqual({
       exitCode: 2,
       stderr: 'cli:INVALID_ARGUMENT The command invocation is invalid.\n',
@@ -109,7 +122,11 @@ Options:
 
   test('isolates JSON usage failures on stdout with a null unresolved command', async () => {
     await expect(
-      runMoldeaCli({ cliVersion: '0.0.1', commandLineArguments: ['--json'] }),
+      runMoldeaCli({
+        cliVersion: '0.0.1',
+        commandLineArguments: ['--json'],
+        invocationDirectory: INVOCATION_DIRECTORY,
+      }),
     ).resolves.toStrictEqual({
       exitCode: 2,
       stderr: '',
@@ -127,11 +144,13 @@ Options:
         cliVersion: '0.0.1',
         commandLineArguments: ['validate', '--json'],
         executeCommand,
+        invocationDirectory: INVOCATION_DIRECTORY,
       }),
     ).resolves.toBe(executionResult);
     expect(executeCommand).toHaveBeenCalledOnce();
     expect(executeCommand).toHaveBeenCalledWith({
       cliVersion: '0.0.1',
+      invocationDirectory: INVOCATION_DIRECTORY,
       invocation: {
         command: 'validate',
         options: {
@@ -153,7 +172,11 @@ Options:
 
   test('reports unavailable and failed command execution as a safe operational error', async () => {
     await expect(
-      runMoldeaCli({ cliVersion: '0.0.1', commandLineArguments: ['compatibility'] }),
+      runMoldeaCli({
+        cliVersion: '0.0.1',
+        commandLineArguments: ['compatibility'],
+        invocationDirectory: INVOCATION_DIRECTORY,
+      }),
     ).resolves.toStrictEqual({
       exitCode: 3,
       stderr: 'cli:INTERNAL_ERROR The command could not be completed.\n',
@@ -169,6 +192,7 @@ Options:
         cliVersion: '0.0.1',
         commandLineArguments: ['inspect', '--json'],
         executeCommand,
+        invocationDirectory: INVOCATION_DIRECTORY,
       }),
     ).resolves.toStrictEqual({
       exitCode: 3,

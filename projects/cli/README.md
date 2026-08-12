@@ -2,7 +2,7 @@
 
 The canonical read-only local command-line composition for deterministic inspection of `moldea` repositories.
 
-The current unpublished `0.0.1` foundation provides the `moldea` executable, strict version 1 command and option parsing, deterministic help and version output, resource-limit validation, safe human or JSON errors, and the Git prerequisite preflight for `validate` and `inspect`. Repository discovery, Repository FS construction, Core execution, adapter composition, and compatibility reporting are not implemented yet.
+The current unpublished `0.0.1` foundation provides the `moldea` executable, strict version 1 command and option parsing, deterministic help and version output, resource-limit validation, safe human or JSON errors, and Git-owned working-tree discovery for `validate` and `inspect`. Repository inventory, Repository FS construction, Core execution, adapter composition, and compatibility reporting are not implemented yet.
 
 Tarball and installed-bin checks are the release boundary for now. This package is not ready to publish to npm.
 
@@ -28,7 +28,7 @@ The package exposes the `moldea` executable and no supported JavaScript or TypeS
 
 No package-backed runtime adapter is active yet. The `custom` adapter remains built into Core and requires no separate package.
 
-The executable performs no network requests, telemetry, repository writes, repository discovery, filesystem-reader construction, or Core inspection in this foundation. Its only Git operation is the read-only prerequisite command `git --version` for `validate` and `inspect`; help, version, usage failures, and `compatibility` do not invoke Git.
+The executable performs no network requests, telemetry, repository writes, filesystem-reader construction, or Core inspection in this foundation. `validate` and `inspect` use read-only Git operations to discover and verify a working tree; help, version, usage failures, and `compatibility` do not invoke Git.
 
 ## Runtime support
 
@@ -40,9 +40,13 @@ The version 1 consumer runtime range is:
 
 The package is Node.js-specific. `validate` and `inspect` require Git `2.30.0` or later; commands compare the numeric Git version and accept standard platform or vendor suffixes.
 
-## Git prerequisite
+## Git working-tree discovery
 
-Git runs directly without a platform shell, with fixed non-interactive arguments, a sanitized deterministic environment, and a 4096-byte limit on each output stream. The CLI does not expose raw process errors or Git diagnostics. It reports unavailable, inaccessible, failed, malformed-version, and unsupported-version states through stable `git:*` human errors or the corresponding version 1 JSON error envelope.
+The starting directory is the invocation directory unless `--repository <path>` selects another path. Relative selections resolve against the invocation directory. Git determines the absolute top-level working-tree root, so ordinary repositories, unborn repositories, nested starting directories, and linked worktrees share the same discovery path.
+
+Git runs directly without a platform shell, with fixed non-interactive arguments and a sanitized deterministic environment. Version output is limited to 4096 bytes per stream, and each discovery output stream is limited to 262144 bytes. Discovery requires Git `2.30.0` or later and rejects missing or inaccessible paths, nonrepositories, bare repositories, Git-directory paths without a usable work tree, malformed Git output, and sparse checkouts before repository inventory begins.
+
+The CLI does not expose selected paths, resolved repository roots, raw process errors, or Git diagnostics in failures. These states use stable `git:*` human errors or the corresponding version 1 JSON error envelope. A successfully discovered supported nonsparse working tree currently reaches the safe `INTERNAL_ERROR` placeholder because repository inventory and command result composition belong to the next implementation slices.
 
 ## Development
 
