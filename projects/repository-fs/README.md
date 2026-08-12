@@ -2,7 +2,7 @@
 
 Node.js-specific foundations for exposing one explicitly selected local directory through the source-neutral repository contract.
 
-The current unpublished `0.0.1` foundation defines the complete version 1 option, selection, and resource-limit contracts. It also validates and detaches caller options and internally canonicalizes an explicit filesystem root with safe common repository exceptions. The public reader factory is intentionally withheld until exact path inventory and coherent reader behavior can be published together.
+The current unpublished `0.0.1` foundation defines the complete version 1 option, selection, and resource-limit contracts. It validates and detaches caller options, internally canonicalizes an explicit filesystem root, and constructs strict private exact-path inventories with safe common repository exceptions. The public reader factory is intentionally withheld until fingerprint verification and coherent reader behavior can be published together.
 
 Tarball and consumer-type checks are the release boundary for now. This package is not ready to publish to npm.
 
@@ -52,6 +52,16 @@ Options, selection objects, and limit objects are closed version 1 contracts. Re
 The host root must be non-empty absolute Unicode-scalar text without NUL. Internal root preparation resolves that explicitly selected root once, requires a directory, captures its stable identity, and revalidates it before later inventory phases can use it. A caller-selected symlink or junction root is allowed; the resolved target becomes the fixed boundary.
 
 Malformed logical paths use `RepositoryPathException`. Other invalid configuration and filesystem failures use `RepositorySourceException` from `@moldea.ai/repository`, with `operation: 'create-reader'` and no exposed host path. Root preparation currently maps absence, non-directory targets, access denial, source failure, cancellation, and detected replacement to their corresponding common codes.
+
+## Internal exact-path inventory
+
+Exact-path construction expands selected paths into a deterministic set of selected entries and required directory parents. The root does not count against `maxEntries`; every other selected or synthesized entry does. Entry limits are checked before filesystem traversal, and no partial inventory is returned on failure.
+
+Required directory names are read as native bytes and matched against the exact UTF-8 encoding of each requested logical segment. Matched names are decoded with fatal UTF-8 handling and without Unicode normalization. This preserves exact case and spelling, rejects unrepresentable selected names, and allows unrelated invalid sibling names to remain outside a narrow exact selection. An exact `.git` segment is prohibited, while `.gitignore`, `.gitattributes`, and `.github` remain ordinary names.
+
+Entries are classified with no-follow `lstat` behavior as regular files, directories, or symlinks. Selected directories are not expanded recursively. Symlinks and junctions may be selected as entries but are never traversed for descendants, and unsupported filesystem entry types fail the complete construction operation.
+
+This inventory remains private. It is not yet a coherent reader snapshot because creation-time fingerprints, mutation verification, reader operations, caching, and invalidation are subsequent implementation phases.
 
 ## Runtime support
 

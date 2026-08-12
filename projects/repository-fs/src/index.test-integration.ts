@@ -234,6 +234,13 @@ describe('published Repository FS package artifacts', () => {
     expect(indexDeclaration).toContain('IFilesystemRepositoryReaderOptions');
     expect(indexDeclaration).toContain('DEFAULT_FILESYSTEM_REPOSITORY_RESOURCE_LIMITS');
     expect(indexDeclaration).not.toContain('prepareFilesystemRepositoryRoot');
+    expect(indexDeclaration).not.toContain('createFilesystemExactPathInventory');
+    expect(indexDeclaration).not.toContain('createFilesystemExactPathSelectionPlan');
+    expect(indexDeclaration).not.toContain('decodeFilesystemName');
+    expect(indexDeclaration).not.toContain('classifyFilesystemEntry');
+    expect(indexDeclaration).not.toContain('getMissingFilesystemExactPathDirectoryEntries');
+    expect(indexDeclaration).not.toContain('matchFilesystemExactPathDirectoryNames');
+    expect(indexDeclaration).not.toContain('throwObservedFilesystemRepositoryCreationError');
     expect(indexDeclaration).not.toContain('createFilesystemRepositoryReader');
     expect(contractsDeclaration).toContain("from '@moldea.ai/repository'");
     expect(allDeclarations).not.toMatch(/from ['"]@moldea\.ai\/(?!repository(?:['"/]))/u);

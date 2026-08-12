@@ -4,7 +4,7 @@ The `packages` project is the open-source package monorepo for `moldea`. It deve
 
 The repository is intentionally separate from the hosted [`platform`](https://github.com/moldea-ai/platform) monorepo. It contains reusable package products and their shared development infrastructure, not Cloud applications, hosted APIs, runtime infrastructure, or deployment configuration.
 
-`@moldea.ai/repository` and `@moldea.ai/core` now provide the source-neutral reader and universal interpretation foundations. `@moldea.ai/repository-fs` is the next active package and currently exposes its option and resource-limit foundation while coherent filesystem reader behavior is built behind that boundary. Additional package directories are introduced progressively in the specified implementation order rather than created as placeholders.
+`@moldea.ai/repository` and `@moldea.ai/core` now provide the source-neutral reader and universal interpretation foundations. `@moldea.ai/repository-fs` is the next active package and currently exposes its option and resource-limit foundation while strict exact-path inventory behavior is built privately behind that boundary. Fingerprint verification and coherent reader operations remain required before the filesystem reader factory is exposed. Additional package directories are introduced progressively in the specified implementation order rather than created as placeholders.
 
 ## Specifications
 

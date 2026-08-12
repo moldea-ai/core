@@ -252,6 +252,41 @@ describe('filesystem repository option normalization', () => {
     });
   });
 
+  test.each(['/.git', '/nested/.git/config'])(
+    'rejects the reserved control path %s',
+    (selectedPath) => {
+      const repositoryPath = parseRepositoryPath(selectedPath);
+
+      expectInvalidSourceData({
+        rootDirectory,
+        selection: { kind: 'paths', paths: [repositoryPath] },
+      });
+
+      expect(() =>
+        normalizeFilesystemRepositoryOptions({
+          rootDirectory,
+          selection: { kind: 'paths', paths: [repositoryPath] },
+        }),
+      ).toThrow(expect.objectContaining({ path: repositoryPath, retryable: false }));
+    },
+  );
+
+  test.each(['/.github', '/.gitignore', '/nested/.gitattributes'])(
+    'allows a non-control path %s',
+    (selectedPath) => {
+      const repositoryPath = parseRepositoryPath(selectedPath);
+      const normalizedOptions = normalizeFilesystemRepositoryOptions({
+        rootDirectory,
+        selection: { kind: 'paths', paths: [repositoryPath] },
+      });
+
+      expect(normalizedOptions.selection).toStrictEqual({
+        kind: 'paths',
+        paths: [repositoryPath],
+      });
+    },
+  );
+
   test.each([0, -1, 1.5, Number.POSITIVE_INFINITY, Number.MAX_SAFE_INTEGER + 1, null, '1'])(
     'rejects invalid configured limit %o',
     (configuredLimit) => {

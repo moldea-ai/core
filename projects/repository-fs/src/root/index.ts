@@ -7,6 +7,12 @@ import {
   normalizeFilesystemRepositoryOptions,
   type INormalizedFilesystemRepositoryReaderOptions,
 } from '../options/index.js';
+import {
+  getNodeErrorCode,
+  throwFilesystemRepositoryCreationException,
+  throwIfFilesystemRepositoryCreationAborted,
+  throwObservedFilesystemRepositoryCreationError,
+} from '../source-exception/index.js';
 
 // stable resolved-root identity retained for later snapshot verification
 interface IFilesystemRootIdentity {
@@ -23,72 +29,23 @@ export interface IPreparedFilesystemRepositoryRoot {
   readonly resolvedRootDirectory: string;
 }
 
-const throwCreationSourceException = (
-  code:
-    | 'ABORTED'
-    | 'ACCESS_DENIED'
-    | 'ENTRY_NOT_DIRECTORY'
-    | 'ENTRY_NOT_FOUND'
-    | 'SNAPSHOT_CHANGED'
-    | 'SOURCE_UNAVAILABLE',
-  retryable: boolean,
-  cause?: unknown,
-): never => {
-  throw new RepositorySourceException({
-    cause,
-    code,
-    operation: 'create-reader',
-    path: null,
-    retryable,
-  });
-};
-
-const throwIfCreationAborted = (signal: AbortSignal | undefined): void => {
-  if (signal?.aborted === true) {
-    throwCreationSourceException('ABORTED', true, signal.reason);
-  }
-};
-
-const getNodeErrorCode = (cause: unknown): string | undefined => {
-  if (typeof cause !== 'object' || cause === null || !('code' in cause)) {
-    return undefined;
-  }
-
-  return typeof cause.code === 'string' ? cause.code : undefined;
-};
-
 /** Maps an initial host-root failure without exposing its host path or raw message. */
 const throwInitialRootError = (cause: unknown): never => {
   const errorCode = getNodeErrorCode(cause);
 
   if (errorCode === 'ENOENT') {
-    return throwCreationSourceException('ENTRY_NOT_FOUND', true, cause);
+    return throwFilesystemRepositoryCreationException('ENTRY_NOT_FOUND', true, null, cause);
   }
 
   if (errorCode === 'ENOTDIR') {
-    return throwCreationSourceException('ENTRY_NOT_DIRECTORY', false, cause);
+    return throwFilesystemRepositoryCreationException('ENTRY_NOT_DIRECTORY', false, null, cause);
   }
 
   if (errorCode === 'EACCES' || errorCode === 'EPERM') {
-    return throwCreationSourceException('ACCESS_DENIED', true, cause);
+    return throwFilesystemRepositoryCreationException('ACCESS_DENIED', true, null, cause);
   }
 
-  return throwCreationSourceException('SOURCE_UNAVAILABLE', true, cause);
-};
-
-/** Maps a failure after root identity capture according to remaining snapshot confidence. */
-const throwRootRevalidationError = (cause: unknown): never => {
-  const errorCode = getNodeErrorCode(cause);
-
-  if (errorCode === 'ENOENT' || errorCode === 'ENOTDIR') {
-    return throwCreationSourceException('SNAPSHOT_CHANGED', true, cause);
-  }
-
-  if (errorCode === 'EACCES' || errorCode === 'EPERM') {
-    return throwCreationSourceException('ACCESS_DENIED', true, cause);
-  }
-
-  return throwCreationSourceException('SOURCE_UNAVAILABLE', true, cause);
+  return throwFilesystemRepositoryCreationException('SOURCE_UNAVAILABLE', true, null, cause);
 };
 
 const captureRootIdentity = (statistics: BigIntStats): IFilesystemRootIdentity => {
@@ -131,52 +88,52 @@ export const prepareFilesystemRepositoryRoot = async (
 ): Promise<IPreparedFilesystemRepositoryRoot> => {
   const options = normalizeFilesystemRepositoryOptions(candidate);
 
-  throwIfCreationAborted(options.signal);
+  throwIfFilesystemRepositoryCreationAborted(options.signal);
 
   let resolvedRootDirectory: string;
   let initialStatistics: BigIntStats;
 
   try {
     resolvedRootDirectory = await realpath(options.rootDirectory);
-    throwIfCreationAborted(options.signal);
+    throwIfFilesystemRepositoryCreationAborted(options.signal);
     initialStatistics = await lstat(resolvedRootDirectory, { bigint: true });
   } catch (cause) {
     if (cause instanceof RepositorySourceException) {
       throw cause;
     }
 
-    throwIfCreationAborted(options.signal);
+    throwIfFilesystemRepositoryCreationAborted(options.signal);
 
     return throwInitialRootError(cause);
   }
 
-  throwIfCreationAborted(options.signal);
+  throwIfFilesystemRepositoryCreationAborted(options.signal);
 
   if (!initialStatistics.isDirectory()) {
-    return throwCreationSourceException('ENTRY_NOT_DIRECTORY', false);
+    return throwFilesystemRepositoryCreationException('ENTRY_NOT_DIRECTORY', false, null);
   }
 
   const identity = captureRootIdentity(initialStatistics);
 
-  throwIfCreationAborted(options.signal);
+  throwIfFilesystemRepositoryCreationAborted(options.signal);
 
   let revalidatedStatistics: BigIntStats;
 
   try {
     revalidatedStatistics = await lstat(resolvedRootDirectory, { bigint: true });
   } catch (cause) {
-    throwIfCreationAborted(options.signal);
+    throwIfFilesystemRepositoryCreationAborted(options.signal);
 
-    return throwRootRevalidationError(cause);
+    return throwObservedFilesystemRepositoryCreationError(cause, null);
   }
 
-  throwIfCreationAborted(options.signal);
+  throwIfFilesystemRepositoryCreationAborted(options.signal);
 
   if (
     !revalidatedStatistics.isDirectory() ||
     !hasSameRootIdentity(identity, captureRootIdentity(revalidatedStatistics))
   ) {
-    return throwCreationSourceException('SNAPSHOT_CHANGED', true);
+    return throwFilesystemRepositoryCreationException('SNAPSHOT_CHANGED', true, null);
   }
 
   return Object.freeze({

@@ -29,11 +29,11 @@ const PATH_SELECTION_PROPERTY_NAMES = new Set(['kind', 'paths']);
 const LIMIT_PROPERTY_NAMES = ['maxCachedBytes', 'maxEntries', 'maxFileBytes'] as const;
 const LIMIT_PROPERTY_NAME_SET = new Set<string>(LIMIT_PROPERTY_NAMES);
 
-const throwInvalidSourceData = (): never => {
+const throwInvalidSourceData = (path: IRepositoryPath | null = null): never => {
   throw new RepositorySourceException({
     code: 'INVALID_SOURCE_DATA',
     operation: 'create-reader',
-    path: null,
+    path,
     retryable: false,
   });
 };
@@ -249,6 +249,8 @@ const normalizeSignal = (candidate: unknown): AbortSignal | undefined => {
 export const normalizeFilesystemRepositoryOptions = (
   candidate: unknown,
 ): INormalizedFilesystemRepositoryReaderOptions => {
+  let normalizedOptions: INormalizedFilesystemRepositoryReaderOptions;
+
   try {
     if (
       !isUnknownRecord(candidate) ||
@@ -272,14 +274,12 @@ export const normalizeFilesystemRepositoryOptions = (
       return throwInvalidSourceData();
     }
 
-    const normalizedOptions: INormalizedFilesystemRepositoryReaderOptions = {
+    normalizedOptions = {
       limits: normalizeLimits(limits),
       rootDirectory,
       selection: normalizeSelection(selection),
       signal: normalizeSignal(signal),
     };
-
-    return Object.freeze(normalizedOptions);
   } catch (cause) {
     if (cause instanceof RepositoryPathException) {
       throw cause;
@@ -287,4 +287,14 @@ export const normalizeFilesystemRepositoryOptions = (
 
     return throwInvalidSourceData();
   }
+
+  if (normalizedOptions.selection.kind === 'paths') {
+    for (const selectedPath of normalizedOptions.selection.paths) {
+      if (selectedPath.slice(1).split('/').includes('.git')) {
+        return throwInvalidSourceData(selectedPath);
+      }
+    }
+  }
+
+  return Object.freeze(normalizedOptions);
 };
