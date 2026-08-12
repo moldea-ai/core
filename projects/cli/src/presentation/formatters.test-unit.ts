@@ -28,6 +28,15 @@ describe('CLI presentation formatters', () => {
     );
   });
 
+  test('formats the safe non-retryable resource-limit error', () => {
+    expect(formatMoldeaCliHumanError('RESOURCE_LIMIT_EXCEEDED')).toBe(
+      'cli:RESOURCE_LIMIT_EXCEEDED A resource limit was exceeded.\n',
+    );
+    expect(formatMoldeaCliJsonError('RESOURCE_LIMIT_EXCEEDED', 'inspect', '0.0.1')).toContain(
+      '"retryable":false,"source":"cli"',
+    );
+  });
+
   test.each([
     ['GIT_NOT_FOUND', 'git:GIT_NOT_FOUND The Git executable is unavailable.\n', false],
     ['GIT_OUTPUT_INVALID', 'git:GIT_OUTPUT_INVALID Git returned invalid output.\n', false],

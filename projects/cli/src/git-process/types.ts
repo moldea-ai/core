@@ -9,6 +9,10 @@ export type IGitProcessFailureReason =
   | 'output-limit-exceeded'
   | 'command-failed';
 
+// streamed Git failures that distinguish bounded stdout and stderr exhaustion
+export type IGitStreamingProcessFailureReason =
+  IGitProcessFailureReason | 'stderr-limit-exceeded' | 'stdout-limit-exceeded';
+
 // completed Git subprocess output
 export interface IGitProcessCompletedResult {
   readonly kind: 'completed';
@@ -36,3 +40,37 @@ export interface IExecuteGitProcessOptions {
 export type IGitProcessExecutor = (
   options: IExecuteGitProcessOptions,
 ) => Promise<IGitProcessResult>;
+
+// consumer for one bounded Git stdout chunk
+export type IGitProcessStdoutConsumer = (chunk: Uint8Array) => void;
+
+// trusted arguments and independent stream limits for one Git subprocess
+export interface IExecuteGitStreamingProcessOptions {
+  readonly arguments: readonly string[];
+  readonly consumeStdout: IGitProcessStdoutConsumer;
+  readonly environment?: NodeJS.ProcessEnv;
+  readonly maxStderrBytes: number;
+  readonly maxStdoutBytes: number;
+}
+
+// successful streamed Git process result without retained stdout
+export interface IGitStreamingProcessCompletedResult {
+  readonly kind: 'completed';
+  readonly stderr: Uint8Array;
+  readonly stdoutBytes: number;
+}
+
+// safe streamed Git process failure
+export interface IGitStreamingProcessFailedResult {
+  readonly kind: 'failed';
+  readonly reason: IGitStreamingProcessFailureReason;
+}
+
+// normalized streamed Git process result
+export type IGitStreamingProcessResult =
+  IGitStreamingProcessCompletedResult | IGitStreamingProcessFailedResult;
+
+// injectable streamed Git subprocess boundary
+export type IGitStreamingProcessExecutor = (
+  options: IExecuteGitStreamingProcessOptions,
+) => Promise<IGitStreamingProcessResult>;

@@ -62,6 +62,11 @@ export const MOLDEA_CLI_ERROR_DEFINITIONS = Object.freeze({
     retryable: false,
     source: 'cli',
   }),
+  RESOURCE_LIMIT_EXCEEDED: Object.freeze({
+    message: 'A resource limit was exceeded.',
+    retryable: false,
+    source: 'cli',
+  }),
 } as const);
 
 // top-level help presented without repository access

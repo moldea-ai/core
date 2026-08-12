@@ -1,4 +1,5 @@
 import { MOLDEA_CLI_COMMANDS } from '../command-line/index.js';
+import { probeGitInventory, type IGitInventoryProbe } from '../git-inventory/index.js';
 import {
   discoverGitWorkingTree,
   type IGitWorkingTreeDiscovery,
@@ -9,13 +10,15 @@ import { createMoldeaCliErrorResult } from './results.js';
 import type { IMoldeaCliCommandExecutor, IMoldeaCliExecutionResult } from './types.js';
 
 /**
- * Creates the private command dispatcher around injectable working-tree discovery.
+ * Creates the private command dispatcher around injectable Git discovery and inventory probes.
  * @param workingTreeDiscovery The Git working-tree discovery operation.
+ * @param gitInventoryProbe The strict raw Git inventory probe.
  * @returns A command executor for the current behavioral slice.
  */
 export const createMoldeaCliCommandExecutor =
   (
     workingTreeDiscovery: IGitWorkingTreeDiscovery = discoverGitWorkingTree,
+    gitInventoryProbe: IGitInventoryProbe = probeGitInventory,
   ): IMoldeaCliCommandExecutor =>
   async (input): Promise<IMoldeaCliExecutionResult> => {
     if (input.invocation.command !== MOLDEA_CLI_COMMANDS.Compatibility) {
@@ -27,6 +30,22 @@ export const createMoldeaCliCommandExecutor =
       if (discoveryResult.kind === 'failed') {
         return createMoldeaCliErrorResult(
           discoveryResult.errorCode,
+          input.invocation.command,
+          input.cliVersion,
+          input.invocation.options.isJson,
+          MOLDEA_CLI_EXIT_CODES.OperationalError,
+        );
+      }
+
+      const inventoryResult = await gitInventoryProbe({
+        maxEntries: input.invocation.options.resourceLimits.maxEntries,
+        maxMetadataBytes: input.invocation.options.resourceLimits.maxTotalBytes,
+        repositoryRoot: discoveryResult.repositoryRoot,
+      });
+
+      if (inventoryResult.kind === 'failed') {
+        return createMoldeaCliErrorResult(
+          inventoryResult.errorCode,
           input.invocation.command,
           input.cliVersion,
           input.invocation.options.isJson,

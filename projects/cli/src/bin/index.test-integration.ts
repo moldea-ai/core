@@ -357,6 +357,13 @@ describe('published CLI package and executable', () => {
         encoding: 'utf8',
         env: gitEnvironment,
       });
+      writeFileSync(
+        path.join(consumerDirectory, '.gitignore'),
+        '*\n!inventory-one.txt\n!inventory-two.txt\n',
+        'utf8',
+      );
+      writeFileSync(path.join(consumerDirectory, 'inventory-one.txt'), 'one', 'utf8');
+      writeFileSync(path.join(consumerDirectory, 'inventory-two.txt'), 'two', 'utf8');
 
       const discoveredRepositoryCommand = spawnPackageManager(
         packageManagerEntrypoint,
@@ -369,6 +376,19 @@ describe('published CLI package and executable', () => {
       expect(discoveredRepositoryCommand.stderr).toBe('');
       expect(discoveredRepositoryCommand.stdout).not.toContain(consumerDirectory);
       expect(discoveredRepositoryCommand.stdout).toContain('"code":"INTERNAL_ERROR"');
+
+      const inventoryLimitCommand = spawnPackageManager(
+        packageManagerEntrypoint,
+        ['exec', 'moldea', 'inspect', '--json', '--max-entries', '1'],
+        consumerDirectory,
+        gitEnvironment,
+      );
+
+      expect(inventoryLimitCommand.status).toBe(3);
+      expect(inventoryLimitCommand.stderr).toBe('');
+      expect(inventoryLimitCommand.stdout).toBe(
+        '{"cliVersion":"0.0.1","command":"inspect","error":{"code":"RESOURCE_LIMIT_EXCEEDED","details":{},"message":"A resource limit was exceeded.","path":null,"retryable":false,"source":"cli"},"result":null,"schemaVersion":1,"status":"error"}\n',
+      );
 
       const installedExecutablePath = path.join(
         consumerDirectory,
