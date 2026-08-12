@@ -9,3 +9,6 @@ export type {
 
 // resource limits
 export { DEFAULT_FILESYSTEM_REPOSITORY_RESOURCE_LIMITS } from './constants/index.js';
+
+// reader
+export { createFilesystemRepositoryReader } from './reader/index.js';

@@ -172,7 +172,7 @@ describe('published Repository FS package artifacts', () => {
     expect(manifest.engines).toStrictEqual({ node: '^22.11.0 || ^24.11.0' });
   });
 
-  test('loads only the documented named runtime foundation export', () => {
+  test('loads only the documented named runtime exports', () => {
     const output = execFileSync(
       process.execPath,
       [
@@ -187,7 +187,10 @@ describe('published Repository FS package artifacts', () => {
     );
 
     expect(JSON.parse(output)).toStrictEqual({
-      exports: ['DEFAULT_FILESYSTEM_REPOSITORY_RESOURCE_LIMITS'],
+      exports: [
+        'DEFAULT_FILESYSTEM_REPOSITORY_RESOURCE_LIMITS',
+        'createFilesystemRepositoryReader',
+      ],
       frozen: true,
       limits: {
         maxCachedBytes: 134_217_728,
@@ -233,6 +236,7 @@ describe('published Repository FS package artifacts', () => {
 
     expect(indexDeclaration).toContain('IFilesystemRepositoryReaderOptions');
     expect(indexDeclaration).toContain('DEFAULT_FILESYSTEM_REPOSITORY_RESOURCE_LIMITS');
+    expect(indexDeclaration).toContain('createFilesystemRepositoryReader');
     expect(indexDeclaration).not.toContain('prepareFilesystemRepositoryRoot');
     expect(indexDeclaration).not.toContain('createFilesystemDirectoryInventory');
     expect(indexDeclaration).not.toContain('createFilesystemDirectoryEntryCandidates');
@@ -265,13 +269,12 @@ describe('published Repository FS package artifacts', () => {
     expect(indexDeclaration).not.toContain('getMissingFilesystemExactPathDirectoryEntries');
     expect(indexDeclaration).not.toContain('matchFilesystemExactPathDirectoryNames');
     expect(indexDeclaration).not.toContain('throwObservedFilesystemRepositoryCreationError');
-    expect(indexDeclaration).not.toContain('createFilesystemRepositoryReader');
     expect(contractsDeclaration).toContain("from '@moldea.ai/repository'");
     expect(allDeclarations).not.toMatch(/from ['"]@moldea\.ai\/(?!repository(?:['"/]))/u);
     expect(allDeclarations).not.toContain('packages/');
   });
 
-  test('typechecks the complete public foundation surface through package resolution', () => {
+  test('typechecks the complete public reader surface through package resolution', () => {
     execFileSync(
       process.execPath,
       [typescriptEntrypoint, '--project', path.join(publicApiFixtureDirectory, 'tsconfig.json')],
@@ -369,14 +372,15 @@ describe('published Repository FS package artifacts', () => {
           '--input-type=module',
           '--eval',
           [
-            "import { DEFAULT_FILESYSTEM_REPOSITORY_RESOURCE_LIMITS as limits } from '@moldea.ai/repository-fs';",
-            'console.log(JSON.stringify({ frozen: Object.isFrozen(limits), limits }));',
+            "import { DEFAULT_FILESYSTEM_REPOSITORY_RESOURCE_LIMITS as limits, createFilesystemRepositoryReader } from '@moldea.ai/repository-fs';",
+            'console.log(JSON.stringify({ factory: typeof createFilesystemRepositoryReader, frozen: Object.isFrozen(limits), limits }));',
           ].join(''),
         ],
         { cwd: consumerDirectory, encoding: 'utf8' },
       );
 
       expect(JSON.parse(runtimeOutput)).toStrictEqual({
+        factory: 'function',
         frozen: true,
         limits: {
           maxCachedBytes: 134_217_728,

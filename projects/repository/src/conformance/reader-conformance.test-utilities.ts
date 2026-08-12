@@ -1,36 +1,73 @@
 import { describe, expect, test } from 'vitest';
 import { expectToRejectCode } from 'web-utils-kit';
 
-import type { IRepositoryEntry, IRepositoryReader } from '../contracts.js';
-import { RepositoryPathException, RepositorySourceException } from '../exceptions.js';
-import { REPOSITORY_ROOT, parseRepositoryPath } from '../repository-path.js';
+// host-sensitive behavior for logical paths that differ only by case
+export type IRepositoryReaderCasePathFixture =
+  | {
+      readonly kind: 'distinct';
+      readonly paths: readonly [string, string];
+    }
+  | {
+      readonly existingPath: string;
+      readonly kind: 'mismatch';
+      readonly missingPath: string;
+    };
+
+// structural reader contract that avoids coupling test consumers to one package build location
+export interface IRepositoryReaderConformanceEntry<TPath extends string> {
+  readonly path: TPath;
+  readonly type: 'file' | 'directory' | 'symlink';
+}
+
+export interface IRepositoryReaderConformanceReader<TPath extends string> {
+  readonly getEntry: (
+    path: TPath,
+    options?: { readonly signal?: AbortSignal },
+  ) => Promise<IRepositoryReaderConformanceEntry<TPath> | null>;
+  readonly listEntries: (options?: {
+    readonly prefix?: TPath;
+    readonly signal?: AbortSignal;
+  }) => AsyncIterable<IRepositoryReaderConformanceEntry<TPath>>;
+  readonly readFile: (
+    path: TPath,
+    options?: { readonly signal?: AbortSignal },
+  ) => Promise<Uint8Array>;
+}
 
 // inputs required to run the source-neutral reader conformance contract
-export interface IRepositoryReaderConformanceFixture {
-  readonly caseDistinctPaths: readonly [string, string];
-  readonly createReader: () => IRepositoryReader;
-  readonly createSnapshotMutationFixture: () => IRepositoryReaderSnapshotMutationFixture;
+export interface IRepositoryReaderConformanceFixture<TPath extends string> {
+  readonly casePaths: IRepositoryReaderCasePathFixture;
+  readonly createReader: () =>
+    IRepositoryReaderConformanceReader<TPath> | Promise<IRepositoryReaderConformanceReader<TPath>>;
+  readonly createSnapshotMutationFixture: () =>
+    | IRepositoryReaderSnapshotMutationFixture<TPath>
+    | Promise<IRepositoryReaderSnapshotMutationFixture<TPath>>;
   readonly emptyFilePath: string;
-  readonly expectedEntries: readonly IRepositoryEntry[];
+  readonly expectedEntries: readonly IRepositoryReaderConformanceEntry<TPath>[];
   readonly fileBytes: Uint8Array;
   readonly filePath: string;
+  readonly isRepositoryPathException: (cause: unknown) => boolean;
+  readonly isRepositorySourceException: (cause: unknown) => boolean;
   readonly missingPath: string;
   readonly nestedDirectoryPath: string;
   readonly nestedExpectedPaths: readonly string[];
+  readonly parsePath: (candidate: string) => TPath;
+  readonly rootPath: TPath;
   readonly symlinkPath: string;
   readonly unicodePath: string;
 }
 
-export interface IRepositoryReaderSnapshotMutationFixture {
+// source mutation scenario used to verify snapshot behavior after reader creation
+export interface IRepositoryReaderSnapshotMutationFixture<TPath extends string> {
   readonly behavior: 'preserve-snapshot' | 'report-snapshot-changed';
   readonly mutateSource: () => Promise<void> | void;
-  readonly reader: IRepositoryReader;
+  readonly reader: IRepositoryReaderConformanceReader<TPath>;
 }
 
-const collectEntries = async (
-  entries: AsyncIterable<IRepositoryEntry>,
-): Promise<IRepositoryEntry[]> => {
-  const collected: IRepositoryEntry[] = [];
+const collectEntries = async <TPath extends string>(
+  entries: AsyncIterable<IRepositoryReaderConformanceEntry<TPath>>,
+): Promise<IRepositoryReaderConformanceEntry<TPath>[]> => {
+  const collected: IRepositoryReaderConformanceEntry<TPath>[] = [];
 
   for await (const entry of entries) {
     collected.push(entry);
@@ -39,7 +76,9 @@ const collectEntries = async (
   return collected;
 };
 
-const sortEntries = (entries: readonly IRepositoryEntry[]): IRepositoryEntry[] => {
+const sortEntries = <TPath extends string>(
+  entries: readonly IRepositoryReaderConformanceEntry<TPath>[],
+): IRepositoryReaderConformanceEntry<TPath>[] => {
   return [...entries].sort((left, right) => {
     if (left.path < right.path) {
       return -1;
@@ -49,27 +88,40 @@ const sortEntries = (entries: readonly IRepositoryEntry[]): IRepositoryEntry[] =
   });
 };
 
+/** Verifies one rejection against the implementation-specific exception class. */
+const expectRejectedException = async (
+  operation: PromiseLike<unknown>,
+  isExpectedException: (cause: unknown) => boolean,
+): Promise<void> => {
+  const cause = await operation.then(
+    () => new Error('The conformance operation unexpectedly succeeded.'),
+    (rejection: unknown) => rejection,
+  );
+
+  expect(isExpectedException(cause)).toBe(true);
+};
+
 /**
  * Defines the contract checks shared by every official repository reader.
  * @param implementationName The reader name shown in the generated suite.
  * @param fixture The source-specific reader factory and expected snapshot values.
  */
-export const describeRepositoryReaderConformance = (
+export const describeRepositoryReaderConformance = <TPath extends string>(
   implementationName: string,
-  fixture: IRepositoryReaderConformanceFixture,
+  fixture: IRepositoryReaderConformanceFixture<TPath>,
 ): void => {
   describe(`${implementationName} repository reader conformance`, () => {
     test('returns exact root, file, directory, symlink, and absent entries', async () => {
-      const reader = fixture.createReader();
+      const reader = await fixture.createReader();
 
-      await expect(reader.getEntry(REPOSITORY_ROOT)).resolves.toStrictEqual({
-        path: REPOSITORY_ROOT,
+      await expect(reader.getEntry(fixture.rootPath)).resolves.toStrictEqual({
+        path: fixture.rootPath,
         type: 'directory',
       });
 
-      const filePath = parseRepositoryPath(fixture.filePath);
-      const directoryPath = parseRepositoryPath(fixture.nestedDirectoryPath);
-      const symlinkPath = parseRepositoryPath(fixture.symlinkPath);
+      const filePath = fixture.parsePath(fixture.filePath);
+      const directoryPath = fixture.parsePath(fixture.nestedDirectoryPath);
+      const symlinkPath = fixture.parsePath(fixture.symlinkPath);
       const firstEntry = await reader.getEntry(filePath);
       expect(firstEntry).toStrictEqual({ path: filePath, type: 'file' });
       await expect(reader.getEntry(directoryPath)).resolves.toStrictEqual({
@@ -80,12 +132,12 @@ export const describeRepositoryReaderConformance = (
         path: symlinkPath,
         type: 'symlink',
       });
-      await expect(reader.getEntry(parseRepositoryPath(fixture.missingPath))).resolves.toBeNull();
+      await expect(reader.getEntry(fixture.parsePath(fixture.missingPath))).resolves.toBeNull();
     });
 
     test('isolates mutable and frozen returned entries from reader state', async () => {
-      const reader = fixture.createReader();
-      const filePath = parseRepositoryPath(fixture.filePath);
+      const reader = await fixture.createReader();
+      const filePath = fixture.parsePath(fixture.filePath);
       const firstEntry = await reader.getEntry(filePath);
 
       expect(firstEntry).toStrictEqual({ path: filePath, type: 'file' });
@@ -118,17 +170,17 @@ export const describeRepositoryReaderConformance = (
     });
 
     test('recursively lists every root descendant once without including the prefix', async () => {
-      const reader = fixture.createReader();
+      const reader = await fixture.createReader();
       const actual = await collectEntries(reader.listEntries());
 
       expect(sortEntries(actual)).toStrictEqual(sortEntries(fixture.expectedEntries));
       expect(new Set(actual.map((entry) => entry.path)).size).toBe(actual.length);
-      expect(actual.some((entry) => entry.path === REPOSITORY_ROOT)).toBe(false);
+      expect(actual.some((entry) => entry.path === fixture.rootPath)).toBe(false);
     });
 
     test('recursively lists only descendants of a nested directory', async () => {
-      const reader = fixture.createReader();
-      const prefix = parseRepositoryPath(fixture.nestedDirectoryPath);
+      const reader = await fixture.createReader();
+      const prefix = fixture.parsePath(fixture.nestedDirectoryPath);
       const actual = await collectEntries(reader.listEntries({ prefix }));
 
       expect(actual.map((entry) => entry.path).sort()).toStrictEqual(
@@ -138,9 +190,9 @@ export const describeRepositoryReaderConformance = (
     });
 
     test('preserves exact and zero-length file bytes and returns fresh buffers', async () => {
-      const reader = fixture.createReader();
-      const filePath = parseRepositoryPath(fixture.filePath);
-      const emptyFilePath = parseRepositoryPath(fixture.emptyFilePath);
+      const reader = await fixture.createReader();
+      const filePath = fixture.parsePath(fixture.filePath);
+      const emptyFilePath = fixture.parsePath(fixture.emptyFilePath);
       const firstRead = await reader.readFile(filePath);
       const secondRead = await reader.readFile(filePath);
 
@@ -152,42 +204,64 @@ export const describeRepositoryReaderConformance = (
       await expect(reader.readFile(emptyFilePath)).resolves.toStrictEqual(new Uint8Array());
     });
 
-    test('preserves case-distinct and non-normalized Unicode paths exactly', async () => {
-      const reader = fixture.createReader();
-      const upperPath = parseRepositoryPath(fixture.caseDistinctPaths[0]);
-      const lowerPath = parseRepositoryPath(fixture.caseDistinctPaths[1]);
-      const unicodePath = parseRepositoryPath(fixture.unicodePath);
+    test('preserves or rejects case-mismatched logical paths according to the source', async () => {
+      const reader = await fixture.createReader();
 
-      await expect(reader.getEntry(upperPath)).resolves.toMatchObject({
-        path: upperPath,
+      if (fixture.casePaths.kind === 'distinct') {
+        const firstPath = fixture.parsePath(fixture.casePaths.paths[0]);
+        const secondPath = fixture.parsePath(fixture.casePaths.paths[1]);
+
+        await expect(reader.getEntry(firstPath)).resolves.toMatchObject({
+          path: firstPath,
+          type: 'file',
+        });
+        await expect(reader.getEntry(secondPath)).resolves.toMatchObject({
+          path: secondPath,
+          type: 'file',
+        });
+        return;
+      }
+
+      const existingPath = fixture.parsePath(fixture.casePaths.existingPath);
+      const missingPath = fixture.parsePath(fixture.casePaths.missingPath);
+
+      await expect(reader.getEntry(existingPath)).resolves.toMatchObject({
+        path: existingPath,
         type: 'file',
       });
-      await expect(reader.getEntry(lowerPath)).resolves.toMatchObject({
-        path: lowerPath,
-        type: 'file',
-      });
+      await expect(reader.getEntry(missingPath)).resolves.toBeNull();
+    });
+
+    test('preserves non-normalized Unicode paths exactly', async () => {
+      const reader = await fixture.createReader();
+      const unicodePath = fixture.parsePath(fixture.unicodePath);
+
       await expect(reader.getEntry(unicodePath)).resolves.toMatchObject({
         path: unicodePath,
         type: 'file',
       });
 
-      const decomposed = parseRepositoryPath(fixture.unicodePath.normalize('NFD'));
+      const alternateUnicodePath =
+        fixture.unicodePath === fixture.unicodePath.normalize('NFC')
+          ? fixture.unicodePath.normalize('NFD')
+          : fixture.unicodePath.normalize('NFC');
+      const alternatePath = fixture.parsePath(alternateUnicodePath);
 
-      if (decomposed !== unicodePath) {
-        await expect(reader.getEntry(decomposed)).resolves.toBeNull();
+      if (alternatePath !== unicodePath) {
+        await expect(reader.getEntry(alternatePath)).resolves.toBeNull();
       }
     });
 
     test('never follows symlinks and reports missing and wrong-type operations precisely', async () => {
-      const reader = fixture.createReader();
-      const symlinkPath = parseRepositoryPath(fixture.symlinkPath);
-      const directoryPath = parseRepositoryPath(fixture.nestedDirectoryPath);
-      const filePath = parseRepositoryPath(fixture.filePath);
-      const missingPath = parseRepositoryPath(fixture.missingPath);
+      const reader = await fixture.createReader();
+      const symlinkPath = fixture.parsePath(fixture.symlinkPath);
+      const directoryPath = fixture.parsePath(fixture.nestedDirectoryPath);
+      const filePath = fixture.parsePath(fixture.filePath);
+      const missingPath = fixture.parsePath(fixture.missingPath);
 
       const symlinkRead = reader.readFile(symlinkPath);
       await expectToRejectCode(symlinkRead, 'ENTRY_NOT_FILE');
-      await expect(symlinkRead).rejects.toBeInstanceOf(RepositorySourceException);
+      await expectRejectedException(symlinkRead, fixture.isRepositorySourceException);
       await expect(symlinkRead).rejects.toMatchObject({
         operation: 'read-file',
         path: symlinkPath,
@@ -196,7 +270,7 @@ export const describeRepositoryReaderConformance = (
 
       const directoryRead = reader.readFile(directoryPath);
       await expectToRejectCode(directoryRead, 'ENTRY_NOT_FILE');
-      await expect(directoryRead).rejects.toBeInstanceOf(RepositorySourceException);
+      await expectRejectedException(directoryRead, fixture.isRepositorySourceException);
       await expect(directoryRead).rejects.toMatchObject({
         operation: 'read-file',
         path: directoryPath,
@@ -205,7 +279,7 @@ export const describeRepositoryReaderConformance = (
 
       const missingRead = reader.readFile(missingPath);
       await expectToRejectCode(missingRead, 'ENTRY_NOT_FOUND');
-      await expect(missingRead).rejects.toBeInstanceOf(RepositorySourceException);
+      await expectRejectedException(missingRead, fixture.isRepositorySourceException);
       await expect(missingRead).rejects.toMatchObject({
         operation: 'read-file',
         path: missingPath,
@@ -214,7 +288,7 @@ export const describeRepositoryReaderConformance = (
 
       const fileList = collectEntries(reader.listEntries({ prefix: filePath }));
       await expectToRejectCode(fileList, 'ENTRY_NOT_DIRECTORY');
-      await expect(fileList).rejects.toBeInstanceOf(RepositorySourceException);
+      await expectRejectedException(fileList, fixture.isRepositorySourceException);
       await expect(fileList).rejects.toMatchObject({
         operation: 'list-entries',
         path: filePath,
@@ -223,7 +297,7 @@ export const describeRepositoryReaderConformance = (
 
       const missingList = collectEntries(reader.listEntries({ prefix: missingPath }));
       await expectToRejectCode(missingList, 'ENTRY_NOT_FOUND');
-      await expect(missingList).rejects.toBeInstanceOf(RepositorySourceException);
+      await expectRejectedException(missingList, fixture.isRepositorySourceException);
       await expect(missingList).rejects.toMatchObject({
         operation: 'list-entries',
         path: missingPath,
@@ -232,35 +306,35 @@ export const describeRepositoryReaderConformance = (
     });
 
     test('runtime-validates forged logical paths in every public operation', async () => {
-      const reader = fixture.createReader();
+      const reader = await fixture.createReader();
       const forgedPath = '../host-secret' as never;
 
       const getEntry = reader.getEntry(forgedPath);
       await expectToRejectCode(getEntry, 'INVALID_REPOSITORY_PATH');
-      await expect(getEntry).rejects.toBeInstanceOf(RepositoryPathException);
+      await expectRejectedException(getEntry, fixture.isRepositoryPathException);
 
       const readFile = reader.readFile(forgedPath);
       await expectToRejectCode(readFile, 'INVALID_REPOSITORY_PATH');
-      await expect(readFile).rejects.toBeInstanceOf(RepositoryPathException);
+      await expectRejectedException(readFile, fixture.isRepositoryPathException);
 
       const forgedPrefixList = collectEntries(reader.listEntries({ prefix: forgedPath }));
       await expectToRejectCode(forgedPrefixList, 'INVALID_REPOSITORY_PATH');
-      await expect(forgedPrefixList).rejects.toBeInstanceOf(RepositoryPathException);
+      await expectRejectedException(forgedPrefixList, fixture.isRepositoryPathException);
 
       const nullPrefixList = collectEntries(reader.listEntries({ prefix: null as never }));
       await expectToRejectCode(nullPrefixList, 'INVALID_REPOSITORY_PATH');
-      await expect(nullPrefixList).rejects.toBeInstanceOf(RepositoryPathException);
+      await expectRejectedException(nullPrefixList, fixture.isRepositoryPathException);
     });
 
     test('honors cancellation before and during operations without partial success', async () => {
-      const reader = fixture.createReader();
-      const path = parseRepositoryPath(fixture.filePath);
+      const reader = await fixture.createReader();
+      const path = fixture.parsePath(fixture.filePath);
       const aborted = new AbortController();
       aborted.abort(new Error('cancelled by test'));
 
       const getEntry = reader.getEntry(path, { signal: aborted.signal });
       await expectToRejectCode(getEntry, 'ABORTED');
-      await expect(getEntry).rejects.toBeInstanceOf(RepositorySourceException);
+      await expectRejectedException(getEntry, fixture.isRepositorySourceException);
       await expect(getEntry).rejects.toMatchObject({
         operation: 'get-entry',
         path,
@@ -269,7 +343,7 @@ export const describeRepositoryReaderConformance = (
 
       const readFile = reader.readFile(path, { signal: aborted.signal });
       await expectToRejectCode(readFile, 'ABORTED');
-      await expect(readFile).rejects.toBeInstanceOf(RepositorySourceException);
+      await expectRejectedException(readFile, fixture.isRepositorySourceException);
       await expect(readFile).rejects.toMatchObject({
         operation: 'read-file',
         path,
@@ -278,10 +352,10 @@ export const describeRepositoryReaderConformance = (
 
       const listEntries = collectEntries(reader.listEntries({ signal: aborted.signal }));
       await expectToRejectCode(listEntries, 'ABORTED');
-      await expect(listEntries).rejects.toBeInstanceOf(RepositorySourceException);
+      await expectRejectedException(listEntries, fixture.isRepositorySourceException);
       await expect(listEntries).rejects.toMatchObject({
         operation: 'list-entries',
-        path: REPOSITORY_ROOT,
+        path: fixture.rootPath,
         retryable: false,
       });
 
@@ -292,17 +366,17 @@ export const describeRepositoryReaderConformance = (
       during.abort();
       const nextEntry = iterator.next();
       await expectToRejectCode(nextEntry, 'ABORTED');
-      await expect(nextEntry).rejects.toBeInstanceOf(RepositorySourceException);
+      await expectRejectedException(nextEntry, fixture.isRepositorySourceException);
       await expect(nextEntry).rejects.toMatchObject({
         operation: 'list-entries',
-        path: REPOSITORY_ROOT,
+        path: fixture.rootPath,
       });
       await expect(iterator.next()).resolves.toStrictEqual({ done: true, value: undefined });
     });
 
     test('supports concurrent and stable repeated reads from one snapshot', async () => {
-      const reader = fixture.createReader();
-      const path = parseRepositoryPath(fixture.filePath);
+      const reader = await fixture.createReader();
+      const path = fixture.parsePath(fixture.filePath);
       const results = await Promise.all(Array.from({ length: 16 }, () => reader.readFile(path)));
 
       for (const result of results) {
@@ -313,8 +387,8 @@ export const describeRepositoryReaderConformance = (
     });
 
     test('preserves one snapshot across source mutation or reports SNAPSHOT_CHANGED', async () => {
-      const scenario = fixture.createSnapshotMutationFixture();
-      const path = parseRepositoryPath(fixture.filePath);
+      const scenario = await fixture.createSnapshotMutationFixture();
+      const path = fixture.parsePath(fixture.filePath);
       const entryBeforeMutation = await scenario.reader.getEntry(path);
       const bytesBeforeMutation = await scenario.reader.readFile(path);
       const listingBeforeMutation = sortEntries(
@@ -326,7 +400,7 @@ export const describeRepositoryReaderConformance = (
       if (scenario.behavior === 'report-snapshot-changed') {
         const readAfterMutation = scenario.reader.readFile(path);
         await expectToRejectCode(readAfterMutation, 'SNAPSHOT_CHANGED');
-        await expect(readAfterMutation).rejects.toBeInstanceOf(RepositorySourceException);
+        await expectRejectedException(readAfterMutation, fixture.isRepositorySourceException);
         await expect(readAfterMutation).rejects.toMatchObject({
           operation: 'read-file',
           path,

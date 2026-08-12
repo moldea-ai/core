@@ -1,8 +1,8 @@
 # `@moldea.ai/repository-fs`
 
-Node.js-specific foundations for exposing one explicitly selected local directory through the source-neutral repository contract.
+Node.js-specific implementation for exposing one explicitly selected local directory through the source-neutral repository contract.
 
-The current unpublished `0.0.1` foundation defines the complete version 1 option, selection, and resource-limit contracts. It validates and detaches caller options, internally canonicalizes an explicit filesystem root, constructs and verifies strict private exact-path and recursive-directory inventories, provides frozen lookup and recursive listing, coordinates verified file capture into a private immutable cache, and permanently invalidates that shared state after snapshot loss. The public reader factory is intentionally withheld until shared conformance can be published with these completed internal behaviors.
+The current unpublished `0.0.1` package exposes the complete version 1 option, selection, resource-limit, and immutable reader contracts. Its public factory validates and detaches caller options, canonicalizes an explicit filesystem root, constructs and verifies strict private exact-path or recursive-directory inventories, provides frozen lookup and recursive listing, coordinates verified file capture into a private immutable cache, and permanently invalidates that shared state after snapshot loss. The filesystem implementation passes the same source-neutral reader conformance contract as `@moldea.ai/repository/memory`.
 
 Tarball and consumer-type checks are the release boundary for now. This package is not ready to publish to npm.
 
@@ -12,12 +12,13 @@ The completed reader will be read-only and Git-agnostic. Callers provide one abs
 
 Raw directory selection can include ignored files, credentials, caches, dependencies, and generated output. Callers that own a narrower trust policy should derive an exact logical-path inventory outside this package.
 
-## Public foundation
+## Public reader
 
 ```typescript
 import { parseRepositoryPath } from '@moldea.ai/repository';
 import {
   DEFAULT_FILESYSTEM_REPOSITORY_RESOURCE_LIMITS,
+  createFilesystemRepositoryReader,
   type IFilesystemRepositoryReaderOptions,
 } from '@moldea.ai/repository-fs';
 
@@ -29,11 +30,14 @@ const options: IFilesystemRepositoryReaderOptions = {
   },
 };
 
+const reader = await createFilesystemRepositoryReader(options);
+const entry = await reader.getEntry(parseRepositoryPath('/moldea/moldea.yaml'));
+
 DEFAULT_FILESYSTEM_REPOSITORY_RESOURCE_LIMITS;
-void options;
+void entry;
 ```
 
-The selection strategy is required. Exact-path arrays are sets with no semantic input order; `/` and exact duplicates are invalid. Directory selection is deliberately explicit because it requests the complete eligible raw tree.
+The returned reader is frozen and exposes only `getEntry`, `listEntries`, and `readFile`. The selection strategy is required. Exact-path arrays are sets with no semantic input order; `/` and exact duplicates are invalid. Directory selection is deliberately explicit because it requests the complete eligible raw tree.
 
 ## Default limits
 
@@ -47,7 +51,7 @@ The exported default object is frozen. Configured limits must be positive safe i
 
 ## Validation and root behavior
 
-Options, selection objects, and limit objects are closed version 1 contracts. Reader construction will snapshot caller-owned configuration before asynchronous work while retaining the supplied `AbortSignal` as a live reference.
+Options, selection objects, and limit objects are closed version 1 contracts. Reader construction snapshots caller-owned configuration before asynchronous work while retaining the supplied creation `AbortSignal` as a live reference. That signal governs construction only; later operations use only their own explicitly supplied signals.
 
 The host root must be non-empty absolute Unicode-scalar text without NUL. Internal root preparation resolves that explicitly selected root once, requires a directory, captures its stable identity, and revalidates it before later inventory phases can use it. A caller-selected symlink or junction root is allowed; the resolved target becomes the fixed boundary.
 
@@ -95,7 +99,7 @@ One private reader state now owns the verified inventory, exact-path index, deta
 
 File capture distinguishes a stable host access denial (`ACCESS_DENIED`) or other stable I/O failure (`SOURCE_UNAVAILABLE`) from a coherence loss (`SNAPSHOT_CHANGED`). It revalidates the open handle and complete root-to-file path before exposing an observed read failure. A failure that prevents coherence from being proved is treated as snapshot loss. Cancellation becomes `ABORTED` only while the capture remains coherent, failed captures never enter the cache, and a close-only failure does not invalidate an otherwise coherent state.
 
-The shared reader conformance boundary and public factory remain subsequent implementation phases.
+The public factory is the only reader-construction boundary. It composes root preparation, verified inventory construction, and private state creation without exposing host paths, inventory metadata, cache state, capture coordination, or lifecycle mutation. Its frozen closures delegate the common reader operations to that private state.
 
 ## Runtime support
 
@@ -119,4 +123,4 @@ pnpm --filter @moldea.ai/repository-fs test:integration
 pnpm --filter @moldea.ai/repository-fs test
 ```
 
-Unit and integration tests are colocated with their owning modules. Integration tests use isolated temporary directories and validate real package tarballs together with `@moldea.ai/repository`.
+Unit and integration tests are colocated with their owning modules. Integration tests materialize the canonical repository-reader fixture in isolated temporary directories, run the shared reader conformance contract, and validate real package tarballs together with `@moldea.ai/repository`.

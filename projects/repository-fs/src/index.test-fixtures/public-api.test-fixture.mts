@@ -1,16 +1,19 @@
-import { parseRepositoryPath, type IRepositoryPath } from '@moldea.ai/repository';
+import {
+  parseRepositoryPath,
+  type IRepositoryPath,
+  type IRepositoryReader,
+} from '@moldea.ai/repository';
 // @ts-expect-error The Repository FS package has no default export.
 import repositoryFilesystemDefault from '@moldea.ai/repository-fs';
 import {
   DEFAULT_FILESYSTEM_REPOSITORY_RESOURCE_LIMITS,
+  createFilesystemRepositoryReader,
   type IFilesystemRepositoryDirectorySelection,
   type IFilesystemRepositoryPathSelection,
   type IFilesystemRepositoryReaderOptions,
   type IFilesystemRepositoryResourceLimits,
   type IFilesystemRepositorySelection,
 } from '@moldea.ai/repository-fs';
-// @ts-expect-error The reader factory is withheld until coherent reader behavior is implemented.
-import { createFilesystemRepositoryReader } from '@moldea.ai/repository-fs';
 import {
   // @ts-expect-error Verified file capture remains an internal reader-building detail.
   createFilesystemRepositoryReaderState,
@@ -44,9 +47,10 @@ const options: IFilesystemRepositoryReaderOptions = {
   selection: pathSelection,
   signal: new AbortController().signal,
 };
+const reader: Promise<IRepositoryReader> = createFilesystemRepositoryReader(options);
 
 void repositoryFilesystemDefault;
-void createFilesystemRepositoryReader;
+void reader;
 void getFilesystemRepositoryEntry;
 void listFilesystemRepositoryEntries;
 void createFilesystemRepositoryReaderState;

@@ -1,9 +1,10 @@
 // @vitest-environment node
 import type { IRepositoryEntry } from './contracts.js';
 import { describeRepositoryReaderConformance } from './conformance/reader-conformance.test-utilities.js';
+import { RepositoryPathException, RepositorySourceException } from './exceptions.js';
 import { createMemoryRepositoryReader, type IMemoryRepositoryEntry } from './memory.js';
 import { createValidMemoryEntries } from './memory.test-fixtures.js';
-import { parseRepositoryPath } from './repository-path.js';
+import { REPOSITORY_ROOT, parseRepositoryPath } from './repository-path.js';
 
 const expectedEntries: readonly IRepositoryEntry[] = [
   { path: parseRepositoryPath('/Case.txt'), type: 'file' },
@@ -20,7 +21,7 @@ const expectedEntries: readonly IRepositoryEntry[] = [
 ];
 
 describeRepositoryReaderConformance('in-memory', {
-  caseDistinctPaths: ['/Case.txt', '/case.txt'],
+  casePaths: { kind: 'distinct', paths: ['/Case.txt', '/case.txt'] },
   createReader: () => createMemoryRepositoryReader(createValidMemoryEntries()),
   createSnapshotMutationFixture: () => {
     const entries = [...createValidMemoryEntries()];
@@ -49,9 +50,13 @@ describeRepositoryReaderConformance('in-memory', {
   expectedEntries,
   fileBytes: new Uint8Array([0, 1, 13, 10, 128, 255]),
   filePath: '/nested/deep/data.bin',
+  isRepositoryPathException: (cause) => cause instanceof RepositoryPathException,
+  isRepositorySourceException: (cause) => cause instanceof RepositorySourceException,
   missingPath: '/missing.txt',
   nestedDirectoryPath: '/nested',
   nestedExpectedPaths: ['/nested/deep', '/nested/deep/data.bin', '/nested/empty'],
+  parsePath: parseRepositoryPath,
+  rootPath: REPOSITORY_ROOT,
   symlinkPath: '/link',
   unicodePath: '/unicode/café-😀.txt',
 });
