@@ -133,6 +133,8 @@ Environment-neutral packages extend `configs/typescript/environment-neutral.json
 
 Package tests use Vitest without global test APIs. Tests are colocated with the source modules they exercise, and Node and non-React tests follow the established `*.test-unit.ts` and `*.test-integration.ts` naming conventions. Each package exposes separate `test:unit` and `test:integration` commands plus a `test` command that runs both suites. Shared conformance fixtures live at repository level when they represent a contract implemented by multiple packages.
 
+Repository FS runtime compatibility is tested at the packed-consumer boundary. CI builds its public tarball and the Repository dependency on the pinned development runtime, then installs and executes those artifacts on the exact minimum and latest patch of each supported Node.js line. This keeps consumer runtime guarantees independent from the newer runtime required by repository development tooling.
+
 Turborepo derives build order from declared workspace dependencies. Package dependencies must remain explicit and acyclic, and no task may rely on workspace enumeration order or undeclared cross-project state.
 
 ## Generated artifacts

@@ -59,6 +59,52 @@ jobs:
       - name: Test
         run: pnpm test
 
+      - name: Pack Repository FS Runtime Artifacts
+        run: |
+          runtime_packages_directory="${{ runner.temp }}/repository-fs-runtime-packages"
+          mkdir -p "$runtime_packages_directory"
+          pnpm --dir projects/repository pack --pack-destination "$runtime_packages_directory"
+          pnpm --dir projects/repository-fs pack --pack-destination "$runtime_packages_directory"
+
+      - name: Upload Repository FS Runtime Artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: repository-fs-runtime-packages
+          path: ${{ runner.temp }}/repository-fs-runtime-packages/*.tgz
+          if-no-files-found: error
+
+  repository-fs-runtime-compatibility:
+    name: Repository FS Runtime (Node.js ${{ matrix.node-version }})
+    needs: verify
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version:
+          - 22.11.0
+          - 22.x
+          - 24.11.0
+          - 24.x
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Download Repository FS Runtime Artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: repository-fs-runtime-packages
+          path: ${{ runner.temp }}/repository-fs-runtime-packages
+
+      - name: Test Packed Repository FS Runtime
+        run: >-
+          node projects/repository-fs/scripts/runtime-compatibility/index.mjs
+          "${{ runner.temp }}/repository-fs-runtime-packages"
+
   test-cross-platform:
     name: Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}

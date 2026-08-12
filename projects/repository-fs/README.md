@@ -111,6 +111,8 @@ The version 1 consumer runtime range is:
 
 The package uses Node.js filesystem and path facilities and is not browser-compatible.
 
+CI builds the public tarballs on the repository development baseline, then installs and executes them through isolated consumers on Node.js `22.11.0`, the latest Node.js `22.x`, Node.js `24.11.0`, and the latest Node.js `24.x`. The complete filesystem suite also runs on Linux, macOS, and Windows. Consumer runtime compatibility is therefore validated independently from the newer Node.js version used by the repository development toolchain.
+
 ## Development
 
 From the monorepo root:

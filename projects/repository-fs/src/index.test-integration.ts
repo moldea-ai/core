@@ -32,6 +32,44 @@ interface IPackDryRunResult {
   readonly version: string;
 }
 
+// public package metadata that must survive packing unchanged except for workspace ranges
+interface IRepositoryFilesystemPackageManifest {
+  readonly dependencies?: Readonly<Record<string, string>>;
+  readonly engines?: Readonly<Record<string, string>>;
+  readonly exports?: unknown;
+  readonly main?: string;
+  readonly name?: string;
+  readonly sideEffects?: boolean;
+  readonly type?: string;
+  readonly types?: string;
+  readonly version?: string;
+}
+
+/** Asserts the exact source or packed Repository FS public-package metadata. */
+const expectPublicPackageManifest = (
+  manifest: IRepositoryFilesystemPackageManifest,
+  repositoryVersionRange: string,
+): void => {
+  expect(manifest).toMatchObject({
+    main: './dist/index.js',
+    name: '@moldea.ai/repository-fs',
+    sideEffects: false,
+    type: 'module',
+    types: './dist/index.d.ts',
+    version: '0.0.1',
+  });
+  expect(manifest.exports).toStrictEqual({
+    '.': {
+      import: './dist/index.js',
+      types: './dist/index.d.ts',
+    },
+  });
+  expect(manifest.engines).toStrictEqual({ node: '^22.11.0 || ^24.11.0' });
+  expect(manifest.dependencies).toStrictEqual({
+    '@moldea.ai/repository': repositoryVersionRange,
+  });
+};
+
 /** Executes native or JavaScript package-manager entrypoints without a platform shell. */
 const runPackageManager = (
   packageManagerEntrypoint: string,
@@ -143,10 +181,7 @@ describe('published Repository FS package artifacts', () => {
     const packResult = JSON.parse(output) as IPackDryRunResult;
     const manifest = JSON.parse(
       readFileSync(path.join(projectDirectory, 'package.json'), 'utf8'),
-    ) as {
-      readonly dependencies?: Readonly<Record<string, string>>;
-      readonly engines?: Readonly<Record<string, string>>;
-    };
+    ) as IRepositoryFilesystemPackageManifest;
     const packedPaths = packResult.files.map((file) => file.path);
 
     expect(packResult).toMatchObject({ name: '@moldea.ai/repository-fs', version: '0.0.1' });
@@ -166,10 +201,7 @@ describe('published Repository FS package artifacts', () => {
       ),
     ).toBe(true);
     expect(packedPaths.every((filePath) => !filePath.includes('.test-'))).toBe(true);
-    expect(manifest.dependencies).toStrictEqual({
-      '@moldea.ai/repository': 'workspace:^0.0.1',
-    });
-    expect(manifest.engines).toStrictEqual({ node: '^22.11.0 || ^24.11.0' });
+    expectPublicPackageManifest(manifest, 'workspace:^0.0.1');
   });
 
   test('loads only the documented named runtime exports', () => {
@@ -216,11 +248,9 @@ describe('published Repository FS package artifacts', () => {
           readFileSync(path.join(packDirectory, tarballName)),
           'package/package.json',
         ).toString('utf8'),
-      ) as { readonly dependencies?: Readonly<Record<string, string>> };
+      ) as IRepositoryFilesystemPackageManifest;
 
-      expect(manifest.dependencies).toStrictEqual({
-        '@moldea.ai/repository': '^0.0.1',
-      });
+      expectPublicPackageManifest(manifest, '^0.0.1');
     } finally {
       rmSync(packDirectory, { force: true, recursive: true });
     }
