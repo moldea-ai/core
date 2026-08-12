@@ -6,13 +6,6 @@ import type {
   IFilesystemInventoryEntry,
 } from '../inventory/index.js';
 
-/** Creates an exact-path lookup for one complete private inventory. */
-export const createFilesystemInventoryEntriesByPath = (
-  inventory: IFilesystemInventory,
-): ReadonlyMap<IRepositoryPath, IFilesystemInventoryEntry> => {
-  return new Map(inventory.entries.map((entry) => [entry.path, entry]));
-};
-
 const getFilesystemInventoryParentPath = (logicalPath: IRepositoryPath): IRepositoryPath => {
   const separatorIndex = logicalPath.lastIndexOf('/');
 

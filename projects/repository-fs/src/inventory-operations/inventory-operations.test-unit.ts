@@ -11,7 +11,13 @@ import {
   type IRepositoryPath,
 } from '@moldea.ai/repository';
 
+import { DEFAULT_FILESYSTEM_REPOSITORY_RESOURCE_LIMITS } from '../constants/index.js';
 import type { IFilesystemInventory, IFilesystemInventoryEntry } from '../inventory/index.js';
+import {
+  createFilesystemRepositoryReaderState,
+  type IFilesystemRepositoryReaderState,
+} from '../reader-state/index.js';
+import type { IPreparedFilesystemRepositoryRoot } from '../root/index.js';
 import { getFilesystemRepositoryEntry, listFilesystemRepositoryEntries } from './index.js';
 
 const createInventoryEntry = (
@@ -55,7 +61,7 @@ const createInventoryEntry = (
   return Object.freeze({ hostPath, path, type });
 };
 
-const createInventory = (): IFilesystemInventory => {
+const createState = (): IFilesystemRepositoryReaderState => {
   const entries = [
     createInventoryEntry('/', 'directory'),
     createInventoryEntry('/Case.txt', 'file'),
@@ -77,7 +83,24 @@ const createInventory = (): IFilesystemInventory => {
     return firstEntry.path > secondEntry.path ? 1 : 0;
   });
 
-  return Object.freeze({ entries: Object.freeze(entries) });
+  const inventory: IFilesystemInventory = Object.freeze({ entries: Object.freeze(entries) });
+  const preparedRoot: IPreparedFilesystemRepositoryRoot = Object.freeze({
+    identity: {
+      birthtimeNanoseconds: 1n,
+      device: 2n,
+      inode: 3n,
+      mode: 4n,
+    },
+    options: Object.freeze({
+      limits: DEFAULT_FILESYSTEM_REPOSITORY_RESOURCE_LIMITS,
+      rootDirectory: '/private/source',
+      selection: Object.freeze({ kind: 'directory' }),
+      signal: undefined,
+    }),
+    resolvedRootDirectory: '/private/source',
+  });
+
+  return createFilesystemRepositoryReaderState(preparedRoot, inventory);
 };
 
 const collectEntries = async (
@@ -101,7 +124,7 @@ describe('frozen filesystem inventory operations', () => {
   ] as const)('getFilesystemRepositoryEntry(%s) -> %s', async (logicalPath, type) => {
     const path = parseRepositoryPath(logicalPath);
 
-    await expect(getFilesystemRepositoryEntry(createInventory(), path)).resolves.toStrictEqual({
+    await expect(getFilesystemRepositoryEntry(createState(), path)).resolves.toStrictEqual({
       path,
       type,
     });
@@ -109,27 +132,27 @@ describe('frozen filesystem inventory operations', () => {
 
   test('returns null for an absent exact path', async () => {
     await expect(
-      getFilesystemRepositoryEntry(createInventory(), parseRepositoryPath('/missing')),
+      getFilesystemRepositoryEntry(createState(), parseRepositoryPath('/missing')),
     ).resolves.toBeNull();
   });
 
   test('preserves exact case and Unicode path identity', async () => {
-    const inventory = createInventory();
+    const state = createState();
     const unicodePath = parseRepositoryPath('/a/nested/unicode-😀.txt');
 
-    await expect(getFilesystemRepositoryEntry(inventory, unicodePath)).resolves.toStrictEqual({
+    await expect(getFilesystemRepositoryEntry(state, unicodePath)).resolves.toStrictEqual({
       path: unicodePath,
       type: 'file',
     });
     await expect(
-      getFilesystemRepositoryEntry(inventory, parseRepositoryPath('/case.txt')),
+      getFilesystemRepositoryEntry(state, parseRepositoryPath('/case.txt')),
     ).resolves.toBeNull();
   });
 
   test('isolates returned entries from the private inventory and later results', async () => {
-    const inventory = createInventory();
+    const state = createState();
     const path = parseRepositoryPath('/Case.txt');
-    const firstEntry = await getFilesystemRepositoryEntry(inventory, path);
+    const firstEntry = await getFilesystemRepositoryEntry(state, path);
 
     expect(firstEntry).toStrictEqual({ path, type: 'file' });
     expect(firstEntry).not.toHaveProperty('hostPath');
@@ -141,14 +164,14 @@ describe('frozen filesystem inventory operations', () => {
 
     Reflect.set(firstEntry, 'type', 'directory');
 
-    await expect(getFilesystemRepositoryEntry(inventory, path)).resolves.toStrictEqual({
+    await expect(getFilesystemRepositoryEntry(state, path)).resolves.toStrictEqual({
       path,
       type: 'file',
     });
   });
 
   test('lists every root descendant exactly once without exposing private metadata', async () => {
-    const entries = await collectEntries(listFilesystemRepositoryEntries(createInventory()));
+    const entries = await collectEntries(listFilesystemRepositoryEntries(createState()));
 
     expect(entries.map((entry) => entry.path)).toStrictEqual([
       parseRepositoryPath('/Case.txt'),
@@ -169,7 +192,7 @@ describe('frozen filesystem inventory operations', () => {
   test('lists only exact nested descendants without matching similarly prefixed paths', async () => {
     const prefix = parseRepositoryPath('/a');
     const entries = await collectEntries(
-      listFilesystemRepositoryEntries(createInventory(), { prefix }),
+      listFilesystemRepositoryEntries(createState(), { prefix }),
     );
 
     expect(entries.map((entry) => entry.path)).toStrictEqual([
@@ -180,8 +203,8 @@ describe('frozen filesystem inventory operations', () => {
   });
 
   test('isolates mutable listed entries from later listings', async () => {
-    const inventory = createInventory();
-    const firstListing = await collectEntries(listFilesystemRepositoryEntries(inventory));
+    const state = createState();
+    const firstListing = await collectEntries(listFilesystemRepositoryEntries(state));
     const firstEntry = firstListing[0];
 
     if (firstEntry === undefined) {
@@ -190,7 +213,7 @@ describe('frozen filesystem inventory operations', () => {
 
     Reflect.set(firstEntry, 'type', 'directory');
 
-    const secondListing = await collectEntries(listFilesystemRepositoryEntries(inventory));
+    const secondListing = await collectEntries(listFilesystemRepositoryEntries(state));
 
     expect(secondListing[0]).toStrictEqual({
       path: parseRepositoryPath('/Case.txt'),
@@ -200,7 +223,7 @@ describe('frozen filesystem inventory operations', () => {
 
   test('returns an empty listing for an empty directory', async () => {
     const entries = await collectEntries(
-      listFilesystemRepositoryEntries(createInventory(), {
+      listFilesystemRepositoryEntries(createState(), {
         prefix: parseRepositoryPath('/empty'),
       }),
     );
@@ -214,7 +237,7 @@ describe('frozen filesystem inventory operations', () => {
     ['/a-link', 'ENTRY_NOT_DIRECTORY'],
   ] as const)('listFilesystemRepositoryEntries(%s) -> %s', async (logicalPath, code) => {
     const prefix = parseRepositoryPath(logicalPath);
-    const listing = collectEntries(listFilesystemRepositoryEntries(createInventory(), { prefix }));
+    const listing = collectEntries(listFilesystemRepositoryEntries(createState(), { prefix }));
 
     await expectToRejectCode(listing, code);
     await expect(listing).rejects.toBeInstanceOf(RepositorySourceException);
@@ -227,12 +250,12 @@ describe('frozen filesystem inventory operations', () => {
 
   test('runtime-validates forged logical paths', async () => {
     const forgedPath = '../private-source' as IRepositoryPath;
-    const getEntry = getFilesystemRepositoryEntry(createInventory(), forgedPath);
+    const getEntry = getFilesystemRepositoryEntry(createState(), forgedPath);
     const listing = collectEntries(
-      listFilesystemRepositoryEntries(createInventory(), { prefix: forgedPath }),
+      listFilesystemRepositoryEntries(createState(), { prefix: forgedPath }),
     );
     const nullPrefixListing = collectEntries(
-      listFilesystemRepositoryEntries(createInventory(), { prefix: null as never }),
+      listFilesystemRepositoryEntries(createState(), { prefix: null as never }),
     );
 
     await expectToRejectCode(getEntry, 'INVALID_REPOSITORY_PATH');
@@ -249,11 +272,11 @@ describe('frozen filesystem inventory operations', () => {
 
     controller.abort(new Error('cancelled by test'));
 
-    const getEntry = getFilesystemRepositoryEntry(createInventory(), path, {
+    const getEntry = getFilesystemRepositoryEntry(createState(), path, {
       signal: controller.signal,
     });
     const listing = collectEntries(
-      listFilesystemRepositoryEntries(createInventory(), { signal: controller.signal }),
+      listFilesystemRepositoryEntries(createState(), { signal: controller.signal }),
     );
 
     await expectToRejectCode(getEntry, 'ABORTED');
@@ -272,7 +295,7 @@ describe('frozen filesystem inventory operations', () => {
 
   test('terminates a listing when its signal is aborted between yields', async () => {
     const controller = new AbortController();
-    const iterator = listFilesystemRepositoryEntries(createInventory(), {
+    const iterator = listFilesystemRepositoryEntries(createState(), {
       signal: controller.signal,
     })[Symbol.asyncIterator]();
     const firstResult = await iterator.next();

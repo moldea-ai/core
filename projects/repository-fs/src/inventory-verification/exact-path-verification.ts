@@ -2,17 +2,17 @@ import { REPOSITORY_ROOT, type IRepositoryPath } from '@moldea.ai/repository';
 
 import type { IFilesystemExactPathSelectionPlan } from '../exact-path-selection/index.js';
 import { getMissingFilesystemExactPathDirectoryEntries } from '../exact-path-inventory/index.js';
-import type { IFilesystemInventory } from '../inventory/index.js';
+import {
+  createFilesystemInventoryEntriesByPath,
+  type IFilesystemInventory,
+} from '../inventory/index.js';
 import type { IPreparedFilesystemRepositoryRoot } from '../root/index.js';
 import { throwFilesystemRepositoryCreationException } from '../source-exception/index.js';
 import {
   captureFilesystemVerificationStatistics,
   readFilesystemVerificationDirectoryNames,
 } from './observation.js';
-import {
-  createFilesystemInventoryEntriesByPath,
-  getFilesystemInventoryDirectory,
-} from './utilities.js';
+import { getFilesystemInventoryDirectory } from './utilities.js';
 import { assertFilesystemInventoryEntryUnchanged } from './validations.js';
 
 /**

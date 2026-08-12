@@ -7,7 +7,11 @@ import {
   type IRepositoryPath,
 } from '@moldea.ai/repository';
 
-import type { IFilesystemInventory, IFilesystemInventoryEntry } from '../inventory/index.js';
+import type { IFilesystemInventoryEntry } from '../inventory/index.js';
+import {
+  throwIfFilesystemRepositoryReaderInvalidated,
+  type IFilesystemRepositoryReaderState,
+} from '../reader-state/index.js';
 import {
   throwFilesystemRepositoryOperationException,
   throwIfFilesystemRepositoryOperationAborted,
@@ -37,11 +41,11 @@ const findFilesystemInventoryLowerBound = (
 
 /** Returns one inventory entry at an exact logical path when it exists. */
 const findFilesystemInventoryEntry = (
-  inventory: IFilesystemInventory,
+  state: IFilesystemRepositoryReaderState,
   path: IRepositoryPath,
 ): IFilesystemInventoryEntry | undefined => {
-  const entryIndex = findFilesystemInventoryLowerBound(inventory.entries, path);
-  const entry = inventory.entries[entryIndex];
+  const entryIndex = findFilesystemInventoryLowerBound(state.inventory.entries, path);
+  const entry = state.inventory.entries[entryIndex];
 
   return entry?.path === path ? entry : undefined;
 };
@@ -54,32 +58,36 @@ const createRepositoryEntry = (entry: IFilesystemInventoryEntry): IRepositoryEnt
 
 /**
  * Looks up one detached common entry in a frozen filesystem inventory.
- * @param inventory The verified root-inclusive filesystem inventory.
+ * @param state The shared verified inventory and permanent reader lifecycle.
  * @param path The validated repository-root logical path to inspect.
  * @param options Optional cancellation controls.
  * @returns A promise resolving to the detached entry or `null` when absent.
  * @throws
  * - INVALID_REPOSITORY_PATH: The repository path is invalid.
+ * - SNAPSHOT_CHANGED: The repository snapshot changed during the operation.
  * - ABORTED: The repository operation was aborted.
  */
 export const getFilesystemRepositoryEntry = async (
-  inventory: IFilesystemInventory,
+  state: IFilesystemRepositoryReaderState,
   path: IRepositoryPath,
   options?: IRepositoryOperationOptions,
 ): Promise<IRepositoryEntry | null> => {
   const parsedPath = parseRepositoryPath(path);
 
   await Promise.resolve();
+  throwIfFilesystemRepositoryReaderInvalidated(state, 'get-entry', parsedPath);
   throwIfFilesystemRepositoryOperationAborted(options?.signal, 'get-entry', parsedPath);
 
-  const entry = findFilesystemInventoryEntry(inventory, parsedPath);
+  const entry = findFilesystemInventoryEntry(state, parsedPath);
 
   if (entry === undefined) {
+    throwIfFilesystemRepositoryReaderInvalidated(state, 'get-entry', parsedPath);
     return null;
   }
 
   const result = createRepositoryEntry(entry);
 
+  throwIfFilesystemRepositoryReaderInvalidated(state, 'get-entry', parsedPath);
   throwIfFilesystemRepositoryOperationAborted(options?.signal, 'get-entry', parsedPath);
 
   return result;
@@ -87,26 +95,28 @@ export const getFilesystemRepositoryEntry = async (
 
 /**
  * Recursively lists detached common descendants from a frozen filesystem inventory.
- * @param inventory The verified root-inclusive filesystem inventory.
+ * @param state The shared verified inventory and permanent reader lifecycle.
  * @param options Optional prefix and cancellation controls.
  * @returns An async iterable over every exact descendant without the prefix itself.
  * @throws
  * - INVALID_REPOSITORY_PATH: The repository path is invalid.
  * - ENTRY_NOT_FOUND: The requested repository entry was not found.
  * - ENTRY_NOT_DIRECTORY: The requested repository entry is not a directory.
+ * - SNAPSHOT_CHANGED: The repository snapshot changed during the operation.
  * - ABORTED: The repository operation was aborted.
  */
 export const listFilesystemRepositoryEntries = async function* (
-  inventory: IFilesystemInventory,
+  state: IFilesystemRepositoryReaderState,
   options?: IRepositoryListOptions,
 ): AsyncIterable<IRepositoryEntry> {
   const prefix =
     options?.prefix === undefined ? REPOSITORY_ROOT : parseRepositoryPath(options.prefix);
 
   await Promise.resolve();
+  throwIfFilesystemRepositoryReaderInvalidated(state, 'list-entries', prefix);
   throwIfFilesystemRepositoryOperationAborted(options?.signal, 'list-entries', prefix);
 
-  const prefixEntry = findFilesystemInventoryEntry(inventory, prefix);
+  const prefixEntry = findFilesystemInventoryEntry(state, prefix);
 
   if (prefixEntry === undefined) {
     return throwFilesystemRepositoryOperationException(
@@ -127,10 +137,10 @@ export const listFilesystemRepositoryEntries = async function* (
   }
 
   const descendantPrefix = prefix === REPOSITORY_ROOT ? REPOSITORY_ROOT : `${prefix}/`;
-  let entryIndex = findFilesystemInventoryLowerBound(inventory.entries, descendantPrefix);
+  let entryIndex = findFilesystemInventoryLowerBound(state.inventory.entries, descendantPrefix);
 
-  while (entryIndex < inventory.entries.length) {
-    const entry = inventory.entries[entryIndex];
+  while (entryIndex < state.inventory.entries.length) {
+    const entry = state.inventory.entries[entryIndex];
 
     if (entry === undefined || entry.path === prefix || !entry.path.startsWith(descendantPrefix)) {
       if (entry?.path === prefix) {
@@ -141,10 +151,12 @@ export const listFilesystemRepositoryEntries = async function* (
       break;
     }
 
+    throwIfFilesystemRepositoryReaderInvalidated(state, 'list-entries', prefix);
     throwIfFilesystemRepositoryOperationAborted(options?.signal, 'list-entries', prefix);
     yield createRepositoryEntry(entry);
     entryIndex += 1;
   }
 
+  throwIfFilesystemRepositoryReaderInvalidated(state, 'list-entries', prefix);
   throwIfFilesystemRepositoryOperationAborted(options?.signal, 'list-entries', prefix);
 };

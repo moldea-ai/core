@@ -8,4 +8,7 @@ export type {
 } from './types.js';
 
 // transformers
-export { createFilesystemInventoryEntry } from './transformers.js';
+export {
+  createFilesystemInventoryEntriesByPath,
+  createFilesystemInventoryEntry,
+} from './transformers.js';

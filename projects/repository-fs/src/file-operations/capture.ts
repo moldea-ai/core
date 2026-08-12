@@ -4,6 +4,11 @@ import { lstat, open, type FileHandle } from 'node:fs/promises';
 import { RepositorySourceException, type IRepositoryPath } from '@moldea.ai/repository';
 
 import {
+  markFilesystemRepositoryReaderInvalidated,
+  throwIfFilesystemRepositoryReaderInvalidated,
+  type IFilesystemRepositoryReaderState,
+} from '../reader-state/index.js';
+import {
   throwFilesystemRepositoryOperationException,
   throwIfFilesystemRepositoryOperationAborted,
   throwObservedFilesystemRepositoryOperationError,
@@ -22,7 +27,14 @@ const getFilesystemFileReadOpenFlags = (): number => {
   return typeof noFollowFlag === 'number' ? constants.O_RDONLY | noFollowFlag : constants.O_RDONLY;
 };
 
-/** Captures no-follow metadata for one frozen host path without exposing host errors. */
+/**
+ * Captures no-follow metadata for one frozen host path without exposing host errors.
+ * @param hostPath The private host path to observe without following its final entry.
+ * @param logicalPath The safe logical path represented by the host path.
+ * @returns A promise resolving to the no-follow metadata.
+ * @throws
+ * - SNAPSHOT_CHANGED: The repository snapshot changed during the operation.
+ */
 const captureFilesystemFileReadPathStatistics = async (
   hostPath: string,
   logicalPath: IRepositoryPath,
@@ -30,54 +42,158 @@ const captureFilesystemFileReadPathStatistics = async (
   try {
     return await lstat(hostPath, { bigint: true });
   } catch (cause) {
-    return throwObservedFilesystemRepositoryOperationError(cause, 'read-file', logicalPath);
+    return throwFilesystemRepositoryOperationException(
+      'SNAPSHOT_CHANGED',
+      'read-file',
+      true,
+      logicalPath,
+      cause,
+    );
   }
 };
 
-/** Revalidates the complete root-to-file path chain without following its final entry. */
+/**
+ * Revalidates the complete root-to-file path chain without following its final entry.
+ * @param state The shared reader state whose lifecycle remains authoritative.
+ * @param target The frozen file and complete directory identity chain.
+ * @returns A promise resolving after the path remains coherent.
+ * @throws
+ * - SNAPSHOT_CHANGED: The repository snapshot changed during the operation.
+ */
 const verifyFilesystemFileReadPath = async (
+  state: IFilesystemRepositoryReaderState,
   target: IFilesystemFileCaptureTarget,
 ): Promise<void> => {
   for (const directory of target.directories) {
+    throwIfFilesystemRepositoryReaderInvalidated(state, 'read-file', target.file.path);
+
     const statistics = await captureFilesystemFileReadPathStatistics(
       directory.hostPath,
       target.file.path,
     );
 
+    throwIfFilesystemRepositoryReaderInvalidated(state, 'read-file', target.file.path);
     assertFilesystemFileReadDirectoryUnchanged(directory, statistics, target.file.path);
   }
 
+  throwIfFilesystemRepositoryReaderInvalidated(state, 'read-file', target.file.path);
   const fileStatistics = await captureFilesystemFileReadPathStatistics(
     target.file.hostPath,
     target.file.path,
   );
 
+  throwIfFilesystemRepositoryReaderInvalidated(state, 'read-file', target.file.path);
   assertFilesystemFileReadEntryUnchanged(target.file, fileStatistics);
 };
 
-/** Revalidates an opened file handle against the selected creation-time fingerprint. */
+/**
+ * Revalidates an opened file handle against the selected creation-time fingerprint.
+ * @param state The shared reader state whose lifecycle remains authoritative.
+ * @param fileHandle The open file handle to verify.
+ * @param target The frozen file and complete directory identity chain.
+ * @returns A promise resolving after the handle remains coherent.
+ * @throws
+ * - SNAPSHOT_CHANGED: The repository snapshot changed during the operation.
+ */
 const verifyOpenedFilesystemFile = async (
+  state: IFilesystemRepositoryReaderState,
   fileHandle: FileHandle,
   target: IFilesystemFileCaptureTarget,
 ): Promise<void> => {
+  throwIfFilesystemRepositoryReaderInvalidated(state, 'read-file', target.file.path);
+
   let statistics: BigIntStats;
 
   try {
     statistics = await fileHandle.stat({ bigint: true });
   } catch (cause) {
-    return throwObservedFilesystemRepositoryOperationError(cause, 'read-file', target.file.path);
+    return throwFilesystemRepositoryOperationException(
+      'SNAPSHOT_CHANGED',
+      'read-file',
+      true,
+      target.file.path,
+      cause,
+    );
   }
 
+  throwIfFilesystemRepositoryReaderInvalidated(state, 'read-file', target.file.path);
   assertFilesystemFileReadEntryUnchanged(target.file, statistics);
 };
 
 /**
+ * Revalidates the active capture before exposing one host access or I/O failure.
+ * @param state The shared reader state whose lifecycle remains authoritative.
+ * @param cause The unknown host failure to classify after revalidation.
+ * @param target The frozen file and complete directory identity chain.
+ * @param fileHandle The open file handle to verify when available.
+ * @returns A promise that rejects with the coherent public failure.
+ * @throws
+ * - ACCESS_DENIED: Access to the repository source was denied.
+ * - SNAPSHOT_CHANGED: The repository snapshot changed during the operation.
+ * - SOURCE_UNAVAILABLE: The repository source is unavailable.
+ */
+const throwCoherentFilesystemFileCaptureError = async (
+  state: IFilesystemRepositoryReaderState,
+  cause: unknown,
+  target: IFilesystemFileCaptureTarget,
+  fileHandle?: FileHandle,
+): Promise<never> => {
+  if (fileHandle !== undefined) {
+    await verifyOpenedFilesystemFile(state, fileHandle, target);
+  }
+
+  await verifyFilesystemFileReadPath(state, target);
+  throwIfFilesystemRepositoryReaderInvalidated(state, 'read-file', target.file.path);
+
+  return throwObservedFilesystemRepositoryOperationError(cause, 'read-file', target.file.path);
+};
+
+/**
+ * Runs one deterministic capture checkpoint as a coherence-aware host failure seam.
+ * @param state The shared reader state whose lifecycle remains authoritative.
+ * @param checkpoint The optional checkpoint callback to invoke.
+ * @param target The frozen file and complete directory identity chain.
+ * @param fileHandle The active file handle to revalidate after a checkpoint failure.
+ * @returns A promise resolving after the checkpoint and coherence checks complete.
+ * @throws
+ * - ACCESS_DENIED: Access to the repository source was denied.
+ * - SNAPSHOT_CHANGED: The repository snapshot changed during the operation.
+ * - SOURCE_UNAVAILABLE: The repository source is unavailable.
+ */
+const runFilesystemFileCaptureCheckpoint = async (
+  state: IFilesystemRepositoryReaderState,
+  checkpoint: (() => void | Promise<void>) | undefined,
+  target: IFilesystemFileCaptureTarget,
+  fileHandle: FileHandle,
+): Promise<void> => {
+  if (checkpoint === undefined) {
+    return;
+  }
+
+  throwIfFilesystemRepositoryReaderInvalidated(state, 'read-file', target.file.path);
+
+  try {
+    await checkpoint();
+  } catch (cause) {
+    return throwCoherentFilesystemFileCaptureError(state, cause, target, fileHandle);
+  }
+
+  throwIfFilesystemRepositoryReaderInvalidated(state, 'read-file', target.file.path);
+};
+
+/**
  * Converts cancellation into `ABORTED` only after the active capture remains coherent.
+ * @param state The shared reader state whose lifecycle remains authoritative.
+ * @param signal The optional caller-owned cancellation signal.
+ * @param target The frozen file and complete directory identity chain.
+ * @param fileHandle The active file handle to revalidate before cancellation wins.
+ * @returns A promise resolving when the operation has not been aborted.
  * @throws
  * - ABORTED: The repository operation was aborted.
  * - SNAPSHOT_CHANGED: The repository snapshot changed during the operation.
  */
 const throwIfFilesystemFileCaptureAborted = async (
+  state: IFilesystemRepositoryReaderState,
   signal: AbortSignal | undefined,
   target: IFilesystemFileCaptureTarget,
   fileHandle: FileHandle,
@@ -87,8 +203,8 @@ const throwIfFilesystemFileCaptureAborted = async (
   }
 
   try {
-    await verifyOpenedFilesystemFile(fileHandle, target);
-    await verifyFilesystemFileReadPath(target);
+    await verifyOpenedFilesystemFile(state, fileHandle, target);
+    await verifyFilesystemFileReadPath(state, target);
   } catch (cause) {
     if (cause instanceof RepositorySourceException && cause.code === 'SNAPSHOT_CHANGED') {
       throw cause;
@@ -108,6 +224,7 @@ const throwIfFilesystemFileCaptureAborted = async (
 
 /**
  * Reads one uncaptured regular file only while its frozen identity remains provable.
+ * @param state The shared reader state whose lifecycle remains authoritative.
  * @param target The frozen file and complete directory identity chain.
  * @param maximumByteLength The largest allocation permitted by active resource limits.
  * @param signal Optional operation cancellation.
@@ -121,13 +238,16 @@ const throwIfFilesystemFileCaptureAborted = async (
  * - SOURCE_UNAVAILABLE: The repository source is unavailable.
  */
 export const captureFilesystemRepositoryFile = async (
+  state: IFilesystemRepositoryReaderState,
   target: IFilesystemFileCaptureTarget,
   maximumByteLength: number,
   signal?: AbortSignal,
   checkpoints?: IFilesystemFileCaptureCheckpoints,
 ): Promise<Uint8Array> => {
+  throwIfFilesystemRepositoryReaderInvalidated(state, 'read-file', target.file.path);
   throwIfFilesystemRepositoryOperationAborted(signal, 'read-file', target.file.path);
-  await verifyFilesystemFileReadPath(target);
+  await verifyFilesystemFileReadPath(state, target);
+  throwIfFilesystemRepositoryReaderInvalidated(state, 'read-file', target.file.path);
   throwIfFilesystemRepositoryOperationAborted(signal, 'read-file', target.file.path);
 
   let fileHandle: FileHandle;
@@ -135,26 +255,9 @@ export const captureFilesystemRepositoryFile = async (
   try {
     fileHandle = await open(target.file.hostPath, getFilesystemFileReadOpenFlags());
   } catch (cause) {
+    await verifyFilesystemFileReadPath(state, target);
+
     if (signal?.aborted === true) {
-      try {
-        await verifyFilesystemFileReadPath(target);
-      } catch (verificationCause) {
-        if (
-          verificationCause instanceof RepositorySourceException &&
-          verificationCause.code === 'SNAPSHOT_CHANGED'
-        ) {
-          throw verificationCause;
-        }
-
-        return throwFilesystemRepositoryOperationException(
-          'SNAPSHOT_CHANGED',
-          'read-file',
-          true,
-          target.file.path,
-          verificationCause,
-        );
-      }
-
       throwIfFilesystemRepositoryOperationAborted(signal, 'read-file', target.file.path);
     }
 
@@ -166,10 +269,11 @@ export const captureFilesystemRepositoryFile = async (
   let hasOperationFailure = false;
 
   try {
-    await checkpoints?.afterOpen?.();
-    await verifyOpenedFilesystemFile(fileHandle, target);
-    await verifyFilesystemFileReadPath(target);
-    await throwIfFilesystemFileCaptureAborted(signal, target, fileHandle);
+    throwIfFilesystemRepositoryReaderInvalidated(state, 'read-file', target.file.path);
+    await runFilesystemFileCaptureCheckpoint(state, checkpoints?.afterOpen, target, fileHandle);
+    await verifyOpenedFilesystemFile(state, fileHandle, target);
+    await verifyFilesystemFileReadPath(state, target);
+    await throwIfFilesystemFileCaptureAborted(state, signal, target, fileHandle);
 
     if (target.file.fingerprint.size > BigInt(maximumByteLength)) {
       return throwFilesystemRepositoryOperationException(
@@ -185,11 +289,12 @@ export const captureFilesystemRepositoryFile = async (
     let capturedByteCount = 0;
 
     while (capturedByteCount < expectedByteLength) {
-      await throwIfFilesystemFileCaptureAborted(signal, target, fileHandle);
+      throwIfFilesystemRepositoryReaderInvalidated(state, 'read-file', target.file.path);
+      await throwIfFilesystemFileCaptureAborted(state, signal, target, fileHandle);
 
       const remainingByteCount = expectedByteLength - capturedByteCount;
       const requestedByteCount = Math.min(remainingByteCount, FILESYSTEM_FILE_READ_CHUNK_BYTES);
-      let bytesRead: number;
+      let bytesRead = 0;
 
       try {
         ({ bytesRead } = await fileHandle.read(
@@ -200,26 +305,31 @@ export const captureFilesystemRepositoryFile = async (
         ));
       } catch (cause) {
         if (signal?.aborted === true) {
-          await throwIfFilesystemFileCaptureAborted(signal, target, fileHandle);
+          await throwIfFilesystemFileCaptureAborted(state, signal, target, fileHandle);
         }
 
-        return throwObservedFilesystemRepositoryOperationError(
-          cause,
-          'read-file',
-          target.file.path,
-        );
+        await throwCoherentFilesystemFileCaptureError(state, cause, target, fileHandle);
       }
+
+      throwIfFilesystemRepositoryReaderInvalidated(state, 'read-file', target.file.path);
 
       if (bytesRead === 0) {
         break;
       }
 
       capturedByteCount += bytesRead;
-      await checkpoints?.afterReadChunk?.(capturedByteCount);
+      await runFilesystemFileCaptureCheckpoint(
+        state,
+        checkpoints?.afterReadChunk === undefined
+          ? undefined
+          : () => checkpoints.afterReadChunk?.(capturedByteCount),
+        target,
+        fileHandle,
+      );
     }
 
-    await verifyOpenedFilesystemFile(fileHandle, target);
-    await verifyFilesystemFileReadPath(target);
+    await verifyOpenedFilesystemFile(state, fileHandle, target);
+    await verifyFilesystemFileReadPath(state, target);
 
     if (capturedByteCount !== expectedByteLength) {
       return throwFilesystemRepositoryOperationException(
@@ -230,21 +340,40 @@ export const captureFilesystemRepositoryFile = async (
       );
     }
 
-    await throwIfFilesystemFileCaptureAborted(signal, target, fileHandle);
+    await throwIfFilesystemFileCaptureAborted(state, signal, target, fileHandle);
+    throwIfFilesystemRepositoryReaderInvalidated(state, 'read-file', target.file.path);
     capturedBytes = pendingBytes;
   } catch (cause) {
+    if (cause instanceof RepositorySourceException && cause.code === 'SNAPSHOT_CHANGED') {
+      markFilesystemRepositoryReaderInvalidated(state, cause);
+    }
+
     operationFailure = cause;
     hasOperationFailure = true;
   }
 
   try {
-    await fileHandle.close();
+    if (checkpoints?.closeFileHandle === undefined) {
+      await fileHandle.close();
+    } else {
+      await checkpoints.closeFileHandle(fileHandle);
+    }
   } catch (cause) {
     if (!hasOperationFailure) {
-      operationFailure = cause;
-      hasOperationFailure = true;
+      throwIfFilesystemRepositoryReaderInvalidated(state, 'read-file', target.file.path);
+      throwIfFilesystemRepositoryOperationAborted(signal, 'read-file', target.file.path);
+
+      return throwFilesystemRepositoryOperationException(
+        'SOURCE_UNAVAILABLE',
+        'read-file',
+        true,
+        target.file.path,
+        cause,
+      );
     }
   }
+
+  throwIfFilesystemRepositoryReaderInvalidated(state, 'read-file', target.file.path);
 
   if (hasOperationFailure) {
     if (operationFailure instanceof RepositorySourceException) {
@@ -267,5 +396,6 @@ export const captureFilesystemRepositoryFile = async (
     );
   }
 
+  throwIfFilesystemRepositoryReaderInvalidated(state, 'read-file', target.file.path);
   return capturedBytes;
 };

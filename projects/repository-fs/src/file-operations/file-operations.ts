@@ -5,45 +5,23 @@ import {
   type IRepositoryPath,
 } from '@moldea.ai/repository';
 
-import { createFilesystemInventoryEntriesByPath } from '../inventory-verification/index.js';
-import type { IFilesystemInventory } from '../inventory/index.js';
-import type { IPreparedFilesystemRepositoryRoot } from '../root/index.js';
+import {
+  invalidateFilesystemRepositoryReader,
+  throwIfFilesystemRepositoryReaderInvalidated,
+  type IFilesystemRepositoryReaderState,
+} from '../reader-state/index.js';
 import {
   throwFilesystemRepositoryOperationException,
   throwIfFilesystemRepositoryOperationAborted,
 } from '../source-exception/index.js';
 import { captureFilesystemRepositoryFile } from './capture.js';
-import type {
-  IFilesystemFileCaptureCheckpoints,
-  IFilesystemRepositoryFileReadState,
-} from './types.js';
+import type { IFilesystemFileCaptureCheckpoints } from './types.js';
 import {
   commitFilesystemFileCapture,
   copyCachedFilesystemFile,
   createFilesystemFileCaptureTarget,
   getMaximumFilesystemFileCaptureBytes,
 } from './utilities.js';
-
-/**
- * Creates private lazy-file state from one complete verified inventory.
- * @param preparedRoot The fixed root and detached resource limits.
- * @param inventory The verified root-inclusive filesystem inventory.
- * @returns Frozen operation context containing a private mutable file cache.
- */
-export const createFilesystemRepositoryFileReadState = (
-  preparedRoot: IPreparedFilesystemRepositoryRoot,
-  inventory: IFilesystemInventory,
-): IFilesystemRepositoryFileReadState => {
-  return Object.freeze({
-    cache: {
-      cachedByteCount: 0,
-      filesByPath: new Map<IRepositoryPath, Uint8Array>(),
-    },
-    entriesByPath: createFilesystemInventoryEntriesByPath(inventory),
-    inventory,
-    limits: preparedRoot.options.limits,
-  });
-};
 
 /**
  * Reads exact caller-owned bytes from the frozen filesystem inventory and private cache.
@@ -64,7 +42,7 @@ export const createFilesystemRepositoryFileReadState = (
  * - ABORTED: The repository operation was aborted.
  */
 export const readFilesystemRepositoryFile = async (
-  state: IFilesystemRepositoryFileReadState,
+  state: IFilesystemRepositoryReaderState,
   path: IRepositoryPath,
   options?: IRepositoryOperationOptions,
   checkpoints?: IFilesystemFileCaptureCheckpoints,
@@ -72,6 +50,7 @@ export const readFilesystemRepositoryFile = async (
   const parsedPath = parseRepositoryPath(path);
 
   await Promise.resolve();
+  throwIfFilesystemRepositoryReaderInvalidated(state, 'read-file', parsedPath);
   throwIfFilesystemRepositoryOperationAborted(options?.signal, 'read-file', parsedPath);
 
   const entry = state.entriesByPath.get(parsedPath);
@@ -97,6 +76,7 @@ export const readFilesystemRepositoryFile = async (
   const cachedBytes = copyCachedFilesystemFile(state.cache, parsedPath);
 
   if (cachedBytes !== undefined) {
+    throwIfFilesystemRepositoryReaderInvalidated(state, 'read-file', parsedPath);
     throwIfFilesystemRepositoryOperationAborted(options?.signal, 'read-file', parsedPath);
 
     return cachedBytes;
@@ -112,6 +92,7 @@ export const readFilesystemRepositoryFile = async (
 
   try {
     capturedBytes = await captureFilesystemRepositoryFile(
+      state,
       target,
       maximumByteLength,
       options?.signal,
@@ -119,6 +100,10 @@ export const readFilesystemRepositoryFile = async (
     );
   } catch (cause) {
     if (cause instanceof RepositorySourceException) {
+      if (cause.code === 'SNAPSHOT_CHANGED') {
+        return invalidateFilesystemRepositoryReader(state, 'read-file', parsedPath, cause);
+      }
+
       throw cause;
     }
 
@@ -131,6 +116,7 @@ export const readFilesystemRepositoryFile = async (
     );
   }
 
+  throwIfFilesystemRepositoryReaderInvalidated(state, 'read-file', parsedPath);
   throwIfFilesystemRepositoryOperationAborted(options?.signal, 'read-file', parsedPath);
 
   return commitFilesystemFileCapture(

@@ -11,8 +11,9 @@ import {
 
 import { DEFAULT_FILESYSTEM_REPOSITORY_RESOURCE_LIMITS } from '../constants/index.js';
 import type { IFilesystemInventory, IFilesystemInventoryEntry } from '../inventory/index.js';
+import { createFilesystemRepositoryReaderState } from '../reader-state/index.js';
 import type { IPreparedFilesystemRepositoryRoot } from '../root/index.js';
-import { createFilesystemRepositoryFileReadState, readFilesystemRepositoryFile } from './index.js';
+import { readFilesystemRepositoryFile } from './index.js';
 
 const createInventoryEntry = (
   logicalPath: string,
@@ -79,7 +80,7 @@ const createState = () => {
     resolvedRootDirectory: '/private/source',
   });
 
-  return createFilesystemRepositoryFileReadState(preparedRoot, inventory);
+  return createFilesystemRepositoryReaderState(preparedRoot, inventory);
 };
 
 describe('filesystem read-file operation', () => {

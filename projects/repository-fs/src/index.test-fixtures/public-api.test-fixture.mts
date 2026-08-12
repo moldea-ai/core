@@ -13,7 +13,9 @@ import {
 import { createFilesystemRepositoryReader } from '@moldea.ai/repository-fs';
 import {
   // @ts-expect-error Verified file capture remains an internal reader-building detail.
-  createFilesystemRepositoryFileReadState,
+  createFilesystemRepositoryReaderState,
+  // @ts-expect-error Reader lifecycle mutation remains an internal reader-building detail.
+  markFilesystemRepositoryReaderInvalidated,
   // @ts-expect-error Frozen inventory operations remain internal reader-building details.
   getFilesystemRepositoryEntry,
   // @ts-expect-error Frozen inventory operations remain internal reader-building details.
@@ -43,7 +45,8 @@ void repositoryFilesystemDefault;
 void createFilesystemRepositoryReader;
 void getFilesystemRepositoryEntry;
 void listFilesystemRepositoryEntries;
-void createFilesystemRepositoryFileReadState;
+void createFilesystemRepositoryReaderState;
+void markFilesystemRepositoryReaderInvalidated;
 void readFilesystemRepositoryFile;
 void selections;
 void options;

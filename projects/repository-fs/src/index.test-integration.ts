@@ -241,9 +241,12 @@ describe('published Repository FS package artifacts', () => {
     expect(indexDeclaration).not.toContain('getFilesystemRepositoryEntry');
     expect(indexDeclaration).not.toContain('listFilesystemRepositoryEntries');
     expect(indexDeclaration).not.toContain('captureFilesystemRepositoryFile');
-    expect(indexDeclaration).not.toContain('createFilesystemRepositoryFileReadState');
+    expect(indexDeclaration).not.toContain('createFilesystemRepositoryReaderState');
     expect(indexDeclaration).not.toContain('readFilesystemRepositoryFile');
-    expect(indexDeclaration).not.toContain('IFilesystemRepositoryFileReadState');
+    expect(indexDeclaration).not.toContain('IFilesystemRepositoryReaderState');
+    expect(indexDeclaration).not.toContain('invalidateFilesystemRepositoryReader');
+    expect(indexDeclaration).not.toContain('markFilesystemRepositoryReaderInvalidated');
+    expect(indexDeclaration).not.toContain('throwIfFilesystemRepositoryReaderInvalidated');
     expect(indexDeclaration).not.toContain('verifyFilesystemDirectoryInventory');
     expect(indexDeclaration).not.toContain('verifyFilesystemExactPathInventory');
     expect(indexDeclaration).not.toContain('createFilesystemRegularFileFingerprint');

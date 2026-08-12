@@ -4,7 +4,11 @@ import { describe, expect, test } from 'vitest';
 
 import { parseRepositoryPath } from '@moldea.ai/repository';
 
-import { createFilesystemInventoryEntry } from './index.js';
+import {
+  createFilesystemInventoryEntriesByPath,
+  createFilesystemInventoryEntry,
+  type IFilesystemInventory,
+} from './index.js';
 
 const logicalPath = parseRepositoryPath('/entry');
 const baseStatistics = {
@@ -96,5 +100,31 @@ describe('filesystem inventory entry transformation', () => {
       'INVALID_SOURCE_DATA',
       'The repository source returned invalid data.',
     );
+  });
+
+  test('indexes one frozen inventory by exact logical path', () => {
+    const rootPath = parseRepositoryPath('/');
+    const rootEntry = createFilesystemInventoryEntry(
+      '/private',
+      rootPath,
+      createStatistics('directory'),
+    );
+    const fileEntry = createFilesystemInventoryEntry(
+      '/private/entry',
+      logicalPath,
+      createStatistics('file'),
+    );
+    const inventory: IFilesystemInventory = Object.freeze({
+      entries: Object.freeze([rootEntry, fileEntry]),
+    });
+    const entriesByPath = createFilesystemInventoryEntriesByPath(inventory);
+
+    expect(entriesByPath).toStrictEqual(
+      new Map([
+        [rootPath, rootEntry],
+        [logicalPath, fileEntry],
+      ]),
+    );
+    expect(entriesByPath.get(logicalPath)).toBe(fileEntry);
   });
 });

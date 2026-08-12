@@ -6,6 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { parseRepositoryPath, type IRepositoryEntry } from '@moldea.ai/repository';
 
+import { createFilesystemRepositoryReaderState } from '../reader-state/index.js';
 import { prepareFilesystemRepositoryRoot } from '../root/index.js';
 import { createVerifiedFilesystemInventory } from '../verified-inventory/index.js';
 import { getFilesystemRepositoryEntry, listFilesystemRepositoryEntries } from './index.js';
@@ -44,21 +45,20 @@ describe('verified filesystem inventory operations', () => {
         },
       });
       const inventory = await createVerifiedFilesystemInventory(preparedRoot);
+      const state = createFilesystemRepositoryReaderState(preparedRoot, inventory);
 
       await rm(temporaryDirectory, { force: true, recursive: true });
 
       await expect(
-        getFilesystemRepositoryEntry(inventory, parseRepositoryPath('/nested/selected.txt')),
+        getFilesystemRepositoryEntry(state, parseRepositoryPath('/nested/selected.txt')),
       ).resolves.toStrictEqual({
         path: parseRepositoryPath('/nested/selected.txt'),
         type: 'file',
       });
       await expect(
-        getFilesystemRepositoryEntry(inventory, parseRepositoryPath('/unselected.txt')),
+        getFilesystemRepositoryEntry(state, parseRepositoryPath('/unselected.txt')),
       ).resolves.toBeNull();
-      await expect(
-        collectEntries(listFilesystemRepositoryEntries(inventory)),
-      ).resolves.toStrictEqual([
+      await expect(collectEntries(listFilesystemRepositoryEntries(state))).resolves.toStrictEqual([
         { path: parseRepositoryPath('/empty'), type: 'directory' },
         { path: parseRepositoryPath('/nested'), type: 'directory' },
         { path: parseRepositoryPath('/nested/selected.txt'), type: 'file' },
@@ -80,22 +80,23 @@ describe('verified filesystem inventory operations', () => {
         selection: { kind: 'directory' },
       });
       const inventory = await createVerifiedFilesystemInventory(preparedRoot);
+      const state = createFilesystemRepositoryReaderState(preparedRoot, inventory);
 
       await rm(path.join(temporaryDirectory, 'nested', 'original.txt'));
       await writeFile(path.join(temporaryDirectory, 'nested', 'created.txt'), 'created', 'utf8');
 
       await expect(
-        getFilesystemRepositoryEntry(inventory, parseRepositoryPath('/nested/original.txt')),
+        getFilesystemRepositoryEntry(state, parseRepositoryPath('/nested/original.txt')),
       ).resolves.toStrictEqual({
         path: parseRepositoryPath('/nested/original.txt'),
         type: 'file',
       });
       await expect(
-        getFilesystemRepositoryEntry(inventory, parseRepositoryPath('/nested/created.txt')),
+        getFilesystemRepositoryEntry(state, parseRepositoryPath('/nested/created.txt')),
       ).resolves.toBeNull();
       await expect(
         collectEntries(
-          listFilesystemRepositoryEntries(inventory, {
+          listFilesystemRepositoryEntries(state, {
             prefix: parseRepositoryPath('/nested'),
           }),
         ),

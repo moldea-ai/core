@@ -9,7 +9,7 @@ import type {
   IFilesystemInventoryEntry,
   IFilesystemRegularFileInventoryEntry,
 } from '../inventory/index.js';
-import type { IFilesystemRepositoryFileCacheState } from './types.js';
+import type { IFilesystemRepositoryFileCacheState } from '../reader-state/index.js';
 import {
   commitFilesystemFileCapture,
   copyCachedFilesystemFile,

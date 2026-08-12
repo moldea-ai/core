@@ -7,9 +7,10 @@ import { describe, expect, test } from 'vitest';
 
 import { parseRepositoryPath } from '@moldea.ai/repository';
 
+import { createFilesystemRepositoryReaderState } from '../reader-state/index.js';
 import { prepareFilesystemRepositoryRoot } from '../root/index.js';
 import { createVerifiedFilesystemInventory } from '../verified-inventory/index.js';
-import { createFilesystemRepositoryFileReadState, readFilesystemRepositoryFile } from './index.js';
+import { readFilesystemRepositoryFile } from './index.js';
 
 const createTemporaryDirectory = (): Promise<string> => {
   return mkdtemp(path.join(tmpdir(), 'moldea-repository-fs-file-operations-'));
@@ -33,7 +34,7 @@ describe('verified filesystem read-file operations', () => {
         selection: { kind: 'directory' },
       });
       const inventory = await createVerifiedFilesystemInventory(preparedRoot);
-      const state = createFilesystemRepositoryFileReadState(preparedRoot, inventory);
+      const state = createFilesystemRepositoryReaderState(preparedRoot, inventory);
       const binaryLogicalPath = parseRepositoryPath('/nested/bytes-😀.bin');
       const emptyLogicalPath = parseRepositoryPath('/empty.bin');
       const firstRead = await readFilesystemRepositoryFile(state, binaryLogicalPath);
@@ -85,7 +86,7 @@ describe('verified filesystem read-file operations', () => {
         selection: { kind: 'directory' },
       });
       const inventory = await createVerifiedFilesystemInventory(preparedRoot);
-      const state = createFilesystemRepositoryFileReadState(preparedRoot, inventory);
+      const state = createFilesystemRepositoryReaderState(preparedRoot, inventory);
       const firstPath = parseRepositoryPath('/first.bin');
       const secondPath = parseRepositoryPath('/second.bin');
       const thirdPath = parseRepositoryPath('/third.bin');

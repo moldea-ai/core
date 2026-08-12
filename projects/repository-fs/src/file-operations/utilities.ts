@@ -11,8 +11,9 @@ import type {
   IFilesystemInventoryEntry,
   IFilesystemRegularFileInventoryEntry,
 } from '../inventory/index.js';
+import type { IFilesystemRepositoryFileCacheState } from '../reader-state/index.js';
 import { throwFilesystemRepositoryOperationException } from '../source-exception/index.js';
-import type { IFilesystemFileCaptureTarget, IFilesystemRepositoryFileCacheState } from './types.js';
+import type { IFilesystemFileCaptureTarget } from './types.js';
 
 interface IFilesystemFileReadStatistics {
   readonly birthtimeNs: bigint;

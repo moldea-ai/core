@@ -5,7 +5,7 @@ import {
   createFilesystemDirectoryIdentity,
   createFilesystemRegularFileFingerprint,
 } from '../filesystem-fingerprint/index.js';
-import type { IFilesystemInventoryEntry } from './types.js';
+import type { IFilesystemInventory, IFilesystemInventoryEntry } from './types.js';
 
 interface IFilesystemInventoryEntryStatistics {
   readonly birthtimeNs: bigint;
@@ -55,4 +55,15 @@ export const createFilesystemInventoryEntry = (
   }
 
   return Object.freeze({ hostPath, path: logicalPath, type });
+};
+
+/**
+ * Creates an exact-path lookup for one complete private inventory.
+ * @param inventory The frozen root-inclusive inventory to index.
+ * @returns A path-keyed lookup retaining the inventory entries by reference.
+ */
+export const createFilesystemInventoryEntriesByPath = (
+  inventory: IFilesystemInventory,
+): ReadonlyMap<IRepositoryPath, IFilesystemInventoryEntry> => {
+  return new Map(inventory.entries.map((entry) => [entry.path, entry]));
 };

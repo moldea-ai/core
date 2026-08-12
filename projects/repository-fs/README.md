@@ -2,7 +2,7 @@
 
 Node.js-specific foundations for exposing one explicitly selected local directory through the source-neutral repository contract.
 
-The current unpublished `0.0.1` foundation defines the complete version 1 option, selection, and resource-limit contracts. It validates and detaches caller options, internally canonicalizes an explicit filesystem root, constructs and verifies strict private exact-path and recursive-directory inventories, provides frozen lookup and recursive listing, and captures verified file bytes into a private immutable cache. The public reader factory is intentionally withheld until permanent invalidation and operation coordination can be published with these completed internal behaviors.
+The current unpublished `0.0.1` foundation defines the complete version 1 option, selection, and resource-limit contracts. It validates and detaches caller options, internally canonicalizes an explicit filesystem root, constructs and verifies strict private exact-path and recursive-directory inventories, provides frozen lookup and recursive listing, captures verified file bytes into a private immutable cache, and permanently invalidates that shared state after snapshot loss. The public reader factory is intentionally withheld until operation coordination and shared conformance can be published with these completed internal behaviors.
 
 Tarball and consumer-type checks are the release boundary for now. This package is not ready to publish to npm.
 
@@ -85,7 +85,13 @@ The first read of a regular file revalidates the resolved root and every frozen 
 
 Only a complete verified capture enters the cache. Failed, cancelled, oversized, truncated, replaced, redirected, or otherwise changed captures commit no bytes and consume no cache budget. Each captured path counts once, repeated reads perform no host access, and every result is a fresh `Uint8Array` detached from both the cache and every other caller result. Later host modification or deletion therefore cannot alter successfully cached bytes.
 
-Permanent invalidation, coordinated concurrent first reads, atomic concurrent reservations, the shared reader conformance boundary, and the public factory remain subsequent implementation phases.
+### Permanent invalidation and operation failures
+
+One private reader state now owns the verified inventory, exact-path index, detached limits, immutable byte cache, and permanent lifecycle. The first detected `SNAPSHOT_CHANGED` failure atomically marks that state invalid, preserves its private cause, clears every cached byte, and prevents any active or later lookup, listing, or read from returning repository data. Later failures retain the first invalidation cause while reporting the current operation and safe logical path. Constructing a fresh state from a newly verified inventory is the only recovery path.
+
+File capture distinguishes a stable host access denial (`ACCESS_DENIED`) or other stable I/O failure (`SOURCE_UNAVAILABLE`) from a coherence loss (`SNAPSHOT_CHANGED`). It revalidates the open handle and complete root-to-file path before exposing an observed read failure. A failure that prevents coherence from being proved is treated as snapshot loss. Cancellation becomes `ABORTED` only while the capture remains coherent, failed captures never enter the cache, and a close-only failure does not invalidate an otherwise coherent state.
+
+Coordinated concurrent first reads, atomic concurrent reservations, the shared reader conformance boundary, and the public factory remain subsequent implementation phases.
 
 ## Runtime support
 
