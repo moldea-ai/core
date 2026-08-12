@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { mkdtemp, realpath, rm, symlink, unlink, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, mkdtemp, realpath, rm, symlink, unlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { expectToRejectCode } from 'web-utils-kit';
@@ -111,6 +111,45 @@ describe('filesystem repository root preparation', () => {
         retryable: false,
       });
     } finally {
+      await rm(temporaryDirectory, { force: true, recursive: true });
+    }
+  });
+
+  test.skipIf(
+    process.platform === 'win32' ||
+      typeof process.geteuid !== 'function' ||
+      process.geteuid() === 0,
+  )('maps an inaccessible root without exposing its host path', async () => {
+    const temporaryDirectory = await createTemporaryDirectory();
+    const inaccessibleParent = path.join(temporaryDirectory, 'inaccessible-parent');
+    const inaccessibleRoot = path.join(inaccessibleParent, 'repository-root');
+
+    try {
+      await mkdir(inaccessibleRoot, { recursive: true });
+      await chmod(inaccessibleParent, 0o000);
+
+      const preparation = prepareFilesystemRepositoryRoot(createDirectoryOptions(inaccessibleRoot));
+
+      await expectToRejectCode(
+        preparation,
+        'ACCESS_DENIED',
+        'Access to the repository source was denied.',
+      );
+      const rejection: unknown = await preparation.then(
+        () => new Error('The inaccessible-root preparation unexpectedly succeeded.'),
+        (cause: unknown) => cause,
+      );
+
+      expect(rejection).toBeInstanceOf(RepositorySourceException);
+      expect(rejection).toMatchObject({
+        operation: 'create-reader',
+        path: null,
+        retryable: true,
+      });
+      expect(JSON.stringify(rejection)).not.toContain(inaccessibleRoot);
+      expect(Object.keys(rejection as RepositorySourceException)).not.toContain('cause');
+    } finally {
+      await chmod(inaccessibleParent, 0o700).catch(() => undefined);
       await rm(temporaryDirectory, { force: true, recursive: true });
     }
   });

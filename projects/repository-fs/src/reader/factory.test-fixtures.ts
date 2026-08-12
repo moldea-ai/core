@@ -42,11 +42,12 @@ export interface IFilesystemRepositoryTestSnapshot {
   readonly unicodePath: string;
 }
 
-// two independent snapshots used by the public-factory suite
+// independent snapshots used by the public-factory suite
 export interface IFilesystemRepositoryTestFixtures {
   readonly cleanup: () => Promise<void>;
   readonly primary: IFilesystemRepositoryTestSnapshot;
   readonly mutation: IFilesystemRepositoryTestSnapshot;
+  readonly recovery: IFilesystemRepositoryTestSnapshot;
 }
 
 const canonicalFixturePath = path.resolve(
@@ -239,7 +240,7 @@ const materializeFilesystemRepositorySnapshot = async (
 
 /**
  * Creates the independent real-filesystem snapshots needed by the public reader tests.
- * @returns The primary snapshot, mutation snapshot, and idempotent cleanup operation.
+ * @returns The isolated snapshots and idempotent cleanup operation.
  */
 export const createFilesystemRepositoryTestFixtures =
   async (): Promise<IFilesystemRepositoryTestFixtures> => {
@@ -257,11 +258,17 @@ export const createFilesystemRepositoryTestFixtures =
         'mutation',
         canonicalFixture,
       );
+      const recovery = await materializeFilesystemRepositorySnapshot(
+        suiteDirectory,
+        'recovery',
+        canonicalFixture,
+      );
 
       return Object.freeze({
         cleanup: () => rm(suiteDirectory, { force: true, recursive: true }),
         mutation,
         primary,
+        recovery,
       });
     } catch (cause) {
       await rm(suiteDirectory, { force: true, recursive: true });

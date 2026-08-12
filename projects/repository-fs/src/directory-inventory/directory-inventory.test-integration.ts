@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { Buffer } from 'node:buffer';
-import { link, mkdir, mkdtemp, realpath, rm, symlink, writeFile } from 'node:fs/promises';
+import { link, mkdir, mkdtemp, readdir, realpath, rm, symlink, writeFile } from 'node:fs/promises';
 import { createServer, type Server } from 'node:net';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -16,6 +16,8 @@ import { createFilesystemDirectoryInventory } from './index.js';
 const createTemporaryDirectory = (): Promise<string> => {
   return mkdtemp(path.join(tmpdir(), 'moldea-repository-fs-directory-'));
 };
+
+const textDecoder = new TextDecoder('utf-8', { fatal: true });
 
 const createInventory = async (
   rootDirectory: string,
@@ -251,6 +253,40 @@ describe('filesystem recursive directory inventory construction', () => {
         { logicalPath: parseRepositoryPath('/first.txt'), type: 'file' },
         { logicalPath: parseRepositoryPath('/second.txt'), type: 'file' },
       ]);
+    } finally {
+      await rm(temporaryDirectory, { force: true, recursive: true });
+    }
+  });
+
+  test('preserves normalization-distinct names when the host filesystem supports them', async () => {
+    const temporaryDirectory = await createTemporaryDirectory();
+    const composedName = 'café.txt';
+    const decomposedName = 'cafe\u0301.txt';
+
+    try {
+      await writeFile(path.join(temporaryDirectory, composedName), 'composed', 'utf8');
+      await writeFile(path.join(temporaryDirectory, decomposedName), 'decomposed', 'utf8');
+
+      const actualNames = (await readdir(temporaryDirectory, { encoding: 'buffer' })).map(
+        (entryName) => textDecoder.decode(entryName),
+      );
+      const inventory = await createInventory(temporaryDirectory);
+      const actualLogicalPaths = inventory.entries.map((entry) => entry.path).sort();
+      const expectedLogicalPaths = [
+        parseRepositoryPath('/'),
+        ...actualNames.map((entryName) => parseRepositoryPath(`/${entryName}`)),
+      ].sort();
+
+      expect(actualLogicalPaths).toStrictEqual(expectedLogicalPaths);
+
+      if (actualNames.length === 2) {
+        expect(new Set(actualNames)).toStrictEqual(new Set([composedName, decomposedName]));
+        expect(actualLogicalPaths).toContain(parseRepositoryPath(`/${composedName}`));
+        expect(actualLogicalPaths).toContain(parseRepositoryPath(`/${decomposedName}`));
+      } else {
+        expect(actualNames).toHaveLength(1);
+        expect(actualNames[0]?.normalize('NFC')).toBe(composedName);
+      }
     } finally {
       await rm(temporaryDirectory, { force: true, recursive: true });
     }

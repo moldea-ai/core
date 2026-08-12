@@ -20,6 +20,18 @@ describe('host root path validation', () => {
     expect(isAbsoluteHostRootDirectory(path.resolve('repository-root-🚀'))).toBe(true);
   });
 
+  test.skipIf(process.platform === 'win32')('accepts an absolute POSIX root', () => {
+    expect(isAbsoluteHostRootDirectory('/repository')).toBe(true);
+  });
+
+  test.skipIf(process.platform !== 'win32')('accepts an absolute Windows drive root', () => {
+    expect(isAbsoluteHostRootDirectory('C:\\repository')).toBe(true);
+  });
+
+  test.skipIf(process.platform !== 'win32')('accepts an absolute Windows UNC root', () => {
+    expect(isAbsoluteHostRootDirectory('\\\\server\\share\\repository')).toBe(true);
+  });
+
   test.each([
     ['', false],
     ['relative/path', false],
