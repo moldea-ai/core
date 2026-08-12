@@ -1,53 +1,10 @@
 import { parseMoldeaCliArguments } from '../command-line/index.js';
-import type { IMoldeaCliCommand } from '../command-line/index.js';
-import {
-  formatMoldeaCliHelp,
-  formatMoldeaCliHumanError,
-  formatMoldeaCliJsonError,
-} from '../presentation/index.js';
-import type { IMoldeaCliErrorCode } from '../presentation/index.js';
+import { formatMoldeaCliHelp } from '../presentation/index.js';
 
+import { executeMoldeaCliCommand } from './command-executor.js';
 import { MOLDEA_CLI_EXIT_CODES } from './constants.js';
-import type {
-  IMoldeaCliCommandExecutionInput,
-  IMoldeaCliExecutionResult,
-  IRunMoldeaCliOptions,
-} from './types.js';
-
-const createErrorResult = (
-  code: IMoldeaCliErrorCode,
-  command: IMoldeaCliCommand | null,
-  cliVersion: string,
-  isJson: boolean,
-  exitCode: number,
-): IMoldeaCliExecutionResult => {
-  return isJson
-    ? {
-        exitCode,
-        stderr: '',
-        stdout: formatMoldeaCliJsonError(code, command, cliVersion),
-      }
-    : {
-        exitCode,
-        stderr: formatMoldeaCliHumanError(code),
-        stdout: '',
-      };
-};
-
-/** Reports the unpublished foundation's intentionally unavailable command handlers safely. */
-const executeUnavailableCommand = (
-  input: IMoldeaCliCommandExecutionInput,
-): Promise<IMoldeaCliExecutionResult> => {
-  return Promise.resolve(
-    createErrorResult(
-      'INTERNAL_ERROR',
-      input.invocation.command,
-      input.cliVersion,
-      input.invocation.options.isJson,
-      MOLDEA_CLI_EXIT_CODES.OperationalError,
-    ),
-  );
-};
+import { createMoldeaCliErrorResult } from './results.js';
+import type { IMoldeaCliExecutionResult, IRunMoldeaCliOptions } from './types.js';
 
 /**
  * Runs one process-neutral CLI invocation through parsing and private command dispatch.
@@ -76,7 +33,7 @@ export const runMoldeaCli = async (
   }
 
   if (parseResult.kind === 'error') {
-    return createErrorResult(
+    return createMoldeaCliErrorResult(
       parseResult.code,
       parseResult.command,
       options.cliVersion,
@@ -85,7 +42,7 @@ export const runMoldeaCli = async (
     );
   }
 
-  const executeCommand = options.executeCommand ?? executeUnavailableCommand;
+  const executeCommand = options.executeCommand ?? executeMoldeaCliCommand;
 
   try {
     return await executeCommand({
@@ -93,7 +50,7 @@ export const runMoldeaCli = async (
       invocation: parseResult.invocation,
     });
   } catch {
-    return createErrorResult(
+    return createMoldeaCliErrorResult(
       'INTERNAL_ERROR',
       parseResult.invocation.command,
       options.cliVersion,

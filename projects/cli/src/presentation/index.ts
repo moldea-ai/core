@@ -1,13 +1,15 @@
 // constants
 export {
   MOLDEA_CLI_COMMAND_HELP,
-  MOLDEA_CLI_ERROR_MESSAGES,
+  MOLDEA_CLI_ERROR_DEFINITIONS,
   MOLDEA_CLI_TOP_LEVEL_HELP,
 } from './constants.js';
 
 // types
 export type {
   IMoldeaCliErrorCode,
+  IMoldeaCliErrorSource,
+  IMoldeaCliGitErrorCode,
   IMoldeaCliJsonError,
   IMoldeaCliJsonErrorEnvelope,
 } from './types.js';

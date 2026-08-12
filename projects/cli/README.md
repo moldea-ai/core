@@ -2,7 +2,7 @@
 
 The canonical read-only local command-line composition for deterministic inspection of `moldea` repositories.
 
-The current unpublished `0.0.1` foundation provides the `moldea` executable, strict version 1 command and option parsing, deterministic help and version output, resource-limit validation, and safe human or JSON usage errors. Valid `validate`, `inspect`, and `compatibility` invocations reach a private command-dispatch boundary, but their Git, Repository FS, Core, adapter, and compatibility behavior is not implemented yet.
+The current unpublished `0.0.1` foundation provides the `moldea` executable, strict version 1 command and option parsing, deterministic help and version output, resource-limit validation, safe human or JSON errors, and the Git prerequisite preflight for `validate` and `inspect`. Repository discovery, Repository FS construction, Core execution, adapter composition, and compatibility reporting are not implemented yet.
 
 Tarball and installed-bin checks are the release boundary for now. This package is not ready to publish to npm.
 
@@ -28,7 +28,7 @@ The package exposes the `moldea` executable and no supported JavaScript or TypeS
 
 No package-backed runtime adapter is active yet. The `custom` adapter remains built into Core and requires no separate package.
 
-The executable performs no network requests, telemetry, repository writes, Git operations, repository discovery, filesystem-reader construction, or Core inspection in this foundation.
+The executable performs no network requests, telemetry, repository writes, repository discovery, filesystem-reader construction, or Core inspection in this foundation. Its only Git operation is the read-only prerequisite command `git --version` for `validate` and `inspect`; help, version, usage failures, and `compatibility` do not invoke Git.
 
 ## Runtime support
 
@@ -38,7 +38,11 @@ The version 1 consumer runtime range is:
 ^22.11.0 || ^24.11.0
 ```
 
-The package is Node.js-specific and requires Git `2.30.0` or later once Git-backed commands are implemented.
+The package is Node.js-specific. `validate` and `inspect` require Git `2.30.0` or later; commands compare the numeric Git version and accept standard platform or vendor suffixes.
+
+## Git prerequisite
+
+Git runs directly without a platform shell, with fixed non-interactive arguments, a sanitized deterministic environment, and a 4096-byte limit on each output stream. The CLI does not expose raw process errors or Git diagnostics. It reports unavailable, inaccessible, failed, malformed-version, and unsupported-version states through stable `git:*` human errors or the corresponding version 1 JSON error envelope.
 
 ## Development
 

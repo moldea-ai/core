@@ -153,7 +153,7 @@ Options:
 
   test('reports unavailable and failed command execution as a safe operational error', async () => {
     await expect(
-      runMoldeaCli({ cliVersion: '0.0.1', commandLineArguments: ['inspect'] }),
+      runMoldeaCli({ cliVersion: '0.0.1', commandLineArguments: ['compatibility'] }),
     ).resolves.toStrictEqual({
       exitCode: 3,
       stderr: 'cli:INTERNAL_ERROR The command could not be completed.\n',

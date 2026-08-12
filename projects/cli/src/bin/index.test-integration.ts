@@ -312,6 +312,36 @@ describe('published CLI package and executable', () => {
       expect(unavailableCommand.stderr).toBe('');
       expect(unavailableCommand.stdout).not.toContain(consumerDirectory);
       expect(unavailableCommand.stdout).toContain('"code":"INTERNAL_ERROR"');
+
+      const installedExecutablePath = path.join(
+        consumerDirectory,
+        'node_modules',
+        '@moldea.ai',
+        'cli',
+        'dist',
+        'moldea.js',
+      );
+      const environmentWithoutPath = Object.fromEntries(
+        Object.entries(process.env).filter(([name]) => name.toUpperCase() !== 'PATH'),
+      );
+      const missingGitResult = spawnSync(
+        process.execPath,
+        [installedExecutablePath, 'validate', '--json'],
+        {
+          cwd: consumerDirectory,
+          encoding: 'utf8',
+          env: {
+            ...environmentWithoutPath,
+            PATH: path.join(consumerDirectory, 'missing-executables'),
+          },
+        },
+      );
+
+      expect(missingGitResult.status).toBe(3);
+      expect(missingGitResult.stderr).toBe('');
+      expect(missingGitResult.stdout).toBe(
+        '{"cliVersion":"0.0.1","command":"validate","error":{"code":"GIT_NOT_FOUND","details":{},"message":"The Git executable is unavailable.","path":null,"retryable":false,"source":"git"},"result":null,"schemaVersion":1,"status":"error"}\n',
+      );
     } finally {
       rmSync(consumerDirectory, { force: true, recursive: true });
     }

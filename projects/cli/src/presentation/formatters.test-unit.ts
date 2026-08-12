@@ -27,4 +27,21 @@ describe('CLI presentation formatters', () => {
       '{"cliVersion":"0.0.1","command":null,"error":{"code":"INVALID_ARGUMENT","details":{},"message":"The command invocation is invalid.","path":null,"retryable":false,"source":"cli"},"result":null,"schemaVersion":1,"status":"error"}\n',
     );
   });
+
+  test.each([
+    ['GIT_NOT_FOUND', 'git:GIT_NOT_FOUND The Git executable is unavailable.\n', false],
+    ['GIT_VERSION_INVALID', 'git:GIT_VERSION_INVALID The Git version output is invalid.\n', false],
+    [
+      'GIT_VERSION_UNSUPPORTED',
+      'git:GIT_VERSION_UNSUPPORTED The installed Git version is unsupported.\n',
+      false,
+    ],
+    ['GIT_ACCESS_DENIED', 'git:GIT_ACCESS_DENIED Git access was denied.\n', true],
+    ['GIT_COMMAND_FAILED', 'git:GIT_COMMAND_FAILED The Git command failed.\n', true],
+  ] as const)('formats safe Git error %s', (code, expectedHumanError, isRetryable) => {
+    expect(formatMoldeaCliHumanError(code)).toBe(expectedHumanError);
+    expect(formatMoldeaCliJsonError(code, 'validate', '0.0.1')).toContain(
+      `"retryable":${String(isRetryable)},"source":"git"`,
+    );
+  });
 });

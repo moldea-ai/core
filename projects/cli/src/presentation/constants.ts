@@ -1,11 +1,48 @@
 import { MOLDEA_CLI_COMMANDS } from '../command-line/index.js';
 
-// stable safe messages for the CLI-owned errors implemented by this foundation
-export const MOLDEA_CLI_ERROR_MESSAGES = {
-  INTERNAL_ERROR: 'The command could not be completed.',
-  INVALID_ARGUMENT: 'The command invocation is invalid.',
-  RESOURCE_LIMIT_CONFIGURATION_INVALID: 'The resource-limit configuration is invalid.',
-} as const;
+// stable safe presentation contracts for errors implemented by the CLI
+export const MOLDEA_CLI_ERROR_DEFINITIONS = Object.freeze({
+  GIT_ACCESS_DENIED: Object.freeze({
+    message: 'Git access was denied.',
+    retryable: true,
+    source: 'git',
+  }),
+  GIT_COMMAND_FAILED: Object.freeze({
+    message: 'The Git command failed.',
+    retryable: true,
+    source: 'git',
+  }),
+  GIT_NOT_FOUND: Object.freeze({
+    message: 'The Git executable is unavailable.',
+    retryable: false,
+    source: 'git',
+  }),
+  GIT_VERSION_INVALID: Object.freeze({
+    message: 'The Git version output is invalid.',
+    retryable: false,
+    source: 'git',
+  }),
+  GIT_VERSION_UNSUPPORTED: Object.freeze({
+    message: 'The installed Git version is unsupported.',
+    retryable: false,
+    source: 'git',
+  }),
+  INTERNAL_ERROR: Object.freeze({
+    message: 'The command could not be completed.',
+    retryable: false,
+    source: 'cli',
+  }),
+  INVALID_ARGUMENT: Object.freeze({
+    message: 'The command invocation is invalid.',
+    retryable: false,
+    source: 'cli',
+  }),
+  RESOURCE_LIMIT_CONFIGURATION_INVALID: Object.freeze({
+    message: 'The resource-limit configuration is invalid.',
+    retryable: false,
+    source: 'cli',
+  }),
+} as const);
 
 // top-level help presented without repository access
 export const MOLDEA_CLI_TOP_LEVEL_HELP = `Usage: moldea <command> [options]

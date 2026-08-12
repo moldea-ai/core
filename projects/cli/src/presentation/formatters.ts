@@ -3,7 +3,7 @@ import { serializeJsonDeterministically } from '../json-serialization/index.js';
 
 import {
   MOLDEA_CLI_COMMAND_HELP,
-  MOLDEA_CLI_ERROR_MESSAGES,
+  MOLDEA_CLI_ERROR_DEFINITIONS,
   MOLDEA_CLI_TOP_LEVEL_HELP,
 } from './constants.js';
 import type { IMoldeaCliErrorCode, IMoldeaCliJsonErrorEnvelope } from './types.js';
@@ -27,7 +27,9 @@ export const formatMoldeaCliHelp = (command: IMoldeaCliCommand | null): string =
  * @returns One concise line ending with LF.
  */
 export const formatMoldeaCliHumanError = (code: IMoldeaCliErrorCode): string => {
-  return `cli:${code} ${MOLDEA_CLI_ERROR_MESSAGES[code]}\n`;
+  const definition = MOLDEA_CLI_ERROR_DEFINITIONS[code];
+
+  return `${definition.source}:${code} ${definition.message}\n`;
 };
 
 /**
@@ -42,16 +44,17 @@ export const formatMoldeaCliJsonError = (
   command: IMoldeaCliCommand | null,
   cliVersion: string,
 ): string => {
+  const definition = MOLDEA_CLI_ERROR_DEFINITIONS[code];
   const envelope: IMoldeaCliJsonErrorEnvelope = {
     cliVersion,
     command,
     error: {
       code,
       details: {},
-      message: MOLDEA_CLI_ERROR_MESSAGES[code],
+      message: definition.message,
       path: null,
-      retryable: false,
-      source: 'cli',
+      retryable: definition.retryable,
+      source: definition.source,
     },
     result: null,
     schemaVersion: 1,
