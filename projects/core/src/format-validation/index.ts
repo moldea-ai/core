@@ -5,21 +5,28 @@ import type { IRepositoryReference } from '../format/index.js';
 const STABLE_ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
 const VARIABLE_ID_PATTERN = /^[A-Z][A-Z0-9_]*$/u;
 const WINDOWS_RESERVED_ID_PATTERN = /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])$/u;
-const LINE_BREAK_CHARACTERS = [
-  '\r',
-  '\n',
-  '\u000b',
-  '\u000c',
-  '\u0085',
-  '\u2028',
-  '\u2029',
-] as const;
+const LINE_BREAK_CHARACTERS = ['\n', '\r', '\u0085', '\u2028', '\u2029'] as const;
 const UNSUPPORTED_GLOB_PATTERN = /[!?[\]{}]/u;
-const NON_WHITESPACE_PATTERN = /[^\p{White_Space}]/u;
-const EDGE_WHITESPACE_PATTERN = /(?:^\p{White_Space}|\p{White_Space}$)/u;
 
 const hasLineBreak = (value: string): boolean => {
   return LINE_BREAK_CHARACTERS.some((lineBreak) => value.includes(lineBreak));
+};
+
+/** Determines whether a code point belongs to the Repository Format version 1 whitespace set. */
+export const isRepositoryFormatWhitespace = (codePoint: number): boolean => {
+  return (
+    (codePoint >= 0x0009 && codePoint <= 0x000d) ||
+    codePoint === 0x0020 ||
+    codePoint === 0x0085 ||
+    codePoint === 0x00a0 ||
+    codePoint === 0x1680 ||
+    (codePoint >= 0x2000 && codePoint <= 0x200a) ||
+    codePoint === 0x2028 ||
+    codePoint === 0x2029 ||
+    codePoint === 0x202f ||
+    codePoint === 0x205f ||
+    codePoint === 0x3000
+  );
 };
 
 /** Compares strings by exact Unicode code-point order without locale behavior. */
@@ -89,7 +96,54 @@ export const isUnicodeScalarText = (value: string): boolean => {
 };
 
 /** Determines whether a value contains at least one non-whitespace scalar. */
-export const hasNonWhitespace = (value: string): boolean => NON_WHITESPACE_PATTERN.test(value);
+export const hasNonWhitespace = (value: string): boolean => {
+  for (const scalar of value) {
+    if (!isRepositoryFormatWhitespace(scalar.codePointAt(0) ?? 0)) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
+/** Determines whether a value begins or ends with version 1 whitespace. */
+export const hasSurroundingWhitespace = (value: string): boolean => {
+  const firstCodePoint = value.codePointAt(0);
+  const lastCodePoint = value.codePointAt(value.length - 1);
+
+  return (
+    (firstCodePoint !== undefined && isRepositoryFormatWhitespace(firstCodePoint)) ||
+    (lastCodePoint !== undefined && isRepositoryFormatWhitespace(lastCodePoint))
+  );
+};
+
+/** Removes only Repository Format version 1 whitespace from both edges. */
+export const trimRepositoryFormatWhitespace = (value: string): string => {
+  let start = 0;
+  let end = value.length;
+
+  while (start < end) {
+    const codePoint = value.codePointAt(start);
+
+    if (codePoint === undefined || !isRepositoryFormatWhitespace(codePoint)) {
+      break;
+    }
+
+    start += codePoint > 0xffff ? 2 : 1;
+  }
+
+  while (end > start) {
+    const codePoint = value.codePointAt(end - 1);
+
+    if (codePoint === undefined || !isRepositoryFormatWhitespace(codePoint)) {
+      break;
+    }
+
+    end -= 1;
+  }
+
+  return value.slice(start, end);
+};
 
 /** Determines whether a string is non-empty and contains no line break. */
 export const isNonEmptySingleLine = (value: string): boolean => {
@@ -116,7 +170,7 @@ export const isCapabilityDescription = (value: string): boolean => {
   return (
     scalarLength >= 1 &&
     scalarLength <= 1_000 &&
-    !EDGE_WHITESPACE_PATTERN.test(value) &&
+    !hasSurroundingWhitespace(value) &&
     !hasLineBreak(value) &&
     !value.includes('\0') &&
     !value.includes('{{') &&

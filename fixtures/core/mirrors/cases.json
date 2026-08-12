@@ -2,7 +2,7 @@
   "cases": [
     {
       "name": "normalized matching mirrors",
-      "manifest": "version: 1\nagents:\n  zeta:\n    framework:\n      id: custom\n    mirrors:\n      - /apps/zeta.md\n  alpha:\n    framework:\n      id: custom\n    mirrors:\n      - /apps/alpha-crlf.md\n      - /apps/alpha-cr.md\n",
+      "manifest": "version: 1\nagents:\n  zeta:\n    runtime:\n      id: custom\n    mirrors:\n      - /apps/zeta.md\n  alpha:\n    runtime:\n      id: custom\n    mirrors:\n      - /apps/alpha-crlf.md\n      - /apps/alpha-cr.md\n",
       "entries": [
         {
           "path": "/moldea/agents/zeta/description.md",
@@ -71,7 +71,7 @@
     },
     {
       "name": "missing, wrong-type, symlink, and stale mirrors",
-      "manifest": "version: 1\nagents:\n  alpha:\n    framework:\n      id: custom\n    mirrors:\n      - /mirrors/f-empty.md\n      - /mirrors/e-stale-unicode.md\n      - /mirrors/d-stale-space.md\n      - /mirrors/c-link.md\n      - /mirrors/b-directory\n      - /mirrors/a-missing.md\n",
+      "manifest": "version: 1\nagents:\n  alpha:\n    runtime:\n      id: custom\n    mirrors:\n      - /mirrors/f-empty.md\n      - /mirrors/e-stale-unicode.md\n      - /mirrors/d-stale-space.md\n      - /mirrors/c-link.md\n      - /mirrors/b-directory\n      - /mirrors/a-missing.md\n",
       "entries": [
         {
           "path": "/moldea/agents/alpha/description.md",
@@ -198,7 +198,7 @@
     },
     {
       "name": "strict mirror text failures",
-      "manifest": "version: 1\nagents:\n  alpha:\n    framework:\n      id: custom\n    mirrors:\n      - /mirrors/b-nul.md\n      - /mirrors/a-invalid-utf8.md\n",
+      "manifest": "version: 1\nagents:\n  alpha:\n    runtime:\n      id: custom\n    mirrors:\n      - /mirrors/b-nul.md\n      - /mirrors/a-invalid-utf8.md\n",
       "entries": [
         {
           "path": "/moldea/agents/alpha/description.md",

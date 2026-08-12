@@ -74,7 +74,7 @@ describe('Core manifest relationship validation', () => {
         reviewer: {
           context: [contextPath],
           decisions: [decision.path],
-          framework: { id: 'custom' },
+          runtime: { id: 'custom' },
         },
       },
       context: {
@@ -104,7 +104,7 @@ describe('Core manifest relationship validation', () => {
         reviewer: {
           context: [contextPath],
           decisions: [decisionPath],
-          framework: { id: 'custom' },
+          runtime: { id: 'custom' },
         },
       },
       context: { [contextPath]: { affectedBy: ['/src/**'] } },
@@ -161,7 +161,7 @@ describe('Core manifest relationship validation', () => {
       agents: {
         reviewer: {
           decisions: [decision.path],
-          framework: { id: 'custom' },
+          runtime: { id: 'custom' },
         },
       },
       version: 1,
@@ -194,7 +194,7 @@ describe('Core manifest relationship validation', () => {
         reviewer: {
           context: [blockedContextPath],
           decisions: [blockedDecisionPath, invalidDecisionPath],
-          framework: { id: 'custom' },
+          runtime: { id: 'custom' },
         },
       },
       context: { [blockedContextPath]: { affectedBy: ['/src/**'] } },
@@ -235,7 +235,7 @@ describe('Core manifest relationship validation', () => {
       agents: {
         constructor: {
           context: [contextPath],
-          framework: { id: 'custom' },
+          runtime: { id: 'custom' },
         },
       },
       context: { [contextPath]: { affectedBy: ['/src/**'] } },
@@ -269,12 +269,12 @@ describe('Core manifest relationship validation', () => {
         reviewer: {
           context: [secondContextPath, firstContextPath],
           decisions: [secondDecisionPath, firstDecisionPath],
-          framework: { id: 'custom' },
+          runtime: { id: 'custom' },
         },
         auditor: {
           context: [secondContextPath, firstContextPath],
           decisions: [secondDecisionPath, firstDecisionPath],
-          framework: { id: 'custom' },
+          runtime: { id: 'custom' },
         },
       },
       version: 1,
@@ -284,12 +284,12 @@ describe('Core manifest relationship validation', () => {
         auditor: {
           context: [firstContextPath, secondContextPath],
           decisions: [firstDecisionPath, secondDecisionPath],
-          framework: { id: 'custom' },
+          runtime: { id: 'custom' },
         },
         reviewer: {
           context: [firstContextPath, secondContextPath],
           decisions: [firstDecisionPath, secondDecisionPath],
-          framework: { id: 'custom' },
+          runtime: { id: 'custom' },
         },
       },
       version: 1,

@@ -30,7 +30,6 @@ export interface ICoreConfigurationExceptionOptions {
 export interface ICoreOperationExceptionOptions {
   readonly code: ICoreOperationErrorCode;
   readonly operation: ICoreOperation;
-  readonly retryable: boolean;
   readonly adapterId?: string;
   readonly agentId?: string;
   readonly limit?: string;
@@ -38,18 +37,25 @@ export interface ICoreOperationExceptionOptions {
 }
 
 const CONFIGURATION_ERROR_MESSAGES = {
-  DUPLICATE_ADAPTER_ID: 'A framework adapter ID is registered more than once.',
-  INVALID_ADAPTER_DEFINITION: 'A framework adapter definition is invalid.',
+  DUPLICATE_ADAPTER_ID: 'A runtime adapter ID is registered more than once.',
+  INVALID_ADAPTER_DEFINITION: 'A runtime adapter definition is invalid.',
   INVALID_RESOURCE_LIMIT: 'A Core resource limit is invalid.',
-  RESERVED_ADAPTER_ID: 'A reserved framework adapter ID was supplied.',
+  RESERVED_ADAPTER_ID: 'A reserved runtime adapter ID was supplied.',
 } as const satisfies Readonly<Record<ICoreConfigurationErrorCode, string>>;
 
 const OPERATION_ERROR_MESSAGES = {
   ABORTED: 'The Core operation was aborted.',
-  ADAPTER_EXECUTION_FAILED: 'A framework adapter failed during inspection.',
+  ADAPTER_EXECUTION_FAILED: 'A runtime adapter failed during inspection.',
   INVALID_ARGUMENT: 'The Core operation received an invalid argument.',
   RESOURCE_LIMIT_EXCEEDED: 'A Core resource limit was exceeded.',
 } as const satisfies Readonly<Record<ICoreOperationErrorCode, string>>;
+
+const OPERATION_ERROR_RETRYABILITY = {
+  ABORTED: true,
+  ADAPTER_EXECUTION_FAILED: false,
+  INVALID_ARGUMENT: false,
+  RESOURCE_LIMIT_EXCEEDED: false,
+} as const satisfies Readonly<Record<ICoreOperationErrorCode, boolean>>;
 
 const attachCause = (exception: Error, cause: unknown): void => {
   if (cause === undefined) {
@@ -97,13 +103,13 @@ export class CoreOperationException extends Exception {
 
   public readonly limit: string | null;
 
-  /** Creates an operation exception with safe retry and scope metadata. */
+  /** Creates an operation exception with derived retry and safe scope metadata. */
   public constructor(options: ICoreOperationExceptionOptions) {
     super(OPERATION_ERROR_MESSAGES[options.code], options.code);
     this.code = options.code;
     this.name = 'CoreOperationException';
     this.operation = options.operation;
-    this.retryable = options.retryable;
+    this.retryable = OPERATION_ERROR_RETRYABILITY[options.code];
     this.adapterId = options.adapterId ?? null;
     this.agentId = options.agentId ?? null;
     this.limit = options.limit ?? null;

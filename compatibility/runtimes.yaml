@@ -1,0 +1,74 @@
+version: 1
+adapters:
+  anthropic:
+    implementation:
+      kind: package
+      package: '@moldea.ai/adapter-anthropic'
+      distribution: public
+    implementationStatus: planned
+  claude-agent-sdk:
+    implementation:
+      kind: package
+      package: '@moldea.ai/adapter-claude-agent-sdk'
+      distribution: public
+    implementationStatus: planned
+  cloudflare-agents:
+    implementation:
+      kind: package
+      package: '@moldea.ai/adapter-cloudflare-agents'
+      distribution: public
+    implementationStatus: planned
+  custom:
+    implementation:
+      kind: built-in
+      package: '@moldea.ai/core'
+      distribution: public
+    implementationStatus: planned
+  eve:
+    implementation:
+      kind: package
+      package: '@moldea.ai/adapter-eve'
+      distribution: public
+    implementationStatus: planned
+  google-genai:
+    implementation:
+      kind: package
+      package: '@moldea.ai/adapter-google-genai'
+      distribution: public
+    implementationStatus: planned
+  langchain:
+    implementation:
+      kind: package
+      package: '@moldea.ai/adapter-langchain'
+      distribution: public
+    implementationStatus: planned
+  langgraph:
+    implementation:
+      kind: package
+      package: '@moldea.ai/adapter-langgraph'
+      distribution: public
+    implementationStatus: planned
+  openai:
+    implementation:
+      kind: package
+      package: '@moldea.ai/adapter-openai'
+      distribution: public
+    implementationStatus: planned
+  openai-agents-sdk:
+    implementation:
+      kind: package
+      package: '@moldea.ai/adapter-openai-agents-sdk'
+      distribution: public
+    implementationStatus: planned
+  pydantic-ai:
+    implementation:
+      kind: package
+      package: '@moldea.ai/adapter-pydantic-ai'
+      distribution: public
+    implementationStatus: planned
+  vercel-ai-sdk:
+    implementation:
+      kind: package
+      package: '@moldea.ai/adapter-vercel-ai-sdk'
+      distribution: public
+    implementationStatus: planned

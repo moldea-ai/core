@@ -14,7 +14,7 @@ import type { ICoreDiagnostic } from '../diagnostics/index.js';
 import { compareExactStrings, parseDecisionIdFromPath } from '../format-validation/index.js';
 import type { IParsedDecision } from '../format/index.js';
 import { freezeRecursively } from '../immutable/index.js';
-import type { ICoreOptionsSnapshot } from '../options/index.js';
+import { createCoreOperationOptionsSnapshot, type ICoreOptionsSnapshot } from '../options/index.js';
 
 // internal repository-level decision result retained for later project indexing
 export interface IDecisionGraphResult {
@@ -61,6 +61,7 @@ export const readDecisionGraph = async (
   options: ICoreOptionsSnapshot,
   signal?: AbortSignal,
 ): Promise<IDecisionGraphResult> => {
+  options = createCoreOperationOptionsSnapshot(options);
   const diagnostics = createCoreDiagnosticCollector(options.limits, 'inspect-project');
   const candidates: IDecisionGraphCandidate[] = [];
   const decisions: IParsedDecision[] = [];
@@ -80,7 +81,7 @@ export const readDecisionGraph = async (
     );
 
     for (const diagnostic of parsed.diagnostics) {
-      diagnostics.add(diagnostic);
+      diagnostics.merge(diagnostic);
     }
 
     candidates.push({
@@ -95,7 +96,7 @@ export const readDecisionGraph = async (
   }
 
   for (const diagnostic of validateDecisionGraph(candidates, options.limits)) {
-    diagnostics.add(diagnostic);
+    diagnostics.merge(diagnostic);
   }
 
   const finalizedDiagnostics = diagnostics.finalize();

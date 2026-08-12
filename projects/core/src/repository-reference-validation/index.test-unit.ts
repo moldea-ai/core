@@ -93,7 +93,7 @@ describe('Core repository reference validation', () => {
             runtimeAgent: sharedReference,
             variableProviders: { REGION: sharedReference },
           },
-          framework: { id: 'custom' },
+          runtime: { id: 'custom' },
           skills: {
             audit: {
               affectedBy: ['/skills/**', EXACT_IMPACT_PATH],
@@ -185,7 +185,7 @@ describe('Core repository reference validation', () => {
               REGION: missingReference('/references/region-provider.ts'),
             },
           },
-          framework: { id: 'custom' },
+          runtime: { id: 'custom' },
           skills: {
             audit: {
               affectedBy: ['/impact/skill.ts'],
@@ -374,7 +374,7 @@ describe('Core repository reference validation', () => {
     const manifest: IMoldeaManifestV1 = {
       agents: {
         reviewer: {
-          framework: { id: 'custom' },
+          runtime: { id: 'custom' },
           skills: {
             audit: {
               description: 'Audits changes.',

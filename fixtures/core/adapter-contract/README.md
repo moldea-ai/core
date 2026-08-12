@@ -1,4 +1,4 @@
-# Core framework-adapter contract fixtures
+# Core runtime-adapter contract fixtures
 
 These fixtures exercise Core's source-neutral adapter invocation boundary through `@moldea.ai/repository/memory`.
 

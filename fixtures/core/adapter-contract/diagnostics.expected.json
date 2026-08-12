@@ -1,21 +1,21 @@
 [
   {
-    "code": "ZETA_ADAPTER_AGENT_DEFINITION_MISSING",
+    "code": "OPENAI_AGENT_DEFINITION_MISSING",
     "details": {
       "runtimeName": "ZetaRuntime"
     },
     "entity": {
       "agentId": "zeta",
-      "adapterId": "zeta-adapter"
+      "adapterId": "openai"
     },
     "message": "The runtime agent definition is missing.",
     "path": null,
     "pointer": null,
     "range": null,
-    "source": "zeta-adapter"
+    "source": "openai"
   },
   {
-    "code": "ALPHA_ADAPTER_TOOL_REGISTRATION_MISSING",
+    "code": "ANTHROPIC_TOOL_REGISTRATION_MISSING",
     "details": {
       "expected": true
     },
@@ -28,6 +28,6 @@
     "path": "/src/audit.ts",
     "pointer": null,
     "range": null,
-    "source": "alpha-adapter"
+    "source": "anthropic"
   }
 ]

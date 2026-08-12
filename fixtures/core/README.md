@@ -18,6 +18,6 @@ These fixtures are the repository-owned conformance data for `@moldea.ai/core`. 
 
 Colocated Core unit suites own source-neutral cases that do not benefit from repository fixtures, including strict UTF-8 and Unicode handling, scalar counting, normalized SHA-256 values, logical paths and simple globs, YAML scalar semantics, placeholder scanning, diagnostic construction and ordering, resource limits, cancellation, and public type compatibility.
 
-The configured adapter fixtures exercise Core's common adapter boundary without distinguishing package provenance. Concrete official adapters must reuse `adapter-contract/` and add their framework-specific fixtures when those packages are implemented.
+The configured adapter fixtures exercise Core's common adapter boundary without distinguishing package provenance. Concrete official adapters must reuse `adapter-contract/` and add their runtime-specific fixtures when those packages are implemented.
 
 The repository CI matrix runs the same test boundary on Linux, macOS, and Windows.

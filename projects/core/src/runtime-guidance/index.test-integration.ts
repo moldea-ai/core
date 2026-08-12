@@ -149,7 +149,7 @@ describe('Core runtime guidance through the memory repository reader', () => {
   test('reads every discovered file once even when guidance is shared', async () => {
     const sharedPath = parseRepositoryPath('/moldea/runtimes/shared.md');
     const manifest =
-      'version: 1\nagents:\n  alpha:\n    framework:\n      id: custom\n      guidance: /moldea/runtimes/shared.md\n  beta:\n    framework:\n      id: custom\n      guidance: /moldea/runtimes/shared.md\n';
+      'version: 1\nagents:\n  alpha:\n    runtime:\n      id: custom\n      guidance: /moldea/runtimes/shared.md\n  beta:\n    runtime:\n      id: custom\n      guidance: /moldea/runtimes/shared.md\n';
     const repository = createMemoryRepositoryReader([
       { content: manifest, path: manifestPath, type: 'file' },
       { content: '# Project\n', path: '/moldea/project.md', type: 'file' },
@@ -189,7 +189,7 @@ describe('Core runtime guidance through the memory repository reader', () => {
     const symlinkPath = parseRepositoryPath('/moldea/runtimes/symlink.md');
     const wrongTypePath = parseRepositoryPath('/moldea/runtimes/directory.md');
     const manifest =
-      'version: 1\nagents:\n  alpha:\n    framework:\n      id: custom\n      guidance: /moldea/runtimes/symlink.md\n  beta:\n    framework:\n      id: custom\n      guidance: /moldea/runtimes/directory.md\n';
+      'version: 1\nagents:\n  alpha:\n    runtime:\n      id: custom\n      guidance: /moldea/runtimes/symlink.md\n  beta:\n    runtime:\n      id: custom\n      guidance: /moldea/runtimes/directory.md\n';
     const repository = createMemoryRepositoryReader([
       { content: manifest, path: manifestPath, type: 'file' },
       { content: '# Project\n', path: '/moldea/project.md', type: 'file' },
@@ -224,7 +224,7 @@ describe('Core runtime guidance through the memory repository reader', () => {
   test('suppresses missing-reference cascades beneath a blocked structural parent', async () => {
     const runtimesPath = parseRepositoryPath('/moldea/runtimes');
     const manifest =
-      'version: 1\nagents:\n  alpha:\n    framework:\n      id: custom\n      guidance: /moldea/runtimes/nested/alpha.md\n';
+      'version: 1\nagents:\n  alpha:\n    runtime:\n      id: custom\n      guidance: /moldea/runtimes/nested/alpha.md\n';
     const repository = createMemoryRepositoryReader([
       { content: manifest, path: manifestPath, type: 'file' },
       { content: '# Project\n', path: '/moldea/project.md', type: 'file' },

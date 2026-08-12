@@ -171,7 +171,7 @@ describe('Core agent assets through the memory repository reader', () => {
     const alphaInstruction = parseRepositoryPath('/moldea/agents/alpha/instruction.md');
     const rogueDescription = parseRepositoryPath('/moldea/agents/rogue/description.md');
     const rogueInstruction = parseRepositoryPath('/moldea/agents/rogue/instruction.md');
-    const manifest = 'version: 1\nagents:\n  alpha:\n    framework:\n      id: custom\n';
+    const manifest = 'version: 1\nagents:\n  alpha:\n    runtime:\n      id: custom\n';
     const repository = createMemoryRepositoryReader([
       { content: manifest, path: manifestPath, type: 'file' },
       { content: '# Project\n', path: '/moldea/project.md', type: 'file' },
@@ -217,7 +217,7 @@ describe('Core agent assets through the memory repository reader', () => {
     const descriptionPath = parseRepositoryPath('/moldea/agents/present/description.md');
     const instructionPath = parseRepositoryPath('/moldea/agents/present/instruction.md');
     const manifest =
-      'version: 1\nagents:\n  blocked:\n    framework:\n      id: custom\n  present:\n    framework:\n      id: custom\n';
+      'version: 1\nagents:\n  blocked:\n    runtime:\n      id: custom\n  present:\n    runtime:\n      id: custom\n';
     const repository = createMemoryRepositoryReader([
       { content: manifest, path: manifestPath, type: 'file' },
       { content: '# Project\n', path: '/moldea/project.md', type: 'file' },
@@ -267,7 +267,7 @@ describe('Core agent assets through the memory repository reader', () => {
 
   test('suppresses missing-agent cascades beneath a blocked structural parent', async () => {
     const agentsPath = parseRepositoryPath('/moldea/agents');
-    const manifest = 'version: 1\nagents:\n  alpha:\n    framework:\n      id: custom\n';
+    const manifest = 'version: 1\nagents:\n  alpha:\n    runtime:\n      id: custom\n';
     const repository = createMemoryRepositoryReader([
       { content: manifest, path: manifestPath, type: 'file' },
       { content: '# Project\n', path: '/moldea/project.md', type: 'file' },
@@ -307,7 +307,7 @@ describe('Core agent assets through the memory repository reader', () => {
   test('validates placeholders even when instruction identity is invalid', async () => {
     const instructionPath = parseRepositoryPath('/moldea/agents/alpha/instruction.md');
     const manifest =
-      'version: 1\nagents:\n  alpha:\n    framework:\n      id: custom\n    variables:\n      DECLARED:\n        description: Declared value.\n';
+      'version: 1\nagents:\n  alpha:\n    runtime:\n      id: custom\n    variables:\n      DECLARED:\n        description: Declared value.\n';
     const repository = createMemoryRepositoryReader([
       { content: manifest, path: manifestPath, type: 'file' },
       { content: '# Project\n', path: '/moldea/project.md', type: 'file' },
@@ -341,7 +341,7 @@ describe('Core agent assets through the memory repository reader', () => {
 
   test('skips placeholder validation when an instruction asset is unavailable', async () => {
     const manifest =
-      'version: 1\nagents:\n  empty:\n    framework:\n      id: custom\n    variables:\n      VALUE:\n        description: Runtime value.\n  invalid:\n    framework:\n      id: custom\n    variables:\n      VALUE:\n        description: Runtime value.\n  missing:\n    framework:\n      id: custom\n    variables:\n      VALUE:\n        description: Runtime value.\n';
+      'version: 1\nagents:\n  empty:\n    runtime:\n      id: custom\n    variables:\n      VALUE:\n        description: Runtime value.\n  invalid:\n    runtime:\n      id: custom\n    variables:\n      VALUE:\n        description: Runtime value.\n  missing:\n    runtime:\n      id: custom\n    variables:\n      VALUE:\n        description: Runtime value.\n';
     const repository = createMemoryRepositoryReader([
       { content: manifest, path: manifestPath, type: 'file' },
       { content: '# Project\n', path: '/moldea/project.md', type: 'file' },
@@ -396,7 +396,7 @@ describe('Core agent assets through the memory repository reader', () => {
     const betaDescription = parseRepositoryPath('/moldea/agents/beta/description.md');
     const betaInstruction = parseRepositoryPath('/moldea/agents/beta/instruction.md');
     const manifest =
-      'version: 1\nagents:\n  alpha:\n    framework:\n      id: custom\n  beta:\n    framework:\n      id: custom\n';
+      'version: 1\nagents:\n  alpha:\n    runtime:\n      id: custom\n  beta:\n    runtime:\n      id: custom\n';
     const repository = createMemoryRepositoryReader([
       { content: manifest, path: manifestPath, type: 'file' },
       { content: '# Project\n', path: '/moldea/project.md', type: 'file' },

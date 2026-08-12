@@ -7,9 +7,10 @@ import {
   type IRepositoryReader,
 } from '@moldea.ai/repository';
 
-import type { IFrameworkAdapterResult } from '../adapter/index.js';
+import type { IRuntimeAdapterResult } from '../adapter/index.js';
 import {
   DEFAULT_CORE_RESOURCE_LIMITS,
+  RECOGNIZED_RUNTIME_ADAPTER_IDS,
   SUPPORTED_REPOSITORY_FORMAT_VERSIONS,
 } from '../constants/index.js';
 import { CoreConfigurationException, CoreOperationException } from '../exceptions/index.js';
@@ -17,7 +18,7 @@ import { normalizeCoreOptions } from '../options/index.js';
 
 import { createCore } from './index.js';
 
-const emptyAdapterResult = (): IFrameworkAdapterResult => ({
+const emptyAdapterResult = (): IRuntimeAdapterResult => ({
   diagnostics: [],
   evidence: [],
 });
@@ -30,14 +31,30 @@ const createEmptyEntryIterable = (): AsyncIterable<IRepositoryEntry> => ({
 
 describe('Core constants and construction', () => {
   test('exports exact deeply immutable version and resource-limit constants', () => {
+    expect(RECOGNIZED_RUNTIME_ADAPTER_IDS).toStrictEqual([
+      'anthropic',
+      'claude-agent-sdk',
+      'cloudflare-agents',
+      'custom',
+      'eve',
+      'google-genai',
+      'langchain',
+      'langgraph',
+      'openai',
+      'openai-agents-sdk',
+      'pydantic-ai',
+      'vercel-ai-sdk',
+    ]);
     expect(SUPPORTED_REPOSITORY_FORMAT_VERSIONS).toStrictEqual([1]);
     expect(DEFAULT_CORE_RESOURCE_LIMITS).toStrictEqual({
       maxDiagnostics: 10_000,
       maxEntries: 100_000,
+      maxEvidence: 10_000,
       maxFileBytes: 8_388_608,
       maxManifestBytes: 2_097_152,
       maxTotalBytesRead: 134_217_728,
     });
+    expect(Object.isFrozen(RECOGNIZED_RUNTIME_ADAPTER_IDS)).toBe(true);
     expect(Object.isFrozen(SUPPORTED_REPOSITORY_FORMAT_VERSIONS)).toBe(true);
     expect(Object.isFrozen(DEFAULT_CORE_RESOURCE_LIMITS)).toBe(true);
   });
@@ -102,16 +119,16 @@ describe('Core constants and construction', () => {
   });
 
   test('snapshots and sorts adapter configuration without freezing caller objects', async () => {
-    const originalInspect = (): Promise<IFrameworkAdapterResult> =>
+    const originalInspect = (): Promise<IRuntimeAdapterResult> =>
       Promise.resolve(emptyAdapterResult());
-    const replacementInspect = (): Promise<IFrameworkAdapterResult> =>
+    const replacementInspect = (): Promise<IRuntimeAdapterResult> =>
       Promise.resolve({
         diagnostics: [],
         evidence: [null as never],
       });
     const versions: 1[] = [1];
     const adapter = {
-      id: 'zeta-adapter',
+      id: 'openai',
       inspect: originalInspect,
       supportedRepositoryFormatVersions: versions,
     };
@@ -119,7 +136,7 @@ describe('Core constants and construction', () => {
       adapters: [
         adapter,
         {
-          id: 'alpha-adapter',
+          id: 'anthropic',
           inspect: originalInspect,
           supportedRepositoryFormatVersions: [1] as const,
         },
@@ -134,7 +151,7 @@ describe('Core constants and construction', () => {
     expect(Object.isFrozen(options)).toBe(false);
     expect(Object.isFrozen(adapter)).toBe(false);
     expect(Object.isFrozen(versions)).toBe(false);
-    expect(snapshot.adapters.map(({ id }) => id)).toStrictEqual(['alpha-adapter', 'zeta-adapter']);
+    expect(snapshot.adapters.map(({ id }) => id)).toStrictEqual(['anthropic', 'openai']);
     expect(snapshot.adapters[1]?.supportedRepositoryFormatVersions).toStrictEqual([1]);
     await expect(snapshot.adapters[1]?.inspect(null as never)).resolves.toStrictEqual(
       emptyAdapterResult(),
@@ -142,7 +159,7 @@ describe('Core constants and construction', () => {
   });
 
   test('rejects reserved, duplicated, and malformed adapter definitions', () => {
-    const inspect = (): Promise<IFrameworkAdapterResult> => Promise.resolve(emptyAdapterResult());
+    const inspect = (): Promise<IRuntimeAdapterResult> => Promise.resolve(emptyAdapterResult());
     const adapter = {
       id: 'eve',
       inspect,
@@ -166,6 +183,16 @@ describe('Core constants and construction', () => {
     ).toThrowError(expect.objectContaining({ code: 'INVALID_ADAPTER_DEFINITION' }));
     expect(() =>
       createCore({
+        adapters: [{ ...adapter, id: 'unrecognized-adapter' }],
+      }),
+    ).toThrowError(
+      expect.objectContaining({
+        adapterId: 'unrecognized-adapter',
+        code: 'INVALID_ADAPTER_DEFINITION',
+      }),
+    );
+    expect(() =>
+      createCore({
         adapters: [
           {
             ...adapter,
@@ -182,6 +209,28 @@ describe('Core constants and construction', () => {
         operation: 'create-core',
       }),
     );
+  });
+
+  test('preserves a class adapter instance as the inspect receiver', async () => {
+    class PrivateFieldAdapter {
+      readonly id = 'openai';
+
+      readonly supportedRepositoryFormatVersions = [1] as const;
+
+      readonly #result = emptyAdapterResult();
+
+      inspect(): Promise<IRuntimeAdapterResult> {
+        return Promise.resolve(this.#result);
+      }
+    }
+
+    const adapter = new PrivateFieldAdapter();
+    const snapshot = normalizeCoreOptions({ adapters: [adapter] });
+
+    await expect(snapshot.adapters[0]?.inspect(null as never)).resolves.toStrictEqual(
+      emptyAdapterResult(),
+    );
+    expect(Object.isFrozen(adapter)).toBe(false);
   });
 
   test('uses typed operation failures for invalid public arguments', async () => {

@@ -50,7 +50,7 @@ const createAgent = (
   mirrors: readonly IRepositoryPath[],
   instruction: IIndexedTextAsset | null = createInstruction(id, `You are the \`${id}\` agent.\n`),
 ): IInspectedAgentAssets => ({
-  declaration: { framework: { id: 'custom' }, mirrors },
+  declaration: { runtime: { id: 'custom' }, mirrors },
   description: null,
   handoffDescription: null,
   id,

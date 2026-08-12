@@ -1,6 +1,6 @@
 import type { IRepositoryPath } from '@moldea.ai/repository';
 
-import type { IFrameworkAdapterSnapshot } from '../options/index.js';
+import { RECOGNIZED_RUNTIME_ADAPTER_IDS } from '../constants/index.js';
 import {
   escapeJsonPointerSegment,
   type ICoreDiagnosticCollector,
@@ -28,7 +28,7 @@ import {
 import type {
   IAgentBindingsManifestEntry,
   IAgentManifestEntry,
-  IFrameworkManifestEntry,
+  IRuntimeManifestEntry,
   IMoldeaManifestV1,
   IRelationshipManifestEntry,
   IRepositoryFormatVersion,
@@ -43,10 +43,19 @@ import { createNullPrototypeRecord } from '../immutable/index.js';
 import type { IYamlNode, IYamlScalarNode } from '../yaml/index.js';
 
 interface IManifestValidationContext {
-  readonly adapters: ReadonlyMap<string, IFrameworkAdapterSnapshot>;
   readonly diagnostics: ICoreDiagnosticCollector;
   readonly mirrorPaths: Set<string>;
   readonly path: IRepositoryPath;
+  readonly runtimeLocations: IRuntimeManifestLocation[];
+}
+
+// private source location retained for repository-level adapter preflight
+export interface IRuntimeManifestLocation {
+  readonly adapterId: string;
+  readonly agentId: string;
+  readonly path: IRepositoryPath;
+  readonly pointer: string;
+  readonly range: ISourceRange;
 }
 
 interface IMappingEntry {
@@ -518,12 +527,12 @@ const readPathList = (
   return paths.sort(compareExactStrings);
 };
 
-const readFramework = (
+const readRuntime = (
   node: IYamlNode,
   pointer: string,
   context: IManifestValidationContext,
   agentId: string,
-): IFrameworkManifestEntry | null => {
+): IRuntimeManifestEntry | null => {
   const entity = { agentId };
   const entries = readMapping(node, pointer, new Set(['guidance', 'id']), context, entity);
 
@@ -535,7 +544,7 @@ const readFramework = (
 
   if (idEntry?.value.kind !== 'scalar' || typeof idEntry.value.value !== 'string') {
     context.diagnostics.add({
-      code: 'MOLDEA_FRAMEWORK_ID_INVALID',
+      code: 'MOLDEA_RUNTIME_ID_INVALID',
       entity,
       path: context.path,
       pointer: childPointer(pointer, 'id'),
@@ -546,34 +555,26 @@ const readFramework = (
 
   const id = idEntry.value.value;
 
-  if (!isStableId(id) || isReservedId(id)) {
+  if (
+    !isStableId(id) ||
+    isReservedId(id) ||
+    !(RECOGNIZED_RUNTIME_ADAPTER_IDS as readonly string[]).includes(id)
+  ) {
     context.diagnostics.add({
-      code: 'MOLDEA_FRAMEWORK_ID_INVALID',
+      code: 'MOLDEA_RUNTIME_ID_INVALID',
       entity,
       path: context.path,
       pointer: childPointer(pointer, 'id'),
       range: idEntry.value.range,
     });
-  } else if (id !== 'custom') {
-    const adapter = context.adapters.get(id);
-
-    if (adapter === undefined) {
-      context.diagnostics.add({
-        code: 'MOLDEA_FRAMEWORK_ADAPTER_UNAVAILABLE',
-        entity: { adapterId: id, agentId },
-        path: context.path,
-        pointer: childPointer(pointer, 'id'),
-        range: idEntry.value.range,
-      });
-    } else if (!adapter.supportedRepositoryFormatVersions.includes(1)) {
-      context.diagnostics.add({
-        code: 'MOLDEA_FRAMEWORK_ADAPTER_FORMAT_UNSUPPORTED',
-        entity: { adapterId: id, agentId },
-        path: context.path,
-        pointer: childPointer(pointer, 'id'),
-        range: idEntry.value.range,
-      });
-    }
+  } else {
+    context.runtimeLocations.push({
+      adapterId: id,
+      agentId,
+      path: context.path,
+      pointer: childPointer(pointer, 'id'),
+      range: idEntry.value.range,
+    });
   }
 
   const guidanceEntry = entries.get('guidance');
@@ -1123,7 +1124,7 @@ const readAgent = (
       'bindings',
       'context',
       'decisions',
-      'framework',
+      'runtime',
       'mirrors',
       'skills',
       'tools',
@@ -1139,18 +1140,13 @@ const readAgent = (
   }
 
   validateAgentOwnedIdUniqueness(node, pointer, context, agentId);
-  const frameworkEntry = entries.get('framework');
-  let framework: IFrameworkManifestEntry | null = null;
+  const runtimeEntry = entries.get('runtime');
+  let runtime: IRuntimeManifestEntry | null = null;
 
-  if (frameworkEntry === undefined) {
-    addInvalidValue(context, childPointer(pointer, 'framework'), null, 'required', entity);
+  if (runtimeEntry === undefined) {
+    addInvalidValue(context, childPointer(pointer, 'runtime'), null, 'required', entity);
   } else {
-    framework = readFramework(
-      frameworkEntry.value,
-      childPointer(pointer, 'framework'),
-      context,
-      agentId,
-    );
+    runtime = readRuntime(runtimeEntry.value, childPointer(pointer, 'runtime'), context, agentId);
   }
 
   const variablesEntry = entries.get('variables');
@@ -1241,12 +1237,12 @@ const readAgent = (
           agentId,
         );
 
-  if (framework === null) {
+  if (runtime === null) {
     return null;
   }
 
   return {
-    framework,
+    runtime,
     ...(contextPaths === null ? {} : { context: contextPaths }),
     ...(decisions === null ? {} : { decisions }),
     ...(variables === null ? {} : { variables }),
@@ -1291,21 +1287,21 @@ const readAgents = (
  * Validates and normalizes a strict YAML document as a version 1 moldea manifest.
  * @param node The parser-neutral YAML root node.
  * @param path The canonical or caller-supplied logical manifest path.
- * @param adapters The immutable configured adapter snapshots.
  * @param diagnostics The operation diagnostic collector.
+ * @param runtimeLocations Mutable private source locations populated for repository inspection.
  * @returns The normalized manifest when its supported version can be interpreted.
  */
 export const validateManifest = (
   node: IYamlNode,
   path: IRepositoryPath,
-  adapters: readonly IFrameworkAdapterSnapshot[],
   diagnostics: ICoreDiagnosticCollector,
+  runtimeLocations: IRuntimeManifestLocation[],
 ): IMoldeaManifestV1 | null => {
   const context: IManifestValidationContext = {
-    adapters: new Map(adapters.map((adapter) => [adapter.id, adapter])),
     diagnostics,
     mirrorPaths: new Set(),
     path,
+    runtimeLocations,
   };
 
   if (node.kind !== 'mapping') {

@@ -156,11 +156,19 @@ describe('Core universal project inspection through the memory repository reader
       throw new TypeError(`The ${case_.name} diagnostic golden is required.`);
     }
 
-    expect(toJsonValue(result)).toStrictEqual({
+    const { runtimeLocations, ...universalResult } = result;
+
+    expect(toJsonValue(universalResult)).toStrictEqual({
       diagnostics: expectedDiagnostics,
       formatVersion: case_.expectedFormatVersion,
       project: readExpectedProject(case_),
     });
+    expect(Object.isFrozen(runtimeLocations)).toBe(true);
+    expect(
+      runtimeLocations.every(
+        ({ pointer }) => pointer.startsWith('/agents/') && pointer.endsWith('/runtime/id'),
+      ),
+    ).toBe(true);
     expect(Object.isFrozen(result)).toBe(true);
     expect(Object.isFrozen(result.diagnostics)).toBe(true);
     expect(result.project === null || Object.isFrozen(result.project)).toBe(true);
@@ -308,9 +316,9 @@ describe('Core universal project inspection through the memory repository reader
         utf8ByteLength: 86,
       },
       '/moldea/moldea.yaml': {
-        digest: 'sha256:101738600c6df7cfd5b14625008837d9276926f1853d7212120e1594e1537352',
-        scalarLength: 1315,
-        utf8ByteLength: 1315,
+        digest: 'sha256:2a407c5ced4e649022e02d08b0ec0cde8d950ecd460cb57c03426177b09aee60',
+        scalarLength: 1311,
+        utf8ByteLength: 1311,
       },
       '/moldea/project.md': {
         digest: 'sha256:5b862e20cf4653aaf9087a59a4eb66515083d052167684143396df2e8c79887e',
@@ -436,7 +444,7 @@ describe('Core universal project inspection through the memory repository reader
     ).rejects.toMatchObject({
       code: 'ABORTED',
       operation: 'inspect-project',
-      retryable: false,
+      retryable: true,
     });
     expect(hasAccessedRepository).toBe(false);
   });

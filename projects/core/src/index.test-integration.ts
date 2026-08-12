@@ -249,7 +249,7 @@ describe('published Core package artifacts', () => {
     );
     const allDeclarations = readDistributionFiles('.d.ts').join('\n');
 
-    expect(indexDeclaration).toContain('IFrameworkAdapterEvidence');
+    expect(indexDeclaration).toContain('IRuntimeAdapterEvidence');
     expect(indexDeclaration).toContain('createCore');
     expect(contractsDeclaration).toContain('inspectProject');
     expect(indexDeclaration).not.toContain('IYaml');
@@ -257,7 +257,7 @@ describe('published Core package artifacts', () => {
     expect(formatDeclaration).toContain('IParsedDecision');
     expect(formatDeclaration).not.toContain('IHandoffManifestEntry');
     expect(adapterDeclaration).toContain('inspect(');
-    expect(adapterDeclaration).toContain('IFrameworkAdapterEvidence');
+    expect(adapterDeclaration).toContain('IRuntimeAdapterEvidence');
     expect(allDeclarations).not.toMatch(/from ['"]@moldea\.ai\/(?!repository(?:['"/]))/u);
     expect(allDeclarations).not.toMatch(/from ['"]yaml['"]/u);
     expect(allDeclarations).not.toContain('ParsedNode');

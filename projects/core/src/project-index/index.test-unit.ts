@@ -53,7 +53,7 @@ const createAgent = (
     declaration: {
       context,
       decisions,
-      framework: { id: 'custom' },
+      runtime: { id: 'custom' },
     },
     description: {
       asset: descriptionAsset,
@@ -79,9 +79,9 @@ const createBaseInput = (): IProjectIndexInput => {
   const alphaDeclaration = {
     context: [zetaContext, alphaContext],
     decisions: [secondDecision.path, firstDecision.path],
-    framework: { id: 'custom' },
+    runtime: { id: 'custom' },
   } as const;
-  const zetaDeclaration = { framework: { id: 'custom' } } as const;
+  const zetaDeclaration = { runtime: { id: 'custom' } } as const;
   const manifest: IIndexedManifest = {
     asset: createAsset('/moldea/moldea.yaml', 'version: 1\n'),
     value: {

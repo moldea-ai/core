@@ -1,28 +1,40 @@
 import type {
-  IFrameworkAdapter,
-  IFrameworkAdapterContext,
-  IFrameworkAdapterResult,
+  IRuntimeAdapter,
+  IRuntimeAdapterContext,
+  IRuntimeAdapterResult,
 } from '../adapter/index.js';
 import {
   DEFAULT_CORE_RESOURCE_LIMITS,
+  RECOGNIZED_RUNTIME_ADAPTER_IDS,
   SUPPORTED_REPOSITORY_FORMAT_VERSIONS,
 } from '../constants/index.js';
 import type { ICoreOptions, ICoreResourceLimits } from '../contracts/index.js';
+import { createCoreOperationResourceLimits } from '../diagnostic-utilities/index.js';
 import { CoreConfigurationException } from '../exceptions/index.js';
 import type { IRepositoryFormatVersion } from '../format/index.js';
 import { freezeRecursively } from '../immutable/index.js';
 
 // detached adapter and complete Core configuration snapshots
-export interface IFrameworkAdapterSnapshot {
+export interface IRuntimeAdapterSnapshot {
   readonly id: string;
   readonly supportedRepositoryFormatVersions: readonly IRepositoryFormatVersion[];
-  readonly inspect: (context: IFrameworkAdapterContext) => Promise<IFrameworkAdapterResult>;
+  readonly inspect: (context: IRuntimeAdapterContext) => Promise<IRuntimeAdapterResult>;
 }
 
 export interface ICoreOptionsSnapshot {
-  readonly adapters: readonly IFrameworkAdapterSnapshot[];
+  readonly adapters: readonly IRuntimeAdapterSnapshot[];
   readonly limits: ICoreResourceLimits;
 }
+
+/** Creates an operation-local options view with one shared raw-diagnostic budget. */
+export const createCoreOperationOptionsSnapshot = (
+  options: ICoreOptionsSnapshot,
+): ICoreOptionsSnapshot => {
+  return Object.freeze({
+    adapters: options.adapters,
+    limits: createCoreOperationResourceLimits(options.limits),
+  });
+};
 
 const RESOURCE_LIMIT_KEYS = [
   'maxEntries',
@@ -30,6 +42,7 @@ const RESOURCE_LIMIT_KEYS = [
   'maxFileBytes',
   'maxManifestBytes',
   'maxDiagnostics',
+  'maxEvidence',
 ] as const satisfies readonly (keyof ICoreResourceLimits)[];
 
 const STABLE_ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
@@ -120,10 +133,10 @@ const normalizeLimits = (candidate: unknown): ICoreResourceLimits => {
  * @param candidate The untrusted adapter definition.
  * @returns A frozen detached adapter snapshot.
  * @throws
- * - RESERVED_ADAPTER_ID: A reserved framework adapter ID was supplied.
- * - INVALID_ADAPTER_DEFINITION: A framework adapter definition is invalid.
+ * - RESERVED_ADAPTER_ID: A reserved runtime adapter ID was supplied.
+ * - INVALID_ADAPTER_DEFINITION: A runtime adapter definition is invalid.
  */
-const normalizeAdapter = (candidate: unknown): IFrameworkAdapterSnapshot => {
+const normalizeAdapter = (candidate: unknown): IRuntimeAdapterSnapshot => {
   if (!isRecord(candidate)) {
     return invalidAdapter();
   }
@@ -140,6 +153,10 @@ const normalizeAdapter = (candidate: unknown): IFrameworkAdapterSnapshot => {
       code: 'RESERVED_ADAPTER_ID',
       operation: 'create-core',
     });
+  }
+
+  if (!(RECOGNIZED_RUNTIME_ADAPTER_IDS as readonly string[]).includes(id)) {
+    return invalidAdapter(id);
   }
 
   const versions = candidate['supportedRepositoryFormatVersions'];
@@ -162,12 +179,12 @@ const normalizeAdapter = (candidate: unknown): IFrameworkAdapterSnapshot => {
     supportedVersions.add(version as IRepositoryFormatVersion);
   }
 
-  const inspectReference = inspect as IFrameworkAdapter['inspect'];
+  const inspectReference = inspect as IRuntimeAdapter['inspect'];
 
   return freezeRecursively({
     id,
-    inspect: async (context: IFrameworkAdapterContext): Promise<IFrameworkAdapterResult> =>
-      inspectReference(context),
+    inspect: async (context: IRuntimeAdapterContext): Promise<IRuntimeAdapterResult> =>
+      inspectReference.call(candidate, context),
     supportedRepositoryFormatVersions: [...supportedVersions].sort((left, right) => left - right),
   });
 };
@@ -177,11 +194,11 @@ const normalizeAdapter = (candidate: unknown): IFrameworkAdapterSnapshot => {
  * @param candidate The untrusted optional adapter definitions.
  * @returns The frozen adapter snapshots in canonical ID order.
  * @throws
- * - DUPLICATE_ADAPTER_ID: A framework adapter ID is registered more than once.
- * - RESERVED_ADAPTER_ID: A reserved framework adapter ID was supplied.
- * - INVALID_ADAPTER_DEFINITION: A framework adapter definition is invalid.
+ * - DUPLICATE_ADAPTER_ID: A runtime adapter ID is registered more than once.
+ * - RESERVED_ADAPTER_ID: A reserved runtime adapter ID was supplied.
+ * - INVALID_ADAPTER_DEFINITION: A runtime adapter definition is invalid.
  */
-const normalizeAdapters = (candidate: unknown): readonly IFrameworkAdapterSnapshot[] => {
+const normalizeAdapters = (candidate: unknown): readonly IRuntimeAdapterSnapshot[] => {
   if (candidate === undefined) {
     return Object.freeze([]);
   }
@@ -215,9 +232,9 @@ const normalizeAdapters = (candidate: unknown): readonly IFrameworkAdapterSnapsh
  * @param options The optional adapters and resource-limit overrides.
  * @returns A deeply frozen, deterministically ordered configuration snapshot.
  * @throws
- * - DUPLICATE_ADAPTER_ID: A framework adapter ID is registered more than once.
- * - RESERVED_ADAPTER_ID: A reserved framework adapter ID was supplied.
- * - INVALID_ADAPTER_DEFINITION: A framework adapter definition is invalid.
+ * - DUPLICATE_ADAPTER_ID: A runtime adapter ID is registered more than once.
+ * - RESERVED_ADAPTER_ID: A reserved runtime adapter ID was supplied.
+ * - INVALID_ADAPTER_DEFINITION: A runtime adapter definition is invalid.
  * - INVALID_RESOURCE_LIMIT: A Core resource limit is invalid.
  */
 export const normalizeCoreOptions = (options: ICoreOptions | undefined): ICoreOptionsSnapshot => {

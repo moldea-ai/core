@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { parseRepositoryPath, RepositoryPathException } from '@moldea.ai/repository';
 
-import type { IFrameworkAdapterResult } from '../adapter/index.js';
+import type { IRuntimeAdapterResult } from '../adapter/index.js';
 import { createCore } from '../core/index.js';
 import { CoreOperationException } from '../exceptions/index.js';
 
@@ -77,10 +77,10 @@ describe('Core manifest parsing', () => {
         'version: 1',
         'agents:',
         '  zeta:',
-        '    framework: { id: custom }',
+        '    runtime: { id: custom }',
         '    affectedBy: [/z/**, /a/**]',
         '  alpha:',
-        '    framework: { id: custom }',
+        '    runtime: { id: custom }',
         '',
       ].join('\n'),
       path: manifestPath,
@@ -89,13 +89,13 @@ describe('Core manifest parsing', () => {
       content: [
         'agents:',
         '  alpha:',
-        '    framework:',
+        '    runtime:',
         '      id: custom',
         '  zeta:',
         '    affectedBy:',
         '      - /a/**',
         '      - /z/**',
-        '    framework:',
+        '    runtime:',
         '      id: custom',
         'version: 1',
         '',
@@ -108,6 +108,31 @@ describe('Core manifest parsing', () => {
     expect(left.manifest).toStrictEqual(right.manifest);
     expect(Object.keys(left.manifest?.agents ?? {})).toStrictEqual(['alpha', 'zeta']);
     expect(left.manifest?.agents?.['zeta']?.affectedBy).toStrictEqual(['/a/**', '/z/**']);
+  });
+
+  test('does not rely on JavaScript property order for integer-like stable IDs', async () => {
+    const createContent = (agentIds: readonly string[]): string => {
+      return [
+        'version: 1',
+        'agents:',
+        ...agentIds.flatMap((agentId) => [`  '${agentId}':`, '    runtime: { id: custom }']),
+        '',
+      ].join('\n');
+    };
+    const left = await createCore().parseManifest({
+      content: createContent(['10', '2']),
+      path: manifestPath,
+    });
+    const right = await createCore().parseManifest({
+      content: createContent(['2', '10']),
+      path: manifestPath,
+    });
+
+    expect(left.valid).toBe(true);
+    expect(right.valid).toBe(true);
+    expect(left.manifest).toStrictEqual(right.manifest);
+    expect(Object.hasOwn(left.manifest?.agents ?? {}, '10')).toBe(true);
+    expect(Object.hasOwn(left.manifest?.agents ?? {}, '2')).toBe(true);
   });
 
   test('preserves prototype-colliding record keys as inert own properties', async () => {
@@ -137,7 +162,7 @@ describe('Core manifest parsing', () => {
         'version: 1',
         'agents:',
         '  agent:',
-        '    framework: { id: custom }',
+        '    runtime: { id: custom }',
         '    tools:',
         '      shared:',
         '        name: shared',
@@ -242,7 +267,7 @@ describe('Core manifest parsing', () => {
     ],
     [
       'an agent relationship',
-      `version: 1\nagents:\n  agent:\n    framework: { id: custom }\n    decisions: [/moldea/decisions/1786050123456-${'a'.repeat(65)}.md]\n`,
+      `version: 1\nagents:\n  agent:\n    runtime: { id: custom }\n    decisions: [/moldea/decisions/1786050123456-${'a'.repeat(65)}.md]\n`,
     ],
   ])('rejects an overlong decision slug in %s', async (_name, content) => {
     const result = await createCore().parseManifest({ content, path: manifestPath });
@@ -256,7 +281,7 @@ describe('Core manifest parsing', () => {
     'rejects unsupported affectedBy metacharacters in %s',
     async (affectedPath) => {
       const result = await createCore().parseManifest({
-        content: `version: 1\nagents:\n  agent:\n    framework: { id: custom }\n    affectedBy: [${JSON.stringify(affectedPath)}]\n`,
+        content: `version: 1\nagents:\n  agent:\n    runtime: { id: custom }\n    affectedBy: [${JSON.stringify(affectedPath)}]\n`,
         path: manifestPath,
       });
 
@@ -270,10 +295,10 @@ describe('Core manifest parsing', () => {
         'version: 1',
         'agents:',
         '  alpha:',
-        '    framework: { id: custom }',
+        '    runtime: { id: custom }',
         '    mirrors: [/generated/instruction.md]',
         '  beta:',
-        '    framework: { id: custom }',
+        '    runtime: { id: custom }',
         '    mirrors: [/generated/instruction.md]',
         '',
       ].join('\n'),
@@ -295,7 +320,7 @@ describe('Core manifest parsing', () => {
         'version: 1',
         'agents:',
         '  agent:',
-        '    framework: { id: custom }',
+        '    runtime: { id: custom }',
         '    tools:',
         '      lookup:',
         '        name: lookup',
@@ -317,17 +342,17 @@ describe('Core manifest parsing', () => {
   test.each([
     ['vertical tab', '\u000b'],
     ['form feed', '\u000c'],
-  ])('rejects %s in capability descriptions', async (_name, lineBreak) => {
+  ])('accepts %s as non-line-breaking capability whitespace', async (_name, whitespace) => {
     const result = await createCore().parseManifest({
       content: [
         'version: 1',
         'agents:',
         '  agent:',
-        '    framework: { id: custom }',
+        '    runtime: { id: custom }',
         '    tools:',
         '      lookup:',
         '        name: lookup',
-        `        description: ${JSON.stringify(`before${lineBreak}after`)}`,
+        `        description: ${JSON.stringify(`before${whitespace}after`)}`,
         '        implementation:',
         '          path: /src/tool.ts',
         '',
@@ -335,14 +360,12 @@ describe('Core manifest parsing', () => {
       path: manifestPath,
     });
 
-    expect(result.diagnostics.map(({ code }) => code)).toStrictEqual([
-      'MOLDEA_CAPABILITY_DESCRIPTION_INVALID',
-    ]);
+    expect(result.diagnostics).toStrictEqual([]);
   });
 
-  test('validates configured framework availability without invoking adapters', async () => {
+  test('recognizes official runtime IDs independently from configured adapters', async () => {
     let inspectionCount = 0;
-    const inspect = (): Promise<IFrameworkAdapterResult> => {
+    const inspect = (): Promise<IRuntimeAdapterResult> => {
       inspectionCount += 1;
       return Promise.resolve({ diagnostics: [], evidence: [] });
     };
@@ -350,23 +373,33 @@ describe('Core manifest parsing', () => {
       'version: 1',
       'agents:',
       '  assistant:',
-      '    framework:',
-      '      id: external',
+      '    runtime:',
+      '      id: openai',
       '',
     ].join('\n');
-    const unavailable = await createCore().parseManifest({ content, path: manifestPath });
-    const available = await createCore({
-      adapters: [{ id: 'external', inspect, supportedRepositoryFormatVersions: [1] }],
+    const unconfigured = await createCore().parseManifest({ content, path: manifestPath });
+    const configured = await createCore({
+      adapters: [{ id: 'openai', inspect, supportedRepositoryFormatVersions: [1] }],
     }).parseManifest({ content, path: manifestPath });
 
-    expect(unavailable.diagnostics).toMatchObject([
+    expect(unconfigured.valid).toBe(true);
+    expect(configured.valid).toBe(true);
+    expect(inspectionCount).toBe(0);
+  });
+
+  test('rejects a syntactically valid unrecognized runtime ID', async () => {
+    const result = await createCore().parseManifest({
+      content: 'version: 1\nagents:\n  assistant:\n    runtime: { id: external }\n',
+      path: manifestPath,
+    });
+
+    expect(result.diagnostics).toMatchObject([
       {
-        code: 'MOLDEA_FRAMEWORK_ADAPTER_UNAVAILABLE',
-        entity: { adapterId: 'external', agentId: 'assistant' },
+        code: 'MOLDEA_RUNTIME_ID_INVALID',
+        entity: { agentId: 'assistant' },
+        pointer: '/agents/assistant/runtime/id',
       },
     ]);
-    expect(available.valid).toBe(true);
-    expect(inspectionCount).toBe(0);
   });
 
   test('uses the manifest byte limit and operation in resource failures', async () => {

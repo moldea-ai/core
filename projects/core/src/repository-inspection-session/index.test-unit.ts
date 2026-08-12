@@ -103,15 +103,15 @@ describe('repository inspection session', () => {
       cause: cancellation,
       code: 'ABORTED',
       operation: 'inspect-project',
-      retryable: false,
+      retryable: true,
     });
     expect(operationCount).toBe(0);
   });
 
-  test('counts every listing yield across repeated listings but not exact lookups', async () => {
+  test('counts distinct paths once across exact lookups, prefixes, and repeated listings', async () => {
     const listedEntry: IRepositoryEntry = { path: PROJECT_PATH, type: 'file' };
     const repository = createReader({
-      getEntry: () => Promise.resolve(listedEntry),
+      getEntry: (path) => Promise.resolve(path === PROJECT_PATH ? listedEntry : null),
       listEntries: () => createEntryIterable([listedEntry]),
     });
     const session = createRepositoryInspectionSession(repository, {
@@ -126,7 +126,10 @@ describe('repository inspection session', () => {
     await expect(collectEntries(session.reader.listEntries())).resolves.toStrictEqual([
       listedEntry,
     ]);
-    await expect(collectEntries(session.reader.listEntries())).rejects.toMatchObject({
+    await expect(session.reader.getEntry(parseRepositoryPath('/missing'))).resolves.toBeNull();
+    await expect(
+      collectEntries(session.reader.listEntries({ prefix: parseRepositoryPath('/moldea') })),
+    ).rejects.toMatchObject({
       code: 'RESOURCE_LIMIT_EXCEEDED',
       limit: 'maxEntries',
       operation: 'inspect-project',
@@ -202,7 +205,10 @@ describe('repository inspection session', () => {
         return sourceRead.promise;
       },
     });
-    const session = createRepositoryInspectionSession(repository, DEFAULT_CORE_RESOURCE_LIMITS);
+    const session = createRepositoryInspectionSession(repository, {
+      ...DEFAULT_CORE_RESOURCE_LIMITS,
+      maxEntries: 1,
+    });
     const firstRead = session.reader.readFile(PROJECT_PATH);
     const secondRead = session.reader.readFile(PROJECT_PATH);
 
@@ -220,6 +226,10 @@ describe('repository inspection session', () => {
     expect(third).toStrictEqual(Uint8Array.from([1, 2, 3, 4]));
     expect(third).not.toBe(second);
     expect(readCount).toBe(1);
+    await expect(session.reader.getEntry(OTHER_PATH)).rejects.toMatchObject({
+      code: 'RESOURCE_LIMIT_EXCEEDED',
+      limit: 'maxEntries',
+    });
   });
 
   test('isolates caller cancellation from a shared in-flight read', async () => {
@@ -253,7 +263,7 @@ describe('repository inspection session', () => {
       cause: cancellation,
       code: 'ABORTED',
       operation: 'inspect-project',
-      retryable: false,
+      retryable: true,
     });
     expect(readCount).toBe(1);
 
@@ -403,7 +413,7 @@ describe('repository inspection session', () => {
       cause: cancellation,
       code: 'ABORTED',
       operation: 'inspect-project',
-      retryable: false,
+      retryable: true,
     });
   });
 

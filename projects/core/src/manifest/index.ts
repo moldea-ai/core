@@ -1,6 +1,6 @@
 import { parseRepositoryPath } from '@moldea.ai/repository';
 
-import type { ICoreOptionsSnapshot } from '../options/index.js';
+import { createCoreOperationOptionsSnapshot, type ICoreOptionsSnapshot } from '../options/index.js';
 import type {
   IIndexedTextAsset,
   IManifestParseResult,
@@ -10,7 +10,11 @@ import { createCoreDiagnosticCollector } from '../diagnostic-utilities/index.js'
 import type { ICoreOperation } from '../exceptions/index.js';
 import { isCanonicalManifestPath } from '../format-validation/index.js';
 import { freezeRecursively } from '../immutable/index.js';
-import { detectSupportedManifestVersion, validateManifest } from '../manifest-validation/index.js';
+import {
+  detectSupportedManifestVersion,
+  validateManifest,
+  type IRuntimeManifestLocation,
+} from '../manifest-validation/index.js';
 import { createSourceLocator } from '../source-location/index.js';
 import { calculateNormalizedTextDigest, normalizeTextDocument } from '../text/index.js';
 import { parseStrictYaml } from '../yaml/index.js';
@@ -18,6 +22,7 @@ import { parseStrictYaml } from '../yaml/index.js';
 // richer manifest parse state retained only by repository inspection
 export interface IManifestDocumentInspectionResult extends IManifestParseResult {
   readonly formatVersion: 1 | null;
+  readonly runtimeLocations: readonly IRuntimeManifestLocation[];
 }
 
 /**
@@ -36,6 +41,7 @@ export const inspectManifestDocument = async (
   options: ICoreOptionsSnapshot,
   operation: Extract<ICoreOperation, 'parse-manifest' | 'inspect-project'> = 'parse-manifest',
 ): Promise<IManifestDocumentInspectionResult> => {
+  options = createCoreOperationOptionsSnapshot(options);
   const normalized = normalizeTextDocument(input, options.limits, operation, 'maxManifestBytes');
   const path = parseRepositoryPath(input.path);
   const diagnostics = createCoreDiagnosticCollector(options.limits, operation);
@@ -45,7 +51,7 @@ export const inspectManifestDocument = async (
   }
 
   for (const diagnostic of normalized.diagnostics) {
-    diagnostics.add(diagnostic);
+    diagnostics.merge(diagnostic);
   }
 
   if (!normalized.valid || normalized.text === null) {
@@ -54,6 +60,7 @@ export const inspectManifestDocument = async (
       diagnostics: diagnostics.finalize(),
       formatVersion: null,
       manifest: null,
+      runtimeLocations: [],
       valid: false,
     });
   }
@@ -61,9 +68,10 @@ export const inspectManifestDocument = async (
   const locator = createSourceLocator(normalized.text.value);
   const parsed = parseStrictYaml(normalized.text.value, path, locator, diagnostics);
   const formatVersion = parsed.value === null ? null : detectSupportedManifestVersion(parsed.value);
+  const runtimeLocations: IRuntimeManifestLocation[] = [];
   const manifest =
     parsed.valid && parsed.value !== null
-      ? validateManifest(parsed.value, path, options.adapters, diagnostics)
+      ? validateManifest(parsed.value, path, diagnostics, runtimeLocations)
       : null;
 
   if (manifest === null || diagnostics.size > 0) {
@@ -72,6 +80,7 @@ export const inspectManifestDocument = async (
       diagnostics: diagnostics.finalize(),
       formatVersion,
       manifest: null,
+      runtimeLocations,
       valid: false,
     });
   }
@@ -90,6 +99,7 @@ export const inspectManifestDocument = async (
     diagnostics: diagnostics.finalize(),
     formatVersion,
     manifest,
+    runtimeLocations,
     valid: true,
   });
 };

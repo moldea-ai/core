@@ -14,7 +14,7 @@ import { createCoreDiagnosticCollector } from '../diagnostic-utilities/index.js'
 import type { ICoreOperation } from '../exceptions/index.js';
 import { parseDecisionIdFromPath } from '../format-validation/index.js';
 import { freezeRecursively } from '../immutable/index.js';
-import type { ICoreOptionsSnapshot } from '../options/index.js';
+import { createCoreOperationOptionsSnapshot, type ICoreOptionsSnapshot } from '../options/index.js';
 import { createSourceLocator } from '../source-location/index.js';
 import { calculateNormalizedTextDigest, normalizeTextDocument } from '../text/index.js';
 import { parseStrictYaml } from '../yaml/index.js';
@@ -35,6 +35,7 @@ export const parseDecisionDocument = async (
   options: ICoreOptionsSnapshot,
   operation: Extract<ICoreOperation, 'parse-decision' | 'inspect-project'> = 'parse-decision',
 ): Promise<IDecisionParseResult> => {
+  options = createCoreOperationOptionsSnapshot(options);
   const normalized = normalizeTextDocument(input, options.limits, operation);
   const path = parseRepositoryPath(input.path);
   const diagnostics = createCoreDiagnosticCollector(options.limits, operation);
@@ -45,7 +46,7 @@ export const parseDecisionDocument = async (
   }
 
   for (const diagnostic of normalized.diagnostics) {
-    diagnostics.add(diagnostic);
+    diagnostics.merge(diagnostic);
   }
 
   if (!normalized.valid || normalized.text === null) {

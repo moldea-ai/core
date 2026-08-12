@@ -13,7 +13,7 @@
       }
     ],
     "runtimeName": "BetaRuntime",
-    "source": "alpha-adapter"
+    "source": "anthropic"
   },
   {
     "agentId": "alpha",
@@ -34,7 +34,7 @@
       }
     ],
     "runtimeName": "auditRequests",
-    "source": "alpha-adapter"
+    "source": "anthropic"
   },
   {
     "agentId": "zeta",
@@ -50,6 +50,6 @@
       }
     ],
     "runtimeName": null,
-    "source": "zeta-adapter"
+    "source": "openai"
   }
 ]

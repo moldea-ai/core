@@ -8,7 +8,7 @@ import {
   type IRepositoryReader,
 } from '@moldea.ai/repository';
 
-import type { IFrameworkAdapterEvidence, IFrameworkAdapterEvidenceKind } from '../adapter/index.js';
+import type { IRuntimeAdapterEvidence, IRuntimeAdapterEvidenceKind } from '../adapter/index.js';
 import type {
   ICoreResourceLimits,
   IIndexedAgent,
@@ -18,6 +18,8 @@ import {
   normalizeDiagnosticDetails,
   normalizeDiagnosticEntity,
   normalizeDiagnostics,
+  registerCoreDiagnosticCandidates,
+  serializeDiagnosticDetails,
 } from '../diagnostic-utilities/index.js';
 import type {
   IAdapterDiagnostic,
@@ -32,14 +34,15 @@ import {
   isNonEmptySingleLine,
   isRepositorySymbol,
   isUnicodeScalarText,
+  hasSurroundingWhitespace,
   sortRepositoryReferences,
 } from '../format-validation/index.js';
 import type { IRepositoryReference } from '../format/index.js';
 import { createNullPrototypeRecord, freezeRecursively } from '../immutable/index.js';
 
 // closed adapter output fields, evidence kinds, and scalar patterns
-const EVIDENCE_KINDS = new Set<IFrameworkAdapterEvidenceKind>([
-  'framework-package',
+const EVIDENCE_KINDS = new Set<IRuntimeAdapterEvidenceKind>([
+  'runtime-package',
   'language',
   'agent-definition',
   'instruction-loader',
@@ -82,13 +85,18 @@ const DIAGNOSTIC_KEYS = new Set([
   'details',
 ]);
 const ADAPTER_RESULT_KEYS = new Set(['evidence', 'diagnostics']);
-const EDGE_WHITESPACE_PATTERN = /(?:^\p{White_Space}|\p{White_Space}$)/u;
 const ADAPTER_CODE_PATTERN = /^[A-Z][A-Z0-9_]*$/u;
 
 // normalized output retained after one adapter result passes Core validation
-export interface IValidatedFrameworkAdapterResult {
-  readonly evidence: readonly IFrameworkAdapterEvidence[];
+export interface IValidatedRuntimeAdapterResult {
+  readonly evidence: readonly IRuntimeAdapterEvidence[];
   readonly diagnostics: readonly IAdapterDiagnostic[];
+}
+
+// mutable raw output counters shared by every adapter in one inspection
+export interface IRuntimeAdapterOutputCounts {
+  diagnostics: number;
+  evidence: number;
 }
 
 interface IAdapterValidationContext {
@@ -112,11 +120,41 @@ const isRecord = (candidate: unknown): candidate is Readonly<Record<string, unkn
 const invalidAdapterResult = (adapterId: string): never => {
   throw new CoreOperationException({
     adapterId,
-    cause: new TypeError('The framework adapter result is invalid.'),
+    cause: new TypeError('The runtime adapter result is invalid.'),
     code: 'ADAPTER_EXECUTION_FAILED',
     operation: 'validate-adapter',
-    retryable: false,
   });
+};
+
+const registerRawOutput = (
+  outputCounts: IRuntimeAdapterOutputCounts,
+  key: keyof IRuntimeAdapterOutputCounts,
+  amount: number,
+  context: IAdapterValidationContext,
+): void => {
+  const limit = key === 'diagnostics' ? 'maxDiagnostics' : 'maxEvidence';
+
+  if (key === 'diagnostics') {
+    outputCounts.diagnostics = registerCoreDiagnosticCandidates(
+      context.limits,
+      amount,
+      'validate-adapter',
+      outputCounts.diagnostics,
+      context.adapterId,
+    );
+    return;
+  }
+
+  if (amount > context.limits[limit] - outputCounts[key]) {
+    throw new CoreOperationException({
+      adapterId: context.adapterId,
+      code: 'RESOURCE_LIMIT_EXCEEDED',
+      limit,
+      operation: 'validate-adapter',
+    });
+  }
+
+  outputCounts[key] += amount;
 };
 
 const hasOnlyKeys = (
@@ -344,7 +382,7 @@ const normalizeReferences = (
   const referenceKeys = new Set<string>();
 
   for (const reference of references) {
-    const key = JSON.stringify(reference);
+    const key = JSON.stringify([reference.path, reference.symbol ?? null]);
 
     if (referenceKeys.has(key)) {
       return invalidAdapterResult(adapterId);
@@ -359,7 +397,7 @@ const normalizeReferences = (
 const normalizeEvidence = (
   candidate: unknown,
   context: IAdapterValidationState,
-): IFrameworkAdapterEvidence => {
+): IRuntimeAdapterEvidence => {
   if (!isRecord(candidate) || !hasOnlyKeys(candidate, EVIDENCE_KEYS)) {
     return invalidAdapterResult(context.adapterId);
   }
@@ -374,14 +412,14 @@ const normalizeEvidence = (
   if (
     source !== context.adapterId ||
     typeof kind !== 'string' ||
-    !EVIDENCE_KINDS.has(kind as IFrameworkAdapterEvidenceKind) ||
+    !EVIDENCE_KINDS.has(kind as IRuntimeAdapterEvidenceKind) ||
     (agentId !== null && !isSafeString(agentId)) ||
     (capabilityKind !== null && capabilityKind !== 'tool' && capabilityKind !== 'skill') ||
     (capabilityId !== null && !isSafeString(capabilityId)) ||
     (runtimeName !== null &&
       (!isSafeString(runtimeName) ||
         !isNonEmptySingleLine(runtimeName) ||
-        EDGE_WHITESPACE_PATTERN.test(runtimeName)))
+        hasSurroundingWhitespace(runtimeName)))
   ) {
     return invalidAdapterResult(context.adapterId);
   }
@@ -404,7 +442,7 @@ const normalizeEvidence = (
     capabilityId,
     capabilityKind,
     details: normalizeDetails(candidate['details'], context.adapterId),
-    kind: kind as IFrameworkAdapterEvidenceKind,
+    kind: kind as IRuntimeAdapterEvidenceKind,
     references: normalizeReferences(candidate['references'], context.adapterId),
     runtimeName,
     source,
@@ -412,7 +450,7 @@ const normalizeEvidence = (
 };
 
 const validateEvidenceReferences = async (
-  evidence: readonly IFrameworkAdapterEvidence[],
+  evidence: readonly IRuntimeAdapterEvidence[],
   context: IAdapterValidationState,
 ): Promise<void> => {
   const entries = new Map<IRepositoryPath, IRepositoryEntry | null>();
@@ -493,10 +531,14 @@ const compareNullableStrings = (left: string | null, right: string | null): numb
       : compareExactStrings(left, right);
 };
 
-const compareEvidence = (
-  left: IFrameworkAdapterEvidence,
-  right: IFrameworkAdapterEvidence,
-): number => {
+const compareEvidence = (left: IRuntimeAdapterEvidence, right: IRuntimeAdapterEvidence): number => {
+  const leftReferences = JSON.stringify(
+    left.references.map((reference) => [reference.path, reference.symbol ?? null]),
+  );
+  const rightReferences = JSON.stringify(
+    right.references.map((reference) => [reference.path, reference.symbol ?? null]),
+  );
+
   return (
     compareExactStrings(left.source, right.source) ||
     compareExactStrings(left.kind, right.kind) ||
@@ -504,9 +546,25 @@ const compareEvidence = (
     compareNullableStrings(left.capabilityKind, right.capabilityKind) ||
     compareNullableStrings(left.capabilityId, right.capabilityId) ||
     compareNullableStrings(left.runtimeName, right.runtimeName) ||
-    compareExactStrings(JSON.stringify(left.references), JSON.stringify(right.references)) ||
-    compareExactStrings(JSON.stringify(left.details), JSON.stringify(right.details))
+    compareExactStrings(leftReferences, rightReferences) ||
+    compareExactStrings(
+      serializeDiagnosticDetails(left.details),
+      serializeDiagnosticDetails(right.details),
+    )
   );
+};
+
+const serializeEvidence = (evidence: IRuntimeAdapterEvidence): string => {
+  return JSON.stringify([
+    evidence.source,
+    evidence.kind,
+    evidence.agentId,
+    evidence.capabilityKind,
+    evidence.capabilityId,
+    evidence.runtimeName,
+    evidence.references.map((reference) => [reference.path, reference.symbol ?? null]),
+    serializeDiagnosticDetails(evidence.details),
+  ]);
 };
 
 /**
@@ -514,20 +572,20 @@ const compareEvidence = (
  * @param candidates The normalized evidence items to combine.
  * @returns A frozen deterministic evidence collection.
  */
-export const normalizeFrameworkAdapterEvidence = (
-  candidates: readonly IFrameworkAdapterEvidence[],
-): readonly IFrameworkAdapterEvidence[] => {
-  const evidence = new Map<string, IFrameworkAdapterEvidence>();
+export const normalizeRuntimeAdapterEvidence = (
+  candidates: readonly IRuntimeAdapterEvidence[],
+): readonly IRuntimeAdapterEvidence[] => {
+  const evidence = new Map<string, IRuntimeAdapterEvidence>();
 
   for (const item of candidates) {
-    evidence.set(JSON.stringify(item), item);
+    evidence.set(serializeEvidence(item), item);
   }
 
   return freezeRecursively([...evidence.values()].sort(compareEvidence));
 };
 
 /**
- * Validates and normalizes one untrusted framework adapter result.
+ * Validates and normalizes one untrusted runtime adapter result.
  * @param candidate The result returned by the adapter implementation.
  * @param context The invoking adapter scope, project, reader, limits, and signal.
  * @returns A promise resolving to frozen deterministic evidence and diagnostics.
@@ -541,12 +599,13 @@ export const normalizeFrameworkAdapterEvidence = (
  * - ABORTED: Adapter validation or a repository operation was aborted.
  * - ADAPTER_EXECUTION_FAILED: The adapter result violates its public contract.
  */
-export const validateFrameworkAdapterResult = async (
+export const validateRuntimeAdapterResult = async (
   candidate: unknown,
   context: IAdapterValidationContext,
-): Promise<IValidatedFrameworkAdapterResult> => {
+  outputCounts: IRuntimeAdapterOutputCounts,
+): Promise<IValidatedRuntimeAdapterResult> => {
   let diagnostics: readonly IAdapterDiagnostic[];
-  let evidence: readonly IFrameworkAdapterEvidence[];
+  let evidence: readonly IRuntimeAdapterEvidence[];
   let validationState: IAdapterValidationState;
 
   try {
@@ -563,6 +622,8 @@ export const validateFrameworkAdapterResult = async (
 
     const evidenceCandidates: readonly unknown[] = evidenceValue;
     const diagnosticCandidates: readonly unknown[] = diagnosticsValue;
+    registerRawOutput(outputCounts, 'evidence', evidenceCandidates.length, context);
+    registerRawOutput(outputCounts, 'diagnostics', diagnosticCandidates.length, context);
     validationState = {
       ...context,
       agentsById: new Map(context.agents.map((agent) => [agent.id, agent])),
@@ -571,12 +632,16 @@ export const validateFrameworkAdapterResult = async (
     diagnostics = diagnosticCandidates.map((diagnostic) =>
       normalizeDiagnostic(diagnostic, validationState),
     );
-    evidence = normalizeFrameworkAdapterEvidence(
+    evidence = normalizeRuntimeAdapterEvidence(
       evidenceCandidates.map((evidenceCandidate) =>
         normalizeEvidence(evidenceCandidate, validationState),
       ),
     );
-  } catch {
+  } catch (error: unknown) {
+    if (error instanceof CoreOperationException && error.code === 'RESOURCE_LIMIT_EXCEEDED') {
+      throw error;
+    }
+
     return invalidAdapterResult(context.adapterId);
   }
 
@@ -584,7 +649,7 @@ export const validateFrameworkAdapterResult = async (
     await validateEvidenceReferences(evidence, validationState);
 
     return freezeRecursively({
-      diagnostics: normalizeDiagnostics(diagnostics, context.limits, 'validate-adapter'),
+      diagnostics: normalizeDiagnostics(diagnostics),
       evidence,
     });
   } catch (error: unknown) {

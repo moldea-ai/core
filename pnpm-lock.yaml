@@ -11,9 +11,15 @@ importers:
       '@eslint/js':
         specifier: 10.0.1
         version: 10.0.1(eslint@10.8.1)
+      '@renovatebot/pep440':
+        specifier: 5.0.0
+        version: 5.0.0
       '@types/node':
         specifier: 22.20.1
         version: 22.20.1
+      '@types/semver':
+        specifier: 7.8.0
+        version: 7.8.0
       eslint:
         specifier: 10.8.1
         version: 10.8.1
@@ -26,6 +32,9 @@ importers:
       prettier:
         specifier: 3.9.6
         version: 3.9.6
+      semver:
+        specifier: 7.8.5
+        version: 7.8.5
       turbo:
         specifier: 2.10.9
         version: 2.10.9
@@ -41,6 +50,9 @@ importers:
       vitest:
         specifier: 4.1.10
         version: 4.1.10(@types/node@22.20.1)(vite@8.2.1(@types/node@22.20.1)(yaml@2.9.0))
+      yaml:
+        specifier: 2.9.0
+        version: 2.9.0
 
   projects/core:
     dependencies:
@@ -177,6 +189,10 @@ packages:
 
   '@oxc-project/types@0.143.0':
     resolution: {integrity: sha512-u6JZdLBTLotrNC9Vd6vPssINdzcCzleKAH6EJKImQb7GtYvX5keN2dxkoK44stCc4tffE6QQRtZTXVSzsLUlWA==}
+
+  '@renovatebot/pep440@5.0.0':
+    resolution: {integrity: sha512-91cFM32/pnOAvC7W1W1kPPI9QM2y6OrYCeomz7pop4A+3Ksh2XnZXGznUMlzR7YbOQlg7X/MNlF27s9Yt9hhTA==}
+    engines: {node: ^22.11.0 || >=24.10.0, pnpm: '>=10.0.0'}
 
   '@rolldown/binding-android-arm64@1.2.3':
     resolution: {integrity: sha512-zrJtHDcaZJ1Fp7xf4hNl+7seH9Cn/N5TwLYkhgXREtBwAd/jaqW3uqeHxpDugJLVICWg4eW44kOQEGJ1r6jCGw==}
@@ -321,6 +337,9 @@ packages:
 
   '@types/node@22.20.1':
     resolution: {integrity: sha512-EANqOCF9QFyra+4pfxUcX9STKJpCLjMbObVzljIJomAWSnuSIEAvyzEU53GaajbXJEgdh0iEcPL+DGvpUd4k1Q==}
+
+  '@types/semver@7.8.0':
+    resolution: {integrity: sha512-1mAINjtQCXXeLkJ9ehXkwOcBpqtLxiVtKhpUf83DdRNdQKV0iXZpaHYqRr7nj+wvxuJzoAmAwXI+sCNMv1CzLQ==}
 
   '@typescript-eslint/eslint-plugin@8.66.0':
     resolution: {integrity: sha512-p088eaGrzYz1s+7cov0aMOCkNGTJlVxF4jgubf28c8L0Cv9Rloj8YBHnv4hXLq6IIEE1AsjNWavO+k+8kP2Y0A==}
@@ -1013,6 +1032,8 @@ snapshots:
 
   '@oxc-project/types@0.143.0': {}
 
+  '@renovatebot/pep440@5.0.0': {}
+
   '@rolldown/binding-android-arm64@1.2.3':
     optional: true
 
@@ -1093,6 +1114,8 @@ snapshots:
   '@types/node@22.20.1':
     dependencies:
       undici-types: 6.21.0
+
+  '@types/semver@7.8.0': {}
 
   '@typescript-eslint/eslint-plugin@8.66.0(@typescript-eslint/parser@8.66.0(eslint@10.8.1)(typescript@6.0.3))(eslint@10.8.1)(typescript@6.0.3)':
     dependencies:

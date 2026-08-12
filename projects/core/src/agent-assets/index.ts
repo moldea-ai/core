@@ -18,7 +18,7 @@ import type { ICoreDiagnostic } from '../diagnostics/index.js';
 import { compareExactStrings } from '../format-validation/index.js';
 import type { IAgentManifestEntry, IMoldeaManifestV1 } from '../format/index.js';
 import { freezeRecursively } from '../immutable/index.js';
-import type { ICoreOptionsSnapshot } from '../options/index.js';
+import { createCoreOperationOptionsSnapshot, type ICoreOptionsSnapshot } from '../options/index.js';
 import { readRepositoryTextAsset } from '../repository-text/index.js';
 import { validateRuntimePlaceholders } from '../runtime-placeholder-validation/index.js';
 
@@ -45,7 +45,7 @@ const addDiagnostics = (
   diagnostics: readonly ICoreDiagnostic[],
 ): void => {
   for (const diagnostic of diagnostics) {
-    collector.add(diagnostic);
+    collector.merge(diagnostic);
   }
 };
 
@@ -152,6 +152,7 @@ export const inspectAgentAssets = async (
   options: ICoreOptionsSnapshot,
   signal?: AbortSignal,
 ): Promise<IAgentAssetInspectionResult> => {
+  options = createCoreOperationOptionsSnapshot(options);
   const collector = createCoreDiagnosticCollector(options.limits, 'inspect-project');
   const agents: IInspectedAgentAssets[] = [];
   const registeredAgents = manifest.agents ?? {};

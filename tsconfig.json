@@ -1,5 +1,8 @@
 {
   "extends": "./configs/typescript/node.json",
-  "include": ["configs/**/*.ts", "vitest.config.ts"],
+  "compilerOptions": {
+    "allowImportingTsExtensions": true
+  },
+  "include": ["configs/**/*.ts", "scripts/**/*.ts", "vitest.config.ts"],
   "exclude": ["**/coverage", "**/dist", "**/node_modules"]
 }

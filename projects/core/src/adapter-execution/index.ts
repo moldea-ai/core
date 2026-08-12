@@ -1,21 +1,22 @@
 import { RepositoryPathException, RepositorySourceException } from '@moldea.ai/repository';
 
-import type { IFrameworkAdapterContext, IFrameworkAdapterEvidence } from '../adapter/index.js';
+import type { IRuntimeAdapterContext, IRuntimeAdapterEvidence } from '../adapter/index.js';
 import type { IMoldeaProjectIndex } from '../contracts/index.js';
 import {
-  normalizeFrameworkAdapterEvidence,
-  validateFrameworkAdapterResult,
+  normalizeRuntimeAdapterEvidence,
+  validateRuntimeAdapterResult,
+  type IRuntimeAdapterOutputCounts,
 } from '../adapter-validation/index.js';
 import { normalizeDiagnostics } from '../diagnostic-utilities/index.js';
 import type { IAdapterDiagnostic } from '../diagnostics/index.js';
 import { CoreOperationException } from '../exceptions/index.js';
 import { freezeRecursively } from '../immutable/index.js';
-import type { ICoreOptionsSnapshot, IFrameworkAdapterSnapshot } from '../options/index.js';
+import type { ICoreOptionsSnapshot, IRuntimeAdapterSnapshot } from '../options/index.js';
 import type { IRepositoryInspectionSession } from '../repository-inspection-session/index.js';
 
-// complete normalized output from every applicable framework adapter
-export interface IFrameworkAdapterInspectionResult {
-  readonly evidence: readonly IFrameworkAdapterEvidence[];
+// complete normalized output from every applicable runtime adapter
+export interface IRuntimeAdapterInspectionResult {
+  readonly evidence: readonly IRuntimeAdapterEvidence[];
   readonly diagnostics: readonly IAdapterDiagnostic[];
 }
 
@@ -30,21 +31,22 @@ const isInspectionBoundaryFailure = (error: unknown): boolean => {
 };
 
 const invokeAdapter = async (
-  adapter: IFrameworkAdapterSnapshot,
+  adapter: IRuntimeAdapterSnapshot,
   project: IMoldeaProjectIndex,
   session: IRepositoryInspectionSession,
   options: ICoreOptionsSnapshot,
+  outputCounts: IRuntimeAdapterOutputCounts,
   signal?: AbortSignal,
-): Promise<IFrameworkAdapterInspectionResult> => {
+): Promise<IRuntimeAdapterInspectionResult> => {
   const agents = freezeRecursively(
-    project.agents.filter(({ declaration }) => declaration.framework.id === adapter.id),
+    project.agents.filter(({ declaration }) => declaration.runtime.id === adapter.id),
   );
 
   if (agents.length === 0) {
     return freezeRecursively({ diagnostics: [], evidence: [] });
   }
 
-  const context: IFrameworkAdapterContext = Object.freeze({
+  const context: IRuntimeAdapterContext = Object.freeze({
     agents,
     project,
     repository: session.reader,
@@ -69,18 +71,21 @@ const invokeAdapter = async (
       cause: error,
       code: 'ADAPTER_EXECUTION_FAILED',
       operation: 'inspect-project',
-      retryable: false,
     });
   }
 
-  return validateFrameworkAdapterResult(candidate, {
-    adapterId: adapter.id,
-    agents,
-    limits: options.limits,
-    project,
-    repository: session.reader,
-    ...(signal === undefined ? {} : { signal }),
-  });
+  return validateRuntimeAdapterResult(
+    candidate,
+    {
+      adapterId: adapter.id,
+      agents,
+      limits: options.limits,
+      project,
+      repository: session.reader,
+      ...(signal === undefined ? {} : { signal }),
+    },
+    outputCounts,
+  );
 };
 
 /**
@@ -103,23 +108,24 @@ const invokeAdapter = async (
  * - ABORTED: Adapter inspection or a repository operation was aborted.
  * - ADAPTER_EXECUTION_FAILED: An adapter failed or returned an invalid result.
  */
-export const inspectFrameworkAdapters = async (
+export const inspectRuntimeAdapters = async (
   project: IMoldeaProjectIndex,
   session: IRepositoryInspectionSession,
   options: ICoreOptionsSnapshot,
   signal?: AbortSignal,
-): Promise<IFrameworkAdapterInspectionResult> => {
-  const evidence: IFrameworkAdapterEvidence[] = [];
+): Promise<IRuntimeAdapterInspectionResult> => {
+  const evidence: IRuntimeAdapterEvidence[] = [];
   const diagnostics: IAdapterDiagnostic[] = [];
+  const outputCounts: IRuntimeAdapterOutputCounts = { diagnostics: 0, evidence: 0 };
 
   for (const adapter of options.adapters) {
-    const result = await invokeAdapter(adapter, project, session, options, signal);
+    const result = await invokeAdapter(adapter, project, session, options, outputCounts, signal);
     evidence.push(...result.evidence);
     diagnostics.push(...result.diagnostics);
   }
 
   return freezeRecursively({
-    diagnostics: normalizeDiagnostics(diagnostics, options.limits, 'inspect-project'),
-    evidence: normalizeFrameworkAdapterEvidence(evidence),
+    diagnostics: normalizeDiagnostics(diagnostics),
+    evidence: normalizeRuntimeAdapterEvidence(evidence),
   });
 };

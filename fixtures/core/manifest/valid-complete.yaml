@@ -21,7 +21,7 @@ unresolved:
     reference: SUPPORT-1
 agents:
   customer-support:
-    framework:
+    runtime:
       id: custom
       guidance: /moldea/runtimes/custom.md
     context:

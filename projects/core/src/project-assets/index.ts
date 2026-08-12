@@ -10,7 +10,7 @@ import type { ICoreDiagnostic } from '../diagnostics/index.js';
 import { compareExactStrings, hasNonWhitespace } from '../format-validation/index.js';
 import type { IMoldeaManifestV1 } from '../format/index.js';
 import { freezeRecursively } from '../immutable/index.js';
-import type { ICoreOptionsSnapshot } from '../options/index.js';
+import { createCoreOperationOptionsSnapshot, type ICoreOptionsSnapshot } from '../options/index.js';
 import { readRepositoryTextAsset } from '../repository-text/index.js';
 
 // internal project and focused-context assets retained for provisional indexing
@@ -33,7 +33,7 @@ const addDiagnostics = (
   diagnostics: readonly ICoreDiagnostic[],
 ): void => {
   for (const diagnostic of diagnostics) {
-    collector.add(diagnostic);
+    collector.merge(diagnostic);
   }
 };
 
@@ -60,6 +60,7 @@ export const readProjectFile = async (
   options: ICoreOptionsSnapshot,
   signal?: AbortSignal,
 ): Promise<IProjectFileInspectionResult> => {
+  options = createCoreOperationOptionsSnapshot(options);
   const collector = createCoreDiagnosticCollector(options.limits, 'inspect-project');
   let project: IIndexedTextAsset | null = null;
 
@@ -112,6 +113,7 @@ export const readProjectAssets = async (
   signal?: AbortSignal,
   projectFile?: IProjectFileInspectionResult,
 ): Promise<IProjectAssetInspectionResult> => {
+  options = createCoreOperationOptionsSnapshot(options);
   const collector = createCoreDiagnosticCollector(options.limits, 'inspect-project');
   const context: IIndexedContextAsset[] = [];
   const inspectedProject =

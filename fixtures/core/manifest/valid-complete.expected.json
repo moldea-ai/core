@@ -32,7 +32,7 @@
   },
   "agents": {
     "customer-support": {
-      "framework": {
+      "runtime": {
         "id": "custom",
         "guidance": "/moldea/runtimes/custom.md"
       },

@@ -5,10 +5,13 @@ import type {
 } from '../contracts/index.js';
 import { createCoreDiagnosticCollector } from '../diagnostic-utilities/index.js';
 import type { ICoreDiagnostic } from '../diagnostics/index.js';
-import { countUnicodeScalars, hasNonWhitespace } from '../format-validation/index.js';
+import {
+  countUnicodeScalars,
+  hasNonWhitespace,
+  trimRepositoryFormatWhitespace,
+} from '../format-validation/index.js';
 import { freezeRecursively } from '../immutable/index.js';
 
-const DESCRIPTION_EDGE_WHITESPACE_PATTERN = /^\p{White_Space}+|\p{White_Space}+$/gu;
 const OPENING_HEADING_PATTERN = /^#{1,6} /u;
 
 // internal description validation result retained for agent reconciliation
@@ -55,7 +58,7 @@ export const validateAgentDescription = (
   limits: ICoreResourceLimits,
 ): IAgentDescriptionValidationResult => {
   const diagnostics = createCoreDiagnosticCollector(limits, 'inspect-project');
-  const value = asset.content.replace(DESCRIPTION_EDGE_WHITESPACE_PATTERN, '');
+  const value = trimRepositoryFormatWhitespace(asset.content);
   const scalarLength = countUnicodeScalars(value);
   const code =
     kind === 'description'

@@ -87,7 +87,6 @@ const throwResourceLimitExceeded = (limit: keyof ICoreResourceLimits): never => 
     code: 'RESOURCE_LIMIT_EXCEEDED',
     limit,
     operation: 'inspect-project',
-    retryable: false,
   });
 };
 
@@ -114,7 +113,7 @@ export const createRepositoryInspectionSession = (
   signal?: AbortSignal,
 ): IRepositoryInspectionSession => {
   const readCache = new Map<IRepositoryPath, Promise<Uint8Array>>();
-  let entryCount = 0;
+  const seenPaths = new Set<IRepositoryPath>();
   let totalBytesRead = 0;
 
   const createAbortedException = (abortedSignal: AbortSignal): CoreOperationException => {
@@ -122,8 +121,19 @@ export const createRepositoryInspectionSession = (
       cause: abortedSignal.reason,
       code: 'ABORTED',
       operation: 'inspect-project',
-      retryable: false,
     });
+  };
+
+  const registerPath = (path: IRepositoryPath): void => {
+    if (path === REPOSITORY_ROOT || seenPaths.has(path)) {
+      return;
+    }
+
+    if (seenPaths.size >= limits.maxEntries) {
+      return throwResourceLimitExceeded('maxEntries');
+    }
+
+    seenPaths.add(path);
   };
 
   const throwIfSignalAborted = (operationSignal?: AbortSignal): void => {
@@ -148,6 +158,7 @@ export const createRepositoryInspectionSession = (
   ): Promise<IRepositoryEntry | null> => {
     const parsedPath = parseRepositoryPath(path);
     throwIfSignalAborted(options?.signal);
+    registerPath(parsedPath);
 
     const candidate = await repository.getEntry(
       parsedPath,
@@ -167,26 +178,22 @@ export const createRepositoryInspectionSession = (
     return {
       async *[Symbol.asyncIterator](): AsyncIterator<IRepositoryEntry> {
         throwIfSignalAborted(options?.signal);
-        const seenPaths = new Set<IRepositoryPath>();
+        registerPath(prefix);
+        const yieldedPaths = new Set<IRepositoryPath>();
         const sourceOptions = createSourceOptions(signal, options?.signal);
         const sourceListOptions =
           sourceOptions === undefined ? { prefix } : { prefix, ...sourceOptions };
 
         for await (const candidate of repository.listEntries(sourceListOptions)) {
           throwIfSignalAborted(options?.signal);
-          entryCount += 1;
-
-          if (entryCount > limits.maxEntries) {
-            return throwResourceLimitExceeded('maxEntries');
-          }
-
           const entry = copyReaderEntry(candidate, 'list-entries', prefix);
 
-          if (!isStrictDescendant(entry.path, prefix) || seenPaths.has(entry.path)) {
+          if (!isStrictDescendant(entry.path, prefix) || yieldedPaths.has(entry.path)) {
             return invalidSourceData('list-entries', entry.path);
           }
 
-          seenPaths.add(entry.path);
+          yieldedPaths.add(entry.path);
+          registerPath(entry.path);
           yield entry;
         }
 
@@ -265,6 +272,7 @@ export const createRepositoryInspectionSession = (
   ): Promise<Uint8Array> => {
     const parsedPath = parseRepositoryPath(path);
     throwIfSignalAborted(options?.signal);
+    registerPath(parsedPath);
 
     let readPromise = readCache.get(parsedPath);
 

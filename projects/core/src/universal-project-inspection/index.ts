@@ -13,8 +13,9 @@ import type { IRepositoryFormatVersion } from '../format/index.js';
 import { freezeRecursively } from '../immutable/index.js';
 import { validateManifestRelationships } from '../manifest-relationship-validation/index.js';
 import { inspectManifestDocument } from '../manifest/index.js';
+import type { IRuntimeManifestLocation } from '../manifest-validation/index.js';
 import { inspectMirrors, type IAgentMirrorInspection } from '../mirrors/index.js';
-import type { ICoreOptionsSnapshot } from '../options/index.js';
+import { createCoreOperationOptionsSnapshot, type ICoreOptionsSnapshot } from '../options/index.js';
 import { readProjectAssets, readProjectFile } from '../project-assets/index.js';
 import { createProjectIndex } from '../project-index/index.js';
 import type { IRepositoryInspectionSession } from '../repository-inspection-session/index.js';
@@ -30,6 +31,7 @@ export interface IUniversalProjectInspectionResult {
   readonly formatVersion: IRepositoryFormatVersion | null;
   readonly project: IMoldeaProjectIndex | null;
   readonly diagnostics: readonly ICoreDiagnostic[];
+  readonly runtimeLocations: readonly IRuntimeManifestLocation[];
 }
 
 // shared inspection state supplied by the public repository-level orchestrator
@@ -43,12 +45,12 @@ const addDiagnostics = (
   diagnostics: readonly ICoreDiagnostic[],
 ): void => {
   for (const diagnostic of diagnostics) {
-    collector.add(diagnostic);
+    collector.merge(diagnostic);
   }
 };
 
 /**
- * Executes every universal repository-format phase before framework adapter validation.
+ * Executes every universal repository-format phase before runtime adapter validation.
  * @param context The shared inspection session and optional cancellation signal.
  * @param options The immutable Core configuration snapshot.
  * @returns The frozen provisional index only when no universal diagnostic remains.
@@ -68,6 +70,7 @@ export const inspectUniversalProject = async (
   context: IUniversalProjectInspectionContext,
   options: ICoreOptionsSnapshot,
 ): Promise<IUniversalProjectInspectionResult> => {
+  options = createCoreOperationOptionsSnapshot(options);
   const { session, signal } = context;
   const collector = createCoreDiagnosticCollector(options.limits, 'inspect-project');
   const operationOptions = signal === undefined ? undefined : { signal };
@@ -77,6 +80,7 @@ export const inspectUniversalProject = async (
 
   let indexedManifest: IIndexedManifest | null = null;
   let formatVersion: IRepositoryFormatVersion | null = null;
+  let runtimeLocations: readonly IRuntimeManifestLocation[] = [];
 
   if (moldeaRoot?.type === 'directory') {
     manifestEntry = await session.reader.getEntry(MANIFEST_PATH, operationOptions);
@@ -89,6 +93,7 @@ export const inspectUniversalProject = async (
         'inspect-project',
       );
       formatVersion = parsedManifest.formatVersion;
+      runtimeLocations = parsedManifest.runtimeLocations;
       addDiagnostics(collector, parsedManifest.diagnostics);
 
       if (parsedManifest.asset !== null && parsedManifest.manifest !== null) {
@@ -214,5 +219,6 @@ export const inspectUniversalProject = async (
     diagnostics,
     formatVersion,
     project,
+    runtimeLocations,
   });
 };

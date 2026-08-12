@@ -1,10 +1,11 @@
 import type { IRepositoryReader } from '@moldea.ai/repository';
 
-import { inspectFrameworkAdapters } from '../adapter-execution/index.js';
+import { validateRuntimeAdapterAvailability } from '../adapter-availability/index.js';
+import { inspectRuntimeAdapters } from '../adapter-execution/index.js';
 import type { IProjectInspectionInput, IProjectInspectionResult } from '../contracts/index.js';
 import { CoreOperationException } from '../exceptions/index.js';
 import { freezeRecursively } from '../immutable/index.js';
-import type { ICoreOptionsSnapshot } from '../options/index.js';
+import { createCoreOperationOptionsSnapshot, type ICoreOptionsSnapshot } from '../options/index.js';
 import { createRepositoryInspectionSession } from '../repository-inspection-session/index.js';
 import { inspectUniversalProject } from '../universal-project-inspection/index.js';
 
@@ -21,7 +22,6 @@ const invalidArgument = (): never => {
   throw new CoreOperationException({
     code: 'INVALID_ARGUMENT',
     operation: 'inspect-project',
-    retryable: false,
   });
 };
 
@@ -86,16 +86,17 @@ const validateInput = (candidate: unknown): IValidatedProjectInspectionInput => 
  * - INVALID_SOURCE_DATA: The repository reader returned invalid contract data.
  * - RESOURCE_LIMIT_EXCEEDED: A Core or repository resource limit was exceeded.
  * - ABORTED: Project inspection or a repository operation was aborted.
- * - ADAPTER_EXECUTION_FAILED: A framework adapter failed or returned an invalid result.
+ * - ADAPTER_EXECUTION_FAILED: A runtime adapter failed or returned an invalid result.
  */
 export const inspectProject = async (
   input: IProjectInspectionInput,
   options: ICoreOptionsSnapshot,
 ): Promise<IProjectInspectionResult> => {
   const validatedInput = validateInput(input);
+  const operationOptions = createCoreOperationOptionsSnapshot(options);
   const session = createRepositoryInspectionSession(
     validatedInput.repository,
-    options.limits,
+    operationOptions.limits,
     validatedInput.signal,
   );
   const universal = await inspectUniversalProject(
@@ -103,7 +104,7 @@ export const inspectProject = async (
       session,
       ...(validatedInput.signal === undefined ? {} : { signal: validatedInput.signal }),
     },
-    options,
+    operationOptions,
   );
 
   if (universal.project === null) {
@@ -116,10 +117,26 @@ export const inspectProject = async (
     });
   }
 
-  const adapterInspection = await inspectFrameworkAdapters(
+  const availabilityDiagnostics = validateRuntimeAdapterAvailability(
+    universal.runtimeLocations,
+    universal.project.formatVersion,
+    operationOptions,
+  );
+
+  if (availabilityDiagnostics.length > 0) {
+    return freezeRecursively({
+      diagnostics: availabilityDiagnostics,
+      evidence: [],
+      formatVersion: universal.formatVersion,
+      project: null,
+      valid: false,
+    });
+  }
+
+  const adapterInspection = await inspectRuntimeAdapters(
     universal.project,
     session,
-    options,
+    operationOptions,
     validatedInput.signal,
   );
   const valid = adapterInspection.diagnostics.length === 0;

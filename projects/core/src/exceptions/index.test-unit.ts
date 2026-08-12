@@ -20,7 +20,7 @@ describe('Core exceptions', () => {
       adapterId: 'eve',
       cause,
       code: 'INVALID_ADAPTER_DEFINITION',
-      message: 'A framework adapter definition is invalid.',
+      message: 'A runtime adapter definition is invalid.',
       name: 'CoreConfigurationException',
       operation: 'create-core',
     });
@@ -33,7 +33,6 @@ describe('Core exceptions', () => {
       code: 'RESOURCE_LIMIT_EXCEEDED',
       limit: 'maxFileBytes',
       operation: 'normalize-text',
-      retryable: false,
     });
 
     expect(exception).toBeInstanceOf(Exception);
@@ -47,5 +46,17 @@ describe('Core exceptions', () => {
       operation: 'normalize-text',
       retryable: false,
     });
+  });
+
+  test('derives retryability from the operation error code', () => {
+    expect(
+      new CoreOperationException({ code: 'ABORTED', operation: 'inspect-project' }),
+    ).toMatchObject({ retryable: true });
+    expect(
+      new CoreOperationException({
+        code: 'ADAPTER_EXECUTION_FAILED',
+        operation: 'inspect-project',
+      }),
+    ).toMatchObject({ retryable: false });
   });
 });

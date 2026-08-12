@@ -2,7 +2,7 @@
   "cases": [
     {
       "name": "fully resolved relationships",
-      "manifest": "version: 1\ncontext:\n  /moldea/project.md:\n    affectedBy:\n      - /src/**\n  /moldea/context/security.md:\n    affectedBy:\n      - /src/security/**\ndecisions:\n  /moldea/decisions/1767225600000-accepted.md:\n    affectedBy:\n      - /src/**\nagents:\n  reviewer:\n    framework:\n      id: custom\n    context:\n      - /moldea/context/security.md\n    decisions:\n      - /moldea/decisions/1767225600000-accepted.md\n",
+      "manifest": "version: 1\ncontext:\n  /moldea/project.md:\n    affectedBy:\n      - /src/**\n  /moldea/context/security.md:\n    affectedBy:\n      - /src/security/**\ndecisions:\n  /moldea/decisions/1767225600000-accepted.md:\n    affectedBy:\n      - /src/**\nagents:\n  reviewer:\n    runtime:\n      id: custom\n    context:\n      - /moldea/context/security.md\n    decisions:\n      - /moldea/decisions/1767225600000-accepted.md\n",
       "contextPaths": ["/moldea/context/security.md"],
       "decisions": [
         {
@@ -15,7 +15,7 @@
     },
     {
       "name": "missing global and agent relationships",
-      "manifest": "version: 1\ncontext:\n  /moldea/context/missing.md:\n    affectedBy:\n      - /src/**\ndecisions:\n  /moldea/decisions/1767225600000-missing.md:\n    affectedBy:\n      - /src/**\nagents:\n  reviewer:\n    framework:\n      id: custom\n    context:\n      - /moldea/context/missing.md\n    decisions:\n      - /moldea/decisions/1767225600000-missing.md\n",
+      "manifest": "version: 1\ncontext:\n  /moldea/context/missing.md:\n    affectedBy:\n      - /src/**\ndecisions:\n  /moldea/decisions/1767225600000-missing.md:\n    affectedBy:\n      - /src/**\nagents:\n  reviewer:\n    runtime:\n      id: custom\n    context:\n      - /moldea/context/missing.md\n    decisions:\n      - /moldea/decisions/1767225600000-missing.md\n",
       "contextPaths": [],
       "decisions": [],
       "expectedDiagnostics": [
@@ -66,7 +66,7 @@
     },
     {
       "name": "inactive global and agent decision relationships",
-      "manifest": "version: 1\ndecisions:\n  /moldea/decisions/1767225600001-proposed.md:\n    affectedBy:\n      - /src/**\nagents:\n  reviewer:\n    framework:\n      id: custom\n    decisions:\n      - /moldea/decisions/1767225600001-proposed.md\n",
+      "manifest": "version: 1\ndecisions:\n  /moldea/decisions/1767225600001-proposed.md:\n    affectedBy:\n      - /src/**\nagents:\n  reviewer:\n    runtime:\n      id: custom\n    decisions:\n      - /moldea/decisions/1767225600001-proposed.md\n",
       "contextPaths": [],
       "decisions": [
         {

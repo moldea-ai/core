@@ -13,7 +13,7 @@ import {
   type IMemoryRepositoryEntry,
 } from '@moldea.ai/repository/memory';
 
-import type { IFrameworkAdapter, IFrameworkAdapterResult } from '../adapter/index.js';
+import type { IRuntimeAdapter, IRuntimeAdapterResult } from '../adapter/index.js';
 import { createCore } from '../core/index.js';
 
 interface IAdapterFixture {
@@ -57,18 +57,18 @@ const createValidEvidence = (): Record<string, unknown> => ({
   kind: 'language',
   references: [{ path: evidencePath }],
   runtimeName: null,
-  source: 'alpha-adapter',
+  source: 'anthropic',
 });
 
 const createValidDiagnostic = (): Record<string, unknown> => ({
-  code: 'ALPHA_ADAPTER_INVALID_REGISTRATION',
+  code: 'ANTHROPIC_INVALID_REGISTRATION',
   details: {},
   entity: { agentId: 'alpha' },
   message: 'The registration is invalid.',
   path: evidencePath,
   pointer: null,
   range: null,
-  source: 'alpha-adapter',
+  source: 'anthropic',
 });
 
 const createValidResult = (): Record<string, unknown> => ({
@@ -281,17 +281,17 @@ const malformedCases: readonly [string, () => unknown][] = [
   ],
 ];
 
-describe('Core framework-adapter result validation', () => {
+describe('Core runtime-adapter result validation', () => {
   test.each(malformedCases)(
     'rejects %s as an operational adapter failure',
     async (_, createResult) => {
-      const alphaAdapter: IFrameworkAdapter = {
-        id: 'alpha-adapter',
-        inspect: () => Promise.resolve(createResult() as IFrameworkAdapterResult),
+      const alphaAdapter: IRuntimeAdapter = {
+        id: 'anthropic',
+        inspect: () => Promise.resolve(createResult() as IRuntimeAdapterResult),
         supportedRepositoryFormatVersions: [1],
       };
-      const zetaAdapter: IFrameworkAdapter = {
-        id: 'zeta-adapter',
+      const zetaAdapter: IRuntimeAdapter = {
+        id: 'openai',
         inspect: () => Promise.resolve({ diagnostics: [], evidence: [] }),
         supportedRepositoryFormatVersions: [1],
       };
@@ -301,9 +301,9 @@ describe('Core framework-adapter result validation', () => {
           repository: createMemoryRepositoryReader(createEntries()),
         }),
       ).rejects.toMatchObject({
-        adapterId: 'alpha-adapter',
+        adapterId: 'anthropic',
         code: 'ADAPTER_EXECUTION_FAILED',
-        message: 'A framework adapter failed during inspection.',
+        message: 'A runtime adapter failed during inspection.',
         operation: 'validate-adapter',
         retryable: false,
       });
@@ -315,14 +315,14 @@ describe('Core framework-adapter result validation', () => {
       ...createValidDiagnostic(),
       details: { zeta: -0, alpha: true },
     };
-    const alphaAdapter: IFrameworkAdapter = {
-      id: 'alpha-adapter',
+    const alphaAdapter: IRuntimeAdapter = {
+      id: 'anthropic',
       inspect: () =>
         Promise.resolve({ diagnostics: [diagnostic, diagnostic], evidence: [] } as never),
       supportedRepositoryFormatVersions: [1],
     };
-    const zetaAdapter: IFrameworkAdapter = {
-      id: 'zeta-adapter',
+    const zetaAdapter: IRuntimeAdapter = {
+      id: 'openai',
       inspect: () => Promise.resolve({ diagnostics: [], evidence: [] }),
       supportedRepositoryFormatVersions: [1],
     };
@@ -335,15 +335,41 @@ describe('Core framework-adapter result validation', () => {
     expect(Object.getPrototypeOf(result.diagnostics[0]?.details)).toBeNull();
   });
 
-  test('accepts a complete valid adapter result', async () => {
-    const candidate = createValidResult();
-    const alphaAdapter: IFrameworkAdapter = {
-      id: 'alpha-adapter',
-      inspect: () => Promise.resolve(candidate as unknown as IFrameworkAdapterResult),
+  test('counts duplicate adapter diagnostics before deduplication', async () => {
+    const diagnostic = createValidDiagnostic();
+    const alphaAdapter: IRuntimeAdapter = {
+      id: 'anthropic',
+      inspect: () =>
+        Promise.resolve({ diagnostics: [diagnostic, diagnostic], evidence: [] } as never),
       supportedRepositoryFormatVersions: [1],
     };
-    const zetaAdapter: IFrameworkAdapter = {
-      id: 'zeta-adapter',
+    const zetaAdapter: IRuntimeAdapter = {
+      id: 'openai',
+      inspect: () => Promise.resolve({ diagnostics: [], evidence: [] }),
+      supportedRepositoryFormatVersions: [1],
+    };
+
+    await expect(
+      createCore({
+        adapters: [zetaAdapter, alphaAdapter],
+        limits: { maxDiagnostics: 1 },
+      }).inspectProject({ repository: createMemoryRepositoryReader(createEntries()) }),
+    ).rejects.toMatchObject({
+      code: 'RESOURCE_LIMIT_EXCEEDED',
+      limit: 'maxDiagnostics',
+      operation: 'validate-adapter',
+    });
+  });
+
+  test('accepts a complete valid adapter result', async () => {
+    const candidate = createValidResult();
+    const alphaAdapter: IRuntimeAdapter = {
+      id: 'anthropic',
+      inspect: () => Promise.resolve(candidate as unknown as IRuntimeAdapterResult),
+      supportedRepositoryFormatVersions: [1],
+    };
+    const zetaAdapter: IRuntimeAdapter = {
+      id: 'openai',
       inspect: () => Promise.resolve({ diagnostics: [], evidence: [] }),
       supportedRepositoryFormatVersions: [1],
     };
@@ -365,13 +391,13 @@ describe('Core framework-adapter result validation', () => {
       },
     });
     Object.defineProperty(candidate, 'diagnostics', { enumerable: true, value: [] });
-    const alphaAdapter: IFrameworkAdapter = {
-      id: 'alpha-adapter',
-      inspect: () => Promise.resolve(candidate as unknown as IFrameworkAdapterResult),
+    const alphaAdapter: IRuntimeAdapter = {
+      id: 'anthropic',
+      inspect: () => Promise.resolve(candidate as unknown as IRuntimeAdapterResult),
       supportedRepositoryFormatVersions: [1],
     };
-    const zetaAdapter: IFrameworkAdapter = {
-      id: 'zeta-adapter',
+    const zetaAdapter: IRuntimeAdapter = {
+      id: 'openai',
       inspect: () => Promise.resolve({ diagnostics: [], evidence: [] }),
       supportedRepositoryFormatVersions: [1],
     };
@@ -380,7 +406,7 @@ describe('Core framework-adapter result validation', () => {
     });
 
     await expect(resultPromise).rejects.toMatchObject({
-      adapterId: 'alpha-adapter',
+      adapterId: 'anthropic',
       code: 'ADAPTER_EXECUTION_FAILED',
       operation: 'validate-adapter',
       retryable: false,
@@ -401,13 +427,13 @@ describe('Core framework-adapter result validation', () => {
       listEntries: (options) => source.listEntries(options),
       readFile: (path, options) => source.readFile(path, options),
     };
-    const alphaAdapter: IFrameworkAdapter = {
-      id: 'alpha-adapter',
-      inspect: () => Promise.resolve(createValidResult() as unknown as IFrameworkAdapterResult),
+    const alphaAdapter: IRuntimeAdapter = {
+      id: 'anthropic',
+      inspect: () => Promise.resolve(createValidResult() as unknown as IRuntimeAdapterResult),
       supportedRepositoryFormatVersions: [1],
     };
-    const zetaAdapter: IFrameworkAdapter = {
-      id: 'zeta-adapter',
+    const zetaAdapter: IRuntimeAdapter = {
+      id: 'openai',
       inspect: () => Promise.resolve({ diagnostics: [], evidence: [] }),
       supportedRepositoryFormatVersions: [1],
     };
@@ -435,13 +461,13 @@ describe('Core framework-adapter result validation', () => {
       listEntries: (options) => source.listEntries(options),
       readFile: (path, options) => source.readFile(path, options),
     };
-    const alphaAdapter: IFrameworkAdapter = {
-      id: 'alpha-adapter',
-      inspect: () => Promise.resolve(createValidResult() as unknown as IFrameworkAdapterResult),
+    const alphaAdapter: IRuntimeAdapter = {
+      id: 'anthropic',
+      inspect: () => Promise.resolve(createValidResult() as unknown as IRuntimeAdapterResult),
       supportedRepositoryFormatVersions: [1],
     };
-    const zetaAdapter: IFrameworkAdapter = {
-      id: 'zeta-adapter',
+    const zetaAdapter: IRuntimeAdapter = {
+      id: 'openai',
       inspect: () => Promise.resolve({ diagnostics: [], evidence: [] }),
       supportedRepositoryFormatVersions: [1],
     };
@@ -455,7 +481,7 @@ describe('Core framework-adapter result validation', () => {
       cause: cancellation,
       code: 'ABORTED',
       operation: 'inspect-project',
-      retryable: false,
+      retryable: true,
     });
     expect(groundingSignal).toBe(controller.signal);
   });

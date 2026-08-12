@@ -48,10 +48,10 @@ const CORE_DIAGNOSTIC_MESSAGES: Record<ICoreDiagnosticCode, string> = {
   MOLDEA_DECISION_TIMESTAMP_MISMATCH:
     'The decision filename timestamp and createdAt value do not match.',
   MOLDEA_ENTRY_TYPE_INVALID: 'The repository entry type is invalid.',
-  MOLDEA_FRAMEWORK_ADAPTER_FORMAT_UNSUPPORTED:
-    'The configured framework adapter does not support the repository format version.',
-  MOLDEA_FRAMEWORK_ADAPTER_UNAVAILABLE: 'The declared framework adapter is unavailable.',
-  MOLDEA_FRAMEWORK_ID_INVALID: 'The framework adapter ID is invalid.',
+  MOLDEA_RUNTIME_ADAPTER_FORMAT_UNSUPPORTED:
+    'The configured runtime adapter does not support the repository format version.',
+  MOLDEA_RUNTIME_ADAPTER_UNAVAILABLE: 'The declared runtime adapter is unavailable.',
+  MOLDEA_RUNTIME_ID_INVALID: 'The runtime adapter ID is invalid.',
   MOLDEA_GLOB_INVALID: 'The impact pattern is invalid.',
   MOLDEA_ID_DUPLICATE: 'An ID is duplicated within its required scope.',
   MOLDEA_ID_INVALID: 'The ID is invalid.',
@@ -126,9 +126,63 @@ export interface ICoreDiagnosticInput {
 
 export interface ICoreDiagnosticCollector {
   add(input: ICoreDiagnosticInput): void;
+  merge(input: ICoreDiagnosticInput): void;
   finalize(): readonly ICoreDiagnostic[];
   readonly size: number;
 }
+
+interface ICoreDiagnosticBudget {
+  count: number;
+}
+
+const CORE_DIAGNOSTIC_BUDGET = Symbol('core-diagnostic-budget');
+
+type ICoreOperationResourceLimits = ICoreResourceLimits & {
+  readonly [CORE_DIAGNOSTIC_BUDGET]?: ICoreDiagnosticBudget;
+};
+
+/** Creates a detached limits view with one diagnostic budget for a complete Core operation. */
+export const createCoreOperationResourceLimits = (
+  limits: ICoreResourceLimits,
+): ICoreResourceLimits => {
+  const operationLimits = limits as ICoreOperationResourceLimits;
+
+  if (operationLimits[CORE_DIAGNOSTIC_BUDGET] !== undefined) {
+    return limits;
+  }
+
+  return Object.freeze({
+    ...limits,
+    [CORE_DIAGNOSTIC_BUDGET]: { count: 0 },
+  });
+};
+
+/** Registers raw diagnostics against the shared operation budget before normalization. */
+export const registerCoreDiagnosticCandidates = (
+  limits: ICoreResourceLimits,
+  amount: number,
+  operation: ICoreOperation,
+  fallbackCount = 0,
+  adapterId?: string,
+): number => {
+  const budget = (limits as ICoreOperationResourceLimits)[CORE_DIAGNOSTIC_BUDGET];
+  const currentCount = budget?.count ?? fallbackCount;
+
+  if (amount > limits.maxDiagnostics - currentCount) {
+    throw new CoreOperationException({
+      ...(adapterId === undefined ? {} : { adapterId }),
+      code: 'RESOURCE_LIMIT_EXCEEDED',
+      limit: 'maxDiagnostics',
+      operation,
+    });
+  }
+
+  if (budget !== undefined) {
+    budget.count += amount;
+  }
+
+  return fallbackCount + amount;
+};
 
 const compareNullableStrings = (left: string | null, right: string | null): number => {
   if (left === null) {
@@ -176,17 +230,42 @@ export const normalizeDiagnosticEntity = (
   return freezeRecursively(createNullPrototypeRecord(entries) as IDiagnosticEntity);
 };
 
+/** Serializes unordered diagnostic details with explicit exact-code-point key ordering. */
+export const serializeDiagnosticDetails = (details: IDiagnosticDetails): string => {
+  const entries = Object.entries(details).sort(([left], [right]) =>
+    compareExactStrings(left, right),
+  );
+
+  return JSON.stringify(entries);
+};
+
 const serializeDiagnostic = (diagnostic: IDiagnostic): string => {
-  return JSON.stringify({
-    code: diagnostic.code,
-    details: diagnostic.details,
-    entity: diagnostic.entity,
-    message: diagnostic.message,
-    path: diagnostic.path,
-    pointer: diagnostic.pointer,
-    range: diagnostic.range,
-    source: diagnostic.source,
-  });
+  const entity =
+    diagnostic.entity === null
+      ? null
+      : ENTITY_KEYS.map((key) => [key, diagnostic.entity?.[key] ?? null]);
+  const range =
+    diagnostic.range === null
+      ? null
+      : [
+          diagnostic.range.start.line,
+          diagnostic.range.start.column,
+          diagnostic.range.start.offset,
+          diagnostic.range.end.line,
+          diagnostic.range.end.column,
+          diagnostic.range.end.offset,
+        ];
+
+  return JSON.stringify([
+    diagnostic.code,
+    serializeDiagnosticDetails(diagnostic.details),
+    entity,
+    diagnostic.message,
+    diagnostic.path,
+    diagnostic.pointer,
+    range,
+    diagnostic.source,
+  ]);
 };
 
 const compareRanges = (left: ISourceRange | null, right: ISourceRange | null): number => {
@@ -201,7 +280,10 @@ const compareRanges = (left: ISourceRange | null, right: ISourceRange | null): n
   return (
     left.start.line - right.start.line ||
     left.start.column - right.start.column ||
-    left.start.offset - right.start.offset
+    left.start.offset - right.start.offset ||
+    left.end.line - right.end.line ||
+    left.end.column - right.end.column ||
+    left.end.offset - right.end.offset
   );
 };
 
@@ -243,7 +325,10 @@ const compareDiagnostics = (left: IDiagnostic, right: IDiagnostic): number => {
       readEntityValue(left.entity, 'adapterId'),
       readEntityValue(right.entity, 'adapterId'),
     ) ||
-    compareExactStrings(JSON.stringify(left.details), JSON.stringify(right.details)) ||
+    compareExactStrings(
+      serializeDiagnosticDetails(left.details),
+      serializeDiagnosticDetails(right.details),
+    ) ||
     compareExactStrings(left.message, right.message)
   );
 };
@@ -275,16 +360,10 @@ export const createCoreDiagnostic = (input: ICoreDiagnosticInput): ICoreDiagnost
 /**
  * Deduplicates and sorts already-normalized Core and adapter diagnostics.
  * @param candidates The immutable diagnostics to combine.
- * @param limits The Core resource limits governing unique diagnostics.
- * @param operation The operation reported by resource failures.
  * @returns A frozen deterministic diagnostic collection.
- * @throws
- * - RESOURCE_LIMIT_EXCEEDED: The diagnostic limit was exceeded.
  */
 export const normalizeDiagnostics = (
   candidates: readonly IDiagnostic[],
-  limits: ICoreResourceLimits,
-  operation: ICoreOperation,
 ): readonly IDiagnostic[] => {
   const diagnostics = new Map<string, IDiagnostic>();
 
@@ -293,15 +372,6 @@ export const normalizeDiagnostics = (
 
     if (diagnostics.has(key)) {
       continue;
-    }
-
-    if (diagnostics.size >= limits.maxDiagnostics) {
-      throw new CoreOperationException({
-        code: 'RESOURCE_LIMIT_EXCEEDED',
-        limit: 'maxDiagnostics',
-        operation,
-        retryable: false,
-      });
     }
 
     diagnostics.set(key, diagnostic);
@@ -321,35 +391,30 @@ export const createCoreDiagnosticCollector = (
   operation: ICoreOperation,
 ): ICoreDiagnosticCollector => {
   const diagnostics = new Map<string, ICoreDiagnostic>();
+  let proposalCount = 0;
+  let fallbackRawCount = 0;
+
+  const retain = (input: ICoreDiagnosticInput): void => {
+    const diagnostic = createCoreDiagnostic(input);
+    const key = serializeDiagnostic(diagnostic);
+
+    proposalCount += 1;
+
+    if (!diagnostics.has(key)) {
+      diagnostics.set(key, diagnostic);
+    }
+  };
 
   return {
     add: (input): void => {
-      const diagnostic = createCoreDiagnostic(input);
-      const key = serializeDiagnostic(diagnostic);
-
-      if (diagnostics.has(key)) {
-        return;
-      }
-
-      if (diagnostics.size >= limits.maxDiagnostics) {
-        throw new CoreOperationException({
-          code: 'RESOURCE_LIMIT_EXCEEDED',
-          limit: 'maxDiagnostics',
-          operation,
-          retryable: false,
-        });
-      }
-
-      diagnostics.set(key, diagnostic);
+      fallbackRawCount = registerCoreDiagnosticCandidates(limits, 1, operation, fallbackRawCount);
+      retain(input);
     },
+    merge: retain,
     finalize: (): readonly ICoreDiagnostic[] =>
-      normalizeDiagnostics(
-        [...diagnostics.values()],
-        limits,
-        operation,
-      ) as readonly ICoreDiagnostic[],
+      normalizeDiagnostics([...diagnostics.values()]) as readonly ICoreDiagnostic[],
     get size(): number {
-      return diagnostics.size;
+      return proposalCount;
     },
   };
 };

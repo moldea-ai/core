@@ -11,7 +11,7 @@ import type { ICoreDiagnostic } from '../diagnostics/index.js';
 import { compareExactStrings, hasNonWhitespace } from '../format-validation/index.js';
 import type { IMoldeaManifestV1 } from '../format/index.js';
 import { freezeRecursively } from '../immutable/index.js';
-import type { ICoreOptionsSnapshot } from '../options/index.js';
+import { createCoreOperationOptionsSnapshot, type ICoreOptionsSnapshot } from '../options/index.js';
 import { readRepositoryTextAsset } from '../repository-text/index.js';
 
 // internal runtime-guidance result retained for final project indexing
@@ -26,7 +26,7 @@ const addDiagnostics = (
   diagnostics: readonly ICoreDiagnostic[],
 ): void => {
   for (const diagnostic of diagnostics) {
-    collector.add(diagnostic);
+    collector.merge(diagnostic);
   }
 };
 
@@ -76,6 +76,7 @@ export const readRuntimeGuidance = async (
   options: ICoreOptionsSnapshot,
   signal?: AbortSignal,
 ): Promise<IRuntimeGuidanceResult> => {
+  options = createCoreOperationOptionsSnapshot(options);
   const collector = createCoreDiagnosticCollector(options.limits, 'inspect-project');
   const runtimes: IIndexedRuntimeGuidance[] = [];
   const discoveredPaths = new Set(discovery.inventory.runtimeGuidance);
@@ -102,7 +103,7 @@ export const readRuntimeGuidance = async (
   }
 
   for (const agentId of Object.keys(manifest?.agents ?? {}).sort(compareExactStrings)) {
-    const guidance = manifest?.agents?.[agentId]?.framework.guidance;
+    const guidance = manifest?.agents?.[agentId]?.runtime.guidance;
 
     if (
       guidance === undefined ||
@@ -117,7 +118,7 @@ export const readRuntimeGuidance = async (
       details: { referencedPath: guidance },
       entity: { agentId },
       path: manifestPath,
-      pointer: `/agents/${escapeJsonPointerSegment(agentId)}/framework/guidance`,
+      pointer: `/agents/${escapeJsonPointerSegment(agentId)}/runtime/guidance`,
     });
   }
 

@@ -24,8 +24,8 @@ import {
   type IDiagnostic,
   type IDiagnosticDetails,
   type IDiagnosticEntity,
-  type IFrameworkAdapterEvidence,
-  type IFrameworkAdapterEvidenceKind,
+  type IRuntimeAdapterEvidence,
+  type IRuntimeAdapterEvidenceKind,
   type IIndexedAgent,
   type IIndexedContextAsset,
   type IIndexedDecision,
@@ -45,19 +45,19 @@ import {
   type ITextDocumentInput,
   type ITextNormalizationResult,
 } from '@moldea.ai/core';
-// @ts-expect-error Framework adapter contracts belong to the adapter subpath.
-import type { IFrameworkAdapter as IRootFrameworkAdapter } from '@moldea.ai/core';
+// @ts-expect-error Runtime adapter contracts belong to the adapter subpath.
+import type { IRuntimeAdapter as IRootRuntimeAdapter } from '@moldea.ai/core';
 // @ts-expect-error Repository-format contracts belong to the format subpath.
 import type { IMoldeaManifestV1 as IRootManifest } from '@moldea.ai/core';
 // @ts-expect-error The adapter subpath has no default export.
 import adapterDefault from '@moldea.ai/core/adapter';
 import type {
   IAdapterDiagnostic as IAdapterSubpathDiagnostic,
-  IFrameworkAdapter,
-  IFrameworkAdapterContext,
-  IFrameworkAdapterEvidence as IAdapterSubpathEvidence,
-  IFrameworkAdapterEvidenceKind as IAdapterSubpathEvidenceKind,
-  IFrameworkAdapterResult,
+  IRuntimeAdapter,
+  IRuntimeAdapterContext,
+  IRuntimeAdapterEvidence as IAdapterSubpathEvidence,
+  IRuntimeAdapterEvidenceKind as IAdapterSubpathEvidenceKind,
+  IRuntimeAdapterResult,
 } from '@moldea.ai/core/adapter';
 // @ts-expect-error The format subpath has no default export.
 import formatDefault from '@moldea.ai/core/format';
@@ -65,7 +65,7 @@ import type {
   IAgentBindingsManifestEntry,
   IAgentManifestEntry,
   IDecisionStatus,
-  IFrameworkManifestEntry,
+  IRuntimeManifestEntry,
   IMoldeaManifestV1,
   IParsedDecision,
   IRelationshipManifestEntry,
@@ -98,8 +98,8 @@ type IRootSurface = readonly [
   IDiagnostic,
   IDiagnosticDetails,
   IDiagnosticEntity,
-  IFrameworkAdapterEvidence,
-  IFrameworkAdapterEvidenceKind,
+  IRuntimeAdapterEvidence,
+  IRuntimeAdapterEvidenceKind,
   IIndexedAgent,
   IIndexedContextAsset,
   IIndexedDecision,
@@ -124,7 +124,7 @@ type IFormatSurface = readonly [
   IAgentBindingsManifestEntry,
   IAgentManifestEntry,
   IDecisionStatus,
-  IFrameworkManifestEntry,
+  IRuntimeManifestEntry,
   IMoldeaManifestV1,
   IParsedDecision,
   IRelationshipManifestEntry,
@@ -139,15 +139,15 @@ type IFormatSurface = readonly [
 
 type IAdapterSurface = readonly [
   IAdapterSubpathDiagnostic,
-  IFrameworkAdapter,
-  IFrameworkAdapterContext,
+  IRuntimeAdapter,
+  IRuntimeAdapterContext,
   IAdapterSubpathEvidence,
   IAdapterSubpathEvidenceKind,
-  IFrameworkAdapterResult,
+  IRuntimeAdapterResult,
 ];
 
 type IRemovedHandoffSurface = IHandoffManifestEntry;
-type IWrongRootAdapterSurface = IRootFrameworkAdapter;
+type IWrongRootAdapterSurface = IRootRuntimeAdapter;
 type IWrongRootFormatSurface = IRootManifest;
 type ICapabilityKind = NonNullable<IDiagnosticEntity['capabilityKind']>;
 
@@ -160,11 +160,11 @@ declare const wrongRootFormatSurface: IWrongRootFormatSurface;
 declare const repository: IRepositoryReader;
 
 const path = parseRepositoryPath('/moldea/project.md');
-const adapter: IFrameworkAdapter = {
-  id: 'test-adapter',
+const adapter: IRuntimeAdapter = {
+  id: 'openai',
   inspect: (context) => {
     const adapterRepository: IRepositoryReader = context.repository;
-    const adapterResult: IFrameworkAdapterResult = { diagnostics: [], evidence: [] };
+    const adapterResult: IRuntimeAdapterResult = { diagnostics: [], evidence: [] };
 
     void adapterRepository;
 
@@ -172,8 +172,8 @@ const adapter: IFrameworkAdapter = {
   },
   supportedRepositoryFormatVersions: [1],
 };
-// @ts-expect-error Framework adapters require an inspect operation.
-const incompleteAdapter: IFrameworkAdapter = {
+// @ts-expect-error Runtime adapters require an inspect operation.
+const incompleteAdapter: IRuntimeAdapter = {
   id: 'incomplete-adapter',
   supportedRepositoryFormatVersions: [1],
 };
@@ -199,12 +199,11 @@ const operationException = new CoreOperationException({
   code: 'RESOURCE_LIMIT_EXCEEDED',
   limit: 'maxFileBytes',
   operation: 'normalize-text',
-  retryable: false,
 });
 const repositoryFormatVersion: IRepositoryFormatVersion = 1;
 const decisionStatus: IDecisionStatus = 'accepted';
 const unresolvedEffect: IUnresolvedRequirementEffect = 'warning';
-const evidenceKind: IFrameworkAdapterEvidenceKind = 'tool-registration';
+const evidenceKind: IRuntimeAdapterEvidenceKind = 'tool-registration';
 const capabilityKind: ICapabilityKind = 'tool';
 const diagnosticCode: ICoreDiagnosticCode = 'MOLDEA_TEXT_EMPTY';
 const configurationErrorCode: ICoreConfigurationErrorCode = 'INVALID_RESOURCE_LIMIT';
@@ -218,7 +217,7 @@ const unsupportedDecisionStatus: IDecisionStatus = 'active';
 // @ts-expect-error Unresolved-requirement effects are a closed public union.
 const unsupportedUnresolvedEffect: IUnresolvedRequirementEffect = 'error';
 // @ts-expect-error Adapter evidence kinds are a closed public union.
-const unsupportedEvidenceKind: IFrameworkAdapterEvidenceKind = 'unknown';
+const unsupportedEvidenceKind: IRuntimeAdapterEvidenceKind = 'unknown';
 // @ts-expect-error Diagnostic capability kinds are limited to tools and skills.
 const unsupportedCapabilityKind: ICapabilityKind = 'handoff';
 // @ts-expect-error Built-in diagnostic codes are closed for this Core major version.

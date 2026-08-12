@@ -8,6 +8,7 @@ import {
   isDecisionPath,
   isNonEmptySingleLine,
   isRepositorySymbol,
+  isRepositoryFormatWhitespace,
   isReservedId,
   isSimpleGlob,
   isStableId,
@@ -15,6 +16,7 @@ import {
   isVariableId,
   parseDecisionIdFromPath,
   sortRepositoryReferences,
+  trimRepositoryFormatWhitespace,
 } from './index.js';
 
 describe('Core manifest-format validation', () => {
@@ -120,8 +122,6 @@ describe('Core manifest-format validation', () => {
   test.each([
     ['carriage return', '\r'],
     ['line feed', '\n'],
-    ['vertical tab', '\u000b'],
-    ['form feed', '\u000c'],
     ['next line', '\u0085'],
     ['line separator', '\u2028'],
     ['paragraph separator', '\u2029'],
@@ -129,12 +129,40 @@ describe('Core manifest-format validation', () => {
     expect(isNonEmptySingleLine(`before${lineBreak}after`)).toBe(false);
   });
 
+  test.each([
+    [0x0009, true],
+    [0x000d, true],
+    [0x0020, true],
+    [0x0085, true],
+    [0x00a0, true],
+    [0x1680, true],
+    [0x2000, true],
+    [0x200a, true],
+    [0x2028, true],
+    [0x2029, true],
+    [0x202f, true],
+    [0x205f, true],
+    [0x3000, true],
+    [0x0008, false],
+    [0x200b, false],
+    [0xfeff, false],
+  ])('uses the exact version 1 whitespace set for U+%s', (codePoint, expected) => {
+    expect(isRepositoryFormatWhitespace(codePoint)).toBe(expected);
+  });
+
+  test('trims only version 1 whitespace from description edges', () => {
+    expect(trimRepositoryFormatWhitespace('\u2000Description\u3000')).toBe('Description');
+    expect(trimRepositoryFormatWhitespace('\ufeffDescription\ufeff')).toBe(
+      '\ufeffDescription\ufeff',
+    );
+  });
+
   test('validates capability descriptions with Unicode whitespace and scalar limits', () => {
     expect(isCapabilityDescription('Retrieves order details.')).toBe(true);
     expect(isCapabilityDescription('\u2007Padded')).toBe(false);
     expect(isCapabilityDescription('Padded\u205f')).toBe(false);
-    expect(isCapabilityDescription('line\u000bbreak')).toBe(false);
-    expect(isCapabilityDescription('line\u000cbreak')).toBe(false);
+    expect(isCapabilityDescription('line\u000bbreak')).toBe(true);
+    expect(isCapabilityDescription('line\u000cbreak')).toBe(true);
     expect(isCapabilityDescription('line\u0085break')).toBe(false);
     expect(isCapabilityDescription('escaped\0nul')).toBe(false);
     expect(isCapabilityDescription('{{VALUE}}')).toBe(false);
@@ -144,8 +172,8 @@ describe('Core manifest-format validation', () => {
 
   test('rejects line breaks and NUL in parsed repository symbols', () => {
     expect(isRepositorySymbol('symbol')).toBe(true);
-    expect(isRepositorySymbol('line\u000bbreak')).toBe(false);
-    expect(isRepositorySymbol('line\u000cbreak')).toBe(false);
+    expect(isRepositorySymbol('line\u000bbreak')).toBe(true);
+    expect(isRepositorySymbol('line\u000cbreak')).toBe(true);
     expect(isRepositorySymbol('escaped\0nul')).toBe(false);
   });
 

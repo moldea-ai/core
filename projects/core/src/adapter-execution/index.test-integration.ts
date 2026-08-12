@@ -16,10 +16,10 @@ import {
 } from '@moldea.ai/repository/memory';
 
 import type {
-  IFrameworkAdapter,
-  IFrameworkAdapterContext,
-  IFrameworkAdapterEvidence,
-  IFrameworkAdapterResult,
+  IRuntimeAdapter,
+  IRuntimeAdapterContext,
+  IRuntimeAdapterEvidence,
+  IRuntimeAdapterResult,
 } from '../adapter/index.js';
 import { createCore } from '../core/index.js';
 
@@ -34,12 +34,12 @@ interface IAdapterFixture {
 
 interface IAdapterHarnessOptions {
   readonly includeDiagnostics?: boolean;
-  readonly onAlpha?: (context: IFrameworkAdapterContext) => Promise<void> | void;
-  readonly onZeta?: (context: IFrameworkAdapterContext) => Promise<void> | void;
+  readonly onAlpha?: (context: IRuntimeAdapterContext) => Promise<void> | void;
+  readonly onZeta?: (context: IRuntimeAdapterContext) => Promise<void> | void;
 }
 
 interface IAdapterHarness {
-  readonly adapters: readonly IFrameworkAdapter[];
+  readonly adapters: readonly IRuntimeAdapter[];
   readonly calls: string[];
   readonly projectAgentIds: string[][];
   readonly scopedAgentIds: string[][];
@@ -87,8 +87,8 @@ const createEntries = (): readonly IMemoryRepositoryEntry[] => [
   }),
 ];
 
-const createAlphaEvidence = (): readonly IFrameworkAdapterEvidence[] => {
-  const toolRegistration: IFrameworkAdapterEvidence = {
+const createAlphaEvidence = (): readonly IRuntimeAdapterEvidence[] => {
+  const toolRegistration: IRuntimeAdapterEvidence = {
     agentId: 'alpha',
     capabilityId: 'audit',
     capabilityKind: 'tool',
@@ -96,7 +96,7 @@ const createAlphaEvidence = (): readonly IFrameworkAdapterEvidence[] => {
     kind: 'tool-registration',
     references: [{ path: evidencePath }, { path: auditPath }],
     runtimeName: 'auditRequests',
-    source: 'alpha-adapter',
+    source: 'anthropic',
   };
 
   return [
@@ -109,13 +109,13 @@ const createAlphaEvidence = (): readonly IFrameworkAdapterEvidence[] => {
       kind: 'agent-definition',
       references: [{ path: evidencePath }],
       runtimeName: 'BetaRuntime',
-      source: 'alpha-adapter',
+      source: 'anthropic',
     },
     toolRegistration,
   ];
 };
 
-const createZetaEvidence = (): readonly IFrameworkAdapterEvidence[] => [
+const createZetaEvidence = (): readonly IRuntimeAdapterEvidence[] => [
   {
     agentId: 'zeta',
     capabilityId: null,
@@ -124,7 +124,7 @@ const createZetaEvidence = (): readonly IFrameworkAdapterEvidence[] => [
     kind: 'language',
     references: [{ path: evidencePath }],
     runtimeName: null,
-    source: 'zeta-adapter',
+    source: 'openai',
   },
 ];
 
@@ -134,7 +134,7 @@ const createAdapterHarness = (options: IAdapterHarnessOptions = {}): IAdapterHar
   const scopedAgentIds: string[][] = [];
   const unusedCalls: string[] = [];
 
-  const observeContext = (adapterId: string, context: IFrameworkAdapterContext): void => {
+  const observeContext = (adapterId: string, context: IRuntimeAdapterContext): void => {
     calls.push(adapterId);
     scopedAgentIds.push(context.agents.map(({ id }) => id));
     projectAgentIds.push(context.project.agents.map(({ id }) => id));
@@ -143,18 +143,18 @@ const createAdapterHarness = (options: IAdapterHarnessOptions = {}): IAdapterHar
     expect(Object.isFrozen(context.project)).toBe(true);
   };
 
-  const alphaAdapter: IFrameworkAdapter = {
-    id: 'alpha-adapter',
+  const alphaAdapter: IRuntimeAdapter = {
+    id: 'anthropic',
     supportedRepositoryFormatVersions: [1],
-    inspect: async (context): Promise<IFrameworkAdapterResult> => {
-      observeContext('alpha-adapter', context);
+    inspect: async (context): Promise<IRuntimeAdapterResult> => {
+      observeContext('anthropic', context);
       await options.onAlpha?.(context);
 
       return {
         diagnostics: options.includeDiagnostics
           ? [
               {
-                code: 'ALPHA_ADAPTER_TOOL_REGISTRATION_MISSING',
+                code: 'ANTHROPIC_TOOL_REGISTRATION_MISSING',
                 details: { expected: true },
                 entity: {
                   agentId: 'alpha',
@@ -165,7 +165,7 @@ const createAdapterHarness = (options: IAdapterHarnessOptions = {}): IAdapterHar
                 path: auditPath,
                 pointer: null,
                 range: null,
-                source: 'alpha-adapter',
+                source: 'anthropic',
               },
             ]
           : [],
@@ -173,25 +173,25 @@ const createAdapterHarness = (options: IAdapterHarnessOptions = {}): IAdapterHar
       };
     },
   };
-  const zetaAdapter: IFrameworkAdapter = {
-    id: 'zeta-adapter',
+  const zetaAdapter: IRuntimeAdapter = {
+    id: 'openai',
     supportedRepositoryFormatVersions: [1],
-    inspect: async (context): Promise<IFrameworkAdapterResult> => {
-      observeContext('zeta-adapter', context);
+    inspect: async (context): Promise<IRuntimeAdapterResult> => {
+      observeContext('openai', context);
       await options.onZeta?.(context);
 
       return {
         diagnostics: options.includeDiagnostics
           ? [
               {
-                code: 'ZETA_ADAPTER_AGENT_DEFINITION_MISSING',
+                code: 'OPENAI_AGENT_DEFINITION_MISSING',
                 details: { runtimeName: 'ZetaRuntime' },
-                entity: { adapterId: 'zeta-adapter', agentId: 'zeta' },
+                entity: { adapterId: 'openai', agentId: 'zeta' },
                 message: 'The runtime agent definition is missing.',
                 path: null,
                 pointer: null,
                 range: null,
-                source: 'zeta-adapter',
+                source: 'openai',
               },
             ]
           : [],
@@ -199,11 +199,11 @@ const createAdapterHarness = (options: IAdapterHarnessOptions = {}): IAdapterHar
       };
     },
   };
-  const unusedAdapter: IFrameworkAdapter = {
-    id: 'unused-adapter',
+  const unusedAdapter: IRuntimeAdapter = {
+    id: 'eve',
     supportedRepositoryFormatVersions: [1],
     inspect: () => {
-      unusedCalls.push('unused-adapter');
+      unusedCalls.push('eve');
       return Promise.resolve({ diagnostics: [], evidence: [] });
     },
   };
@@ -220,7 +220,7 @@ const createAdapterHarness = (options: IAdapterHarnessOptions = {}): IAdapterHar
 const toJsonValue = (candidate: unknown): unknown =>
   JSON.parse(JSON.stringify(candidate)) as unknown;
 
-describe('Core framework-adapter execution', () => {
+describe('Core runtime-adapter execution', () => {
   test('invokes applicable adapters canonically through one mutation-isolated reader session', async () => {
     const source = createMemoryRepositoryReader(createEntries());
     const readCounts = new Map<IRepositoryPath, number>();
@@ -258,7 +258,7 @@ describe('Core framework-adapter execution', () => {
     ]);
     expect(toJsonValue(result.evidence)).toStrictEqual(expectedEvidence);
     expect(result.diagnostics).toStrictEqual([]);
-    expect(harness.calls).toStrictEqual(['alpha-adapter', 'zeta-adapter']);
+    expect(harness.calls).toStrictEqual(['anthropic', 'openai']);
     expect(harness.scopedAgentIds).toStrictEqual([['alpha', 'beta'], ['zeta']]);
     expect(harness.projectAgentIds).toStrictEqual([
       ['alpha', 'beta', 'custom-agent', 'zeta'],
@@ -287,7 +287,7 @@ describe('Core framework-adapter execution', () => {
     });
     expect(toJsonValue(result.diagnostics)).toStrictEqual(expectedDiagnostics);
     expect(toJsonValue(result.evidence)).toStrictEqual(expectedEvidence);
-    expect(harness.calls).toStrictEqual(['alpha-adapter', 'zeta-adapter']);
+    expect(harness.calls).toStrictEqual(['anthropic', 'openai']);
   });
 
   test('does not invoke any adapter after universal validation fails', async () => {
@@ -307,6 +307,27 @@ describe('Core framework-adapter execution', () => {
     expect(harness.unusedCalls).toStrictEqual([]);
   });
 
+  test('does not invoke any adapter when one declared official adapter is unavailable', async () => {
+    const harness = createAdapterHarness();
+    const result = await createCore({
+      adapters: harness.adapters.filter(({ id }) => id === 'anthropic'),
+    }).inspectProject({ repository: createMemoryRepositoryReader(createEntries()) });
+
+    expect(result).toMatchObject({
+      diagnostics: [
+        {
+          code: 'MOLDEA_RUNTIME_ADAPTER_UNAVAILABLE',
+          entity: { adapterId: 'openai', agentId: 'zeta' },
+          pointer: '/agents/zeta/runtime/id',
+        },
+      ],
+      evidence: [],
+      project: null,
+      valid: false,
+    });
+    expect(harness.calls).toStrictEqual([]);
+  });
+
   test('wraps unexpected adapter failures with safe adapter metadata and cause', async () => {
     const failure = new Error('private adapter failure');
     const harness = createAdapterHarness({
@@ -320,14 +341,14 @@ describe('Core framework-adapter execution', () => {
         repository: createMemoryRepositoryReader(createEntries()),
       }),
     ).rejects.toMatchObject({
-      adapterId: 'alpha-adapter',
+      adapterId: 'anthropic',
       cause: failure,
       code: 'ADAPTER_EXECUTION_FAILED',
-      message: 'A framework adapter failed during inspection.',
+      message: 'A runtime adapter failed during inspection.',
       operation: 'inspect-project',
       retryable: false,
     });
-    expect(harness.calls).toStrictEqual(['alpha-adapter']);
+    expect(harness.calls).toStrictEqual(['anthropic']);
   });
 
   test('preserves repository source exceptions raised through an adapter reader', async () => {
@@ -371,9 +392,9 @@ describe('Core framework-adapter execution', () => {
     ).rejects.toMatchObject({
       code: 'ABORTED',
       operation: 'inspect-project',
-      retryable: false,
+      retryable: true,
     });
-    expect(harness.calls).toStrictEqual(['alpha-adapter']);
+    expect(harness.calls).toStrictEqual(['anthropic']);
   });
 
   test('charges adapter enumeration to the shared entry budget', async () => {
@@ -432,9 +453,59 @@ describe('Core framework-adapter execution', () => {
     ).rejects.toMatchObject({
       code: 'RESOURCE_LIMIT_EXCEEDED',
       limit: 'maxDiagnostics',
-      operation: 'inspect-project',
+      operation: 'validate-adapter',
       retryable: false,
     });
-    expect(harness.calls).toStrictEqual(['alpha-adapter', 'zeta-adapter']);
+    expect(harness.calls).toStrictEqual(['anthropic', 'openai']);
+  });
+
+  test('enforces the raw evidence budget before deduplication', async () => {
+    const harness = createAdapterHarness();
+
+    await expect(
+      createCore({
+        adapters: harness.adapters,
+        limits: { maxEvidence: 2 },
+      }).inspectProject({ repository: createMemoryRepositoryReader(createEntries()) }),
+    ).rejects.toMatchObject({
+      code: 'RESOURCE_LIMIT_EXCEEDED',
+      limit: 'maxEvidence',
+      operation: 'validate-adapter',
+      retryable: false,
+    });
+    expect(harness.calls).toStrictEqual(['anthropic']);
+  });
+
+  test('allows one immutable adapter instance to serve concurrent inspections', async () => {
+    let activeInspections = 0;
+    let maximumActiveInspections = 0;
+    let startedInspections = 0;
+    let releaseInspections!: () => void;
+    const rendezvous = new Promise<void>((resolve) => {
+      releaseInspections = resolve;
+    });
+    const harness = createAdapterHarness({
+      onAlpha: async () => {
+        activeInspections += 1;
+        maximumActiveInspections = Math.max(maximumActiveInspections, activeInspections);
+        startedInspections += 1;
+
+        if (startedInspections === 2) {
+          releaseInspections();
+        }
+
+        await rendezvous;
+        activeInspections -= 1;
+      },
+    });
+    const core = createCore({ adapters: harness.adapters });
+    const [first, second] = await Promise.all([
+      core.inspectProject({ repository: createMemoryRepositoryReader(createEntries()) }),
+      core.inspectProject({ repository: createMemoryRepositoryReader(createEntries()) }),
+    ]);
+
+    expect(first.valid).toBe(true);
+    expect(second.valid).toBe(true);
+    expect(maximumActiveInspections).toBe(2);
   });
 });

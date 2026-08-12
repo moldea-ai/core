@@ -4,7 +4,7 @@
       "context": ["/moldea/context/security.md"],
       "decisions": ["/moldea/decisions/1767225600000-use-security.md"],
       "declaration": {
-        "framework": {
+        "runtime": {
           "id": "custom",
           "guidance": "/moldea/runtimes/node.md"
         },
@@ -88,7 +88,7 @@
       "context": [],
       "decisions": [],
       "declaration": {
-        "framework": {
+        "runtime": {
           "id": "custom"
         }
       },
@@ -168,11 +168,11 @@
   "formatVersion": 1,
   "manifest": {
     "asset": {
-      "content": "version: 1\ncontext:\n  /moldea/project.md:\n    affectedBy:\n      - /src/**\n  /moldea/context/security.md:\n    bindings:\n      - path: /src/security.ts\ndecisions:\n  /moldea/decisions/1767225600000-use-security.md:\n    affectedBy:\n      - /src/**\nunresolved:\n  release-owner:\n    category: ownership\n    effect: warning\n    description: Release ownership is unresolved.\n    resolution: Assign one release owner.\n    related:\n      - path: /src/release.ts\nagents:\n  zeta:\n    framework:\n      id: custom\n  alpha:\n    framework:\n      id: custom\n      guidance: /moldea/runtimes/node.md\n    context:\n      - /moldea/context/security.md\n    decisions:\n      - /moldea/decisions/1767225600000-use-security.md\n    variables:\n      REGION:\n        description: Deployment region.\n    bindings:\n      runtimeAgent:\n        path: /src/agents.ts\n        symbol: alphaAgent\n    tools:\n      audit:\n        name: auditRequests\n        description: Audits requests.\n        implementation:\n          path: /src/audit.ts\n    affectedBy:\n      - /src/**\n    mirrors:\n      - /apps/alpha.md\n    unresolved:\n      schema-owner:\n        category: ownership\n        effect: informational\n        description: Schema ownership is unresolved.\n        resolution: Assign one schema owner.\n        related:\n          - path: /src/schema.ts\n",
-      "digest": "sha256:101738600c6df7cfd5b14625008837d9276926f1853d7212120e1594e1537352",
+      "content": "version: 1\ncontext:\n  /moldea/project.md:\n    affectedBy:\n      - /src/**\n  /moldea/context/security.md:\n    bindings:\n      - path: /src/security.ts\ndecisions:\n  /moldea/decisions/1767225600000-use-security.md:\n    affectedBy:\n      - /src/**\nunresolved:\n  release-owner:\n    category: ownership\n    effect: warning\n    description: Release ownership is unresolved.\n    resolution: Assign one release owner.\n    related:\n      - path: /src/release.ts\nagents:\n  zeta:\n    runtime:\n      id: custom\n  alpha:\n    runtime:\n      id: custom\n      guidance: /moldea/runtimes/node.md\n    context:\n      - /moldea/context/security.md\n    decisions:\n      - /moldea/decisions/1767225600000-use-security.md\n    variables:\n      REGION:\n        description: Deployment region.\n    bindings:\n      runtimeAgent:\n        path: /src/agents.ts\n        symbol: alphaAgent\n    tools:\n      audit:\n        name: auditRequests\n        description: Audits requests.\n        implementation:\n          path: /src/audit.ts\n    affectedBy:\n      - /src/**\n    mirrors:\n      - /apps/alpha.md\n    unresolved:\n      schema-owner:\n        category: ownership\n        effect: informational\n        description: Schema ownership is unresolved.\n        resolution: Assign one schema owner.\n        related:\n          - path: /src/schema.ts\n",
+      "digest": "sha256:2a407c5ced4e649022e02d08b0ec0cde8d950ecd460cb57c03426177b09aee60",
       "path": "/moldea/moldea.yaml",
-      "scalarLength": 1315,
-      "utf8ByteLength": 1315
+      "scalarLength": 1311,
+      "utf8ByteLength": 1311
     },
     "value": {
       "version": 1,
@@ -208,7 +208,7 @@
       },
       "agents": {
         "alpha": {
-          "framework": {
+          "runtime": {
             "id": "custom",
             "guidance": "/moldea/runtimes/node.md"
           },
@@ -251,7 +251,7 @@
           }
         },
         "zeta": {
-          "framework": {
+          "runtime": {
             "id": "custom"
           }
         }

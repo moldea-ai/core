@@ -4,7 +4,7 @@ The `packages` project is the open-source package monorepo for `moldea`. It deve
 
 The repository is intentionally separate from the hosted [`platform`](https://github.com/moldea-ai/platform) monorepo. It contains reusable package products and their shared development infrastructure, not Cloud applications, hosted APIs, runtime infrastructure, or deployment configuration.
 
-`@moldea.ai/repository` and `@moldea.ai/core` now provide the source-neutral reader and universal interpretation foundations. `@moldea.ai/repository-fs` is the next active package and currently exposes its option and resource-limit foundation while strict exact-path and recursive-directory inventory behavior, private filesystem fingerprints, and creation-time verification are built behind that boundary. Coherent reader operations, verified file capture, and invalidation remain required before the filesystem reader factory is exposed. Additional package directories are introduced progressively in the specified implementation order rather than created as placeholders.
+`@moldea.ai/repository` and `@moldea.ai/core` now provide the source-neutral reader and universal interpretation foundations. `@moldea.ai/repository-fs` currently exposes its option and resource-limit foundation while strict exact-path and recursive-directory inventory behavior, private filesystem fingerprints, and creation-time verification are built behind that boundary. Coherent reader operations, verified file capture, and invalidation remain required before the filesystem reader factory is exposed. The canonical Runtime Compatibility Matrix is now materialized with every approved adapter marked `planned`; this publishes the inventory without claiming runtime support before adapter implementations and fixtures exist.
 
 ## Specifications
 
@@ -15,8 +15,8 @@ The product and package specifications are currently maintained in the `platform
 - [`@moldea.ai/repository-fs`](https://github.com/moldea-ai/platform/blob/main/moldea/context/repository-fs-package.md) — coherent local filesystem reader.
 - [`@moldea.ai/core`](https://github.com/moldea-ai/platform/blob/main/moldea/context/core-package.md) — deterministic repository-format interpretation and indexing.
 - [`@moldea.ai/cli`](https://github.com/moldea-ai/platform/blob/main/moldea/context/cli-package.md) — read-only Git working-tree composition and executable contract.
-- [Framework Adapter Contract](https://github.com/moldea-ai/platform/blob/main/moldea/context/framework-adapter-contract.md) — deterministic extension contract for official adapters.
-- [Framework Compatibility Matrix](https://github.com/moldea-ai/platform/blob/main/moldea/context/framework-compatibility-matrix.md) — canonical compatibility-data contract and initial adapter inventory.
+- [Runtime Adapter Contract](https://github.com/moldea-ai/platform/blob/main/moldea/context/runtime-adapter-contract.md) — deterministic extension contract for official adapters.
+- [Runtime Compatibility Matrix](https://github.com/moldea-ai/platform/blob/main/moldea/context/runtime-compatibility-matrix.md) — canonical compatibility-data contract and initial adapter inventory.
 
 The specification documents remain the design authority. Compatibility artifacts are introduced in their specified implementation phase, after their foundational packages and conformance requirements are in place.
 
@@ -25,16 +25,22 @@ The specification documents remain the design authority. Compatibility artifacts
 ```text
 .github/
   workflows/                   # Repository verification
+compatibility/
+  runtimes.yaml                # Canonical runtime support inventory and claims
 configs/
   typescript/                  # Shared environment and declaration configs
   vite/                        # Shared ESM library build configuration
   vitest/                      # Shared package test configuration
 fixtures/                      # Repository-wide conformance fixtures
+docs/
+  runtime-compatibility.md     # Generated compatibility presentation
 packages/                      # Private shared implementation packages
 projects/
   core/                        # Deterministic repository-format interpretation
   repository/                  # Source-neutral reader contract and memory reader
   repository-fs/               # Explicit local-filesystem repository reader
+scripts/
+  runtime-compatibility/       # Matrix validation and deterministic generation
 eslint.config.js
 package.json
 pnpm-lock.yaml
@@ -69,12 +75,17 @@ Shared internal packages may support first-class projects but never depend on th
 | `repository-github`         | `@moldea.ai/repository-github`         | Private initially |
 | `core`                      | `@moldea.ai/core`                      | Public            |
 | `cli`                       | `@moldea.ai/cli`                       | Public            |
+| `adapter-anthropic`         | `@moldea.ai/adapter-anthropic`         | Public            |
+| `adapter-claude-agent-sdk`  | `@moldea.ai/adapter-claude-agent-sdk`  | Public            |
+| `adapter-cloudflare-agents` | `@moldea.ai/adapter-cloudflare-agents` | Public            |
 | `adapter-eve`               | `@moldea.ai/adapter-eve`               | Public            |
-| `adapter-openai-agents-sdk` | `@moldea.ai/adapter-openai-agents-sdk` | Public            |
+| `adapter-google-genai`      | `@moldea.ai/adapter-google-genai`      | Public            |
 | `adapter-langchain`         | `@moldea.ai/adapter-langchain`         | Public            |
 | `adapter-langgraph`         | `@moldea.ai/adapter-langgraph`         | Public            |
-| `adapter-vercel-ai-sdk`     | `@moldea.ai/adapter-vercel-ai-sdk`     | Public            |
+| `adapter-openai`            | `@moldea.ai/adapter-openai`            | Public            |
+| `adapter-openai-agents-sdk` | `@moldea.ai/adapter-openai-agents-sdk` | Public            |
 | `adapter-pydantic-ai`       | `@moldea.ai/adapter-pydantic-ai`       | Public            |
+| `adapter-vercel-ai-sdk`     | `@moldea.ai/adapter-vercel-ai-sdk`     | Public            |
 
 The catalog records approved architecture, not implementation or release status. The `custom` adapter remains built into `@moldea.ai/core` and has no separate package project.
 
@@ -105,12 +116,14 @@ pnpm test
 
 Useful focused commands:
 
-| Command                 | Purpose                                        |
-| ----------------------- | ---------------------------------------------- |
-| `pnpm test:root`        | Run tests for shared repository configuration. |
-| `pnpm test:unit`        | Run root and package unit-test tasks.          |
-| `pnpm test:integration` | Build and run package integration-test tasks.  |
-| `pnpm format`           | Format repository-maintained files.            |
+| Command                       | Purpose                                                                 |
+| ----------------------------- | ----------------------------------------------------------------------- |
+| `pnpm test:root`              | Run tests for shared repository configuration.                          |
+| `pnpm test:unit`              | Run root and package unit-test tasks.                                   |
+| `pnpm test:integration`       | Build and run package integration-test tasks.                           |
+| `pnpm format`                 | Format repository-maintained files.                                     |
+| `pnpm compatibility:generate` | Validate the canonical matrix and regenerate its Markdown presentation. |
+| `pnpm compatibility:check`    | Verify matrix validity and exact generated-document synchronization.    |
 
 ## Build and test conventions
 
@@ -124,7 +137,7 @@ Turborepo derives build order from declared workspace dependencies. Package depe
 
 ## Generated artifacts
 
-Generated files are not edited directly. Update the documented canonical source and run its deterministic generator. When a generated artifact is introduced, its deterministic synchronization check must be added to CI in the same change.
+Generated files are not edited directly. Runtime compatibility changes begin in [`compatibility/runtimes.yaml`](compatibility/runtimes.yaml); run `pnpm compatibility:generate` to update [`docs/runtime-compatibility.md`](docs/runtime-compatibility.md). CI runs `pnpm compatibility:check` and fails when the matrix is invalid or the committed presentation is stale.
 
 ## Initial implementation sequence
 

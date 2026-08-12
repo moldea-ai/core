@@ -1,5 +1,5 @@
-// framework adapter evidence contracts
-export type { IFrameworkAdapterEvidence, IFrameworkAdapterEvidenceKind } from './adapter/index.js';
+// runtime adapter evidence contracts
+export type { IRuntimeAdapterEvidence, IRuntimeAdapterEvidenceKind } from './adapter/index.js';
 
 // supported versions and default resource limits
 export {

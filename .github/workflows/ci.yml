@@ -41,6 +41,9 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Check Runtime Compatibility Artifacts
+        run: pnpm compatibility:check
+
       - name: Check Formatting
         run: pnpm format:check
 

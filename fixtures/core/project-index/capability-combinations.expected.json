@@ -4,7 +4,7 @@
       "context": [],
       "decisions": [],
       "declaration": {
-        "framework": {
+        "runtime": {
           "id": "custom"
         },
         "tools": {
@@ -52,7 +52,7 @@
       "context": [],
       "decisions": [],
       "declaration": {
-        "framework": {
+        "runtime": {
           "id": "custom"
         }
       },
@@ -82,7 +82,7 @@
       "context": [],
       "decisions": [],
       "declaration": {
-        "framework": {
+        "runtime": {
           "id": "custom"
         },
         "skills": {
@@ -121,7 +121,7 @@
       "context": [],
       "decisions": [],
       "declaration": {
-        "framework": {
+        "runtime": {
           "id": "custom"
         },
         "tools": {
@@ -162,17 +162,17 @@
   "formatVersion": 1,
   "manifest": {
     "asset": {
-      "content": "version: 1\nagents:\n  both:\n    framework: { id: custom }\n    tools:\n      inspect:\n        name: inspectRecords\n        description: Inspects records when verification is required.\n        implementation: { path: /src/inspect.ts }\n    skills:\n      triage:\n        name: triage-records\n        description: Applies record triage when investigation is required.\n        implementation: { path: /.agents/skills/triage/SKILL.md }\n  neither:\n    framework: { id: custom }\n  skill-only:\n    framework: { id: custom }\n    skills:\n      document:\n        name: document-result\n        description: Documents verified results after work is complete.\n        implementation: { path: /.agents/skills/document/SKILL.md }\n  tool-only:\n    framework: { id: custom }\n    tools:\n      lookup:\n        name: lookupRecord\n        description: Retrieves a record when exact state is required.\n        implementation: { path: /src/lookup.ts }\n",
-      "digest": "sha256:6a3938af31971f95ab9acc356c9c4b32eb63417caadc36dcf1ababba4cf529e7",
+      "content": "version: 1\nagents:\n  both:\n    runtime: { id: custom }\n    tools:\n      inspect:\n        name: inspectRecords\n        description: Inspects records when verification is required.\n        implementation: { path: /src/inspect.ts }\n    skills:\n      triage:\n        name: triage-records\n        description: Applies record triage when investigation is required.\n        implementation: { path: /.agents/skills/triage/SKILL.md }\n  neither:\n    runtime: { id: custom }\n  skill-only:\n    runtime: { id: custom }\n    skills:\n      document:\n        name: document-result\n        description: Documents verified results after work is complete.\n        implementation: { path: /.agents/skills/document/SKILL.md }\n  tool-only:\n    runtime: { id: custom }\n    tools:\n      lookup:\n        name: lookupRecord\n        description: Retrieves a record when exact state is required.\n        implementation: { path: /src/lookup.ts }\n",
+      "digest": "sha256:e2a84ff27adf5f6906659ab52bed5d64de7cdae7e725e2fe03328cd6024b59bf",
       "path": "/moldea/moldea.yaml",
-      "scalarLength": 924,
-      "utf8ByteLength": 924
+      "scalarLength": 916,
+      "utf8ByteLength": 916
     },
     "value": {
       "version": 1,
       "agents": {
         "both": {
-          "framework": {
+          "runtime": {
             "id": "custom"
           },
           "tools": {
@@ -195,12 +195,12 @@
           }
         },
         "neither": {
-          "framework": {
+          "runtime": {
             "id": "custom"
           }
         },
         "skill-only": {
-          "framework": {
+          "runtime": {
             "id": "custom"
           },
           "skills": {
@@ -214,7 +214,7 @@
           }
         },
         "tool-only": {
-          "framework": {
+          "runtime": {
             "id": "custom"
           },
           "tools": {

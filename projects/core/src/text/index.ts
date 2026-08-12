@@ -130,7 +130,6 @@ const invalidArgument = (operation: ICoreOperation): never => {
   throw new CoreOperationException({
     code: 'INVALID_ARGUMENT',
     operation,
-    retryable: false,
   });
 };
 
@@ -148,7 +147,6 @@ const enforceFileLimit = (
     code: 'RESOURCE_LIMIT_EXCEEDED',
     limit,
     operation,
-    retryable: false,
   });
 };
 

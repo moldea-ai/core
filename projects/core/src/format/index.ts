@@ -10,13 +10,13 @@ export interface IRepositoryReference {
   readonly symbol?: string;
 }
 
-// context, decision, framework, and runtime-variable manifest declarations
+// context, decision, runtime, and runtime-variable manifest declarations
 export interface IRelationshipManifestEntry {
   readonly bindings?: readonly IRepositoryReference[];
   readonly affectedBy?: readonly string[];
 }
 
-export interface IFrameworkManifestEntry {
+export interface IRuntimeManifestEntry {
   readonly id: string;
   readonly guidance?: IRepositoryPath;
 }
@@ -65,7 +65,7 @@ export interface IUnresolvedRequirementManifestEntry {
 }
 
 export interface IAgentManifestEntry {
-  readonly framework: IFrameworkManifestEntry;
+  readonly runtime: IRuntimeManifestEntry;
   readonly context?: readonly IRepositoryPath[];
   readonly decisions?: readonly IRepositoryPath[];
   readonly variables?: Readonly<Record<string, IRuntimeVariableManifestEntry>>;

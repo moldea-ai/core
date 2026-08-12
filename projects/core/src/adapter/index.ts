@@ -4,8 +4,8 @@ import type { IIndexedAgent, IMoldeaProjectIndex } from '../contracts/index.js';
 import type { IAdapterDiagnostic, IDiagnosticDetails } from '../diagnostics/index.js';
 import type { IRepositoryFormatVersion, IRepositoryReference } from '../format/index.js';
 
-// deterministic framework extension registered with one Core instance
-export interface IFrameworkAdapter {
+// deterministic runtime extension registered with one Core instance
+export interface IRuntimeAdapter {
   readonly id: string;
   readonly supportedRepositoryFormatVersions: readonly IRepositoryFormatVersion[];
 
@@ -25,20 +25,20 @@ export interface IFrameworkAdapter {
    * - RESOURCE_LIMIT_EXCEEDED: A Core or repository resource limit was exceeded.
    * - ABORTED: Adapter inspection or a repository operation was aborted.
    */
-  inspect(context: IFrameworkAdapterContext): Promise<IFrameworkAdapterResult>;
+  inspect(context: IRuntimeAdapterContext): Promise<IRuntimeAdapterResult>;
 }
 
 // immutable invocation context supplied only after universal validation succeeds
-export interface IFrameworkAdapterContext {
+export interface IRuntimeAdapterContext {
   readonly repository: IRepositoryReader;
   readonly project: IMoldeaProjectIndex;
   readonly agents: readonly IIndexedAgent[];
   readonly signal?: AbortSignal;
 }
 
-// normalized framework observation kinds and evidence records
-export type IFrameworkAdapterEvidenceKind =
-  | 'framework-package'
+// normalized runtime observation kinds and evidence records
+export type IRuntimeAdapterEvidenceKind =
+  | 'runtime-package'
   | 'language'
   | 'agent-definition'
   | 'instruction-loader'
@@ -49,9 +49,9 @@ export type IFrameworkAdapterEvidenceKind =
   | 'variable-provider'
   | 'runtime-pattern';
 
-export interface IFrameworkAdapterEvidence {
+export interface IRuntimeAdapterEvidence {
   readonly source: string;
-  readonly kind: IFrameworkAdapterEvidenceKind;
+  readonly kind: IRuntimeAdapterEvidenceKind;
   readonly agentId: string | null;
   readonly capabilityKind: 'tool' | 'skill' | null;
   readonly capabilityId: string | null;
@@ -61,8 +61,8 @@ export interface IFrameworkAdapterEvidence {
 }
 
 // complete all-or-nothing output from one adapter invocation
-export interface IFrameworkAdapterResult {
-  readonly evidence: readonly IFrameworkAdapterEvidence[];
+export interface IRuntimeAdapterResult {
+  readonly evidence: readonly IRuntimeAdapterEvidence[];
   readonly diagnostics: readonly IAdapterDiagnostic[];
 }
 

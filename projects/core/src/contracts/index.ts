@@ -1,6 +1,6 @@
 import type { IRepositoryPath, IRepositoryReader } from '@moldea.ai/repository';
 
-import type { IFrameworkAdapter, IFrameworkAdapterEvidence } from '../adapter/index.js';
+import type { IRuntimeAdapter, IRuntimeAdapterEvidence } from '../adapter/index.js';
 import type { ICoreDiagnostic, IDiagnostic } from '../diagnostics/index.js';
 import type {
   IAgentManifestEntry,
@@ -18,10 +18,11 @@ export interface ICoreResourceLimits {
   readonly maxFileBytes: number;
   readonly maxManifestBytes: number;
   readonly maxDiagnostics: number;
+  readonly maxEvidence: number;
 }
 
 export interface ICoreOptions {
-  readonly adapters?: readonly IFrameworkAdapter[];
+  readonly adapters?: readonly IRuntimeAdapter[];
   readonly limits?: Partial<ICoreResourceLimits>;
 }
 
@@ -83,7 +84,7 @@ export interface IProjectInspectionResult {
   readonly valid: boolean;
   readonly formatVersion: IRepositoryFormatVersion | null;
   readonly project: IMoldeaProjectIndex | null;
-  readonly evidence: readonly IFrameworkAdapterEvidence[];
+  readonly evidence: readonly IRuntimeAdapterEvidence[];
   readonly diagnostics: readonly IDiagnostic[];
 }
 
@@ -211,7 +212,7 @@ export interface ICore {
    * - INVALID_SOURCE_DATA: The repository reader returned invalid contract data.
    * - RESOURCE_LIMIT_EXCEEDED: A Core or repository resource limit was exceeded.
    * - ABORTED: Project inspection or a repository operation was aborted.
-   * - ADAPTER_EXECUTION_FAILED: A framework adapter failed or returned an invalid result.
+   * - ADAPTER_EXECUTION_FAILED: A runtime adapter failed or returned an invalid result.
    */
   inspectProject(input: IProjectInspectionInput): Promise<IProjectInspectionResult>;
 }
