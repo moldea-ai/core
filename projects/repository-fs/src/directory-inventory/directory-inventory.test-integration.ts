@@ -200,7 +200,7 @@ describe('filesystem recursive directory inventory construction', () => {
       const inventory = await createInventory(temporaryDirectory);
 
       expect(inventory.entries).toContainEqual({
-        hostPath: redirectPath,
+        hostPath: path.join(await realpath(temporaryDirectory), 'redirect'),
         path: parseRepositoryPath('/redirect'),
         type: 'symlink',
       });
