@@ -12,6 +12,29 @@ export interface IFilesystemRepositoryFileCacheState {
   readonly filesByPath: Map<IRepositoryPath, Uint8Array>;
 }
 
+// one synchronous claim against the shared captured-byte budget
+export interface IFilesystemRepositoryFileCaptureReservation {
+  readonly byteCount: number;
+  readonly isAccepted: boolean;
+  isReleased: boolean;
+  readonly maximumByteLength: number;
+}
+
+// one authoritative physical capture shared by every active waiter for a path
+export interface IFilesystemRepositoryPendingFileCapture {
+  readonly controller: AbortController;
+  isAcceptingWaiters: boolean;
+  readonly promise: Promise<void>;
+  readonly reservation: IFilesystemRepositoryFileCaptureReservation;
+  waiterCount: number;
+}
+
+// active capture coordination and capacity reserved before asynchronous host work
+export interface IFilesystemRepositoryFileCaptureState {
+  readonly capturesByPath: Map<IRepositoryPath, IFilesystemRepositoryPendingFileCapture>;
+  reservedByteCount: number;
+}
+
 // permanent lifecycle record retaining only the first snapshot-loss cause
 export interface IFilesystemRepositoryReaderLifecycle {
   invalidationCause: unknown;
@@ -21,6 +44,7 @@ export interface IFilesystemRepositoryReaderLifecycle {
 // authoritative internal state shared by every future filesystem reader operation
 export interface IFilesystemRepositoryReaderState {
   readonly cache: IFilesystemRepositoryFileCacheState;
+  readonly captures: IFilesystemRepositoryFileCaptureState;
   readonly entriesByPath: ReadonlyMap<IRepositoryPath, IFilesystemInventoryEntry>;
   readonly inventory: IFilesystemInventory;
   readonly lifecycle: IFilesystemRepositoryReaderLifecycle;

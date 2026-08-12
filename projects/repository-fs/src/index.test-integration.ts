@@ -241,9 +241,15 @@ describe('published Repository FS package artifacts', () => {
     expect(indexDeclaration).not.toContain('getFilesystemRepositoryEntry');
     expect(indexDeclaration).not.toContain('listFilesystemRepositoryEntries');
     expect(indexDeclaration).not.toContain('captureFilesystemRepositoryFile');
+    expect(indexDeclaration).not.toContain('coordinateFilesystemRepositoryFileCapture');
+    expect(indexDeclaration).not.toContain('reserveFilesystemFileCaptureCapacity');
+    expect(indexDeclaration).not.toContain('releaseFilesystemFileCaptureCapacity');
+    expect(indexDeclaration).not.toContain('commitReservedFilesystemFileCapture');
     expect(indexDeclaration).not.toContain('createFilesystemRepositoryReaderState');
     expect(indexDeclaration).not.toContain('readFilesystemRepositoryFile');
     expect(indexDeclaration).not.toContain('IFilesystemRepositoryReaderState');
+    expect(indexDeclaration).not.toContain('IFilesystemRepositoryFileCaptureReservation');
+    expect(indexDeclaration).not.toContain('IFilesystemRepositoryPendingFileCapture');
     expect(indexDeclaration).not.toContain('invalidateFilesystemRepositoryReader');
     expect(indexDeclaration).not.toContain('markFilesystemRepositoryReaderInvalidated');
     expect(indexDeclaration).not.toContain('throwIfFilesystemRepositoryReaderInvalidated');

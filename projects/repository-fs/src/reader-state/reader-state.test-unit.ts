@@ -56,6 +56,8 @@ describe('filesystem repository reader lifecycle', () => {
     });
     expect(state.cache.cachedByteCount).toBe(0);
     expect(state.cache.filesByPath.size).toBe(0);
+    expect(state.captures.capturesByPath.size).toBe(0);
+    expect(state.captures.reservedByteCount).toBe(0);
     expect(Object.isFrozen(state)).toBe(true);
   });
 
@@ -102,11 +104,27 @@ describe('filesystem repository reader lifecycle', () => {
   test('marks invalidation and clears cached bytes without waiting for exception delivery', () => {
     const state = createState();
     const cachedPath = parseRepositoryPath('/cached.bin');
+    const pendingPath = parseRepositoryPath('/pending.bin');
     const firstCause = new Error('/private/source/cached.bin');
     const laterCause = new Error('/private/source/later.bin');
+    const captureController = new AbortController();
+    const reservation = {
+      byteCount: 3,
+      isAccepted: true,
+      isReleased: false,
+      maximumByteLength: 3,
+    };
 
     state.cache.filesByPath.set(cachedPath, Uint8Array.from([1, 2, 3]));
     state.cache.cachedByteCount = 3;
+    state.captures.capturesByPath.set(pendingPath, {
+      controller: captureController,
+      isAcceptingWaiters: true,
+      promise: Promise.resolve(),
+      reservation,
+      waiterCount: 1,
+    });
+    state.captures.reservedByteCount = 3;
 
     markFilesystemRepositoryReaderInvalidated(state, firstCause);
     markFilesystemRepositoryReaderInvalidated(state, laterCause);
@@ -117,6 +135,11 @@ describe('filesystem repository reader lifecycle', () => {
     });
     expect(state.cache.cachedByteCount).toBe(0);
     expect(state.cache.filesByPath.size).toBe(0);
+    expect(state.captures.capturesByPath.size).toBe(0);
+    expect(state.captures.reservedByteCount).toBe(0);
+    expect(captureController.signal.aborted).toBe(true);
+    expect(captureController.signal.reason).toBe(firstCause);
+    expect(reservation.isReleased).toBe(true);
   });
 
   test('reports invalidation with the current operation and logical path', () => {

@@ -135,21 +135,6 @@ export const assertFilesystemFileReadEntryUnchanged = (
 };
 
 /**
- * Derives the largest exact file length allowed by both active byte limits.
- * @param cache The reader's private captured-byte accounting state.
- * @param maxFileBytes The configured single-file limit.
- * @param maxCachedBytes The configured total private-cache limit.
- * @returns The non-negative maximum byte length available to the next capture.
- */
-export const getMaximumFilesystemFileCaptureBytes = (
-  cache: IFilesystemRepositoryFileCacheState,
-  maxFileBytes: number,
-  maxCachedBytes: number,
-): number => {
-  return Math.min(maxFileBytes, maxCachedBytes - cache.cachedByteCount);
-};
-
-/**
  * Copies one cached file into caller-owned storage.
  * @param cache The private cache to inspect.
  * @param path The exact frozen file path.
@@ -162,45 +147,4 @@ export const copyCachedFilesystemFile = (
   const cachedBytes = cache.filesByPath.get(path);
 
   return cachedBytes === undefined ? undefined : new Uint8Array(cachedBytes);
-};
-
-/**
- * Atomically copies one completed capture into private cache storage.
- * @param cache The private cache and byte accounting to update.
- * @param path The exact frozen file path.
- * @param capturedBytes The fully verified bytes to copy.
- * @param maxCachedBytes The configured total private-cache limit.
- * @returns A fresh caller-owned copy of the authoritative cached bytes.
- * @throws
- * - RESOURCE_LIMIT_EXCEEDED: A repository reading resource limit was exceeded.
- */
-export const commitFilesystemFileCapture = (
-  cache: IFilesystemRepositoryFileCacheState,
-  path: IRepositoryPath,
-  capturedBytes: Uint8Array,
-  maxCachedBytes: number,
-): Uint8Array => {
-  const existingBytes = cache.filesByPath.get(path);
-
-  if (existingBytes !== undefined) {
-    return new Uint8Array(existingBytes);
-  }
-
-  const nextCachedByteCount = cache.cachedByteCount + capturedBytes.byteLength;
-
-  if (!Number.isSafeInteger(nextCachedByteCount) || nextCachedByteCount > maxCachedBytes) {
-    return throwFilesystemRepositoryOperationException(
-      'RESOURCE_LIMIT_EXCEEDED',
-      'read-file',
-      false,
-      path,
-    );
-  }
-
-  const cachedBytes = new Uint8Array(capturedBytes);
-
-  cache.filesByPath.set(path, cachedBytes);
-  cache.cachedByteCount = nextCachedByteCount;
-
-  return new Uint8Array(cachedBytes);
 };

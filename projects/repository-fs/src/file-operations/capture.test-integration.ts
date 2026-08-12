@@ -482,6 +482,52 @@ describe('verified filesystem file capture', () => {
     }
   });
 
+  test.each([
+    ['successful close', false],
+    ['failed close', true],
+  ] as const)(
+    'prefers snapshot loss when final cancellation overlaps %s',
+    async (_description, hasCloseFailure) => {
+      const temporaryDirectory = await createTemporaryDirectory();
+
+      try {
+        const originalBytes = Uint8Array.from([7, 8, 9]);
+        const filePath = path.join(temporaryDirectory, 'file.bin');
+
+        await writeFile(filePath, originalBytes);
+
+        const state = await createDirectoryState(temporaryDirectory);
+        const logicalPath = parseRepositoryPath('/file.bin');
+        const controller = new AbortController();
+        const read = readFilesystemRepositoryFile(
+          state,
+          logicalPath,
+          { signal: controller.signal },
+          {
+            closeFileHandle: async (fileHandle) => {
+              await writeFile(filePath, Uint8Array.from([9, 8, 7]));
+              controller.abort('cancel-changed-close');
+              await fileHandle.close();
+
+              if (hasCloseFailure) {
+                throw Object.assign(new Error(filePath), { code: 'EIO' });
+              }
+            },
+          },
+        );
+
+        await expectToRejectCode(read, 'SNAPSHOT_CHANGED');
+        expect(state.lifecycle.isInvalidated).toBe(true);
+        expect(state.cache.cachedByteCount).toBe(0);
+        expect(state.cache.filesByPath.has(logicalPath)).toBe(false);
+        expect(state.captures.capturesByPath.size).toBe(0);
+        expect(state.captures.reservedByteCount).toBe(0);
+      } finally {
+        await rm(temporaryDirectory, { force: true, recursive: true });
+      }
+    },
+  );
+
   test('prefers concurrent invalidation over a close failure', async () => {
     const temporaryDirectory = await createTemporaryDirectory();
 

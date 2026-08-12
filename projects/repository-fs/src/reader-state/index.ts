@@ -1,6 +1,9 @@
 // types
 export type {
   IFilesystemRepositoryFileCacheState,
+  IFilesystemRepositoryFileCaptureReservation,
+  IFilesystemRepositoryFileCaptureState,
+  IFilesystemRepositoryPendingFileCapture,
   IFilesystemRepositoryReaderOperation,
   IFilesystemRepositoryReaderState,
 } from './types.js';

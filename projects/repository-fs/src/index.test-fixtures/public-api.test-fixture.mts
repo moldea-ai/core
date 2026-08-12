@@ -16,6 +16,10 @@ import {
   createFilesystemRepositoryReaderState,
   // @ts-expect-error Reader lifecycle mutation remains an internal reader-building detail.
   markFilesystemRepositoryReaderInvalidated,
+  // @ts-expect-error Per-path capture coordination remains an internal reader-building detail.
+  coordinateFilesystemRepositoryFileCapture,
+  // @ts-expect-error Capture capacity reservations remain an internal reader-building detail.
+  reserveFilesystemFileCaptureCapacity,
   // @ts-expect-error Frozen inventory operations remain internal reader-building details.
   getFilesystemRepositoryEntry,
   // @ts-expect-error Frozen inventory operations remain internal reader-building details.
@@ -47,6 +51,8 @@ void getFilesystemRepositoryEntry;
 void listFilesystemRepositoryEntries;
 void createFilesystemRepositoryReaderState;
 void markFilesystemRepositoryReaderInvalidated;
+void coordinateFilesystemRepositoryFileCapture;
+void reserveFilesystemFileCaptureCapacity;
 void readFilesystemRepositoryFile;
 void selections;
 void options;

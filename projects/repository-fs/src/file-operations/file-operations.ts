@@ -14,14 +14,9 @@ import {
   throwFilesystemRepositoryOperationException,
   throwIfFilesystemRepositoryOperationAborted,
 } from '../source-exception/index.js';
-import { captureFilesystemRepositoryFile } from './capture.js';
+import { coordinateFilesystemRepositoryFileCapture } from './coordination.js';
 import type { IFilesystemFileCaptureCheckpoints } from './types.js';
-import {
-  commitFilesystemFileCapture,
-  copyCachedFilesystemFile,
-  createFilesystemFileCaptureTarget,
-  getMaximumFilesystemFileCaptureBytes,
-} from './utilities.js';
+import { copyCachedFilesystemFile, createFilesystemFileCaptureTarget } from './utilities.js';
 
 /**
  * Reads exact caller-owned bytes from the frozen filesystem inventory and private cache.
@@ -83,18 +78,11 @@ export const readFilesystemRepositoryFile = async (
   }
 
   const target = createFilesystemFileCaptureTarget(state.entriesByPath, entry);
-  const maximumByteLength = getMaximumFilesystemFileCaptureBytes(
-    state.cache,
-    state.limits.maxFileBytes,
-    state.limits.maxCachedBytes,
-  );
-  let capturedBytes: Uint8Array;
 
   try {
-    capturedBytes = await captureFilesystemRepositoryFile(
+    return await coordinateFilesystemRepositoryFileCapture(
       state,
       target,
-      maximumByteLength,
       options?.signal,
       checkpoints,
     );
@@ -115,14 +103,4 @@ export const readFilesystemRepositoryFile = async (
       cause,
     );
   }
-
-  throwIfFilesystemRepositoryReaderInvalidated(state, 'read-file', parsedPath);
-  throwIfFilesystemRepositoryOperationAborted(options?.signal, 'read-file', parsedPath);
-
-  return commitFilesystemFileCapture(
-    state.cache,
-    parsedPath,
-    capturedBytes,
-    state.limits.maxCachedBytes,
-  );
 };

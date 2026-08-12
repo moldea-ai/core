@@ -10,12 +10,7 @@ import type {
   IFilesystemRegularFileInventoryEntry,
 } from '../inventory/index.js';
 import type { IFilesystemRepositoryFileCacheState } from '../reader-state/index.js';
-import {
-  commitFilesystemFileCapture,
-  copyCachedFilesystemFile,
-  createFilesystemFileCaptureTarget,
-  getMaximumFilesystemFileCaptureBytes,
-} from './utilities.js';
+import { copyCachedFilesystemFile, createFilesystemFileCaptureTarget } from './utilities.js';
 
 const createDirectoryEntry = (
   logicalPath: string,
@@ -90,55 +85,19 @@ describe('filesystem file-operation utilities', () => {
     );
   });
 
-  test.each([
-    [0, 8, 16, 8],
-    [8, 16, 16, 8],
-    [15, 16, 16, 1],
-    [16, 16, 16, 0],
-  ])(
-    'getMaximumFilesystemFileCaptureBytes(%d, %d, %d) -> %d',
-    (cachedByteCount, maxFileBytes, maxCachedBytes, expectedMaximum) => {
-      const cache = createCache();
-
-      cache.cachedByteCount = cachedByteCount;
-
-      expect(getMaximumFilesystemFileCaptureBytes(cache, maxFileBytes, maxCachedBytes)).toBe(
-        expectedMaximum,
-      );
-    },
-  );
-
-  test('copies committed bytes and counts one path exactly once', () => {
+  test('copies cached bytes into caller-owned storage', () => {
     const cache = createCache();
     const path = parseRepositoryPath('/file.bin');
-    const capturedBytes = Uint8Array.from([1, 2, 3]);
-    const firstResult = commitFilesystemFileCapture(cache, path, capturedBytes, 3);
+    const cachedBytes = Uint8Array.from([1, 2, 3]);
 
-    capturedBytes[0] = 9;
-    firstResult[1] = 9;
+    cache.filesByPath.set(path, cachedBytes);
+    cache.cachedByteCount = cachedBytes.byteLength;
+    const firstCopy = copyCachedFilesystemFile(cache, path);
 
-    const secondResult = commitFilesystemFileCapture(cache, path, Uint8Array.from([8, 8, 8]), 3);
-    const copiedResult = copyCachedFilesystemFile(cache, path);
+    firstCopy?.fill(9);
 
-    expect(secondResult).toStrictEqual(Uint8Array.from([1, 2, 3]));
-    expect(copiedResult).toStrictEqual(Uint8Array.from([1, 2, 3]));
-    expect(secondResult).not.toBe(copiedResult);
-    expect(cache.cachedByteCount).toBe(3);
-    expect(cache.filesByPath.size).toBe(1);
-  });
-
-  test('rejects a cache commit beyond the exact remaining budget', () => {
-    const cache = createCache();
-    const firstPath = parseRepositoryPath('/first.bin');
-    const secondPath = parseRepositoryPath('/second.bin');
-
-    commitFilesystemFileCapture(cache, firstPath, Uint8Array.from([1, 2]), 3);
-
-    expectToThrowCode(
-      () => commitFilesystemFileCapture(cache, secondPath, Uint8Array.from([3, 4]), 3),
-      'RESOURCE_LIMIT_EXCEEDED',
-    );
-    expect(cache.cachedByteCount).toBe(2);
-    expect(cache.filesByPath.has(secondPath)).toBe(false);
+    expect(firstCopy).toStrictEqual(Uint8Array.from([9, 9, 9]));
+    expect(copyCachedFilesystemFile(cache, path)).toStrictEqual(Uint8Array.from([1, 2, 3]));
+    expect(copyCachedFilesystemFile(cache, parseRepositoryPath('/missing.bin'))).toBeUndefined();
   });
 });

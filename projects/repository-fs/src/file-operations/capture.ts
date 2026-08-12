@@ -265,6 +265,8 @@ export const captureFilesystemRepositoryFile = async (
   }
 
   let capturedBytes: Uint8Array | undefined;
+  let closeFailure: unknown;
+  let hasCloseFailure = false;
   let operationFailure: unknown;
   let hasOperationFailure = false;
 
@@ -359,20 +361,12 @@ export const captureFilesystemRepositoryFile = async (
       await checkpoints.closeFileHandle(fileHandle);
     }
   } catch (cause) {
-    if (!hasOperationFailure) {
-      throwIfFilesystemRepositoryReaderInvalidated(state, 'read-file', target.file.path);
-      throwIfFilesystemRepositoryOperationAborted(signal, 'read-file', target.file.path);
-
-      return throwFilesystemRepositoryOperationException(
-        'SOURCE_UNAVAILABLE',
-        'read-file',
-        true,
-        target.file.path,
-        cause,
-      );
-    }
+    closeFailure = cause;
+    hasCloseFailure = true;
   }
 
+  throwIfFilesystemRepositoryReaderInvalidated(state, 'read-file', target.file.path);
+  await verifyFilesystemFileReadPath(state, target);
   throwIfFilesystemRepositoryReaderInvalidated(state, 'read-file', target.file.path);
 
   if (hasOperationFailure) {
@@ -384,6 +378,18 @@ export const captureFilesystemRepositoryFile = async (
       operationFailure,
       'read-file',
       target.file.path,
+    );
+  }
+
+  throwIfFilesystemRepositoryOperationAborted(signal, 'read-file', target.file.path);
+
+  if (hasCloseFailure) {
+    return throwFilesystemRepositoryOperationException(
+      'SOURCE_UNAVAILABLE',
+      'read-file',
+      true,
+      target.file.path,
+      closeFailure,
     );
   }
 

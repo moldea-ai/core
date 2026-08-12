@@ -26,6 +26,10 @@ export const createFilesystemRepositoryReaderState = (
       cachedByteCount: 0,
       filesByPath: new Map<IRepositoryPath, Uint8Array>(),
     },
+    captures: {
+      capturesByPath: new Map(),
+      reservedByteCount: 0,
+    },
     entriesByPath: createFilesystemInventoryEntriesByPath(inventory),
     inventory,
     lifecycle: {
@@ -75,6 +79,15 @@ export const markFilesystemRepositoryReaderInvalidated = (
 
   state.lifecycle.isInvalidated = true;
   state.lifecycle.invalidationCause = cause;
+
+  for (const pendingCapture of state.captures.capturesByPath.values()) {
+    pendingCapture.isAcceptingWaiters = false;
+    pendingCapture.reservation.isReleased = true;
+    pendingCapture.controller.abort(cause);
+  }
+
+  state.captures.capturesByPath.clear();
+  state.captures.reservedByteCount = 0;
   state.cache.filesByPath.clear();
   state.cache.cachedByteCount = 0;
 };

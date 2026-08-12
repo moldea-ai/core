@@ -130,4 +130,38 @@ describe('verified filesystem read-file operations', () => {
       await rm(temporaryDirectory, { force: true, recursive: true });
     }
   });
+
+  test('prefers snapshot loss over a denied capacity reservation', async () => {
+    const temporaryDirectory = await createTemporaryDirectory();
+
+    try {
+      const hostPath = path.join(temporaryDirectory, 'file.bin');
+
+      await writeFile(hostPath, Uint8Array.from([1, 2, 3]));
+
+      const preparedRoot = await prepareFilesystemRepositoryRoot({
+        limits: {
+          maxCachedBytes: 1,
+          maxEntries: 2,
+          maxFileBytes: 1,
+        },
+        rootDirectory: temporaryDirectory,
+        selection: { kind: 'directory' },
+      });
+      const inventory = await createVerifiedFilesystemInventory(preparedRoot);
+      const state = createFilesystemRepositoryReaderState(preparedRoot, inventory);
+      const logicalPath = parseRepositoryPath('/file.bin');
+
+      await writeFile(hostPath, Uint8Array.from([3, 2, 1]));
+
+      const read = readFilesystemRepositoryFile(state, logicalPath);
+
+      await expectToRejectCode(read, 'SNAPSHOT_CHANGED');
+      expect(state.lifecycle.isInvalidated).toBe(true);
+      expect(state.cache.cachedByteCount).toBe(0);
+      expect(state.captures.reservedByteCount).toBe(0);
+    } finally {
+      await rm(temporaryDirectory, { force: true, recursive: true });
+    }
+  });
 });
