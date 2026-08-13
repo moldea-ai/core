@@ -21,6 +21,7 @@ import type {
   IGitInventoryOwnershipReadDirectory,
   IGitInventoryOwnershipStatistics,
 } from './types.js';
+import { areHostPathsEquivalent } from './utilities.js';
 
 const GIT_CONTROL_SEGMENT = '.git';
 const GIT_REPOSITORY_ROOT_ARGUMENTS = ['rev-parse', '--show-toplevel'] as const;
@@ -208,11 +209,7 @@ const validateGitBoundary = async (
     return createInspectionFailure('GIT_OUTPUT_INVALID');
   }
 
-  const normalizedDiscoveredRoot = path.resolve(discoveredRoot);
-  const normalizedDirectory = path.resolve(directory);
-  const normalizedRepositoryRoot = path.resolve(repositoryRoot);
-
-  if (normalizedDiscoveredRoot === normalizedDirectory) {
+  if (areHostPathsEquivalent(discoveredRoot, directory)) {
     return Object.freeze({
       gitMetadataBytes: processResult.stdoutBytes,
       kind: 'validated',
@@ -220,7 +217,7 @@ const validateGitBoundary = async (
     });
   }
 
-  if (normalizedDiscoveredRoot === normalizedRepositoryRoot) {
+  if (areHostPathsEquivalent(discoveredRoot, repositoryRoot)) {
     return Object.freeze({
       gitMetadataBytes: processResult.stdoutBytes,
       kind: 'validated',
