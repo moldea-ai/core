@@ -114,12 +114,19 @@ describe('createGitWorkingTreeIdentityInspector', () => {
   });
 
   test('rejects a Git root that no longer matches the selected repository', async () => {
+    const replacementRoot = path.resolve('replacement');
     const processExecutor = createProcessExecutor({
       '--absolute-git-dir': GIT_DIRECTORY,
       '--git-common-dir': '.git',
-      '--show-toplevel': path.resolve('replacement'),
+      '--show-toplevel': replacementRoot,
     });
-    const inspectPath = vi.fn<IGitWorkingTreeIdentityStat>();
+    const inspectPath = vi.fn<IGitWorkingTreeIdentityStat>((hostPath) =>
+      Promise.resolve({
+        dev: 1n,
+        ino: hostPath === replacementRoot ? 2n : 1n,
+        isDirectory: () => true,
+      }),
+    );
 
     await expect(
       createGitWorkingTreeIdentityInspector(
@@ -129,7 +136,50 @@ describe('createGitWorkingTreeIdentityInspector', () => {
         repositoryRoot: REPOSITORY_ROOT,
       }),
     ).resolves.toStrictEqual({ kind: 'mismatched' });
-    expect(inspectPath).not.toHaveBeenCalled();
+    expect(inspectPath.mock.calls.map(([hostPath]) => hostPath)).toStrictEqual([
+      replacementRoot,
+      REPOSITORY_ROOT,
+    ]);
+  });
+
+  test('accepts distinct absolute root spellings with the same filesystem identity', async () => {
+    const selectedRoot = path.resolve('selected-alias');
+    const discoveredRoot = path.resolve('canonical-repository');
+    const gitDirectory = path.join(discoveredRoot, '.git');
+    const processExecutor = createProcessExecutor({
+      '--absolute-git-dir': gitDirectory,
+      '--git-common-dir': gitDirectory,
+      '--show-toplevel': discoveredRoot,
+    });
+    const inspectPath = vi.fn<IGitWorkingTreeIdentityStat>((hostPath) => {
+      const inode = new Map([
+        [selectedRoot, 1n],
+        [discoveredRoot, 1n],
+        [gitDirectory, 2n],
+      ]).get(hostPath);
+
+      if (inode === undefined) {
+        return Promise.reject(Object.assign(new Error('private missing path'), { code: 'ENOENT' }));
+      }
+
+      return Promise.resolve({ dev: 1n, ino: inode, isDirectory: () => true });
+    });
+    const inspectIdentity = createGitWorkingTreeIdentityInspector(processExecutor, inspectPath);
+
+    await expect(inspectIdentity({ repositoryRoot: selectedRoot })).resolves.toStrictEqual({
+      identity: {
+        commonDirectory: { dev: 1n, ino: 2n, path: gitDirectory },
+        gitDirectory: { dev: 1n, ino: 2n, path: gitDirectory },
+        repositoryRoot: { dev: 1n, ino: 1n, path: discoveredRoot },
+      },
+      kind: 'inspected',
+    });
+    expect(inspectPath.mock.calls.map(([hostPath]) => hostPath)).toStrictEqual([
+      discoveredRoot,
+      selectedRoot,
+      gitDirectory,
+      gitDirectory,
+    ]);
   });
 
   test.each([

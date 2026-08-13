@@ -7,7 +7,10 @@ import {
   type IGitProcessExecutor,
   type IGitProcessFailureReason,
 } from '../../git-process/index.js';
-import { areHostPathsEquivalent } from '../../host-path-identity/index.js';
+import {
+  areHostPathsEquivalent,
+  haveSameHostPathIdentity,
+} from '../../host-path-identity/index.js';
 import type { IMoldeaCliGitErrorCode } from '../../presentation/index.js';
 import { MAX_GIT_DISCOVERY_OUTPUT_BYTES } from '../constants.js';
 import { parseGitAbsolutePathOutput, parseGitPathOutput } from '../parser.js';
@@ -153,8 +156,30 @@ export const createGitWorkingTreeIdentityInspector = (
       return discoveredRoot;
     }
 
+    const repositoryRoot = await captureLocation(
+      inspectPath,
+      discoveredRoot,
+      'GIT_WORK_TREE_REQUIRED',
+    );
+
+    if (isInspectionFailure(repositoryRoot)) {
+      return repositoryRoot;
+    }
+
     if (!areHostPathsEquivalent(discoveredRoot, input.repositoryRoot)) {
-      return Object.freeze({ kind: 'mismatched' });
+      const selectedRepositoryRoot = await captureLocation(
+        inspectPath,
+        input.repositoryRoot,
+        'GIT_WORK_TREE_REQUIRED',
+      );
+
+      if (isInspectionFailure(selectedRepositoryRoot)) {
+        return selectedRepositoryRoot;
+      }
+
+      if (!haveSameHostPathIdentity(repositoryRoot, selectedRepositoryRoot)) {
+        return Object.freeze({ kind: 'mismatched' });
+      }
     }
 
     const gitDirectoryPath = await queryGitPath(
@@ -182,16 +207,6 @@ export const createGitWorkingTreeIdentityInspector = (
     const commonDirectoryPath = path.isAbsolute(commonDirectoryOutput)
       ? commonDirectoryOutput
       : path.resolve(input.repositoryRoot, commonDirectoryOutput);
-    const repositoryRoot = await captureLocation(
-      inspectPath,
-      discoveredRoot,
-      'GIT_WORK_TREE_REQUIRED',
-    );
-
-    if (isInspectionFailure(repositoryRoot)) {
-      return repositoryRoot;
-    }
-
     const gitDirectory = await captureLocation(inspectPath, gitDirectoryPath, 'GIT_OUTPUT_INVALID');
 
     if (isInspectionFailure(gitDirectory)) {
