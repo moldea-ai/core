@@ -2,7 +2,7 @@
 
 The canonical read-only local command-line composition for deterministic inspection of `moldea` repositories.
 
-The current unpublished `0.0.1` foundation provides the `moldea` executable, strict version 1 command and option parsing, deterministic help and version output, resource-limit validation, safe human or JSON errors, Git-owned working-tree discovery, and bounded strict tracked/untracked candidate probing for `validate` and `inspect`. Effective inventory normalization, Repository FS construction, Core execution, adapter composition, and compatibility reporting are not implemented yet.
+The current unpublished `0.0.1` foundation provides the `moldea` executable, strict version 1 command and option parsing, deterministic help and version output, resource-limit validation, safe human or JSON errors, Git-owned working-tree discovery, bounded strict tracked/untracked candidate probing, submodule exclusion, and ownership-aware nested-repository filtering for `validate` and `inspect`. Entry-type and logical-path normalization, Repository FS construction, Core execution, adapter composition, and compatibility reporting are not implemented yet.
 
 Tarball and installed-bin checks are the release boundary for now. This package is not ready to publish to npm.
 
@@ -16,7 +16,7 @@ moldea inspect
 moldea compatibility
 ```
 
-The foundation fully supports top-level and command-specific help, `moldea --version`, strict option validation, and usage failures. It discovers a selected working tree and probes its raw tracked and non-ignored untracked candidates, but it does not complete repository inspection or return successful command results yet.
+The foundation fully supports top-level and command-specific help, `moldea --version`, strict option validation, and usage failures. It discovers a selected working tree, probes its raw tracked and non-ignored untracked candidates, excludes submodule content, and filters nested-repository-only untracked content, but it does not complete repository inspection or return successful command results yet.
 
 ## Package boundary
 
@@ -28,7 +28,7 @@ The package exposes the `moldea` executable and no supported JavaScript or TypeS
 
 No package-backed runtime adapter is active yet. The `custom` adapter remains built into Core and requires no separate package.
 
-The executable performs no network requests, telemetry, repository writes, filesystem-reader construction, or Core inspection in this foundation. `validate` and `inspect` use read-only Git operations to discover and verify a working tree and probe raw inventory candidates; help, version, usage failures, and `compatibility` do not invoke Git.
+The executable performs no network requests, telemetry, repository writes, filesystem-reader construction, or Core inspection in this foundation. `validate` and `inspect` use read-only Git operations and no-follow filesystem metadata inspection to discover a working tree, probe raw inventory candidates, and establish selected-repository ownership; help, version, usage failures, and `compatibility` do not invoke Git.
 
 ## Runtime support
 
@@ -40,7 +40,7 @@ The version 1 consumer runtime range is:
 
 The package is Node.js-specific. `validate` and `inspect` require Git `2.30.0` or later; commands compare the numeric Git version and accept standard platform or vendor suffixes.
 
-## Git working-tree discovery and raw inventory
+## Git working-tree discovery and ownership-filtered inventory
 
 The starting directory is the invocation directory unless `--repository <path>` selects another path. Relative selections resolve against the invocation directory. Git determines the absolute top-level working-tree root, so ordinary repositories, unborn repositories, nested starting directories, and linked worktrees share the same discovery path.
 
@@ -48,9 +48,13 @@ Git runs directly without a platform shell, with fixed non-interactive arguments
 
 After discovery, `validate` and `inspect` stream NUL-delimited tracked-index and non-ignored untracked records from fixed `git ls-files` commands. Tracked records accept only full SHA-1 or SHA-256 object IDs, index stages `0` through `3`, and Git modes `100644`, `100755`, `120000`, or `160000`. Paths are decoded as fatal UTF-8 and preserve exact Unicode scalars, case, tabs, newlines, and an initial BOM without normalization.
 
-Raw tracked and untracked records share `maxEntries` before any future stage collapse or deduplication. Their combined stdout shares `maxTotalBytes`, while stderr has a separate fixed 4096-byte diagnostic ceiling and is never emitted. Exceeding an inventory ceiling discards all candidates and returns the non-retryable `cli:RESOURCE_LIMIT_EXCEEDED` contract with message `A resource limit was exceeded.` Malformed output returns `git:GIT_OUTPUT_INVALID` without a partial inventory.
+Raw tracked and untracked records share `maxEntries` before ownership filtering, future stage collapse, or deduplication. Their combined stdout and any nested-root validation stdout share `maxTotalBytes`, while stderr has a separate fixed 4096-byte diagnostic ceiling per Git command and is never emitted. Exceeding an inventory ceiling discards all candidates and returns the non-retryable `cli:RESOURCE_LIMIT_EXCEEDED` contract with message `A resource limit was exceeded.` Malformed output returns `git:GIT_OUTPUT_INVALID` without a partial inventory.
 
-The CLI does not expose selected paths, candidate paths, resolved repository roots, raw process errors, or Git diagnostics in failures. A successfully probed candidate set currently reaches the safe `INTERNAL_ERROR` placeholder because selected-repository ownership, `.git` and nested-repository boundaries, entry-type overlay, attribute classification, logical-path conversion, effective deduplication, and command result composition belong to later implementation slices.
+Every tracked `160000` gitlink establishes an excluded submodule root. The root and every candidate below it are removed without initializing, updating, or recursing into the submodule. Candidate paths containing an exact `.git` segment are also excluded; similarly named ordinary paths such as `.gitignore`, `.gitattributes`, and `.github` remain eligible.
+
+For untracked candidates, the CLI traverses only the required directory prefixes, compares native names by exact bytes, and uses no-follow filesystem observations. An exact `.git` marker is validated through bounded sanitized Git root discovery so both ordinary nested repositories and linked worktrees are recognized without reimplementing Git's control-file format. Untracked candidates owned by those nested working trees are excluded. A selected-repository tracked candidate remains included even when a nested repository was created above it later. Ambiguous ownership, a symlinked boundary, unsafe raw path structure, or contradictory root output fails the complete probe with `GIT_OUTPUT_INVALID`; access failures remain `GIT_ACCESS_DENIED`.
+
+The CLI does not expose selected paths, candidate paths, resolved repository roots, raw process errors, or Git diagnostics in failures. A successfully ownership-filtered candidate set currently reaches the safe `INTERNAL_ERROR` placeholder because entry-type overlay, attribute classification, logical-path conversion, effective deduplication, and command result composition belong to later implementation slices.
 
 ## Development
 

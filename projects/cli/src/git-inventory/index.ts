@@ -13,5 +13,5 @@ export type {
   IGitUntrackedInventoryCandidate,
 } from './types.js';
 
-// raw inventory probe
+// ownership-filtered inventory probe
 export { createGitInventoryProbe, probeGitInventory } from './probe.js';

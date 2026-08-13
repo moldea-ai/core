@@ -1,49 +1,15 @@
 // @vitest-environment node
-import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, test } from 'vitest';
 
-import { createGitProcessEnvironment } from '../git-process/index.js';
-
 import { probeGitInventory } from './probe.js';
-
-interface IGitRepositoryFixture {
-  readonly directory: string;
-  readonly environment: NodeJS.ProcessEnv;
-  readonly remove: () => void;
-}
-
-/** Creates an isolated unborn Git repository with no ambient user configuration. */
-const createGitRepository = (): IGitRepositoryFixture => {
-  const testDirectory = mkdtempSync(path.join(tmpdir(), 'moldea-git-inventory-'));
-  const directory = path.join(testDirectory, 'repository');
-  const homeDirectory = path.join(testDirectory, 'home');
-  const configDirectory = path.join(testDirectory, 'config');
-  const hooksDirectory = path.join(testDirectory, 'hooks');
-  const environment = createGitProcessEnvironment({
-    ...process.env,
-    HOME: homeDirectory,
-    XDG_CONFIG_HOME: configDirectory,
-  });
-
-  for (const fixtureDirectory of [directory, homeDirectory, configDirectory, hooksDirectory]) {
-    mkdirSync(fixtureDirectory, { recursive: true });
-  }
-
-  execFileSync(
-    'git',
-    ['-c', `core.hooksPath=${hooksDirectory}`, '-c', 'init.defaultBranch=main', 'init'],
-    { cwd: directory, env: environment, stdio: 'ignore' },
-  );
-
-  return {
-    directory,
-    environment,
-    remove: () => rmSync(testDirectory, { force: true, recursive: true }),
-  };
-};
+import {
+  commitFixtureGitIndex,
+  createGitRepository,
+  initializeGitRepository,
+  runFixtureGit,
+} from './probe.test-fixtures.js';
 
 describe('real Git inventory probe', () => {
   test('enumerates tracked and non-ignored untracked paths in an unborn repository', async () => {
@@ -59,11 +25,7 @@ describe('real Git inventory probe', () => {
       );
       writeFileSync(path.join(repository.directory, 'untracked-😀.txt'), 'untracked', 'utf8');
       writeFileSync(path.join(repository.directory, 'ignored.txt'), 'ignored', 'utf8');
-      execFileSync('git', ['add', '--', '.gitignore', 'nested/tracked file.txt'], {
-        cwd: repository.directory,
-        env: repository.environment,
-        stdio: 'ignore',
-      });
+      runFixtureGit(repository, ['add', '--', '.gitignore', 'nested/tracked file.txt']);
 
       const result = await probeGitInventory({
         maxEntries: 4,
@@ -95,11 +57,7 @@ describe('real Git inventory probe', () => {
     try {
       writeFileSync(path.join(repository.directory, 'tracked.txt'), 'tracked', 'utf8');
       writeFileSync(path.join(repository.directory, 'untracked.txt'), 'untracked', 'utf8');
-      execFileSync('git', ['add', '--', 'tracked.txt'], {
-        cwd: repository.directory,
-        env: repository.environment,
-        stdio: 'ignore',
-      });
+      runFixtureGit(repository, ['add', '--', 'tracked.txt']);
 
       await expect(
         probeGitInventory({
@@ -133,11 +91,7 @@ describe('real Git inventory probe', () => {
         ]);
 
         writeFileSync(invalidPath, 'invalid path bytes');
-        execFileSync('git', ['add', '--all'], {
-          cwd: repository.directory,
-          env: repository.environment,
-          stdio: 'ignore',
-        });
+        runFixtureGit(repository, ['add', '--all']);
 
         await expect(
           probeGitInventory({
@@ -151,4 +105,130 @@ describe('real Git inventory probe', () => {
       }
     },
   );
+
+  test('excludes nested-only content while retaining selected-repository tracked descendants', async () => {
+    const repository = createGitRepository();
+
+    try {
+      const nestedDirectory = path.join(repository.directory, 'nested');
+
+      mkdirSync(path.join(repository.directory, '.github'));
+      mkdirSync(nestedDirectory);
+      writeFileSync(path.join(repository.directory, '.gitattributes'), '*.txt text\n', 'utf8');
+      writeFileSync(path.join(repository.directory, '.gitignore'), 'ignored.txt\n', 'utf8');
+      writeFileSync(
+        path.join(repository.directory, '.github', 'workflow.yml'),
+        'name: test\n',
+        'utf8',
+      );
+      writeFileSync(path.join(nestedDirectory, 'tracked.txt'), 'parent owned', 'utf8');
+      runFixtureGit(repository, [
+        'add',
+        '--',
+        '.gitattributes',
+        '.gitignore',
+        'nested/tracked.txt',
+      ]);
+
+      initializeGitRepository(nestedDirectory, repository.environment, repository.hooksDirectory);
+      writeFileSync(path.join(nestedDirectory, 'untracked.txt'), 'nested owned', 'utf8');
+
+      await expect(
+        probeGitInventory({
+          maxEntries: 8,
+          maxMetadataBytes: 16_384,
+          repositoryRoot: repository.directory,
+        }),
+      ).resolves.toStrictEqual({
+        candidates: [
+          { kind: 'tracked', mode: '100644', path: '.gitattributes', stage: 0 },
+          { kind: 'tracked', mode: '100644', path: '.gitignore', stage: 0 },
+          { kind: 'tracked', mode: '100644', path: 'nested/tracked.txt', stage: 0 },
+          { kind: 'untracked', path: '.github/workflow.yml' },
+        ],
+        kind: 'probed',
+      });
+    } finally {
+      repository.remove();
+    }
+  });
+
+  test('excludes initialized and uninitialized submodule roots without recursion', async () => {
+    const repository = createGitRepository();
+
+    try {
+      const submoduleSource = path.join(repository.testDirectory, 'submodule-source');
+
+      initializeGitRepository(submoduleSource, repository.environment, repository.hooksDirectory);
+      writeFileSync(path.join(submoduleSource, 'content.txt'), 'submodule content', 'utf8');
+      runFixtureGit(repository, ['add', '--', 'content.txt'], submoduleSource);
+      commitFixtureGitIndex(repository, submoduleSource);
+      runFixtureGit(repository, [
+        '-c',
+        'protocol.file.allow=always',
+        'submodule',
+        'add',
+        submoduleSource,
+        'module',
+      ]);
+
+      const probe = (): ReturnType<typeof probeGitInventory> =>
+        probeGitInventory({
+          maxEntries: 4,
+          maxMetadataBytes: 16_384,
+          repositoryRoot: repository.directory,
+        });
+
+      await expect(
+        probeGitInventory({
+          maxEntries: 1,
+          maxMetadataBytes: 16_384,
+          repositoryRoot: repository.directory,
+        }),
+      ).resolves.toStrictEqual({ errorCode: 'RESOURCE_LIMIT_EXCEEDED', kind: 'failed' });
+
+      await expect(probe()).resolves.toStrictEqual({
+        candidates: [{ kind: 'tracked', mode: '100644', path: '.gitmodules', stage: 0 }],
+        kind: 'probed',
+      });
+
+      runFixtureGit(repository, ['submodule', 'deinit', '--force', '--', 'module']);
+
+      await expect(probe()).resolves.toStrictEqual({
+        candidates: [{ kind: 'tracked', mode: '100644', path: '.gitmodules', stage: 0 }],
+        kind: 'probed',
+      });
+    } finally {
+      repository.remove();
+    }
+  });
+
+  test('excludes a nested linked worktree boundary', async () => {
+    const repository = createGitRepository();
+
+    try {
+      const worktreeSource = path.join(repository.testDirectory, 'worktree-source');
+      const nestedWorktree = path.join(repository.directory, 'linked-worktree');
+
+      initializeGitRepository(worktreeSource, repository.environment, repository.hooksDirectory);
+      writeFileSync(path.join(worktreeSource, 'content.txt'), 'linked content', 'utf8');
+      runFixtureGit(repository, ['add', '--', 'content.txt'], worktreeSource);
+      commitFixtureGitIndex(repository, worktreeSource);
+      runFixtureGit(
+        repository,
+        ['worktree', 'add', '--detach', nestedWorktree, 'HEAD'],
+        worktreeSource,
+      );
+
+      await expect(
+        probeGitInventory({
+          maxEntries: 2,
+          maxMetadataBytes: 16_384,
+          repositoryRoot: repository.directory,
+        }),
+      ).resolves.toStrictEqual({ candidates: [], kind: 'probed' });
+    } finally {
+      repository.remove();
+    }
+  });
 });

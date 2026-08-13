@@ -8,6 +8,7 @@ import type {
 
 import { GIT_TRACKED_INVENTORY_ARGUMENTS, GIT_UNTRACKED_INVENTORY_ARGUMENTS } from './constants.js';
 import { createGitInventoryProbe } from './probe.js';
+import type { IGitInventoryOwnershipFilter } from './repository-ownership/index.js';
 
 const ENCODER = new TextEncoder();
 const OBJECT_ID = '0123456789abcdef0123456789abcdef01234567';
@@ -62,7 +63,16 @@ describe('createGitInventoryProbe', () => {
       { stdout: trackedOutput },
       { stdout: untrackedOutput },
     ]);
-    const probe = createGitInventoryProbe(processExecutor);
+    const ownershipFilter = vi.fn<IGitInventoryOwnershipFilter>((input) =>
+      Promise.resolve(
+        Object.freeze({
+          candidates: input.candidates,
+          gitMetadataBytes: 0,
+          kind: 'filtered',
+        }),
+      ),
+    );
+    const probe = createGitInventoryProbe(processExecutor, ownershipFilter);
     const result = await probe({
       maxEntries: 3,
       maxMetadataBytes: 512,
@@ -101,6 +111,16 @@ describe('createGitInventoryProbe', () => {
     expect(processCalls[1]?.[0].maxStderrBytes).toBe(4096);
     expect(processCalls[1]?.[0].maxStdoutBytes).toBe(512 - trackedOutput.byteLength);
     expect(typeof processCalls[1]?.[0].consumeStdout).toBe('function');
+    expect(ownershipFilter).toHaveBeenCalledOnce();
+    expect(ownershipFilter).toHaveBeenCalledWith({
+      candidates: [
+        { kind: 'tracked', mode: '100644', path: 'tracked', stage: 0 },
+        { kind: 'tracked', mode: '100755', path: 'conflict', stage: 2 },
+        { kind: 'untracked', path: 'untracked' },
+      ],
+      maxMetadataBytes: 512 - trackedOutput.byteLength - untrackedOutput.byteLength,
+      repositoryRoot: '/repository',
+    });
   });
 
   test('enforces the combined entry limit before stage collapse or deduplication', async () => {
@@ -151,5 +171,21 @@ describe('createGitInventoryProbe', () => {
     await expect(
       malformedProbe({ maxEntries: 1, maxMetadataBytes: 32, repositoryRoot: '/private' }),
     ).resolves.toStrictEqual({ errorCode: 'GIT_OUTPUT_INVALID', kind: 'failed' });
+  });
+
+  test('returns an atomic ownership failure after both raw streams complete', async () => {
+    const processExecutor = createProcessExecutor([
+      { stdout: ENCODER.encode(`100644 ${OBJECT_ID} 0\ttracked\u0000`) },
+      { stdout: ENCODER.encode('nested/untracked\u0000') },
+    ]);
+    const ownershipFilter = vi
+      .fn<IGitInventoryOwnershipFilter>()
+      .mockResolvedValue(Object.freeze({ errorCode: 'GIT_ACCESS_DENIED', kind: 'failed' }));
+    const probe = createGitInventoryProbe(processExecutor, ownershipFilter);
+
+    await expect(
+      probe({ maxEntries: 2, maxMetadataBytes: 1024, repositoryRoot: '/private' }),
+    ).resolves.toStrictEqual({ errorCode: 'GIT_ACCESS_DENIED', kind: 'failed' });
+    expect(ownershipFilter).toHaveBeenCalledOnce();
   });
 });

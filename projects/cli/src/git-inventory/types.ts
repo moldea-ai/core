@@ -22,21 +22,21 @@ export interface IGitUntrackedInventoryCandidate {
   readonly path: string;
 }
 
-// raw candidate retained before ownership, type, and path normalization
+// raw candidate retained before type and logical-path normalization
 export type IGitInventoryCandidate =
   IGitTrackedInventoryCandidate | IGitUntrackedInventoryCandidate;
 
 // operational errors that can terminate a raw Git inventory probe
 export type IGitInventoryProbeErrorCode = IMoldeaCliGitErrorCode | 'RESOURCE_LIMIT_EXCEEDED';
 
-// limits and selected repository root for one raw inventory probe
+// limits and selected repository root for one ownership-filtered inventory probe
 export interface IGitInventoryProbeInput {
   readonly maxEntries: number;
   readonly maxMetadataBytes: number;
   readonly repositoryRoot: string;
 }
 
-// complete immutable raw candidate set from one probe
+// complete immutable selected-repository candidate set from one probe
 export interface IGitInventoryProbedResult {
   readonly candidates: readonly IGitInventoryCandidate[];
   readonly kind: 'probed';
@@ -48,10 +48,10 @@ export interface IGitInventoryProbeFailedResult {
   readonly kind: 'failed';
 }
 
-// all-or-nothing raw inventory probe result
+// all-or-nothing ownership-filtered inventory probe result
 export type IGitInventoryProbeResult = IGitInventoryProbeFailedResult | IGitInventoryProbedResult;
 
-// injectable raw inventory probe boundary
+// injectable ownership-filtered inventory probe boundary
 export type IGitInventoryProbe = (
   input: IGitInventoryProbeInput,
 ) => Promise<IGitInventoryProbeResult>;

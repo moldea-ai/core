@@ -6,6 +6,11 @@ import {
 } from '../git-process/index.js';
 import { GIT_TRACKED_INVENTORY_ARGUMENTS, GIT_UNTRACKED_INVENTORY_ARGUMENTS } from './constants.js';
 import { createTrackedGitInventoryParser, createUntrackedGitInventoryParser } from './parser.js';
+import {
+  createGitInventoryBoundaryInspector,
+  createGitInventoryOwnershipFilter,
+  type IGitInventoryOwnershipFilter,
+} from './repository-ownership/index.js';
 import type {
   IGitInventoryCandidate,
   IGitInventoryParserResult,
@@ -62,13 +67,17 @@ const isProbeFailure = (
 ): result is IGitInventoryProbeFailedResult => !Array.isArray(result);
 
 /**
- * Creates the strict raw Git inventory probe around an injectable streamed process boundary.
+ * Creates the strict ownership-filtered Git inventory probe around injectable boundaries.
  * @param processExecutor The bounded incremental Git process executor.
- * @returns An all-or-nothing tracked and untracked candidate probe.
+ * @param ownershipFilter The submodule and nested-repository ownership filter.
+ * @returns An all-or-nothing selected-repository candidate probe.
  */
 export const createGitInventoryProbe =
   (
     processExecutor: IGitStreamingProcessExecutor = executeGitStreamingProcess,
+    ownershipFilter: IGitInventoryOwnershipFilter = createGitInventoryOwnershipFilter(
+      createGitInventoryBoundaryInspector(processExecutor),
+    ),
   ): IGitInventoryProbe =>
   async (input): Promise<IGitInventoryProbeResult> => {
     const trackedParser = createTrackedGitInventoryParser(input.maxEntries);
@@ -117,11 +126,21 @@ export const createGitInventoryProbe =
       return untrackedCandidates;
     }
 
-    return Object.freeze({
+    const ownershipResult = await ownershipFilter({
       candidates: Object.freeze([...trackedCandidates, ...untrackedCandidates]),
-      kind: 'probed',
+      maxMetadataBytes:
+        input.maxMetadataBytes -
+        trackedProcessResult.stdoutBytes -
+        untrackedProcessResult.stdoutBytes,
+      repositoryRoot: input.repositoryRoot,
     });
+
+    if (ownershipResult.kind === 'failed') {
+      return ownershipResult;
+    }
+
+    return Object.freeze({ candidates: ownershipResult.candidates, kind: 'probed' });
   };
 
-// default raw Git inventory probe used by command execution
+// default ownership-filtered Git inventory probe used by command execution
 export const probeGitInventory = createGitInventoryProbe();
