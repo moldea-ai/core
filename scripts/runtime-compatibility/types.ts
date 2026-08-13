@@ -126,6 +126,49 @@ export interface IRuntimeCompatibilityMatrix {
   version: 1;
 }
 
+// package manifest fields used to derive one CLI release composition
+export interface IMoldeaPackageManifestSource {
+  dependencies?: Readonly<Record<string, string>>;
+  engines?: Readonly<Record<string, string>>;
+  name: string;
+  version: string;
+}
+
+// one active runtime adapter definition inspected during release generation
+export interface IRuntimeAdapterReleaseDefinition {
+  id: string;
+  supportedRepositoryFormatVersions: readonly number[];
+}
+
+// canonical inputs required to validate and generate CLI release metadata
+export interface IMoldeaCliReleaseMetadataSources {
+  activeAdapters: readonly IRuntimeAdapterReleaseDefinition[];
+  cliManifest: unknown;
+  coreRecognizedAdapterIds: readonly string[];
+  coreSupportedRepositoryFormatVersions: readonly number[];
+  matrix: IRuntimeCompatibilityMatrix;
+  minimumGitVersion: string;
+  outputSchemaVersion: 1;
+  packageManifests: Readonly<Record<string, unknown>>;
+}
+
+// one exact package version bundled into the generated CLI composition
+export interface IMoldeaCliGeneratedPackageMetadata {
+  name: string;
+  version: string;
+}
+
+// deterministic release metadata serialized into the CLI source artifact
+export interface IMoldeaCliGeneratedReleaseMetadata {
+  activeAdapterIds: string[];
+  cliPackage: IMoldeaCliGeneratedPackageMetadata & { supportedNodeRange: string };
+  matrix: IRuntimeCompatibilityMatrix;
+  minimumGitVersion: string;
+  outputSchemaVersion: 1;
+  packages: IMoldeaCliGeneratedPackageMetadata[];
+  repositoryFormatVersions: number[];
+}
+
 // structured validator failure with a canonical matrix path
 export interface IRuntimeCompatibilityValidationIssue {
   message: string;

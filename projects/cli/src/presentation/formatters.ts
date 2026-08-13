@@ -1,6 +1,7 @@
 import type { IDiagnostic, IDiagnosticEntity } from '@moldea.ai/core';
 
 import { MOLDEA_CLI_COMMANDS, type IMoldeaCliCommand } from '../command-line/index.js';
+import { MOLDEA_CLI_JSON_SCHEMA_VERSION } from '../json-output-contract/index.js';
 import { serializeJsonDeterministically } from '../json-serialization/index.js';
 
 import { MOLDEA_CLI_COMMAND_HELP, MOLDEA_CLI_TOP_LEVEL_HELP } from './constants.js';
@@ -124,7 +125,7 @@ export const formatMoldeaCliJsonError = (
     command,
     error,
     result: null,
-    schemaVersion: 1,
+    schemaVersion: MOLDEA_CLI_JSON_SCHEMA_VERSION,
     status: 'error',
   };
 
@@ -162,7 +163,7 @@ export const formatMoldeaCliJsonValidateResult = (
     command: MOLDEA_CLI_COMMANDS.Validate,
     error: null,
     result,
-    schemaVersion: 1,
+    schemaVersion: MOLDEA_CLI_JSON_SCHEMA_VERSION,
     status: result.diagnostics.length === 0 ? 'valid' : 'invalid',
   };
 
@@ -239,7 +240,7 @@ export const formatMoldeaCliJsonInspectResult = (
     command: MOLDEA_CLI_COMMANDS.Inspect,
     error: null,
     result,
-    schemaVersion: 1,
+    schemaVersion: MOLDEA_CLI_JSON_SCHEMA_VERSION,
     status: result.inspection.valid ? 'valid' : 'invalid',
   };
 

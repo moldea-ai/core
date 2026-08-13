@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { runMoldeaCli } from '../cli-execution/index.js';
 import { loadMoldeaCliPackageMetadata } from '../package-metadata/index.js';
 import { createMoldeaCliOwnedError, formatMoldeaCliHumanError } from '../presentation/index.js';
+import { MOLDEA_CLI_RELEASE_METADATA } from '../release-metadata/index.js';
 
 const executableDirectory = path.dirname(fileURLToPath(import.meta.url));
 const packageManifestPath = path.resolve(executableDirectory, '..', 'package.json');
@@ -16,6 +17,7 @@ try {
     cliVersion: packageMetadata.version,
     commandLineArguments: process.argv.slice(2),
     invocationDirectory,
+    releaseMetadata: MOLDEA_CLI_RELEASE_METADATA,
   });
 
   if (executionResult.stdout.length > 0) {

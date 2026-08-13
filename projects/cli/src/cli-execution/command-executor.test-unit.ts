@@ -14,6 +14,7 @@ import type { IMoldeaCliCommand } from '../command-line/index.js';
 import type { IMoldeaCliCoreInspectionExecutor } from '../core-composition/index.js';
 import type { IGitWorkingTreeDiscovery } from '../git-working-tree/index.js';
 import type { IMoldeaCliOwnedErrorCode } from '../presentation/index.js';
+import { MOLDEA_CLI_RELEASE_METADATA } from '../release-metadata/index.js';
 import { GitContentTransformUnsupportedException } from '../repository-content-transformation-guard/index.js';
 import type {
   IWorkingTreeSnapshotExecutionInput,
@@ -47,6 +48,7 @@ const createCommandInput = (
       },
     },
   },
+  releaseMetadata: MOLDEA_CLI_RELEASE_METADATA,
 });
 
 /** Creates one immutable ASCII text asset for command-result composition tests. */

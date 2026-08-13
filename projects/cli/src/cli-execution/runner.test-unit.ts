@@ -2,6 +2,7 @@
 import { describe, expect, test, vi } from 'vitest';
 
 import { MOLDEA_CLI_TOP_LEVEL_HELP } from '../presentation/index.js';
+import { MOLDEA_CLI_RELEASE_METADATA } from '../release-metadata/index.js';
 
 import { runMoldeaCli } from './runner.js';
 import type { IMoldeaCliCommandExecutor } from './types.js';
@@ -18,6 +19,7 @@ describe('runMoldeaCli', () => {
         commandLineArguments: [],
         executeCommand,
         invocationDirectory: INVOCATION_DIRECTORY,
+        releaseMetadata: MOLDEA_CLI_RELEASE_METADATA,
       }),
     ).resolves.toStrictEqual({
       exitCode: 0,
@@ -87,6 +89,7 @@ Options:
         commandLineArguments: [command, '--help'],
         executeCommand,
         invocationDirectory: INVOCATION_DIRECTORY,
+        releaseMetadata: MOLDEA_CLI_RELEASE_METADATA,
       }),
     ).resolves.toStrictEqual({ exitCode: 0, stderr: '', stdout: expectedHelp });
     expect(executeCommand).not.toHaveBeenCalled();
@@ -101,6 +104,7 @@ Options:
         commandLineArguments: ['--version'],
         executeCommand,
         invocationDirectory: INVOCATION_DIRECTORY,
+        releaseMetadata: MOLDEA_CLI_RELEASE_METADATA,
       }),
     ).resolves.toStrictEqual({ exitCode: 0, stderr: '', stdout: '0.0.1\n' });
     expect(executeCommand).not.toHaveBeenCalled();
@@ -112,6 +116,7 @@ Options:
         cliVersion: '0.0.1',
         commandLineArguments: ['unknown'],
         invocationDirectory: INVOCATION_DIRECTORY,
+        releaseMetadata: MOLDEA_CLI_RELEASE_METADATA,
       }),
     ).resolves.toStrictEqual({
       exitCode: 2,
@@ -126,6 +131,7 @@ Options:
         cliVersion: '0.0.1',
         commandLineArguments: ['--json'],
         invocationDirectory: INVOCATION_DIRECTORY,
+        releaseMetadata: MOLDEA_CLI_RELEASE_METADATA,
       }),
     ).resolves.toStrictEqual({
       exitCode: 2,
@@ -145,6 +151,7 @@ Options:
         commandLineArguments: ['validate', '--json'],
         executeCommand,
         invocationDirectory: INVOCATION_DIRECTORY,
+        releaseMetadata: MOLDEA_CLI_RELEASE_METADATA,
       }),
     ).resolves.toBe(executionResult);
     expect(executeCommand).toHaveBeenCalledOnce();
@@ -167,6 +174,7 @@ Options:
           },
         },
       },
+      releaseMetadata: MOLDEA_CLI_RELEASE_METADATA,
     });
   });
 
@@ -176,6 +184,7 @@ Options:
         cliVersion: '0.0.1',
         commandLineArguments: ['compatibility'],
         invocationDirectory: INVOCATION_DIRECTORY,
+        releaseMetadata: MOLDEA_CLI_RELEASE_METADATA,
       }),
     ).resolves.toStrictEqual({
       exitCode: 3,
@@ -193,6 +202,7 @@ Options:
         commandLineArguments: ['inspect', '--json'],
         executeCommand,
         invocationDirectory: INVOCATION_DIRECTORY,
+        releaseMetadata: MOLDEA_CLI_RELEASE_METADATA,
       }),
     ).resolves.toStrictEqual({
       exitCode: 3,

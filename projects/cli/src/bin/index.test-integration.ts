@@ -188,7 +188,10 @@ describe('published CLI package and executable', () => {
     ).toBe(true);
     expect(packedPaths.every((filePath) => !filePath.includes('.test-'))).toBe(true);
     expectPackageManifest(manifest, 'workspace:0.0.1');
-    expect(readFileSync(distributionPath, 'utf8').startsWith('#!/usr/bin/env node\n')).toBe(true);
+    const executable = readFileSync(distributionPath, 'utf8');
+    expect(executable.startsWith('#!/usr/bin/env node\n')).toBe(true);
+    expect(executable).toContain('@moldea.ai/adapter-anthropic');
+    expect(executable).toContain('minimumGitVersion');
   });
 
   test('rewrites exact workspace dependencies in the real tarball', () => {
@@ -214,6 +217,8 @@ describe('published CLI package and executable', () => {
 
       expectPackageManifest(manifest, '0.0.1');
       expect(executable.startsWith('#!/usr/bin/env node\n')).toBe(true);
+      expect(executable).toContain('@moldea.ai/adapter-anthropic');
+      expect(executable).toContain('minimumGitVersion');
     } finally {
       rmSync(packDirectory, { force: true, recursive: true });
     }

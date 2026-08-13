@@ -27,7 +27,7 @@
     "node": "^22.11.0 || ^24.11.0"
   },
   "scripts": {
-    "build": "vite build --emptyOutDir",
+    "build": "pnpm --dir ../.. compatibility:check && vite build --emptyOutDir",
     "dev": "vite build --watch",
     "lint": "eslint .",
     "test": "pnpm run test:unit && pnpm run test:integration",

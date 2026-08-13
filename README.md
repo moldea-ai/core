@@ -117,14 +117,14 @@ pnpm test
 
 Useful focused commands:
 
-| Command                       | Purpose                                                                 |
-| ----------------------------- | ----------------------------------------------------------------------- |
-| `pnpm test:root`              | Run tests for shared repository configuration.                          |
-| `pnpm test:unit`              | Run root and package unit-test tasks.                                   |
-| `pnpm test:integration`       | Build and run package integration-test tasks.                           |
-| `pnpm format`                 | Format repository-maintained files.                                     |
-| `pnpm compatibility:generate` | Validate the canonical matrix and regenerate its Markdown presentation. |
-| `pnpm compatibility:check`    | Verify matrix validity and exact generated-document synchronization.    |
+| Command                       | Purpose                                                                  |
+| ----------------------------- | ------------------------------------------------------------------------ |
+| `pnpm test:root`              | Run tests for shared repository configuration.                           |
+| `pnpm test:unit`              | Run root and package unit-test tasks.                                    |
+| `pnpm test:integration`       | Build and run package integration-test tasks.                            |
+| `pnpm format`                 | Format repository-maintained files.                                      |
+| `pnpm compatibility:generate` | Regenerate compatibility documentation and bundled CLI release metadata. |
+| `pnpm compatibility:check`    | Verify matrix, package, and generated-artifact synchronization.          |
 
 ## Build and test conventions
 
@@ -140,8 +140,8 @@ Turborepo derives build order from declared workspace dependencies. Package depe
 
 ## Generated artifacts
 
-Generated files are not edited directly. Runtime compatibility changes begin in [`compatibility/runtimes.yaml`](compatibility/runtimes.yaml); run `pnpm compatibility:generate` to update [`docs/runtime-compatibility.md`](docs/runtime-compatibility.md). CI runs `pnpm compatibility:check` and fails when the matrix is invalid or the committed presentation is stale.
+Generated files are not edited directly. Runtime compatibility changes begin in [`compatibility/runtimes.yaml`](compatibility/runtimes.yaml), while exact bundled versions come from the first-class project manifests. Run `pnpm compatibility:generate` to update [`docs/runtime-compatibility.md`](docs/runtime-compatibility.md) and the CLI's generated immutable release-metadata module. CI runs `pnpm compatibility:check` and fails when the matrix, package composition, documentation, or bundled metadata is invalid or stale.
 
 ## Initial implementation sequence
 
-The first implementation project was `@moldea.ai/repository`, followed by its in-memory reader and shared conformance suite. Core's universal behavior was then completed through that memory-reader boundary, followed by the coherent Repository FS implementation. CLI implementation now includes its executable, strict command-line foundation, safe Git version prerequisite, Git-owned working-tree discovery with sparse-checkout rejection, bounded strict parsing of raw tracked and non-ignored untracked candidates, submodule and nested-repository ownership filtering, deterministic stage collapse, no-follow current entry-type normalization, bounded effective `core.symlinks` resolution, portable logical-path normalization with exact Unicode code-point ordering, effective Git content-transformation classification, exact-path Repository FS composition with immutable symlink-type and guarded-read wrappers, worktree and repository identity pinning, exact normalized inventory comparison, three-attempt whole-operation snapshot stabilization, fresh Core composition within every accepted attempt, safe package-owned operational errors, and complete `validate` and `inspect` human and JSON presentation. Bundled compatibility metadata, compatibility reporting, and official package-backed adapters remain later ordered slices.
+The first implementation project was `@moldea.ai/repository`, followed by its in-memory reader and shared conformance suite. Core's universal behavior was then completed through that memory-reader boundary, followed by the coherent Repository FS implementation. CLI implementation now includes its executable, strict command-line foundation, safe Git version prerequisite, Git-owned working-tree discovery with sparse-checkout rejection, bounded strict parsing of raw tracked and non-ignored untracked candidates, submodule and nested-repository ownership filtering, deterministic stage collapse, no-follow current entry-type normalization, bounded effective `core.symlinks` resolution, portable logical-path normalization with exact Unicode code-point ordering, effective Git content-transformation classification, exact-path Repository FS composition with immutable symlink-type and guarded-read wrappers, worktree and repository identity pinning, exact normalized inventory comparison, three-attempt whole-operation snapshot stabilization, fresh Core composition within every accepted attempt, safe package-owned operational errors, complete `validate` and `inspect` human and JSON presentation, and generated immutable compatibility and exact package-version metadata. Compatibility reporting and official package-backed adapters remain later ordered slices.
