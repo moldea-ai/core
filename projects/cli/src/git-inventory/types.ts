@@ -1,7 +1,7 @@
 import type { IMoldeaCliGitErrorCode } from '../presentation/index.js';
 
 import type { GIT_TRACKED_ENTRY_MODES } from './constants.js';
-import type { IGitInventoryEntry } from './entry-type/index.js';
+import type { IGitInventoryEntry } from './logical-path/index.js';
 
 // Git index modes retained for later entry-type classification
 export type IGitTrackedEntryMode = (typeof GIT_TRACKED_ENTRY_MODES)[number];

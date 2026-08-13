@@ -11,6 +11,11 @@ import {
   inspectGitInventoryEntry,
   type IGitInventoryEntryTypeNormalizer,
 } from './entry-type/index.js';
+import {
+  normalizeGitInventoryLogicalPaths,
+  type IGitInventoryLogicalPathNormalizer,
+  validateGitInventoryCandidateLogicalPaths,
+} from './logical-path/index.js';
 import { createTrackedGitInventoryParser, createUntrackedGitInventoryParser } from './parser.js';
 import {
   createGitInventoryBoundaryInspector,
@@ -77,6 +82,7 @@ const isProbeFailure = (
  * @param processExecutor The bounded incremental Git process executor.
  * @param ownershipFilter The submodule and nested-repository ownership filter.
  * @param entryTypeNormalizer The current filesystem and Git mode entry-type normalizer.
+ * @param logicalPathNormalizer The portable repository logical-path normalizer.
  * @returns An all-or-nothing selected-repository entry probe.
  */
 export const createGitInventoryProbe =
@@ -89,6 +95,7 @@ export const createGitInventoryProbe =
       inspectGitInventoryEntry,
       createGitSymlinkConfigurationResolver(processExecutor),
     ),
+    logicalPathNormalizer: IGitInventoryLogicalPathNormalizer = normalizeGitInventoryLogicalPaths,
   ): IGitInventoryProbe =>
   async (input): Promise<IGitInventoryProbeResult> => {
     const trackedParser = createTrackedGitInventoryParser(input.maxEntries);
@@ -137,8 +144,15 @@ export const createGitInventoryProbe =
       return untrackedCandidates;
     }
 
+    const candidates = Object.freeze([...trackedCandidates, ...untrackedCandidates]);
+    const logicalPathValidationResult = validateGitInventoryCandidateLogicalPaths({ candidates });
+
+    if (logicalPathValidationResult.kind === 'failed') {
+      return logicalPathValidationResult;
+    }
+
     const ownershipResult = await ownershipFilter({
-      candidates: Object.freeze([...trackedCandidates, ...untrackedCandidates]),
+      candidates,
       maxMetadataBytes:
         input.maxMetadataBytes -
         trackedProcessResult.stdoutBytes -
@@ -164,7 +178,13 @@ export const createGitInventoryProbe =
       return entryTypeResult;
     }
 
-    return Object.freeze({ entries: entryTypeResult.entries, kind: 'probed' });
+    const logicalPathResult = logicalPathNormalizer({ entries: entryTypeResult.entries });
+
+    if (logicalPathResult.kind === 'failed') {
+      return logicalPathResult;
+    }
+
+    return Object.freeze({ entries: logicalPathResult.entries, kind: 'probed' });
   };
 
 // default normalized Git inventory probe used by command execution

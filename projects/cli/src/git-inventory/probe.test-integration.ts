@@ -40,20 +40,20 @@ describe('real Git inventory probe', () => {
             entryType: 'file',
             indexEntries: [{ mode: '100644', stage: 0 }],
             kind: 'tracked',
-            path: '.gitignore',
+            path: '/.gitignore',
             requiresSymlinkOverlay: false,
           },
           {
             entryType: 'file',
             indexEntries: [{ mode: '100644', stage: 0 }],
             kind: 'tracked',
-            path: 'nested/tracked file.txt',
+            path: '/nested/tracked file.txt',
             requiresSymlinkOverlay: false,
           },
           {
             entryType: 'file',
             kind: 'untracked',
-            path: 'untracked-😀.txt',
+            path: '/untracked-😀.txt',
             requiresSymlinkOverlay: false,
           },
         ],
@@ -148,7 +148,7 @@ describe('real Git inventory probe', () => {
             entryType: 'symlink',
             indexEntries: [{ mode: '120000', stage: 0 }],
             kind: 'tracked',
-            path: 'emulated-link',
+            path: '/emulated-link',
             requiresSymlinkOverlay: true,
           },
         ],
@@ -193,7 +193,7 @@ describe('real Git inventory probe', () => {
             entryType: 'file',
             indexEntries: [{ mode: '120000', stage: 0 }],
             kind: 'tracked',
-            path: 'changed-link',
+            path: '/changed-link',
             requiresSymlinkOverlay: false,
           },
         ],
@@ -230,13 +230,13 @@ describe('real Git inventory probe', () => {
               entryType: 'symlink',
               indexEntries: [{ mode: '100644', stage: 0 }],
               kind: 'tracked',
-              path: 'tracked-link',
+              path: '/tracked-link',
               requiresSymlinkOverlay: false,
             },
             {
               entryType: 'symlink',
               kind: 'untracked',
-              path: 'untracked-link',
+              path: '/untracked-link',
               requiresSymlinkOverlay: false,
             },
           ],
@@ -261,6 +261,31 @@ describe('real Git inventory probe', () => {
 
         writeFileSync(invalidPath, 'invalid path bytes');
         runFixtureGit(repository, ['add', '--all']);
+
+        await expect(
+          probeGitInventory({
+            maxEntries: 1,
+            maxMetadataBytes: 4096,
+            repositoryRoot: repository.directory,
+          }),
+        ).resolves.toStrictEqual({ errorCode: 'GIT_OUTPUT_INVALID', kind: 'failed' });
+      } finally {
+        repository.remove();
+      }
+    },
+  );
+
+  test.skipIf(process.platform === 'win32')(
+    'rejects an absent tracked path outside the portable logical-path grammar',
+    async () => {
+      const repository = createGitRepository();
+
+      try {
+        const invalidPath = path.join(repository.directory, 'control\npath.txt');
+
+        writeFileSync(invalidPath, 'invalid', 'utf8');
+        runFixtureGit(repository, ['add', '--all']);
+        unlinkSync(invalidPath);
 
         await expect(
           probeGitInventory({
@@ -314,27 +339,27 @@ describe('real Git inventory probe', () => {
             entryType: 'file',
             indexEntries: [{ mode: '100644', stage: 0 }],
             kind: 'tracked',
-            path: '.gitattributes',
-            requiresSymlinkOverlay: false,
-          },
-          {
-            entryType: 'file',
-            indexEntries: [{ mode: '100644', stage: 0 }],
-            kind: 'tracked',
-            path: '.gitignore',
-            requiresSymlinkOverlay: false,
-          },
-          {
-            entryType: 'file',
-            indexEntries: [{ mode: '100644', stage: 0 }],
-            kind: 'tracked',
-            path: 'nested/tracked.txt',
+            path: '/.gitattributes',
             requiresSymlinkOverlay: false,
           },
           {
             entryType: 'file',
             kind: 'untracked',
-            path: '.github/workflow.yml',
+            path: '/.github/workflow.yml',
+            requiresSymlinkOverlay: false,
+          },
+          {
+            entryType: 'file',
+            indexEntries: [{ mode: '100644', stage: 0 }],
+            kind: 'tracked',
+            path: '/.gitignore',
+            requiresSymlinkOverlay: false,
+          },
+          {
+            entryType: 'file',
+            indexEntries: [{ mode: '100644', stage: 0 }],
+            kind: 'tracked',
+            path: '/nested/tracked.txt',
             requiresSymlinkOverlay: false,
           },
         ],
@@ -385,7 +410,7 @@ describe('real Git inventory probe', () => {
             entryType: 'file',
             indexEntries: [{ mode: '100644', stage: 0 }],
             kind: 'tracked',
-            path: '.gitmodules',
+            path: '/.gitmodules',
             requiresSymlinkOverlay: false,
           },
         ],
@@ -400,7 +425,7 @@ describe('real Git inventory probe', () => {
             entryType: 'file',
             indexEntries: [{ mode: '100644', stage: 0 }],
             kind: 'tracked',
-            path: '.gitmodules',
+            path: '/.gitmodules',
             requiresSymlinkOverlay: false,
           },
         ],

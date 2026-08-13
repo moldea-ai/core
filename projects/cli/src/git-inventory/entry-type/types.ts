@@ -112,8 +112,8 @@ export type IGitSymlinkConfigurationResolver = (
   input: IGitSymlinkConfigurationInput,
 ) => Promise<IGitSymlinkConfigurationResult>;
 
-// normalized tracked working-tree entry with retained Git index metadata
-export interface IGitTrackedInventoryEntry {
+// entry-type-normalized tracked path with retained Git index metadata
+export interface IGitEntryTypeNormalizedTrackedEntry {
   readonly entryType: IGitInventoryHostEntryType;
   readonly indexEntries: readonly IGitInventoryIndexEntry[];
   readonly kind: 'tracked';
@@ -121,16 +121,17 @@ export interface IGitTrackedInventoryEntry {
   readonly requiresSymlinkOverlay: boolean;
 }
 
-// normalized untracked working-tree entry
-export interface IGitUntrackedInventoryEntry {
+// entry-type-normalized untracked path
+export interface IGitEntryTypeNormalizedUntrackedEntry {
   readonly entryType: IGitInventoryHostEntryType;
   readonly kind: 'untracked';
   readonly path: string;
   readonly requiresSymlinkOverlay: false;
 }
 
-// one existing path in the effective selected-repository inventory
-export type IGitInventoryEntry = IGitTrackedInventoryEntry | IGitUntrackedInventoryEntry;
+// one existing Git-relative path after entry-type normalization
+export type IGitEntryTypeNormalizedEntry =
+  IGitEntryTypeNormalizedTrackedEntry | IGitEntryTypeNormalizedUntrackedEntry;
 
 // ownership-filtered candidates entering current entry-type normalization
 export interface IGitInventoryEntryTypeNormalizerInput {
@@ -141,7 +142,7 @@ export interface IGitInventoryEntryTypeNormalizerInput {
 
 // complete normalized current working-tree inventory
 export interface IGitInventoryEntryTypeNormalizedResult {
-  readonly entries: readonly IGitInventoryEntry[];
+  readonly entries: readonly IGitEntryTypeNormalizedEntry[];
   readonly gitMetadataBytes: number;
   readonly kind: 'normalized';
 }

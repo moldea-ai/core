@@ -13,13 +13,15 @@ export type {
   IGitUntrackedInventoryCandidate,
 } from './types.js';
 
-// normalized entry types
+// entry-type normalization
+export type { IGitInventoryIndexEntry } from './entry-type/index.js';
+
+// logical-path-normalized inventory
 export type {
   IGitInventoryEntry,
-  IGitInventoryIndexEntry,
   IGitTrackedInventoryEntry,
   IGitUntrackedInventoryEntry,
-} from './entry-type/index.js';
+} from './logical-path/index.js';
 
 // normalized inventory probe
 export { createGitInventoryProbe, probeGitInventory } from './probe.js';

@@ -8,6 +8,7 @@ import type {
 
 import { GIT_TRACKED_INVENTORY_ARGUMENTS, GIT_UNTRACKED_INVENTORY_ARGUMENTS } from './constants.js';
 import type { IGitInventoryEntryTypeNormalizer } from './entry-type/index.js';
+import type { IGitInventoryLogicalPathNormalizer } from './logical-path/index.js';
 import { createGitInventoryProbe } from './probe.js';
 import type { IGitInventoryOwnershipFilter } from './repository-ownership/index.js';
 
@@ -112,22 +113,22 @@ describe('createGitInventoryProbe', () => {
       entries: [
         {
           entryType: 'file',
-          indexEntries: [{ mode: '100644', stage: 0 }],
+          indexEntries: [{ mode: '100755', stage: 2 }],
           kind: 'tracked',
-          path: 'tracked',
+          path: '/conflict',
           requiresSymlinkOverlay: false,
         },
         {
           entryType: 'file',
-          indexEntries: [{ mode: '100755', stage: 2 }],
+          indexEntries: [{ mode: '100644', stage: 0 }],
           kind: 'tracked',
-          path: 'conflict',
+          path: '/tracked',
           requiresSymlinkOverlay: false,
         },
         {
           entryType: 'file',
           kind: 'untracked',
-          path: 'untracked',
+          path: '/untracked',
           requiresSymlinkOverlay: false,
         },
       ],
@@ -229,6 +230,20 @@ describe('createGitInventoryProbe', () => {
     ).resolves.toStrictEqual({ errorCode: 'GIT_OUTPUT_INVALID', kind: 'failed' });
   });
 
+  test('rejects a non-portable candidate before ownership filtering', async () => {
+    const processExecutor = createProcessExecutor([
+      { stdout: ENCODER.encode(`100644 ${OBJECT_ID} 0\tcontrol\npath\u0000`) },
+      { stdout: new Uint8Array() },
+    ]);
+    const ownershipFilter = vi.fn<IGitInventoryOwnershipFilter>();
+    const probe = createGitInventoryProbe(processExecutor, ownershipFilter);
+
+    await expect(
+      probe({ maxEntries: 1, maxMetadataBytes: 128, repositoryRoot: '/repository' }),
+    ).resolves.toStrictEqual({ errorCode: 'GIT_OUTPUT_INVALID', kind: 'failed' });
+    expect(ownershipFilter).not.toHaveBeenCalled();
+  });
+
   test('returns an atomic ownership failure after both raw streams complete', async () => {
     const processExecutor = createProcessExecutor([
       { stdout: ENCODER.encode(`100644 ${OBJECT_ID} 0\ttracked\u0000`) },
@@ -264,5 +279,57 @@ describe('createGitInventoryProbe', () => {
       probe({ maxEntries: 1, maxMetadataBytes: 128, repositoryRoot: '/repository' }),
     ).resolves.toStrictEqual({ errorCode: 'GIT_OUTPUT_INVALID', kind: 'failed' });
     expect(entryTypeNormalizer).toHaveBeenCalledOnce();
+  });
+
+  test('returns an atomic logical-path failure without exposing partial entries', async () => {
+    const processExecutor = createProcessExecutor([
+      { stdout: ENCODER.encode(`100644 ${OBJECT_ID} 0\tinvalid\u0000`) },
+      { stdout: new Uint8Array() },
+    ]);
+    const ownershipFilter = vi.fn<IGitInventoryOwnershipFilter>((input) =>
+      Promise.resolve(
+        Object.freeze({ candidates: input.candidates, gitMetadataBytes: 0, kind: 'filtered' }),
+      ),
+    );
+    const entryTypeNormalizer = vi.fn<IGitInventoryEntryTypeNormalizer>().mockResolvedValue(
+      Object.freeze({
+        entries: Object.freeze([
+          Object.freeze({
+            entryType: 'file',
+            indexEntries: Object.freeze([Object.freeze({ mode: '100644', stage: 0 as const })]),
+            kind: 'tracked',
+            path: 'invalid',
+            requiresSymlinkOverlay: false,
+          }),
+        ]),
+        gitMetadataBytes: 0,
+        kind: 'normalized',
+      }),
+    );
+    const logicalPathNormalizer = vi
+      .fn<IGitInventoryLogicalPathNormalizer>()
+      .mockReturnValue(Object.freeze({ errorCode: 'GIT_OUTPUT_INVALID', kind: 'failed' }));
+    const probe = createGitInventoryProbe(
+      processExecutor,
+      ownershipFilter,
+      entryTypeNormalizer,
+      logicalPathNormalizer,
+    );
+
+    await expect(
+      probe({ maxEntries: 1, maxMetadataBytes: 128, repositoryRoot: '/repository' }),
+    ).resolves.toStrictEqual({ errorCode: 'GIT_OUTPUT_INVALID', kind: 'failed' });
+    expect(logicalPathNormalizer).toHaveBeenCalledOnce();
+    expect(logicalPathNormalizer).toHaveBeenCalledWith({
+      entries: [
+        {
+          entryType: 'file',
+          indexEntries: [{ mode: '100644', stage: 0 }],
+          kind: 'tracked',
+          path: 'invalid',
+          requiresSymlinkOverlay: false,
+        },
+      ],
+    });
   });
 });

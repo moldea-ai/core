@@ -3,7 +3,7 @@ import { inspectGitInventoryEntry } from './entry-inspector.js';
 import { resolveGitSymlinkConfiguration } from './symlink-configuration.js';
 import type {
   ICollapsedGitTrackedInventoryCandidate,
-  IGitInventoryEntry,
+  IGitEntryTypeNormalizedEntry,
   IGitInventoryEntryInspector,
   IGitInventoryEntryTypeNormalizationFailedResult,
   IGitInventoryEntryTypeNormalizationResult,
@@ -45,7 +45,7 @@ export const createGitInventoryEntryTypeNormalizer = (
       return createNormalizationFailure('GIT_OUTPUT_INVALID');
     }
 
-    const entries: IGitInventoryEntry[] = [];
+    const entries: IGitEntryTypeNormalizedEntry[] = [];
     let symlinkConfiguration: Awaited<ReturnType<IGitSymlinkConfigurationResolver>> | null = null;
 
     for (const candidate of collapseResult.candidates) {

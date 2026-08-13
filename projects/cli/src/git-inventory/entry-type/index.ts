@@ -1,11 +1,11 @@
 // types
 export type {
-  IGitInventoryEntry,
+  IGitEntryTypeNormalizedEntry,
+  IGitEntryTypeNormalizedTrackedEntry,
+  IGitEntryTypeNormalizedUntrackedEntry,
   IGitInventoryEntryInspector,
   IGitInventoryEntryTypeNormalizer,
   IGitInventoryIndexEntry,
-  IGitTrackedInventoryEntry,
-  IGitUntrackedInventoryEntry,
 } from './types.js';
 
 // candidate collapse
