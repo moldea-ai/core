@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 import { runMoldeaCli } from '../cli-execution/index.js';
 import { loadMoldeaCliPackageMetadata } from '../package-metadata/index.js';
-import { formatMoldeaCliHumanError } from '../presentation/index.js';
+import { createMoldeaCliOwnedError, formatMoldeaCliHumanError } from '../presentation/index.js';
 
 const executableDirectory = path.dirname(fileURLToPath(import.meta.url));
 const packageManifestPath = path.resolve(executableDirectory, '..', 'package.json');
@@ -28,6 +28,6 @@ try {
 
   process.exitCode = executionResult.exitCode;
 } catch {
-  process.stderr.write(formatMoldeaCliHumanError('INTERNAL_ERROR'));
+  process.stderr.write(formatMoldeaCliHumanError(createMoldeaCliOwnedError('INTERNAL_ERROR')));
   process.exitCode = 3;
 }

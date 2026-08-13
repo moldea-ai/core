@@ -2,6 +2,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { MOLDEA_CLI_COMMAND_HELP, MOLDEA_CLI_TOP_LEVEL_HELP } from './constants.js';
+import { createMoldeaCliOwnedError } from './errors.js';
 import {
   formatMoldeaCliHelp,
   formatMoldeaCliHumanError,
@@ -17,33 +18,43 @@ describe('CLI presentation formatters', () => {
   });
 
   test('formats one safe human error line', () => {
-    expect(formatMoldeaCliHumanError('INVALID_ARGUMENT')).toBe(
+    expect(formatMoldeaCliHumanError(createMoldeaCliOwnedError('INVALID_ARGUMENT'))).toBe(
       'cli:INVALID_ARGUMENT The command invocation is invalid.\n',
     );
   });
 
   test('formats one compact deterministic JSON error document', () => {
-    expect(formatMoldeaCliJsonError('INVALID_ARGUMENT', null, '0.0.1')).toBe(
+    expect(
+      formatMoldeaCliJsonError(createMoldeaCliOwnedError('INVALID_ARGUMENT'), null, '0.0.1'),
+    ).toBe(
       '{"cliVersion":"0.0.1","command":null,"error":{"code":"INVALID_ARGUMENT","details":{},"message":"The command invocation is invalid.","path":null,"retryable":false,"source":"cli"},"result":null,"schemaVersion":1,"status":"error"}\n',
     );
   });
 
   test('formats the safe non-retryable resource-limit error', () => {
-    expect(formatMoldeaCliHumanError('RESOURCE_LIMIT_EXCEEDED')).toBe(
+    expect(formatMoldeaCliHumanError(createMoldeaCliOwnedError('RESOURCE_LIMIT_EXCEEDED'))).toBe(
       'cli:RESOURCE_LIMIT_EXCEEDED A resource limit was exceeded.\n',
     );
-    expect(formatMoldeaCliJsonError('RESOURCE_LIMIT_EXCEEDED', 'inspect', '0.0.1')).toContain(
-      '"retryable":false,"source":"cli"',
-    );
+    expect(
+      formatMoldeaCliJsonError(
+        createMoldeaCliOwnedError('RESOURCE_LIMIT_EXCEEDED'),
+        'inspect',
+        '0.0.1',
+      ),
+    ).toContain('"retryable":false,"source":"cli"');
   });
 
   test('formats the safe retryable working-tree instability error', () => {
-    expect(formatMoldeaCliHumanError('WORKING_TREE_UNSTABLE')).toBe(
+    expect(formatMoldeaCliHumanError(createMoldeaCliOwnedError('WORKING_TREE_UNSTABLE'))).toBe(
       'cli:WORKING_TREE_UNSTABLE The working tree did not remain stable.\n',
     );
-    expect(formatMoldeaCliJsonError('WORKING_TREE_UNSTABLE', 'validate', '0.0.1')).toContain(
-      '"retryable":true,"source":"cli"',
-    );
+    expect(
+      formatMoldeaCliJsonError(
+        createMoldeaCliOwnedError('WORKING_TREE_UNSTABLE'),
+        'validate',
+        '0.0.1',
+      ),
+    ).toContain('"retryable":true,"source":"cli"');
   });
 
   test.each([
@@ -73,9 +84,30 @@ describe('CLI presentation formatters', () => {
       false,
     ],
   ] as const)('formats safe Git error %s', (code, expectedHumanError, isRetryable) => {
-    expect(formatMoldeaCliHumanError(code)).toBe(expectedHumanError);
-    expect(formatMoldeaCliJsonError(code, 'validate', '0.0.1')).toContain(
+    const error = createMoldeaCliOwnedError(code);
+
+    expect(formatMoldeaCliHumanError(error)).toBe(expectedHumanError);
+    expect(formatMoldeaCliJsonError(error, 'validate', '0.0.1')).toContain(
       `"retryable":${String(isRetryable)},"source":"git"`,
+    );
+  });
+
+  test('preserves a complete package-owned error in deterministic JSON output', () => {
+    expect(
+      formatMoldeaCliJsonError(
+        Object.freeze({
+          code: 'ENTRY_NOT_FOUND',
+          details: Object.freeze({}),
+          message: 'The requested repository entry was not found.',
+          path: '/moldea/project.md',
+          retryable: false,
+          source: 'repository',
+        }),
+        'inspect',
+        '0.0.1',
+      ),
+    ).toBe(
+      '{"cliVersion":"0.0.1","command":"inspect","error":{"code":"ENTRY_NOT_FOUND","details":{},"message":"The requested repository entry was not found.","path":"/moldea/project.md","retryable":false,"source":"repository"},"result":null,"schemaVersion":1,"status":"error"}\n',
     );
   });
 });

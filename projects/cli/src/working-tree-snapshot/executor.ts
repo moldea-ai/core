@@ -12,7 +12,7 @@ import {
   type IGitWorkingTreeIdentity,
   type IGitWorkingTreeIdentityInspector,
 } from '../git-working-tree/index.js';
-import type { IMoldeaCliErrorCode } from '../presentation/index.js';
+import type { IMoldeaCliOwnedErrorCode } from '../presentation/index.js';
 import {
   createWorkingTreeRepositoryReader,
   type IWorkingTreeRepositoryReaderFactory,
@@ -28,8 +28,9 @@ import type {
 } from './types.js';
 
 /** Creates one immutable terminal snapshot failure. */
-const createSnapshotFailure = (errorCode: IMoldeaCliErrorCode): IWorkingTreeSnapshotFailedResult =>
-  Object.freeze({ errorCode, kind: 'failed' });
+const createSnapshotFailure = (
+  errorCode: IMoldeaCliOwnedErrorCode,
+): IWorkingTreeSnapshotFailedResult => Object.freeze({ errorCode, kind: 'failed' });
 
 /** Determines whether a source exception proves that the current reader is unusable. */
 const isSnapshotChanged = (error: unknown): boolean =>
@@ -42,7 +43,7 @@ const isCreationInventoryRace = (error: unknown): boolean =>
   (error.code === 'ENTRY_NOT_FOUND' || error.code === 'ENTRY_NOT_DIRECTORY');
 
 /** Determines whether identity inspection failed because the pinned source disappeared. */
-const isPinnedIdentityUnavailable = (errorCode: IMoldeaCliErrorCode): boolean =>
+const isPinnedIdentityUnavailable = (errorCode: IMoldeaCliOwnedErrorCode): boolean =>
   errorCode === 'GIT_REPOSITORY_NOT_FOUND' || errorCode === 'GIT_WORK_TREE_REQUIRED';
 
 /**

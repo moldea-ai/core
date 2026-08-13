@@ -2,7 +2,7 @@ import type { IRepositoryReader } from '@moldea.ai/repository';
 
 import type { IMoldeaCliResourceLimits } from '../command-line/index.js';
 import type { IGitInventoryEntry } from '../git-inventory/index.js';
-import type { IMoldeaCliErrorCode } from '../presentation/index.js';
+import type { IMoldeaCliOwnedErrorCode } from '../presentation/index.js';
 
 // attempt-local operation that consumes one accepted coherent reader
 export type IWorkingTreeSnapshotOperation<TResult> = (
@@ -24,7 +24,7 @@ export interface IWorkingTreeSnapshotCompletedResult<TResult> {
 
 // safe terminal failure before a snapshot operation completed
 export interface IWorkingTreeSnapshotFailedResult {
-  readonly errorCode: IMoldeaCliErrorCode;
+  readonly errorCode: IMoldeaCliOwnedErrorCode;
   readonly kind: 'failed';
 }
 

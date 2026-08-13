@@ -7,12 +7,16 @@ export {
 
 // types
 export type {
+  IMoldeaCliError,
   IMoldeaCliErrorCode,
   IMoldeaCliErrorSource,
   IMoldeaCliGitErrorCode,
-  IMoldeaCliJsonError,
   IMoldeaCliJsonErrorEnvelope,
+  IMoldeaCliOwnedErrorCode,
 } from './types.js';
+
+// errors
+export { createMoldeaCliOwnedError } from './errors.js';
 
 // formatters
 export {

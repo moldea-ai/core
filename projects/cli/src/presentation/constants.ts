@@ -12,6 +12,11 @@ export const MOLDEA_CLI_ERROR_DEFINITIONS = Object.freeze({
     retryable: true,
     source: 'git',
   }),
+  GIT_CONTENT_TRANSFORM_UNSUPPORTED: Object.freeze({
+    message: 'The requested file uses an unsupported Git content transformation.',
+    retryable: false,
+    source: 'git',
+  }),
   GIT_NOT_FOUND: Object.freeze({
     message: 'The Git executable is unavailable.',
     retryable: false,

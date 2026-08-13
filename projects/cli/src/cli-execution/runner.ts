@@ -1,5 +1,5 @@
 import { parseMoldeaCliArguments } from '../command-line/index.js';
-import { formatMoldeaCliHelp } from '../presentation/index.js';
+import { createMoldeaCliOwnedError, formatMoldeaCliHelp } from '../presentation/index.js';
 
 import { executeMoldeaCliCommand } from './command-executor.js';
 import { MOLDEA_CLI_EXIT_CODES } from './constants.js';
@@ -34,7 +34,7 @@ export const runMoldeaCli = async (
 
   if (parseResult.kind === 'error') {
     return createMoldeaCliErrorResult(
-      parseResult.code,
+      createMoldeaCliOwnedError(parseResult.code),
       parseResult.command,
       options.cliVersion,
       parseResult.isJson,
@@ -52,7 +52,7 @@ export const runMoldeaCli = async (
     });
   } catch {
     return createMoldeaCliErrorResult(
-      'INTERNAL_ERROR',
+      createMoldeaCliOwnedError('INTERNAL_ERROR'),
       parseResult.invocation.command,
       options.cliVersion,
       parseResult.invocation.options.isJson,

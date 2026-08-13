@@ -1,23 +1,32 @@
+import type { ICoreConfigurationErrorCode, ICoreOperationErrorCode } from '@moldea.ai/core';
+import type { IRepositorySourceErrorCode } from '@moldea.ai/repository';
+
 import type { IMoldeaCliCommand } from '../command-line/index.js';
 
 import type { MOLDEA_CLI_ERROR_DEFINITIONS } from './constants.js';
 
-// error codes observable through the current executable foundation
-export type IMoldeaCliErrorCode = keyof typeof MOLDEA_CLI_ERROR_DEFINITIONS;
+// errors owned directly by the CLI executable and its Git integration
+export type IMoldeaCliOwnedErrorCode = keyof typeof MOLDEA_CLI_ERROR_DEFINITIONS;
+
+// operational error codes observable through the current executable foundation
+export type IMoldeaCliErrorCode =
+  | IMoldeaCliOwnedErrorCode
+  | IRepositorySourceErrorCode
+  | ICoreConfigurationErrorCode
+  | ICoreOperationErrorCode;
 
 // Git-specific errors produced by CLI-owned Git operations
-export type IMoldeaCliGitErrorCode = Extract<IMoldeaCliErrorCode, `GIT_${string}`>;
+export type IMoldeaCliGitErrorCode = Extract<IMoldeaCliOwnedErrorCode, `GIT_${string}`>;
 
 // safe error sources exposed by the CLI
-export type IMoldeaCliErrorSource =
-  (typeof MOLDEA_CLI_ERROR_DEFINITIONS)[IMoldeaCliErrorCode]['source'];
+export type IMoldeaCliErrorSource = 'cli' | 'git' | 'repository' | 'core';
 
-// safe error fields serialized in version 1 JSON output
-export interface IMoldeaCliJsonError {
+// safe operational error fields shared by human and JSON presentation
+export interface IMoldeaCliError {
   readonly code: IMoldeaCliErrorCode;
   readonly details: Readonly<Record<string, string | number | boolean | null>>;
   readonly message: string;
-  readonly path: null;
+  readonly path: string | null;
   readonly retryable: boolean;
   readonly source: IMoldeaCliErrorSource;
 }
@@ -26,7 +35,7 @@ export interface IMoldeaCliJsonError {
 export interface IMoldeaCliJsonErrorEnvelope {
   readonly cliVersion: string;
   readonly command: IMoldeaCliCommand | null;
-  readonly error: IMoldeaCliJsonError;
+  readonly error: IMoldeaCliError;
   readonly result: null;
   readonly schemaVersion: 1;
   readonly status: 'error';

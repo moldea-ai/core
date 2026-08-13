@@ -2,14 +2,14 @@ import type { IMoldeaCliCommand } from '../command-line/index.js';
 import {
   formatMoldeaCliHumanError,
   formatMoldeaCliJsonError,
-  type IMoldeaCliErrorCode,
+  type IMoldeaCliError,
 } from '../presentation/index.js';
 
 import type { IMoldeaCliExecutionResult } from './types.js';
 
 /**
  * Creates one safe process-neutral error result in the requested output mode.
- * @param code The stable public error code.
+ * @param error The complete safe operational error.
  * @param command The resolved command, or null when resolution failed.
  * @param cliVersion The installed CLI package version.
  * @param isJson Whether machine-readable output was requested.
@@ -17,7 +17,7 @@ import type { IMoldeaCliExecutionResult } from './types.js';
  * @returns The complete immutable process output.
  */
 export const createMoldeaCliErrorResult = (
-  code: IMoldeaCliErrorCode,
+  error: IMoldeaCliError,
   command: IMoldeaCliCommand | null,
   cliVersion: string,
   isJson: boolean,
@@ -28,11 +28,11 @@ export const createMoldeaCliErrorResult = (
       ? {
           exitCode,
           stderr: '',
-          stdout: formatMoldeaCliJsonError(code, command, cliVersion),
+          stdout: formatMoldeaCliJsonError(error, command, cliVersion),
         }
       : {
           exitCode,
-          stderr: formatMoldeaCliHumanError(code),
+          stderr: formatMoldeaCliHumanError(error),
           stdout: '',
         },
   );

@@ -1,11 +1,15 @@
 // @vitest-environment node
 import { describe, expect, test, vi } from 'vitest';
 
+import { CoreOperationException } from '@moldea.ai/core';
+import { parseRepositoryPath, type IRepositoryReader } from '@moldea.ai/repository';
 import { createMemoryRepositoryReader } from '@moldea.ai/repository/memory';
 
 import type { IMoldeaCliCommand } from '../command-line/index.js';
+import type { IMoldeaCliCoreInspectionExecutor } from '../core-composition/index.js';
 import type { IGitWorkingTreeDiscovery } from '../git-working-tree/index.js';
-import type { IMoldeaCliErrorCode } from '../presentation/index.js';
+import type { IMoldeaCliOwnedErrorCode } from '../presentation/index.js';
+import { GitContentTransformUnsupportedException } from '../repository-content-transformation-guard/index.js';
 import type {
   IWorkingTreeSnapshotExecutionInput,
   IWorkingTreeSnapshotExecutionResult,
@@ -52,6 +56,7 @@ interface ITestSnapshotExecution {
 const createCompletedSnapshotExecutor = (): {
   readonly execution: ITestSnapshotExecution;
   readonly executor: IWorkingTreeSnapshotExecutor;
+  readonly reader: IRepositoryReader;
 } => {
   const reader = createMemoryRepositoryReader([]);
   const execution: ITestSnapshotExecution = {
@@ -73,12 +78,12 @@ const createCompletedSnapshotExecutor = (): {
     return Object.freeze({ kind: 'completed', result });
   };
 
-  return { execution, executor };
+  return { execution, executor, reader };
 };
 
 /** Creates one generic safe snapshot failure executor. */
 const createFailedSnapshotExecutor =
-  (errorCode: IMoldeaCliErrorCode): IWorkingTreeSnapshotExecutor =>
+  (errorCode: IMoldeaCliOwnedErrorCode): IWorkingTreeSnapshotExecutor =>
   () =>
     Promise.resolve(Object.freeze({ errorCode, kind: 'failed' }));
 
@@ -90,9 +95,19 @@ describe('createMoldeaCliCommandExecutor', () => {
         .fn<IGitWorkingTreeDiscovery>()
         .mockResolvedValue(Object.freeze({ kind: 'discovered', repositoryRoot: '/workspace' }));
       const snapshot = createCompletedSnapshotExecutor();
+      const coreInspection = vi.fn<IMoldeaCliCoreInspectionExecutor>().mockResolvedValue(
+        Object.freeze({
+          diagnostics: Object.freeze([]),
+          evidence: Object.freeze([]),
+          formatVersion: null,
+          project: null,
+          valid: false,
+        }),
+      );
       const executeCommand = createMoldeaCliCommandExecutor(
         workingTreeDiscovery,
         snapshot.executor,
+        coreInspection,
       );
 
       await expect(executeCommand(createCommandInput(command))).resolves.toStrictEqual({
@@ -109,6 +124,18 @@ describe('createMoldeaCliCommandExecutor', () => {
         calls: 1,
         operationCalls: 1,
         repositoryRoot: '/workspace',
+        resourceLimits: {
+          maxDiagnostics: 10_000,
+          maxEntries: 100_000,
+          maxEvidence: 10_000,
+          maxFileBytes: 8_388_608,
+          maxManifestBytes: 2_097_152,
+          maxTotalBytes: 134_217_728,
+        },
+      });
+      expect(coreInspection).toHaveBeenCalledOnce();
+      expect(coreInspection).toHaveBeenCalledWith({
+        repository: snapshot.reader,
         resourceLimits: {
           maxDiagnostics: 10_000,
           maxEntries: 100_000,
@@ -189,6 +216,57 @@ describe('createMoldeaCliCommandExecutor', () => {
       exitCode: 3,
       stderr: '',
       stdout: expectedOutput,
+    });
+  });
+
+  test('maps a guarded Core read to the safe Git transformation error', async () => {
+    const workingTreeDiscovery = vi
+      .fn<IGitWorkingTreeDiscovery>()
+      .mockResolvedValue(Object.freeze({ kind: 'discovered', repositoryRoot: '/workspace' }));
+    const snapshot = createCompletedSnapshotExecutor();
+    const coreInspection = vi
+      .fn<IMoldeaCliCoreInspectionExecutor>()
+      .mockRejectedValue(
+        new GitContentTransformUnsupportedException(parseRepositoryPath('/assets/model.bin')),
+      );
+    const executeCommand = createMoldeaCliCommandExecutor(
+      workingTreeDiscovery,
+      snapshot.executor,
+      coreInspection,
+    );
+
+    await expect(executeCommand(createCommandInput('inspect', true))).resolves.toStrictEqual({
+      exitCode: 3,
+      stderr: '',
+      stdout:
+        '{"cliVersion":"0.0.1","command":"inspect","error":{"code":"GIT_CONTENT_TRANSFORM_UNSUPPORTED","details":{},"message":"The requested file uses an unsupported Git content transformation.","path":"/assets/model.bin","retryable":false,"source":"git"},"result":null,"schemaVersion":1,"status":"error"}\n',
+    });
+  });
+
+  test('maps a Core operation failure without exposing its cause', async () => {
+    const workingTreeDiscovery = vi
+      .fn<IGitWorkingTreeDiscovery>()
+      .mockResolvedValue(Object.freeze({ kind: 'discovered', repositoryRoot: '/workspace' }));
+    const snapshot = createCompletedSnapshotExecutor();
+    const coreInspection = vi.fn<IMoldeaCliCoreInspectionExecutor>().mockRejectedValue(
+      new CoreOperationException({
+        adapterId: 'openai',
+        cause: new Error('private adapter detail'),
+        code: 'ADAPTER_EXECUTION_FAILED',
+        operation: 'validate-adapter',
+      }),
+    );
+    const executeCommand = createMoldeaCliCommandExecutor(
+      workingTreeDiscovery,
+      snapshot.executor,
+      coreInspection,
+    );
+
+    await expect(executeCommand(createCommandInput('validate', true))).resolves.toStrictEqual({
+      exitCode: 3,
+      stderr: '',
+      stdout:
+        '{"cliVersion":"0.0.1","command":"validate","error":{"code":"ADAPTER_EXECUTION_FAILED","details":{"adapterId":"openai","operation":"validate-adapter"},"message":"A runtime adapter failed during inspection.","path":null,"retryable":false,"source":"core"},"result":null,"schemaVersion":1,"status":"error"}\n',
     });
   });
 });
