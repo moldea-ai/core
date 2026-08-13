@@ -7,6 +7,7 @@ import type {
 } from '../git-process/index.js';
 
 import { GIT_TRACKED_INVENTORY_ARGUMENTS, GIT_UNTRACKED_INVENTORY_ARGUMENTS } from './constants.js';
+import type { IGitInventoryEntryTypeNormalizer } from './entry-type/index.js';
 import { createGitInventoryProbe } from './probe.js';
 import type { IGitInventoryOwnershipFilter } from './repository-ownership/index.js';
 
@@ -67,12 +68,40 @@ describe('createGitInventoryProbe', () => {
       Promise.resolve(
         Object.freeze({
           candidates: input.candidates,
-          gitMetadataBytes: 0,
+          gitMetadataBytes: 7,
           kind: 'filtered',
         }),
       ),
     );
-    const probe = createGitInventoryProbe(processExecutor, ownershipFilter);
+    const entryTypeNormalizer = vi.fn<IGitInventoryEntryTypeNormalizer>().mockResolvedValue(
+      Object.freeze({
+        entries: Object.freeze([
+          Object.freeze({
+            entryType: 'file',
+            indexEntries: Object.freeze([Object.freeze({ mode: '100644', stage: 0 as const })]),
+            kind: 'tracked',
+            path: 'tracked',
+            requiresSymlinkOverlay: false,
+          }),
+          Object.freeze({
+            entryType: 'file',
+            indexEntries: Object.freeze([Object.freeze({ mode: '100755', stage: 2 as const })]),
+            kind: 'tracked',
+            path: 'conflict',
+            requiresSymlinkOverlay: false,
+          }),
+          Object.freeze({
+            entryType: 'file',
+            kind: 'untracked',
+            path: 'untracked',
+            requiresSymlinkOverlay: false,
+          }),
+        ]),
+        gitMetadataBytes: 0,
+        kind: 'normalized',
+      }),
+    );
+    const probe = createGitInventoryProbe(processExecutor, ownershipFilter, entryTypeNormalizer);
     const result = await probe({
       maxEntries: 3,
       maxMetadataBytes: 512,
@@ -80,17 +109,34 @@ describe('createGitInventoryProbe', () => {
     });
 
     expect(result).toStrictEqual({
-      candidates: [
-        { kind: 'tracked', mode: '100644', path: 'tracked', stage: 0 },
-        { kind: 'tracked', mode: '100755', path: 'conflict', stage: 2 },
-        { kind: 'untracked', path: 'untracked' },
+      entries: [
+        {
+          entryType: 'file',
+          indexEntries: [{ mode: '100644', stage: 0 }],
+          kind: 'tracked',
+          path: 'tracked',
+          requiresSymlinkOverlay: false,
+        },
+        {
+          entryType: 'file',
+          indexEntries: [{ mode: '100755', stage: 2 }],
+          kind: 'tracked',
+          path: 'conflict',
+          requiresSymlinkOverlay: false,
+        },
+        {
+          entryType: 'file',
+          kind: 'untracked',
+          path: 'untracked',
+          requiresSymlinkOverlay: false,
+        },
       ],
       kind: 'probed',
     });
     expect(Object.isFrozen(result)).toBe(true);
 
     if (result.kind === 'probed') {
-      expect(Object.isFrozen(result.candidates)).toBe(true);
+      expect(Object.isFrozen(result.entries)).toBe(true);
     }
 
     const processCalls = vi.mocked(processExecutor).mock.calls;
@@ -119,6 +165,16 @@ describe('createGitInventoryProbe', () => {
         { kind: 'untracked', path: 'untracked' },
       ],
       maxMetadataBytes: 512 - trackedOutput.byteLength - untrackedOutput.byteLength,
+      repositoryRoot: '/repository',
+    });
+    expect(entryTypeNormalizer).toHaveBeenCalledOnce();
+    expect(entryTypeNormalizer).toHaveBeenCalledWith({
+      candidates: [
+        { kind: 'tracked', mode: '100644', path: 'tracked', stage: 0 },
+        { kind: 'tracked', mode: '100755', path: 'conflict', stage: 2 },
+        { kind: 'untracked', path: 'untracked' },
+      ],
+      maxMetadataBytes: 512 - trackedOutput.byteLength - untrackedOutput.byteLength - 7,
       repositoryRoot: '/repository',
     });
   });
@@ -187,5 +243,26 @@ describe('createGitInventoryProbe', () => {
       probe({ maxEntries: 2, maxMetadataBytes: 1024, repositoryRoot: '/private' }),
     ).resolves.toStrictEqual({ errorCode: 'GIT_ACCESS_DENIED', kind: 'failed' });
     expect(ownershipFilter).toHaveBeenCalledOnce();
+  });
+
+  test('returns an atomic entry-type failure without exposing partial entries', async () => {
+    const processExecutor = createProcessExecutor([
+      { stdout: ENCODER.encode(`120000 ${OBJECT_ID} 0\tlink\u0000`) },
+      { stdout: new Uint8Array() },
+    ]);
+    const ownershipFilter = vi.fn<IGitInventoryOwnershipFilter>((input) =>
+      Promise.resolve(
+        Object.freeze({ candidates: input.candidates, gitMetadataBytes: 0, kind: 'filtered' }),
+      ),
+    );
+    const entryTypeNormalizer = vi
+      .fn<IGitInventoryEntryTypeNormalizer>()
+      .mockResolvedValue(Object.freeze({ errorCode: 'GIT_OUTPUT_INVALID', kind: 'failed' }));
+    const probe = createGitInventoryProbe(processExecutor, ownershipFilter, entryTypeNormalizer);
+
+    await expect(
+      probe({ maxEntries: 1, maxMetadataBytes: 128, repositoryRoot: '/repository' }),
+    ).resolves.toStrictEqual({ errorCode: 'GIT_OUTPUT_INVALID', kind: 'failed' });
+    expect(entryTypeNormalizer).toHaveBeenCalledOnce();
   });
 });

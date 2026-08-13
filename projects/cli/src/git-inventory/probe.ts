@@ -5,6 +5,12 @@ import {
   type IGitStreamingProcessFailureReason,
 } from '../git-process/index.js';
 import { GIT_TRACKED_INVENTORY_ARGUMENTS, GIT_UNTRACKED_INVENTORY_ARGUMENTS } from './constants.js';
+import {
+  createGitInventoryEntryTypeNormalizer,
+  createGitSymlinkConfigurationResolver,
+  inspectGitInventoryEntry,
+  type IGitInventoryEntryTypeNormalizer,
+} from './entry-type/index.js';
 import { createTrackedGitInventoryParser, createUntrackedGitInventoryParser } from './parser.js';
 import {
   createGitInventoryBoundaryInspector,
@@ -67,16 +73,21 @@ const isProbeFailure = (
 ): result is IGitInventoryProbeFailedResult => !Array.isArray(result);
 
 /**
- * Creates the strict ownership-filtered Git inventory probe around injectable boundaries.
+ * Creates the strict normalized Git inventory probe around injectable boundaries.
  * @param processExecutor The bounded incremental Git process executor.
  * @param ownershipFilter The submodule and nested-repository ownership filter.
- * @returns An all-or-nothing selected-repository candidate probe.
+ * @param entryTypeNormalizer The current filesystem and Git mode entry-type normalizer.
+ * @returns An all-or-nothing selected-repository entry probe.
  */
 export const createGitInventoryProbe =
   (
     processExecutor: IGitStreamingProcessExecutor = executeGitStreamingProcess,
     ownershipFilter: IGitInventoryOwnershipFilter = createGitInventoryOwnershipFilter(
       createGitInventoryBoundaryInspector(processExecutor),
+    ),
+    entryTypeNormalizer: IGitInventoryEntryTypeNormalizer = createGitInventoryEntryTypeNormalizer(
+      inspectGitInventoryEntry,
+      createGitSymlinkConfigurationResolver(processExecutor),
     ),
   ): IGitInventoryProbe =>
   async (input): Promise<IGitInventoryProbeResult> => {
@@ -139,8 +150,22 @@ export const createGitInventoryProbe =
       return ownershipResult;
     }
 
-    return Object.freeze({ candidates: ownershipResult.candidates, kind: 'probed' });
+    const entryTypeResult = await entryTypeNormalizer({
+      candidates: ownershipResult.candidates,
+      maxMetadataBytes:
+        input.maxMetadataBytes -
+        trackedProcessResult.stdoutBytes -
+        untrackedProcessResult.stdoutBytes -
+        ownershipResult.gitMetadataBytes,
+      repositoryRoot: input.repositoryRoot,
+    });
+
+    if (entryTypeResult.kind === 'failed') {
+      return entryTypeResult;
+    }
+
+    return Object.freeze({ entries: entryTypeResult.entries, kind: 'probed' });
   };
 
-// default ownership-filtered Git inventory probe used by command execution
+// default normalized Git inventory probe used by command execution
 export const probeGitInventory = createGitInventoryProbe();

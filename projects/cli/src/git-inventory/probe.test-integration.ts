@@ -1,5 +1,6 @@
 // @vitest-environment node
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { mkdirSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, test } from 'vitest';
 
@@ -34,15 +35,27 @@ describe('real Git inventory probe', () => {
       });
 
       expect(result).toStrictEqual({
-        candidates: [
-          { kind: 'tracked', mode: '100644', path: '.gitignore', stage: 0 },
+        entries: [
           {
+            entryType: 'file',
+            indexEntries: [{ mode: '100644', stage: 0 }],
             kind: 'tracked',
-            mode: '100644',
-            path: 'nested/tracked file.txt',
-            stage: 0,
+            path: '.gitignore',
+            requiresSymlinkOverlay: false,
           },
-          { kind: 'untracked', path: 'untracked-😀.txt' },
+          {
+            entryType: 'file',
+            indexEntries: [{ mode: '100644', stage: 0 }],
+            kind: 'tracked',
+            path: 'nested/tracked file.txt',
+            requiresSymlinkOverlay: false,
+          },
+          {
+            entryType: 'file',
+            kind: 'untracked',
+            path: 'untracked-😀.txt',
+            requiresSymlinkOverlay: false,
+          },
         ],
         kind: 'probed',
       });
@@ -78,6 +91,162 @@ describe('real Git inventory probe', () => {
       repository.remove();
     }
   });
+
+  test('omits tracked paths that are absent from the current working tree', async () => {
+    const repository = createGitRepository();
+
+    try {
+      const deletedPath = path.join(repository.directory, 'deleted.txt');
+
+      writeFileSync(deletedPath, 'tracked', 'utf8');
+      runFixtureGit(repository, ['add', '--', 'deleted.txt']);
+      unlinkSync(deletedPath);
+
+      await expect(
+        probeGitInventory({
+          maxEntries: 1,
+          maxMetadataBytes: 4096,
+          repositoryRoot: repository.directory,
+        }),
+      ).resolves.toStrictEqual({ entries: [], kind: 'probed' });
+    } finally {
+      repository.remove();
+    }
+  });
+
+  test('preserves an index symlink materialized as a host file when core.symlinks is false', async () => {
+    const repository = createGitRepository();
+
+    try {
+      const linkPath = path.join(repository.directory, 'emulated-link');
+
+      writeFileSync(linkPath, '../target', 'utf8');
+
+      const objectId = execFileSync('git', ['hash-object', '-w', '--', 'emulated-link'], {
+        cwd: repository.directory,
+        encoding: 'utf8',
+        env: repository.environment,
+      }).trim();
+
+      runFixtureGit(repository, [
+        'update-index',
+        '--add',
+        '--cacheinfo',
+        `120000,${objectId},emulated-link`,
+      ]);
+      runFixtureGit(repository, ['config', 'core.symlinks', 'false']);
+
+      await expect(
+        probeGitInventory({
+          maxEntries: 1,
+          maxMetadataBytes: 4096,
+          repositoryRoot: repository.directory,
+        }),
+      ).resolves.toStrictEqual({
+        entries: [
+          {
+            entryType: 'symlink',
+            indexEntries: [{ mode: '120000', stage: 0 }],
+            kind: 'tracked',
+            path: 'emulated-link',
+            requiresSymlinkOverlay: true,
+          },
+        ],
+        kind: 'probed',
+      });
+    } finally {
+      repository.remove();
+    }
+  });
+
+  test('uses a current host file for a tracked symlink type change when core.symlinks is true', async () => {
+    const repository = createGitRepository();
+
+    try {
+      const linkPath = path.join(repository.directory, 'changed-link');
+
+      writeFileSync(linkPath, '../target', 'utf8');
+
+      const objectId = execFileSync('git', ['hash-object', '-w', '--', 'changed-link'], {
+        cwd: repository.directory,
+        encoding: 'utf8',
+        env: repository.environment,
+      }).trim();
+
+      runFixtureGit(repository, [
+        'update-index',
+        '--add',
+        '--cacheinfo',
+        `120000,${objectId},changed-link`,
+      ]);
+      runFixtureGit(repository, ['config', 'core.symlinks', 'true']);
+
+      await expect(
+        probeGitInventory({
+          maxEntries: 1,
+          maxMetadataBytes: 4096,
+          repositoryRoot: repository.directory,
+        }),
+      ).resolves.toStrictEqual({
+        entries: [
+          {
+            entryType: 'file',
+            indexEntries: [{ mode: '120000', stage: 0 }],
+            kind: 'tracked',
+            path: 'changed-link',
+            requiresSymlinkOverlay: false,
+          },
+        ],
+        kind: 'probed',
+      });
+    } finally {
+      repository.remove();
+    }
+  });
+
+  test.skipIf(process.platform === 'win32')(
+    'uses native no-follow types for tracked changes and untracked symlinks',
+    async () => {
+      const repository = createGitRepository();
+
+      try {
+        const trackedPath = path.join(repository.directory, 'tracked-link');
+
+        writeFileSync(trackedPath, 'regular', 'utf8');
+        runFixtureGit(repository, ['add', '--', 'tracked-link']);
+        unlinkSync(trackedPath);
+        symlinkSync('../target', trackedPath);
+        symlinkSync('../target', path.join(repository.directory, 'untracked-link'));
+
+        await expect(
+          probeGitInventory({
+            maxEntries: 2,
+            maxMetadataBytes: 4096,
+            repositoryRoot: repository.directory,
+          }),
+        ).resolves.toStrictEqual({
+          entries: [
+            {
+              entryType: 'symlink',
+              indexEntries: [{ mode: '100644', stage: 0 }],
+              kind: 'tracked',
+              path: 'tracked-link',
+              requiresSymlinkOverlay: false,
+            },
+            {
+              entryType: 'symlink',
+              kind: 'untracked',
+              path: 'untracked-link',
+              requiresSymlinkOverlay: false,
+            },
+          ],
+          kind: 'probed',
+        });
+      } finally {
+        repository.remove();
+      }
+    },
+  );
 
   test.skipIf(process.platform === 'win32')(
     'rejects a tracked path that Git returns as invalid UTF-8',
@@ -140,11 +309,34 @@ describe('real Git inventory probe', () => {
           repositoryRoot: repository.directory,
         }),
       ).resolves.toStrictEqual({
-        candidates: [
-          { kind: 'tracked', mode: '100644', path: '.gitattributes', stage: 0 },
-          { kind: 'tracked', mode: '100644', path: '.gitignore', stage: 0 },
-          { kind: 'tracked', mode: '100644', path: 'nested/tracked.txt', stage: 0 },
-          { kind: 'untracked', path: '.github/workflow.yml' },
+        entries: [
+          {
+            entryType: 'file',
+            indexEntries: [{ mode: '100644', stage: 0 }],
+            kind: 'tracked',
+            path: '.gitattributes',
+            requiresSymlinkOverlay: false,
+          },
+          {
+            entryType: 'file',
+            indexEntries: [{ mode: '100644', stage: 0 }],
+            kind: 'tracked',
+            path: '.gitignore',
+            requiresSymlinkOverlay: false,
+          },
+          {
+            entryType: 'file',
+            indexEntries: [{ mode: '100644', stage: 0 }],
+            kind: 'tracked',
+            path: 'nested/tracked.txt',
+            requiresSymlinkOverlay: false,
+          },
+          {
+            entryType: 'file',
+            kind: 'untracked',
+            path: '.github/workflow.yml',
+            requiresSymlinkOverlay: false,
+          },
         ],
         kind: 'probed',
       });
@@ -188,14 +380,30 @@ describe('real Git inventory probe', () => {
       ).resolves.toStrictEqual({ errorCode: 'RESOURCE_LIMIT_EXCEEDED', kind: 'failed' });
 
       await expect(probe()).resolves.toStrictEqual({
-        candidates: [{ kind: 'tracked', mode: '100644', path: '.gitmodules', stage: 0 }],
+        entries: [
+          {
+            entryType: 'file',
+            indexEntries: [{ mode: '100644', stage: 0 }],
+            kind: 'tracked',
+            path: '.gitmodules',
+            requiresSymlinkOverlay: false,
+          },
+        ],
         kind: 'probed',
       });
 
       runFixtureGit(repository, ['submodule', 'deinit', '--force', '--', 'module']);
 
       await expect(probe()).resolves.toStrictEqual({
-        candidates: [{ kind: 'tracked', mode: '100644', path: '.gitmodules', stage: 0 }],
+        entries: [
+          {
+            entryType: 'file',
+            indexEntries: [{ mode: '100644', stage: 0 }],
+            kind: 'tracked',
+            path: '.gitmodules',
+            requiresSymlinkOverlay: false,
+          },
+        ],
         kind: 'probed',
       });
     } finally {
@@ -226,7 +434,7 @@ describe('real Git inventory probe', () => {
           maxMetadataBytes: 16_384,
           repositoryRoot: repository.directory,
         }),
-      ).resolves.toStrictEqual({ candidates: [], kind: 'probed' });
+      ).resolves.toStrictEqual({ entries: [], kind: 'probed' });
     } finally {
       repository.remove();
     }

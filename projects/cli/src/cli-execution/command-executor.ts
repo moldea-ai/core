@@ -12,7 +12,7 @@ import type { IMoldeaCliCommandExecutor, IMoldeaCliExecutionResult } from './typ
 /**
  * Creates the private command dispatcher around injectable Git discovery and inventory probes.
  * @param workingTreeDiscovery The Git working-tree discovery operation.
- * @param gitInventoryProbe The strict raw Git inventory probe.
+ * @param gitInventoryProbe The strict normalized Git inventory probe.
  * @returns A command executor for the current behavioral slice.
  */
 export const createMoldeaCliCommandExecutor =

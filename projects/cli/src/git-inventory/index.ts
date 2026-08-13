@@ -13,5 +13,13 @@ export type {
   IGitUntrackedInventoryCandidate,
 } from './types.js';
 
-// ownership-filtered inventory probe
+// normalized entry types
+export type {
+  IGitInventoryEntry,
+  IGitInventoryIndexEntry,
+  IGitTrackedInventoryEntry,
+  IGitUntrackedInventoryEntry,
+} from './entry-type/index.js';
+
+// normalized inventory probe
 export { createGitInventoryProbe, probeGitInventory } from './probe.js';

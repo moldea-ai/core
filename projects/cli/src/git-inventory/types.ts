@@ -1,6 +1,7 @@
 import type { IMoldeaCliGitErrorCode } from '../presentation/index.js';
 
 import type { GIT_TRACKED_ENTRY_MODES } from './constants.js';
+import type { IGitInventoryEntry } from './entry-type/index.js';
 
 // Git index modes retained for later entry-type classification
 export type IGitTrackedEntryMode = (typeof GIT_TRACKED_ENTRY_MODES)[number];
@@ -29,16 +30,16 @@ export type IGitInventoryCandidate =
 // operational errors that can terminate a raw Git inventory probe
 export type IGitInventoryProbeErrorCode = IMoldeaCliGitErrorCode | 'RESOURCE_LIMIT_EXCEEDED';
 
-// limits and selected repository root for one ownership-filtered inventory probe
+// limits and selected repository root for one normalized inventory probe
 export interface IGitInventoryProbeInput {
   readonly maxEntries: number;
   readonly maxMetadataBytes: number;
   readonly repositoryRoot: string;
 }
 
-// complete immutable selected-repository candidate set from one probe
+// complete immutable selected-repository entry set from one probe
 export interface IGitInventoryProbedResult {
-  readonly candidates: readonly IGitInventoryCandidate[];
+  readonly entries: readonly IGitInventoryEntry[];
   readonly kind: 'probed';
 }
 
@@ -48,10 +49,10 @@ export interface IGitInventoryProbeFailedResult {
   readonly kind: 'failed';
 }
 
-// all-or-nothing ownership-filtered inventory probe result
+// all-or-nothing normalized inventory probe result
 export type IGitInventoryProbeResult = IGitInventoryProbeFailedResult | IGitInventoryProbedResult;
 
-// injectable ownership-filtered inventory probe boundary
+// injectable normalized inventory probe boundary
 export type IGitInventoryProbe = (
   input: IGitInventoryProbeInput,
 ) => Promise<IGitInventoryProbeResult>;

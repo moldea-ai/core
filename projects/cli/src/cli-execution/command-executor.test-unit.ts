@@ -42,7 +42,7 @@ describe('createMoldeaCliCommandExecutor', () => {
         .mockResolvedValue(Object.freeze({ kind: 'discovered', repositoryRoot: '/workspace' }));
       const gitInventoryProbe = vi
         .fn<IGitInventoryProbe>()
-        .mockResolvedValue(Object.freeze({ candidates: Object.freeze([]), kind: 'probed' }));
+        .mockResolvedValue(Object.freeze({ entries: Object.freeze([]), kind: 'probed' }));
       const executeCommand = createMoldeaCliCommandExecutor(
         workingTreeDiscovery,
         gitInventoryProbe,
