@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -30,7 +30,8 @@ export const initializeGitRepository = (
 
 /** Creates an isolated unborn Git repository with no ambient user configuration. */
 export const createGitRepository = (): IGitRepositoryFixture => {
-  const testDirectory = mkdtempSync(path.join(tmpdir(), 'moldea-git-inventory-'));
+  const temporaryDirectory = mkdtempSync(path.join(tmpdir(), 'moldea-git-inventory-'));
+  const testDirectory = realpathSync(temporaryDirectory);
   const directory = path.join(testDirectory, 'repository');
   const homeDirectory = path.join(testDirectory, 'home');
   const configDirectory = path.join(testDirectory, 'config');

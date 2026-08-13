@@ -248,7 +248,7 @@ describe('real Git inventory probe', () => {
     },
   );
 
-  test.skipIf(process.platform === 'win32')(
+  test.skipIf(process.platform !== 'linux')(
     'rejects a tracked path that Git returns as invalid UTF-8',
     async () => {
       const repository = createGitRepository();

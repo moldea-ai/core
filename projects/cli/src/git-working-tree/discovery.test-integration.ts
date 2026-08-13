@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { execFile } from 'node:child_process';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, realpath, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
@@ -29,7 +29,8 @@ interface IGitFixture {
 
 /** Creates one isolated temporary directory tracked for teardown. */
 const createTemporaryDirectory = async (): Promise<string> => {
-  const directory = await mkdtemp(path.join(tmpdir(), 'moldea-cli-git-'));
+  const temporaryDirectory = await mkdtemp(path.join(tmpdir(), 'moldea-cli-git-'));
+  const directory = await realpath(temporaryDirectory);
 
   temporaryDirectories.push(directory);
   return directory;
