@@ -35,6 +35,10 @@ export const createGitInventoryEntryTypeNormalizer = (
   symlinkConfigurationResolver: IGitSymlinkConfigurationResolver = resolveGitSymlinkConfiguration,
 ): IGitInventoryEntryTypeNormalizer => {
   return async (input): Promise<IGitInventoryEntryTypeNormalizationResult> => {
+    if (input.signal?.aborted) {
+      return createNormalizationFailure('GIT_OPERATION_ABORTED');
+    }
+
     if (!Number.isSafeInteger(input.maxMetadataBytes) || input.maxMetadataBytes < 0) {
       return createNormalizationFailure('RESOURCE_LIMIT_EXCEEDED');
     }
@@ -49,7 +53,15 @@ export const createGitInventoryEntryTypeNormalizer = (
     let symlinkConfiguration: Awaited<ReturnType<IGitSymlinkConfigurationResolver>> | null = null;
 
     for (const candidate of collapseResult.candidates) {
+      if (input.signal?.aborted) {
+        return createNormalizationFailure('GIT_OPERATION_ABORTED');
+      }
+
       const inspectionResult = await entryInspector(input.repositoryRoot, candidate.path);
+
+      if (input.signal?.aborted) {
+        return createNormalizationFailure('GIT_OPERATION_ABORTED');
+      }
 
       if (inspectionResult.kind === 'failed') {
         return inspectionResult;
@@ -91,6 +103,7 @@ export const createGitInventoryEntryTypeNormalizer = (
       symlinkConfiguration ??= await symlinkConfigurationResolver({
         maxMetadataBytes: input.maxMetadataBytes,
         repositoryRoot: input.repositoryRoot,
+        ...(input.signal === undefined ? {} : { signal: input.signal }),
       });
 
       if (symlinkConfiguration.kind === 'failed') {

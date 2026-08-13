@@ -50,6 +50,7 @@ export interface IGitInventoryBoundaryInspectionInput {
   readonly maxMetadataBytes: number;
   readonly plans: readonly IGitInventoryOwnershipPathPlan[];
   readonly repositoryRoot: string;
+  readonly signal?: AbortSignal;
 }
 
 // ownership retained for one untracked candidate after boundary inspection
@@ -82,6 +83,7 @@ export interface IGitInventoryOwnershipFilterInput {
   readonly candidates: readonly IGitInventoryCandidate[];
   readonly maxMetadataBytes: number;
   readonly repositoryRoot: string;
+  readonly signal?: AbortSignal;
 }
 
 // complete selected-repository candidate set after ownership filtering

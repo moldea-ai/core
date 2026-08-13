@@ -40,6 +40,8 @@ const mapGitProcessFailure = (
   reason: IGitStreamingProcessFailureReason,
 ): IGitInventoryProbeErrorCode => {
   switch (reason) {
+    case 'aborted':
+      return 'GIT_OPERATION_ABORTED';
     case 'not-found':
       return 'GIT_NOT_FOUND';
     case 'repository-not-found':
@@ -106,12 +108,17 @@ export const createGitInventoryProbe =
     logicalPathNormalizer: IGitInventoryLogicalPathNormalizer = normalizeGitInventoryLogicalPaths,
   ): IGitInventoryProbe =>
   async (input): Promise<IGitInventoryProbeResult> => {
+    if (input.signal?.aborted) {
+      return createProbeFailure('GIT_OPERATION_ABORTED');
+    }
+
     const trackedParser = createTrackedGitInventoryParser(input.maxEntries);
     const trackedProcessResult = await processExecutor({
       arguments: ['-C', input.repositoryRoot, ...GIT_TRACKED_INVENTORY_ARGUMENTS],
       consumeStdout: (chunk) => trackedParser.consume(chunk),
       maxStderrBytes: MAX_GIT_PROCESS_DIAGNOSTIC_BYTES,
       maxStdoutBytes: input.maxMetadataBytes,
+      ...(input.signal === undefined ? {} : { signal: input.signal }),
     });
 
     if (trackedProcessResult.kind === 'failed') {
@@ -136,6 +143,7 @@ export const createGitInventoryProbe =
       consumeStdout: (chunk) => untrackedParser.consume(chunk),
       maxStderrBytes: MAX_GIT_PROCESS_DIAGNOSTIC_BYTES,
       maxStdoutBytes: input.maxMetadataBytes - trackedProcessResult.stdoutBytes,
+      ...(input.signal === undefined ? {} : { signal: input.signal }),
     });
 
     if (untrackedProcessResult.kind === 'failed') {
@@ -166,6 +174,7 @@ export const createGitInventoryProbe =
         trackedProcessResult.stdoutBytes -
         untrackedProcessResult.stdoutBytes,
       repositoryRoot: input.repositoryRoot,
+      ...(input.signal === undefined ? {} : { signal: input.signal }),
     });
 
     if (ownershipResult.kind === 'failed') {
@@ -180,6 +189,7 @@ export const createGitInventoryProbe =
         untrackedProcessResult.stdoutBytes -
         ownershipResult.gitMetadataBytes,
       repositoryRoot: input.repositoryRoot,
+      ...(input.signal === undefined ? {} : { signal: input.signal }),
     });
 
     if (entryTypeResult.kind === 'failed') {
@@ -195,6 +205,7 @@ export const createGitInventoryProbe =
         ownershipResult.gitMetadataBytes -
         entryTypeResult.gitMetadataBytes,
       repositoryRoot: input.repositoryRoot,
+      ...(input.signal === undefined ? {} : { signal: input.signal }),
     });
 
     if (contentTransformationResult.kind === 'failed') {

@@ -88,6 +88,7 @@ export type IGitInventoryEntryInspector = (
 export interface IGitSymlinkConfigurationInput {
   readonly maxMetadataBytes: number;
   readonly repositoryRoot: string;
+  readonly signal?: AbortSignal;
 }
 
 // successfully resolved effective Git symlink configuration
@@ -138,6 +139,7 @@ export interface IGitInventoryEntryTypeNormalizerInput {
   readonly candidates: readonly IGitInventoryCandidate[];
   readonly maxMetadataBytes: number;
   readonly repositoryRoot: string;
+  readonly signal?: AbortSignal;
 }
 
 // complete normalized current working-tree inventory

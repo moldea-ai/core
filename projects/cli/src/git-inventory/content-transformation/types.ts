@@ -74,6 +74,7 @@ export interface IGitContentTransformationClassifierInput {
   readonly entries: readonly IGitEntryTypeNormalizedEntry[];
   readonly maxMetadataBytes: number;
   readonly repositoryRoot: string;
+  readonly signal?: AbortSignal;
 }
 
 // complete classified inventory and the Git metadata bytes it consumed

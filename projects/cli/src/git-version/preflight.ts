@@ -16,6 +16,8 @@ import type { IGitVersion, IGitVersionPreflight, IGitVersionPreflightResult } fr
  */
 const mapGitProcessFailure = (reason: IGitProcessFailureReason): IMoldeaCliGitErrorCode => {
   switch (reason) {
+    case 'aborted':
+      return 'GIT_OPERATION_ABORTED';
     case 'not-found':
       return 'GIT_NOT_FOUND';
     case 'repository-not-found':
@@ -53,10 +55,11 @@ const isGitVersionSupported = (version: IGitVersion): boolean => {
  */
 export const createGitVersionPreflight =
   (processExecutor: IGitProcessExecutor = executeGitProcess): IGitVersionPreflight =>
-  async (): Promise<IGitVersionPreflightResult> => {
+  async (signal): Promise<IGitVersionPreflightResult> => {
     const processResult = await processExecutor({
       arguments: ['--version'],
       maxBufferBytes: MAX_GIT_VERSION_OUTPUT_BYTES,
+      ...(signal === undefined ? {} : { signal }),
     });
 
     if (processResult.kind === 'failed') {

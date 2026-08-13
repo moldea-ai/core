@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 interface ISpawnTestOptions {
   readonly env: NodeJS.ProcessEnv;
   readonly shell: false;
+  readonly signal?: AbortSignal;
   readonly stdio: readonly ['ignore' | 'pipe', 'pipe', 'pipe'];
   readonly windowsHide: true;
 }
@@ -267,5 +268,47 @@ describe('executeGitStreamingProcess', () => {
     );
 
     await expect(resultPromise).resolves.toStrictEqual({ kind: 'failed', reason: 'not-found' });
+  });
+
+  test('does not launch Git for an already-aborted streamed operation', async () => {
+    const controller = new AbortController();
+
+    controller.abort();
+
+    await expect(
+      executeGitStreamingProcess({
+        arguments: ['ls-files'],
+        consumeStdout: vi.fn(),
+        maxStderrBytes: 16,
+        maxStdoutBytes: 16,
+        signal: controller.signal,
+      }),
+    ).resolves.toStrictEqual({ kind: 'failed', reason: 'aborted' });
+    expect(spawnTestDouble).not.toHaveBeenCalled();
+  });
+
+  test('normalizes an in-flight streamed abort exactly once', async () => {
+    const controller = new AbortController();
+    const testProcess = createTestChildProcess();
+
+    spawnTestDouble.mockReturnValue(testProcess.childProcess);
+
+    const resultPromise = executeGitStreamingProcess({
+      arguments: ['ls-files'],
+      consumeStdout: vi.fn(),
+      maxStderrBytes: 16,
+      maxStdoutBytes: 16,
+      signal: controller.signal,
+    });
+
+    expect(spawnTestDouble.mock.calls[0]?.[2].signal).toBe(controller.signal);
+    controller.abort(new Error('private cancellation reason'));
+    testProcess.childProcess.emit(
+      'error',
+      Object.assign(new Error('aborted'), { code: 'ABORT_ERR' }),
+    );
+    testProcess.childProcess.emit('close', null);
+
+    await expect(resultPromise).resolves.toStrictEqual({ kind: 'failed', reason: 'aborted' });
   });
 });

@@ -8,7 +8,7 @@ import type { IMoldeaCliExecutionResult, IRunMoldeaCliOptions } from './types.js
 
 /**
  * Runs one process-neutral CLI invocation through parsing and private command dispatch.
- * @param options The arguments, installed version, generated release metadata, and executor seam.
+ * @param options The arguments, installed metadata, optional cancellation, and executor seam.
  * @returns A promise resolving to exact process output and the handled exit code.
  */
 export const runMoldeaCli = async (
@@ -50,6 +50,7 @@ export const runMoldeaCli = async (
       invocation: parseResult.invocation,
       packageMetadata: options.packageMetadata,
       releaseMetadata: options.releaseMetadata,
+      ...(options.signal === undefined ? {} : { signal: options.signal }),
     });
   } catch {
     return createMoldeaCliErrorResult(

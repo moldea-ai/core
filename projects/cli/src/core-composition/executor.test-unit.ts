@@ -55,13 +55,18 @@ const createAdapter = (id: string): IRuntimeAdapter => ({
 
 describe('createMoldeaCliCoreInspectionExecutor', () => {
   test('creates fresh Core state with the exact mapped CLI resource limits', async () => {
+    const controller = new AbortController();
     const reader = createMemoryRepositoryReader([]);
     const coreDouble = createCoreDouble();
     const coreFactory = vi.fn<IMoldeaCliCoreFactory>().mockReturnValue(coreDouble.core);
     const executeInspection = createMoldeaCliCoreInspectionExecutor(coreFactory);
 
     await expect(
-      executeInspection({ repository: reader, resourceLimits: RESOURCE_LIMITS }),
+      executeInspection({
+        repository: reader,
+        resourceLimits: RESOURCE_LIMITS,
+        signal: controller.signal,
+      }),
     ).resolves.toBe(INSPECTION_RESULT);
     expect(coreFactory).toHaveBeenCalledOnce();
     expect(coreFactory).toHaveBeenCalledWith({
@@ -77,7 +82,10 @@ describe('createMoldeaCliCoreInspectionExecutor', () => {
     });
     expect(Object.isFrozen(coreFactory.mock.calls[0]?.[0]?.adapters)).toBe(true);
     expect(Object.isFrozen(coreFactory.mock.calls[0]?.[0]?.limits)).toBe(true);
-    expect(coreDouble.inspectProject).toHaveBeenCalledWith({ repository: reader });
+    expect(coreDouble.inspectProject).toHaveBeenCalledWith({
+      repository: reader,
+      signal: controller.signal,
+    });
 
     await executeInspection({ repository: reader, resourceLimits: RESOURCE_LIMITS });
 

@@ -69,6 +69,7 @@ export const createMoldeaCliCommandExecutor =
     const discoveryResult = await workingTreeDiscovery({
       invocationDirectory: input.invocationDirectory,
       repositoryDirectory: input.invocation.options.repositoryDirectory,
+      ...(input.signal === undefined ? {} : { signal: input.signal }),
     });
 
     if (discoveryResult.kind === 'failed') {
@@ -84,9 +85,15 @@ export const createMoldeaCliCommandExecutor =
     try {
       const resourceLimits = input.invocation.options.resourceLimits;
       const snapshotResult = await workingTreeSnapshotExecutor({
-        operation: (repository) => coreInspectionExecutor({ repository, resourceLimits }),
+        operation: (repository, signal) =>
+          coreInspectionExecutor({
+            repository,
+            resourceLimits,
+            ...(signal === undefined ? {} : { signal }),
+          }),
         repositoryRoot: discoveryResult.repositoryRoot,
         resourceLimits,
+        ...(input.signal === undefined ? {} : { signal: input.signal }),
       });
 
       if (snapshotResult.kind === 'failed') {

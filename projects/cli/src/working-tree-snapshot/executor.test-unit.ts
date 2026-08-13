@@ -421,4 +421,53 @@ describe('createWorkingTreeSnapshotExecutor', () => {
     expect(inventoryProbe).toHaveBeenCalledTimes(2);
     expect(repositoryReaderFactory).toHaveBeenCalledOnce();
   });
+
+  test('forwards cancellation and does not retry a partial operation result', async () => {
+    const controller = new AbortController();
+    const identityInspector = createStableIdentityInspector();
+    const inventoryProbe = vi.fn<IGitInventoryProbe>().mockResolvedValue(createInventoryResult());
+    const repositoryReaderFactory = vi
+      .fn<IWorkingTreeRepositoryReaderFactory>()
+      .mockResolvedValue(createMemoryRepositoryReader([]));
+    const operation = vi.fn((_reader, signal: AbortSignal | undefined) => {
+      expect(signal).toBe(controller.signal);
+      controller.abort(new Error('private cancellation reason'));
+
+      return Promise.resolve('partial');
+    });
+    const executeSnapshot = createWorkingTreeSnapshotExecutor(
+      identityInspector,
+      inventoryProbe,
+      repositoryReaderFactory,
+    );
+
+    await expect(
+      executeSnapshot({
+        operation,
+        repositoryRoot: REPOSITORY_ROOT,
+        resourceLimits: RESOURCE_LIMITS,
+        signal: controller.signal,
+      }),
+    ).resolves.toStrictEqual({ errorCode: 'GIT_OPERATION_ABORTED', kind: 'failed' });
+    expect(identityInspector).toHaveBeenCalledTimes(2);
+    expect(inventoryProbe).toHaveBeenCalledTimes(2);
+    expect(repositoryReaderFactory).toHaveBeenCalledOnce();
+    expect(operation).toHaveBeenCalledOnce();
+    expect(identityInspector).toHaveBeenNthCalledWith(1, {
+      repositoryRoot: REPOSITORY_ROOT,
+      signal: controller.signal,
+    });
+    expect(inventoryProbe).toHaveBeenNthCalledWith(1, {
+      maxEntries: RESOURCE_LIMITS.maxEntries,
+      maxMetadataBytes: RESOURCE_LIMITS.maxTotalBytes,
+      repositoryRoot: REPOSITORY_ROOT,
+      signal: controller.signal,
+    });
+    expect(repositoryReaderFactory).toHaveBeenCalledWith({
+      entries: createInventoryResult().entries,
+      repositoryRoot: REPOSITORY_ROOT,
+      resourceLimits: RESOURCE_LIMITS,
+      signal: controller.signal,
+    });
+  });
 });

@@ -19,6 +19,8 @@ import type {
 /** Maps a normalized Git process failure to a safe discovery error. */
 const mapGitProcessFailure = (reason: IGitProcessFailureReason): IMoldeaCliGitErrorCode => {
   switch (reason) {
+    case 'aborted':
+      return 'GIT_OPERATION_ABORTED';
     case 'not-found':
       return 'GIT_NOT_FOUND';
     case 'repository-not-found':
@@ -60,6 +62,7 @@ export const createGitWorkingTreeDiscovery =
     const workTreeResult = await processExecutor({
       arguments: ['-C', startingDirectoryResult.directory, 'rev-parse', '--is-inside-work-tree'],
       maxBufferBytes: MAX_GIT_DISCOVERY_OUTPUT_BYTES,
+      ...(input.signal === undefined ? {} : { signal: input.signal }),
     });
 
     if (workTreeResult.kind === 'failed') {
@@ -83,6 +86,7 @@ export const createGitWorkingTreeDiscovery =
     const rootResult = await processExecutor({
       arguments: ['-C', startingDirectoryResult.directory, 'rev-parse', '--show-toplevel'],
       maxBufferBytes: MAX_GIT_DISCOVERY_OUTPUT_BYTES,
+      ...(input.signal === undefined ? {} : { signal: input.signal }),
     });
 
     if (rootResult.kind === 'failed') {
@@ -108,7 +112,7 @@ export const createGitWorkingTreeDiscovery =
       return createDiscoveryFailure(rootDirectoryResult.errorCode);
     }
 
-    const versionResult = await gitVersionPreflight();
+    const versionResult = await gitVersionPreflight(input.signal);
 
     if (versionResult.kind === 'failed') {
       return createDiscoveryFailure(versionResult.errorCode);
@@ -125,6 +129,7 @@ export const createGitWorkingTreeDiscovery =
         'core.sparseCheckout',
       ],
       maxBufferBytes: MAX_GIT_DISCOVERY_OUTPUT_BYTES,
+      ...(input.signal === undefined ? {} : { signal: input.signal }),
     });
 
     if (sparseCheckoutResult.kind === 'failed') {

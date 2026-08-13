@@ -23,4 +23,4 @@ export interface IGitVersionFailedResult {
 export type IGitVersionPreflightResult = IGitVersionSupportedResult | IGitVersionFailedResult;
 
 // injectable Git prerequisite preflight
-export type IGitVersionPreflight = () => Promise<IGitVersionPreflightResult>;
+export type IGitVersionPreflight = (signal?: AbortSignal) => Promise<IGitVersionPreflightResult>;

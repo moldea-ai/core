@@ -24,6 +24,8 @@ const mapGitProcessFailure = (
   reason: IGitStreamingProcessFailureReason,
 ): IGitInventoryProbeErrorCode => {
   switch (reason) {
+    case 'aborted':
+      return 'GIT_OPERATION_ABORTED';
     case 'not-found':
       return 'GIT_NOT_FOUND';
     case 'access-denied':
@@ -61,6 +63,10 @@ export const createGitSymlinkConfigurationResolver = (
   processExecutor: IGitStreamingProcessExecutor = executeGitStreamingProcess,
 ): IGitSymlinkConfigurationResolver => {
   return async (input): Promise<IGitSymlinkConfigurationResult> => {
+    if (input.signal?.aborted) {
+      return createConfigurationFailure('GIT_OPERATION_ABORTED');
+    }
+
     if (!Number.isSafeInteger(input.maxMetadataBytes) || input.maxMetadataBytes < 0) {
       return createConfigurationFailure('RESOURCE_LIMIT_EXCEEDED');
     }
@@ -75,6 +81,7 @@ export const createGitSymlinkConfigurationResolver = (
       },
       maxStderrBytes: MAX_GIT_PROCESS_DIAGNOSTIC_BYTES,
       maxStdoutBytes: input.maxMetadataBytes,
+      ...(input.signal === undefined ? {} : { signal: input.signal }),
     });
 
     if (processResult.kind === 'failed') {

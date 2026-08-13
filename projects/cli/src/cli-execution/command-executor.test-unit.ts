@@ -130,7 +130,10 @@ const createCompletedSnapshotExecutor = (): {
     execution.calls += 1;
     execution.repositoryRoot = input.repositoryRoot;
     execution.resourceLimits = input.resourceLimits;
-    const result = await input.operation(reader);
+    const result =
+      input.signal === undefined
+        ? await input.operation(reader)
+        : await input.operation(reader, input.signal);
 
     execution.operationCalls += 1;
 
@@ -201,6 +204,38 @@ describe('createMoldeaCliCommandExecutor', () => {
         maxManifestBytes: 2_097_152,
         maxTotalBytes: 134_217_728,
       },
+    });
+  });
+
+  test('forwards one operation signal through discovery, snapshot, and Core', async () => {
+    const controller = new AbortController();
+    const workingTreeDiscovery = vi
+      .fn<IGitWorkingTreeDiscovery>()
+      .mockResolvedValue(Object.freeze({ kind: 'discovered', repositoryRoot: '/workspace' }));
+    const snapshot = createCompletedSnapshotExecutor();
+    const coreInspection = vi
+      .fn<IMoldeaCliCoreInspectionExecutor>()
+      .mockResolvedValue(createValidInspection());
+    const executeCommand = createMoldeaCliCommandExecutor(
+      workingTreeDiscovery,
+      snapshot.executor,
+      coreInspection,
+    );
+
+    await executeCommand({
+      ...createCommandInput('validate'),
+      signal: controller.signal,
+    });
+
+    expect(workingTreeDiscovery).toHaveBeenCalledWith({
+      invocationDirectory: '/workspace',
+      repositoryDirectory: null,
+      signal: controller.signal,
+    });
+    expect(coreInspection).toHaveBeenCalledWith({
+      repository: snapshot.reader,
+      resourceLimits: createCommandInput('validate').invocation.options.resourceLimits,
+      signal: controller.signal,
     });
   });
 
@@ -449,6 +484,10 @@ Adapter evidence items: 0
   });
 
   test.each([
+    [
+      'GIT_OPERATION_ABORTED',
+      '{"cliVersion":"0.0.1","command":"inspect","error":{"code":"GIT_OPERATION_ABORTED","details":{},"message":"The Git operation was aborted.","path":null,"retryable":true,"source":"git"},"result":null,"schemaVersion":1,"status":"error"}\n',
+    ],
     [
       'RESOURCE_LIMIT_EXCEEDED',
       '{"cliVersion":"0.0.1","command":"inspect","error":{"code":"RESOURCE_LIMIT_EXCEEDED","details":{},"message":"A resource limit was exceeded.","path":null,"retryable":false,"source":"cli"},"result":null,"schemaVersion":1,"status":"error"}\n',

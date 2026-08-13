@@ -3,6 +3,7 @@ export type IGitProcessEnvironment = Readonly<Record<string, string>>;
 
 // reasons a Git subprocess can fail without exposing process diagnostics
 export type IGitProcessFailureReason =
+  | 'aborted'
   | 'not-found'
   | 'repository-not-found'
   | 'access-denied'
@@ -34,6 +35,7 @@ export interface IExecuteGitProcessOptions {
   readonly arguments: readonly string[];
   readonly environment?: NodeJS.ProcessEnv;
   readonly maxBufferBytes: number;
+  readonly signal?: AbortSignal;
 }
 
 // injectable Git subprocess boundary
@@ -51,6 +53,7 @@ export interface IExecuteGitStreamingProcessOptions {
   readonly environment?: NodeJS.ProcessEnv;
   readonly maxStderrBytes: number;
   readonly maxStdoutBytes: number;
+  readonly signal?: AbortSignal;
   readonly stdin?: Uint8Array;
 }
 

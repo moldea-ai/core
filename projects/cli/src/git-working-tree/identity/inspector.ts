@@ -36,6 +36,8 @@ const createInspectionFailure = (
 /** Maps one normalized Git process failure to the discovery error contract. */
 const mapGitProcessFailure = (reason: IGitProcessFailureReason): IMoldeaCliGitErrorCode => {
   switch (reason) {
+    case 'aborted':
+      return 'GIT_OPERATION_ABORTED';
     case 'not-found':
       return 'GIT_NOT_FOUND';
     case 'repository-not-found':
@@ -80,10 +82,12 @@ const queryGitPath = async (
   repositoryRoot: string,
   arguments_: readonly string[],
   isAbsoluteRequired: boolean,
+  signal?: AbortSignal,
 ): Promise<string | IGitWorkingTreeIdentityInspectionFailedResult> => {
   const result = await processExecutor({
     arguments: ['-C', repositoryRoot, ...arguments_],
     maxBufferBytes: MAX_GIT_DISCOVERY_OUTPUT_BYTES,
+    ...(signal === undefined ? {} : { signal }),
   });
 
   if (result.kind === 'failed') {
@@ -150,6 +154,7 @@ export const createGitWorkingTreeIdentityInspector = (
       input.repositoryRoot,
       GIT_WORKING_TREE_IDENTITY_ARGUMENTS.RepositoryRoot,
       true,
+      input.signal,
     );
 
     if (isInspectionFailure(discoveredRoot)) {
@@ -162,6 +167,10 @@ export const createGitWorkingTreeIdentityInspector = (
       'GIT_WORK_TREE_REQUIRED',
     );
 
+    if (input.signal?.aborted) {
+      return createInspectionFailure('GIT_OPERATION_ABORTED');
+    }
+
     if (isInspectionFailure(repositoryRoot)) {
       return repositoryRoot;
     }
@@ -172,6 +181,10 @@ export const createGitWorkingTreeIdentityInspector = (
         input.repositoryRoot,
         'GIT_WORK_TREE_REQUIRED',
       );
+
+      if (input.signal?.aborted) {
+        return createInspectionFailure('GIT_OPERATION_ABORTED');
+      }
 
       if (isInspectionFailure(selectedRepositoryRoot)) {
         return selectedRepositoryRoot;
@@ -187,6 +200,7 @@ export const createGitWorkingTreeIdentityInspector = (
       input.repositoryRoot,
       GIT_WORKING_TREE_IDENTITY_ARGUMENTS.GitDirectory,
       true,
+      input.signal,
     );
 
     if (isInspectionFailure(gitDirectoryPath)) {
@@ -198,6 +212,7 @@ export const createGitWorkingTreeIdentityInspector = (
       input.repositoryRoot,
       GIT_WORKING_TREE_IDENTITY_ARGUMENTS.CommonDirectory,
       false,
+      input.signal,
     );
 
     if (isInspectionFailure(commonDirectoryOutput)) {
@@ -209,6 +224,10 @@ export const createGitWorkingTreeIdentityInspector = (
       : path.resolve(input.repositoryRoot, commonDirectoryOutput);
     const gitDirectory = await captureLocation(inspectPath, gitDirectoryPath, 'GIT_OUTPUT_INVALID');
 
+    if (input.signal?.aborted) {
+      return createInspectionFailure('GIT_OPERATION_ABORTED');
+    }
+
     if (isInspectionFailure(gitDirectory)) {
       return gitDirectory;
     }
@@ -218,6 +237,10 @@ export const createGitWorkingTreeIdentityInspector = (
       commonDirectoryPath,
       'GIT_OUTPUT_INVALID',
     );
+
+    if (input.signal?.aborted) {
+      return createInspectionFailure('GIT_OPERATION_ABORTED');
+    }
 
     if (isInspectionFailure(commonDirectory)) {
       return commonDirectory;

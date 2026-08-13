@@ -26,6 +26,8 @@ const mapGitProcessFailure = (
   reason: IGitStreamingProcessFailureReason,
 ): IGitInventoryProbeErrorCode => {
   switch (reason) {
+    case 'aborted':
+      return 'GIT_OPERATION_ABORTED';
     case 'not-found':
       return 'GIT_NOT_FOUND';
     case 'access-denied':
@@ -103,6 +105,10 @@ export const createGitContentTransformationClassifier = (
   processExecutor: IGitStreamingProcessExecutor = executeGitStreamingProcess,
 ): IGitContentTransformationClassifier => {
   return async (input): Promise<IGitContentTransformationClassificationResult> => {
+    if (input.signal?.aborted) {
+      return createClassificationFailure('GIT_OPERATION_ABORTED');
+    }
+
     if (!Number.isSafeInteger(input.maxMetadataBytes) || input.maxMetadataBytes < 0) {
       return createClassificationFailure('RESOURCE_LIMIT_EXCEEDED');
     }
@@ -128,6 +134,7 @@ export const createGitContentTransformationClassifier = (
       },
       maxStderrBytes: MAX_GIT_PROCESS_DIAGNOSTIC_BYTES,
       maxStdoutBytes: input.maxMetadataBytes,
+      ...(input.signal === undefined ? {} : { signal: input.signal }),
       stdin,
     });
 

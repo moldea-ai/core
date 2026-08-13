@@ -3,10 +3,11 @@ import type { IRepositoryReader } from '@moldea.ai/repository';
 
 import type { IMoldeaCliResourceLimits } from '../command-line/index.js';
 
-// immutable inputs for one attempt-local Core inspection
+// immutable inputs for one cancellable attempt-local Core inspection
 export interface IMoldeaCliCoreInspectionInput {
   readonly repository: IRepositoryReader;
   readonly resourceLimits: IMoldeaCliResourceLimits;
+  readonly signal?: AbortSignal;
 }
 
 // injectable Core construction boundary

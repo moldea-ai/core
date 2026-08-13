@@ -41,7 +41,10 @@ export const createMoldeaCliCoreInspectionExecutor = (
       }),
     });
 
-    return core.inspectProject({ repository: input.repository });
+    return core.inspectProject({
+      repository: input.repository,
+      ...(input.signal === undefined ? {} : { signal: input.signal }),
+    });
   };
 };
 

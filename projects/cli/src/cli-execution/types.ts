@@ -9,12 +9,13 @@ export interface IMoldeaCliExecutionResult {
   readonly stdout: string;
 }
 
-// private command-dispatch input and seam used by later behavioral slices
+// private command-dispatch input with optional operation cancellation
 export interface IMoldeaCliCommandExecutionInput {
   readonly invocationDirectory: string;
   readonly invocation: IMoldeaCliCommandInvocation;
   readonly packageMetadata: IMoldeaCliPackageMetadata;
   readonly releaseMetadata: IMoldeaCliReleaseMetadata;
+  readonly signal?: AbortSignal;
 }
 
 // private dispatch boundary extended as command implementations are introduced
@@ -22,11 +23,12 @@ export type IMoldeaCliCommandExecutor = (
   input: IMoldeaCliCommandExecutionInput,
 ) => Promise<IMoldeaCliExecutionResult>;
 
-// process-neutral inputs required to handle one invocation
+// process-neutral inputs required to handle one optionally cancellable invocation
 export interface IRunMoldeaCliOptions {
   readonly commandLineArguments: readonly string[];
   readonly executeCommand?: IMoldeaCliCommandExecutor;
   readonly invocationDirectory: string;
   readonly packageMetadata: IMoldeaCliPackageMetadata;
   readonly releaseMetadata: IMoldeaCliReleaseMetadata;
+  readonly signal?: AbortSignal;
 }

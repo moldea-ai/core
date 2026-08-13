@@ -53,6 +53,7 @@ export const createWorkingTreeRepositoryReaderFactory =
       }),
       rootDirectory: input.repositoryRoot,
       selection: Object.freeze({ kind: 'paths', paths: selectedPaths }),
+      ...(input.signal === undefined ? {} : { signal: input.signal }),
     });
 
     const overlaidReader = symlinkOverlayFactory(filesystemReader, symlinkOverlayPaths);

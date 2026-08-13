@@ -1,4 +1,4 @@
-import type { IGitInventoryCandidate } from '../types.js';
+import type { IGitInventoryCandidate, IGitInventoryProbeErrorCode } from '../types.js';
 
 import { inspectGitInventoryBoundaries } from './boundary-inspector.js';
 import { planGitInventoryOwnershipPath } from './path-planner.js';
@@ -22,8 +22,9 @@ interface IGitInventoryGitlinkTrieNode {
 }
 
 /** Creates one immutable ownership-filtering failure. */
-const createOwnershipFailure = (): IGitInventoryOwnershipFilterFailedResult =>
-  Object.freeze({ errorCode: 'GIT_OUTPUT_INVALID', kind: 'failed' });
+const createOwnershipFailure = (
+  errorCode: IGitInventoryProbeErrorCode = 'GIT_OUTPUT_INVALID',
+): IGitInventoryOwnershipFilterFailedResult => Object.freeze({ errorCode, kind: 'failed' });
 
 /** Builds one segment trie for deterministic submodule-root lookup. */
 const createGitlinkTrie = (
@@ -87,6 +88,10 @@ export const createGitInventoryOwnershipFilter = (
     const plannedCandidates: IGitInventoryIndexedOwnershipPlan[] = [];
 
     for (const [candidateIndex, candidate] of input.candidates.entries()) {
+      if (input.signal?.aborted) {
+        return createOwnershipFailure('GIT_OPERATION_ABORTED');
+      }
+
       const planResult = planGitInventoryOwnershipPath(candidate);
 
       if (planResult.kind === 'failed') {
@@ -129,6 +134,7 @@ export const createGitInventoryOwnershipFilter = (
       maxMetadataBytes: input.maxMetadataBytes,
       plans: untrackedPlans.map(({ plan }) => plan),
       repositoryRoot: input.repositoryRoot,
+      ...(input.signal === undefined ? {} : { signal: input.signal }),
     });
 
     if (boundaryResult.kind === 'failed') {
@@ -140,6 +146,10 @@ export const createGitInventoryOwnershipFilter = (
     }
 
     for (const [ownershipIndex, ownership] of boundaryResult.ownership.entries()) {
+      if (input.signal?.aborted) {
+        return createOwnershipFailure('GIT_OPERATION_ABORTED');
+      }
+
       const untrackedPlan = untrackedPlans[ownershipIndex];
 
       if (untrackedPlan === undefined) {

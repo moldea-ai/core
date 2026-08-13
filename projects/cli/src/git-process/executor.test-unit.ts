@@ -7,6 +7,7 @@ interface IExecFileTestOptions {
   readonly env: NodeJS.ProcessEnv;
   readonly maxBuffer: number;
   readonly shell: false;
+  readonly signal?: AbortSignal;
   readonly windowsHide: true;
 }
 
@@ -122,5 +123,38 @@ describe('executeGitProcess', () => {
     await expect(
       executeGitProcess({ arguments: ['rev-parse'], maxBufferBytes: 4096 }),
     ).resolves.toStrictEqual({ kind: 'failed', reason });
+  });
+
+  test('does not launch Git for an already-aborted operation', async () => {
+    const controller = new AbortController();
+
+    controller.abort();
+
+    await expect(
+      executeGitProcess({
+        arguments: ['--version'],
+        maxBufferBytes: 4096,
+        signal: controller.signal,
+      }),
+    ).resolves.toStrictEqual({ kind: 'failed', reason: 'aborted' });
+    expect(execFileTestDouble).not.toHaveBeenCalled();
+  });
+
+  test('normalizes an in-flight signal without exposing the abort reason', async () => {
+    const controller = new AbortController();
+
+    execFileTestDouble.mockImplementation((_file, _arguments, options, callback) => {
+      expect(options.signal).toBe(controller.signal);
+      controller.abort(new Error('private cancellation reason'));
+      callback(createProcessError('ABORT_ERR'), Buffer.alloc(0), Buffer.alloc(0));
+    });
+
+    await expect(
+      executeGitProcess({
+        arguments: ['--version'],
+        maxBufferBytes: 4096,
+        signal: controller.signal,
+      }),
+    ).resolves.toStrictEqual({ kind: 'failed', reason: 'aborted' });
   });
 });

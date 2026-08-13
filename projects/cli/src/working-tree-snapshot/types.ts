@@ -4,16 +4,18 @@ import type { IMoldeaCliResourceLimits } from '../command-line/index.js';
 import type { IGitInventoryEntry } from '../git-inventory/index.js';
 import type { IMoldeaCliOwnedErrorCode } from '../presentation/index.js';
 
-// attempt-local operation that consumes one accepted coherent reader
+// attempt-local operation that consumes one accepted reader and optional signal
 export type IWorkingTreeSnapshotOperation<TResult> = (
   reader: IRepositoryReader,
+  signal?: AbortSignal,
 ) => Promise<TResult>;
 
-// immutable inputs for one bounded snapshot execution
+// immutable inputs for one bounded cancellable snapshot execution
 export interface IWorkingTreeSnapshotExecutionInput<TResult> {
   readonly operation: IWorkingTreeSnapshotOperation<TResult>;
   readonly repositoryRoot: string;
   readonly resourceLimits: IMoldeaCliResourceLimits;
+  readonly signal?: AbortSignal;
 }
 
 // completed operation from one accepted snapshot attempt

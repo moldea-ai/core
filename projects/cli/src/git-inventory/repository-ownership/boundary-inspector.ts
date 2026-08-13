@@ -90,6 +90,8 @@ const mapGitProcessFailure = (
   reason: IGitStreamingProcessFailureReason,
 ): IGitInventoryProbeErrorCode => {
   switch (reason) {
+    case 'aborted':
+      return 'GIT_OPERATION_ABORTED';
     case 'not-found':
       return 'GIT_NOT_FOUND';
     case 'access-denied':
@@ -183,7 +185,12 @@ const validateGitBoundary = async (
   maxMetadataBytes: number,
   processExecutor: IGitStreamingProcessExecutor,
   inspectHostPath: IGitInventoryOwnershipLstat,
+  signal?: AbortSignal,
 ): Promise<IGitInventoryBoundaryValidationAttempt> => {
+  if (signal?.aborted) {
+    return createInspectionFailure('GIT_OPERATION_ABORTED');
+  }
+
   if (!Number.isSafeInteger(maxMetadataBytes) || maxMetadataBytes < 0) {
     return createInspectionFailure('RESOURCE_LIMIT_EXCEEDED');
   }
@@ -198,6 +205,7 @@ const validateGitBoundary = async (
     },
     maxStderrBytes: MAX_GIT_PROCESS_DIAGNOSTIC_BYTES,
     maxStdoutBytes: maxMetadataBytes,
+    ...(signal === undefined ? {} : { signal }),
   });
 
   if (processResult.kind === 'failed') {
@@ -234,6 +242,10 @@ const validateGitBoundary = async (
 
   const discoveredRootInspection = await inspectPath(discoveredRoot, inspectHostPath);
 
+  if (signal?.aborted) {
+    return createInspectionFailure('GIT_OPERATION_ABORTED');
+  }
+
   if (discoveredRootInspection.kind === 'failed') {
     return discoveredRootInspection;
   }
@@ -254,6 +266,10 @@ const validateGitBoundary = async (
   }
 
   const repositoryRootInspection = await inspectPath(repositoryRoot, inspectHostPath);
+
+  if (signal?.aborted) {
+    return createInspectionFailure('GIT_OPERATION_ABORTED');
+  }
 
   if (repositoryRootInspection.kind === 'failed') {
     return repositoryRootInspection;
@@ -298,17 +314,29 @@ export const createGitInventoryBoundaryInspector = (
   readDirectory: IGitInventoryOwnershipReadDirectory = readOwnershipDirectory,
 ): IGitInventoryBoundaryInspector => {
   return async (input): Promise<IGitInventoryBoundaryInspectionResult> => {
+    if (input.signal?.aborted) {
+      return createInspectionFailure('GIT_OPERATION_ABORTED');
+    }
+
     const directoryObservations = new Map<string, IGitInventoryDirectoryObservation>();
     const ownership: IGitInventoryBoundaryOwnership[] = [];
     let gitMetadataBytes = 0;
     let rootEncodedNameKeys: ReadonlySet<string> | null = null;
 
     const getRootEncodedNames = async (): Promise<IGitInventoryDirectoryReadAttempt> => {
+      if (input.signal?.aborted) {
+        return createInspectionFailure('GIT_OPERATION_ABORTED');
+      }
+
       if (rootEncodedNameKeys !== null) {
         return Object.freeze({ encodedNameKeys: rootEncodedNameKeys, kind: 'read' });
       }
 
       const readResult = await readDirectoryNames(input.repositoryRoot, readDirectory);
+
+      if (input.signal?.aborted) {
+        return createInspectionFailure('GIT_OPERATION_ABORTED');
+      }
 
       if (readResult.kind === 'read') {
         rootEncodedNameKeys = readResult.encodedNameKeys;
@@ -322,6 +350,10 @@ export const createGitInventoryBoundaryInspector = (
       parentPrefix: string,
       segment: string,
     ): Promise<IGitInventoryBoundaryInspectionFailedResult | IGitInventoryDirectoryObservation> => {
+      if (input.signal?.aborted) {
+        return createInspectionFailure('GIT_OPERATION_ABORTED');
+      }
+
       const prefix = parentPrefix.length === 0 ? segment : `${parentPrefix}/${segment}`;
       const cachedObservation = directoryObservations.get(prefix);
 
@@ -349,6 +381,10 @@ export const createGitInventoryBoundaryInspector = (
       const hostPath = path.join(parentHostPath, segment);
       const initialInspection = await inspectPath(hostPath, inspectHostPath);
 
+      if (input.signal?.aborted) {
+        return createInspectionFailure('GIT_OPERATION_ABORTED');
+      }
+
       if (initialInspection.kind === 'failed') {
         return initialInspection;
       }
@@ -362,11 +398,19 @@ export const createGitInventoryBoundaryInspector = (
 
       const directoryNamesResult = await readDirectoryNames(hostPath, readDirectory);
 
+      if (input.signal?.aborted) {
+        return createInspectionFailure('GIT_OPERATION_ABORTED');
+      }
+
       if (directoryNamesResult.kind === 'failed') {
         return directoryNamesResult;
       }
 
       const revalidatedInspection = await inspectPath(hostPath, inspectHostPath);
+
+      if (input.signal?.aborted) {
+        return createInspectionFailure('GIT_OPERATION_ABORTED');
+      }
 
       if (revalidatedInspection.kind === 'failed') {
         return revalidatedInspection;
@@ -389,6 +433,10 @@ export const createGitInventoryBoundaryInspector = (
         try {
           await inspectHostPath(gitControlPath);
 
+          if (input.signal?.aborted) {
+            return createInspectionFailure('GIT_OPERATION_ABORTED');
+          }
+
           return createInspectionFailure('GIT_OUTPUT_INVALID');
         } catch (error) {
           const errorCode = (error as NodeJS.ErrnoException | null)?.code?.toUpperCase();
@@ -399,6 +447,10 @@ export const createGitInventoryBoundaryInspector = (
         }
       } else {
         const gitControlInspection = await inspectPath(gitControlPath, inspectHostPath);
+
+        if (input.signal?.aborted) {
+          return createInspectionFailure('GIT_OPERATION_ABORTED');
+        }
 
         if (gitControlInspection.kind === 'failed') {
           return gitControlInspection;
@@ -419,6 +471,7 @@ export const createGitInventoryBoundaryInspector = (
           input.maxMetadataBytes - gitMetadataBytes,
           processExecutor,
           inspectHostPath,
+          input.signal,
         );
 
         if (boundaryValidation.kind === 'failed') {
@@ -441,11 +494,19 @@ export const createGitInventoryBoundaryInspector = (
     };
 
     for (const plan of input.plans) {
+      if (input.signal?.aborted) {
+        return createInspectionFailure('GIT_OPERATION_ABORTED');
+      }
+
       let candidateOwnership: IGitInventoryBoundaryOwnership = 'selected-repository';
       let parentObservation: IGitInventoryDirectoryObservation | null = null;
       let parentPrefix = '';
 
       for (const segment of plan.directorySegments) {
+        if (input.signal?.aborted) {
+          return createInspectionFailure('GIT_OPERATION_ABORTED');
+        }
+
         const observation = await inspectDirectory(parentObservation, parentPrefix, segment);
 
         if (isInspectionFailure(observation)) {

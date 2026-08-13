@@ -1,11 +1,13 @@
 // @vitest-environment node
 import {
   execFileSync,
+  spawn,
   spawnSync,
   type ExecFileSyncOptionsWithStringEncoding,
   type SpawnSyncReturns,
 } from 'node:child_process';
 import {
+  chmodSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
@@ -156,6 +158,142 @@ const expectPackageManifest = (
   expect(manifest).not.toHaveProperty('types');
 };
 
+/** Waits until a process-owned signal fixture is materialized. */
+const waitForFixturePath = async (fixturePath: string): Promise<void> => {
+  const deadline = Date.now() + 5_000;
+
+  while (Date.now() < deadline) {
+    if (existsSync(fixturePath)) {
+      return;
+    }
+
+    await new Promise<void>((resolve) => {
+      setTimeout(resolve, 25);
+    });
+  }
+
+  throw new Error('The signal fixture was not created before the test deadline.');
+};
+
+/** Determines whether process-group cleanup raced with normal process exit. */
+const isMissingProcessError = (error: unknown): boolean =>
+  typeof error === 'object' && error !== null && 'code' in error && error.code === 'ESRCH';
+
+/** Spawns the installed CLI, signals its active Git child, and captures process completion. */
+const executeInstalledSignalCase = async (
+  executablePath: string,
+  command: 'inspect' | 'validate',
+  signal: 'SIGINT' | 'SIGTERM',
+  cwd: string,
+  environment: NodeJS.ProcessEnv,
+  startedPath: string,
+  stoppedPath: string,
+): Promise<{ readonly code: number | null; readonly stderr: string; readonly stdout: string }> => {
+  const childProcess = spawn(process.execPath, [executablePath, command, '--json'], {
+    cwd,
+    detached: true,
+    env: environment,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  const stderrChunks: Buffer[] = [];
+  const stdoutChunks: Buffer[] = [];
+  let hasClosed = false;
+  const closeCompletion = new Promise<number | null>((resolve) => {
+    childProcess.once('close', (code) => {
+      hasClosed = true;
+      resolve(code);
+    });
+  });
+  const processFailure = new Promise<{
+    readonly error: Error;
+    readonly kind: 'failed';
+  }>((resolve) => {
+    childProcess.once('error', (error) => resolve({ error, kind: 'failed' }));
+  });
+
+  childProcess.stderr.on('data', (chunk: Buffer) => stderrChunks.push(chunk));
+  childProcess.stdout.on('data', (chunk: Buffer) => stdoutChunks.push(chunk));
+
+  let cleanupFailure: unknown;
+  let executionFailure: unknown;
+  let executionResult: {
+    readonly code: number | null;
+    readonly stderr: string;
+    readonly stdout: string;
+  } | null = null;
+  let hasCleanupFailed = false;
+  let hasExecutionFailed = false;
+
+  try {
+    const startupResult = await Promise.race([
+      waitForFixturePath(startedPath).then(() => Object.freeze({ kind: 'started' as const })),
+      processFailure,
+    ]);
+
+    if (startupResult.kind === 'failed') {
+      throw startupResult.error;
+    }
+
+    if (!childProcess.kill(signal)) {
+      throw new Error('The installed CLI process exited before it could receive the test signal.');
+    }
+
+    const completionResult = await Promise.race([
+      closeCompletion.then((code) => Object.freeze({ code, kind: 'closed' as const })),
+      processFailure,
+    ]);
+
+    if (completionResult.kind === 'failed') {
+      throw completionResult.error;
+    }
+
+    await waitForFixturePath(stoppedPath);
+
+    executionResult = {
+      code: completionResult.code,
+      stderr: Buffer.concat(stderrChunks).toString('utf8'),
+      stdout: Buffer.concat(stdoutChunks).toString('utf8'),
+    };
+  } catch (error) {
+    executionFailure = error;
+    hasExecutionFailed = true;
+  } finally {
+    if (!hasClosed && childProcess.pid !== undefined) {
+      try {
+        process.kill(-childProcess.pid, 'SIGKILL');
+      } catch (error) {
+        if (!isMissingProcessError(error)) {
+          cleanupFailure = error;
+          hasCleanupFailed = true;
+        }
+      }
+
+      await closeCompletion;
+    }
+  }
+
+  if (hasExecutionFailed && hasCleanupFailed) {
+    throw new AggregateError(
+      [executionFailure, cleanupFailure],
+      'The installed CLI signal case and its cleanup both failed.',
+    );
+  }
+
+  if (hasExecutionFailed) {
+    throw executionFailure;
+  }
+
+  if (hasCleanupFailed) {
+    throw cleanupFailure;
+  }
+
+  if (executionResult === null) {
+    throw new Error('The installed CLI signal case did not produce a completion result.');
+  }
+
+  return executionResult;
+};
+
 describe('published CLI package and executable', () => {
   test('packs only the executable package surface and exact metadata', () => {
     const packageManagerEntrypoint = process.env['npm_execpath'];
@@ -226,7 +364,7 @@ describe('published CLI package and executable', () => {
     }
   });
 
-  test('installs and executes the real CLI and foundational package tarballs', () => {
+  test('installs and executes the real CLI and foundational package tarballs', async () => {
     const packageManagerEntrypoint = process.env['npm_execpath'];
 
     if (packageManagerEntrypoint === undefined) {
@@ -630,6 +768,51 @@ Adapter evidence items: 0
         command: 'compatibility',
         status: 'valid',
       });
+
+      if (process.platform !== 'win32') {
+        const fakeGitDirectory = path.join(testDirectory, 'fake-git');
+        const fakeGitPath = path.join(fakeGitDirectory, 'git');
+
+        mkdirSync(fakeGitDirectory);
+        writeFileSync(
+          fakeGitPath,
+          `#!/usr/bin/env node
+const { writeFileSync } = require('node:fs');
+writeFileSync(process.env.MOLDEA_TEST_GIT_STARTED, 'started');
+process.on('SIGTERM', () => {
+  writeFileSync(process.env.MOLDEA_TEST_GIT_STOPPED, 'stopped');
+  process.exit(0);
+});
+setInterval(() => undefined, 1000);
+`,
+          'utf8',
+        );
+        chmodSync(fakeGitPath, 0o755);
+
+        for (const [command, signal, exitCode] of [
+          ['validate', 'SIGINT', 130],
+          ['inspect', 'SIGTERM', 143],
+        ] as const) {
+          const startedPath = path.join(testDirectory, `${command}-git-started`);
+          const stoppedPath = path.join(testDirectory, `${command}-git-stopped`);
+          const signalResult = await executeInstalledSignalCase(
+            installedExecutablePath,
+            command,
+            signal,
+            consumerDirectory,
+            {
+              ...gitEnvironment,
+              MOLDEA_TEST_GIT_STARTED: startedPath,
+              MOLDEA_TEST_GIT_STOPPED: stoppedPath,
+              PATH: `${fakeGitDirectory}${path.delimiter}${gitEnvironment['PATH'] ?? ''}`,
+            },
+            startedPath,
+            stoppedPath,
+          );
+
+          expect(signalResult).toStrictEqual({ code: exitCode, stderr: '', stdout: '' });
+        }
+      }
 
       const installedCoreManifestPath = path.join(
         consumerDirectory,

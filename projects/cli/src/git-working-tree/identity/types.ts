@@ -16,9 +16,10 @@ export interface IGitWorkingTreeIdentity {
   readonly repositoryRoot: IGitWorkingTreeIdentityLocation;
 }
 
-// root accepted by one identity inspection
+// root and optional cancellation accepted by one identity inspection
 export interface IGitWorkingTreeIdentityInspectionInput {
   readonly repositoryRoot: string;
+  readonly signal?: AbortSignal;
 }
 
 // successful immutable identity inspection

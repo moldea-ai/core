@@ -30,11 +30,12 @@ export type IGitInventoryCandidate =
 // operational errors that can terminate a raw Git inventory probe
 export type IGitInventoryProbeErrorCode = IMoldeaCliGitErrorCode | 'RESOURCE_LIMIT_EXCEEDED';
 
-// limits and selected repository root for one normalized inventory probe
+// limits, selected repository root, and cancellation for one normalized inventory probe
 export interface IGitInventoryProbeInput {
   readonly maxEntries: number;
   readonly maxMetadataBytes: number;
   readonly repositoryRoot: string;
+  readonly signal?: AbortSignal;
 }
 
 // complete immutable selected-repository entry set from one probe

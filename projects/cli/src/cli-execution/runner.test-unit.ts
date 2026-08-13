@@ -157,6 +157,7 @@ Options:
   });
 
   test('dispatches one immutable normalized command', async () => {
+    const controller = new AbortController();
     const executionResult = { exitCode: 0, stderr: '', stdout: 'complete\n' };
     const executeCommand = vi.fn<IMoldeaCliCommandExecutor>().mockResolvedValue(executionResult);
 
@@ -167,6 +168,7 @@ Options:
         invocationDirectory: INVOCATION_DIRECTORY,
         packageMetadata: INSTALLED_PACKAGE_METADATA,
         releaseMetadata: MOLDEA_CLI_RELEASE_METADATA,
+        signal: controller.signal,
       }),
     ).resolves.toBe(executionResult);
     expect(executeCommand).toHaveBeenCalledOnce();
@@ -190,6 +192,7 @@ Options:
       },
       packageMetadata: INSTALLED_PACKAGE_METADATA,
       releaseMetadata: MOLDEA_CLI_RELEASE_METADATA,
+      signal: controller.signal,
     });
   });
 

@@ -16,13 +16,18 @@ const concatenateChunks = (chunks: readonly Buffer[], byteLength: number): Uint8
 
 /**
  * Executes Git directly while consuming bounded stdout incrementally.
- * @param options The trusted arguments, optional stdin, stream consumer, environment, and limits.
+ * @param options The trusted arguments, optional stdin and signal, consumer, environment, and limits.
  * @returns A promise that resolves to a normalized streamed process result.
  */
 export const executeGitStreamingProcess: IGitStreamingProcessExecutor = async (
   options,
 ): Promise<IGitStreamingProcessResult> =>
   new Promise((resolve, reject) => {
+    if (options.signal?.aborted) {
+      resolve(Object.freeze({ kind: 'failed', reason: 'aborted' }));
+      return;
+    }
+
     const stdin = options.stdin === undefined ? null : Uint8Array.from(options.stdin);
     const stderrChunks: Buffer[] = [];
     let failureReason: IGitStreamingProcessFailureReason | null = null;
@@ -33,6 +38,7 @@ export const executeGitStreamingProcess: IGitStreamingProcessExecutor = async (
     const childProcess = spawn('git', [...GIT_PROCESS_GLOBAL_ARGUMENTS, ...options.arguments], {
       env: createGitProcessEnvironment(options.environment ?? process.env),
       shell: false,
+      ...(options.signal === undefined ? {} : { signal: options.signal }),
       stdio: [stdin === null ? 'ignore' : 'pipe', 'pipe', 'pipe'],
       windowsHide: true,
     });
@@ -95,7 +101,9 @@ export const executeGitStreamingProcess: IGitStreamingProcessExecutor = async (
       resolve(
         Object.freeze({
           kind: 'failed',
-          reason: classifyGitProcessError(error, concatenateChunks(stderrChunks, stderrBytes)),
+          reason: options.signal?.aborted
+            ? 'aborted'
+            : classifyGitProcessError(error, concatenateChunks(stderrChunks, stderrBytes)),
         }),
       );
     });
@@ -109,6 +117,11 @@ export const executeGitStreamingProcess: IGitStreamingProcessExecutor = async (
 
       if (failureReason !== null) {
         resolve(Object.freeze({ kind: 'failed', reason: failureReason }));
+        return;
+      }
+
+      if (options.signal?.aborted) {
+        resolve(Object.freeze({ kind: 'failed', reason: 'aborted' }));
         return;
       }
 

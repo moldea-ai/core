@@ -27,6 +27,11 @@ export const MOLDEA_CLI_ERROR_DEFINITIONS = Object.freeze({
     retryable: false,
     source: 'git',
   }),
+  GIT_OPERATION_ABORTED: Object.freeze({
+    message: 'The Git operation was aborted.',
+    retryable: true,
+    source: 'git',
+  }),
   GIT_OUTPUT_INVALID: Object.freeze({
     message: 'Git returned invalid output.',
     retryable: false,

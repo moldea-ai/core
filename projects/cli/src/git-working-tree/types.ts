@@ -32,10 +32,11 @@ export type IGitStartingDirectoryInspector = (
 // minimal filesystem stat boundary required for directory inspection
 export type IGitStartingDirectoryStat = (directory: string) => Promise<Pick<Stats, 'isDirectory'>>;
 
-// process-neutral inputs required to discover one Git working tree
+// process-neutral inputs required to discover one optionally cancellable Git working tree
 export interface IGitWorkingTreeDiscoveryInput {
   readonly invocationDirectory: string;
   readonly repositoryDirectory: string | null;
+  readonly signal?: AbortSignal;
 }
 
 // immutable repository root discovered from Git

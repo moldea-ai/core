@@ -53,6 +53,7 @@ const createReaderInput = (): IWorkingTreeRepositoryReaderInput => ({
 
 describe('createWorkingTreeRepositoryReaderFactory', () => {
   test('composes exact paths, filesystem limits, and only required symlink overlays', async () => {
+    const controller = new AbortController();
     const filesystemReader = createMemoryRepositoryReader([]);
     const overlaidReader = createMemoryRepositoryReader([]);
     const guardedReader = createMemoryRepositoryReader([]);
@@ -71,7 +72,9 @@ describe('createWorkingTreeRepositoryReaderFactory', () => {
       contentTransformationGuardFactory,
     );
 
-    await expect(createReader(createReaderInput())).resolves.toBe(guardedReader);
+    await expect(createReader({ ...createReaderInput(), signal: controller.signal })).resolves.toBe(
+      guardedReader,
+    );
     expect(filesystemReaderFactory).toHaveBeenCalledOnce();
     expect(filesystemReaderFactory).toHaveBeenCalledWith({
       limits: {
@@ -84,6 +87,7 @@ describe('createWorkingTreeRepositoryReaderFactory', () => {
         kind: 'paths',
         paths: [parseRepositoryPath('/moldea/link'), parseRepositoryPath('/moldea/project.md')],
       },
+      signal: controller.signal,
     });
     expect(symlinkOverlayFactory).toHaveBeenCalledOnce();
     expect(symlinkOverlayFactory).toHaveBeenCalledWith(filesystemReader, [

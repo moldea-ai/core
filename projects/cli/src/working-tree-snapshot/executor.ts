@@ -63,9 +63,20 @@ export const createWorkingTreeSnapshotExecutor = (
   const executeSnapshot = async <TResult>(
     input: IWorkingTreeSnapshotExecutionInput<TResult>,
   ): Promise<IWorkingTreeSnapshotExecutionResult<TResult>> => {
+    if (input.signal?.aborted) {
+      return createSnapshotFailure('GIT_OPERATION_ABORTED');
+    }
+
     const repositoryRoot = input.repositoryRoot;
     const resourceLimits = Object.freeze({ ...input.resourceLimits });
-    const pinnedIdentityResult = await identityInspector({ repositoryRoot });
+    const pinnedIdentityResult = await identityInspector({
+      repositoryRoot,
+      ...(input.signal === undefined ? {} : { signal: input.signal }),
+    });
+
+    if (input.signal?.aborted) {
+      return createSnapshotFailure('GIT_OPERATION_ABORTED');
+    }
 
     if (pinnedIdentityResult.kind === 'failed') {
       return createSnapshotFailure(pinnedIdentityResult.errorCode);
@@ -84,13 +95,25 @@ export const createWorkingTreeSnapshotExecutor = (
         maxEntries: resourceLimits.maxEntries,
         maxMetadataBytes: resourceLimits.maxTotalBytes,
         repositoryRoot,
+        ...(input.signal === undefined ? {} : { signal: input.signal }),
       });
 
       return result.kind === 'failed' ? createSnapshotFailure(result.errorCode) : result;
     };
 
     for (let attempt = 0; attempt < MAX_WORKING_TREE_SNAPSHOT_ATTEMPTS; attempt += 1) {
-      const currentIdentityResult = await identityInspector({ repositoryRoot });
+      if (input.signal?.aborted) {
+        return createSnapshotFailure('GIT_OPERATION_ABORTED');
+      }
+
+      const currentIdentityResult = await identityInspector({
+        repositoryRoot,
+        ...(input.signal === undefined ? {} : { signal: input.signal }),
+      });
+
+      if (input.signal?.aborted) {
+        return createSnapshotFailure('GIT_OPERATION_ABORTED');
+      }
 
       if (currentIdentityResult.kind === 'failed') {
         return createSnapshotFailure(
@@ -109,6 +132,10 @@ export const createWorkingTreeSnapshotExecutor = (
 
       const firstInventoryResult = await probeInventory();
 
+      if (input.signal?.aborted) {
+        return createSnapshotFailure('GIT_OPERATION_ABORTED');
+      }
+
       if (firstInventoryResult.kind === 'failed') {
         return firstInventoryResult;
       }
@@ -120,8 +147,13 @@ export const createWorkingTreeSnapshotExecutor = (
           entries: firstInventoryResult.entries,
           repositoryRoot,
           resourceLimits,
+          ...(input.signal === undefined ? {} : { signal: input.signal }),
         });
       } catch (error) {
+        if (input.signal?.aborted) {
+          return createSnapshotFailure('GIT_OPERATION_ABORTED');
+        }
+
         if (isSnapshotChanged(error)) {
           continue;
         }
@@ -131,6 +163,10 @@ export const createWorkingTreeSnapshotExecutor = (
         }
 
         const freshInventoryResult = await probeInventory();
+
+        if (input.signal?.aborted) {
+          return createSnapshotFailure('GIT_OPERATION_ABORTED');
+        }
 
         if (freshInventoryResult.kind === 'failed') {
           return freshInventoryResult;
@@ -145,6 +181,10 @@ export const createWorkingTreeSnapshotExecutor = (
 
       const secondInventoryResult = await probeInventory();
 
+      if (input.signal?.aborted) {
+        return createSnapshotFailure('GIT_OPERATION_ABORTED');
+      }
+
       if (secondInventoryResult.kind === 'failed') {
         return secondInventoryResult;
       }
@@ -154,10 +194,25 @@ export const createWorkingTreeSnapshotExecutor = (
       }
 
       try {
-        const result = await input.operation(reader);
+        if (input.signal?.aborted) {
+          return createSnapshotFailure('GIT_OPERATION_ABORTED');
+        }
+
+        const result =
+          input.signal === undefined
+            ? await input.operation(reader)
+            : await input.operation(reader, input.signal);
+
+        if (input.signal?.aborted) {
+          return createSnapshotFailure('GIT_OPERATION_ABORTED');
+        }
 
         return Object.freeze({ kind: 'completed', result });
       } catch (error) {
+        if (input.signal?.aborted) {
+          return createSnapshotFailure('GIT_OPERATION_ABORTED');
+        }
+
         if (!isSnapshotChanged(error)) {
           throw error;
         }
