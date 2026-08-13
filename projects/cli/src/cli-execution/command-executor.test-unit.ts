@@ -1,9 +1,13 @@
 // @vitest-environment node
 import { describe, expect, test, vi } from 'vitest';
 
+import { parseRepositoryPath } from '@moldea.ai/repository';
+import { createMemoryRepositoryReader } from '@moldea.ai/repository/memory';
+
 import type { IMoldeaCliCommand } from '../command-line/index.js';
-import type { IGitInventoryProbe } from '../git-inventory/index.js';
+import type { IGitInventoryEntry, IGitInventoryProbe } from '../git-inventory/index.js';
 import type { IGitWorkingTreeDiscovery } from '../git-working-tree/index.js';
+import type { IWorkingTreeRepositoryReaderFactory } from '../repository-reader/index.js';
 
 import { createMoldeaCliCommandExecutor } from './command-executor.js';
 import type { IMoldeaCliCommandExecutionInput } from './types.js';
@@ -35,17 +39,30 @@ const createCommandInput = (
 
 describe('createMoldeaCliCommandExecutor', () => {
   test.each(['validate', 'inspect'] as const)(
-    'discovers the working tree once for %s',
+    'discovers and composes the working tree once for %s',
     async (command) => {
+      const inventoryEntries: readonly IGitInventoryEntry[] = Object.freeze([
+        Object.freeze({
+          entryType: 'file',
+          indexEntries: Object.freeze([Object.freeze({ mode: '120000', stage: 0 })]),
+          kind: 'tracked',
+          path: parseRepositoryPath('/moldea/context-link'),
+          requiresSymlinkOverlay: true,
+        }),
+      ]);
       const workingTreeDiscovery = vi
         .fn<IGitWorkingTreeDiscovery>()
         .mockResolvedValue(Object.freeze({ kind: 'discovered', repositoryRoot: '/workspace' }));
       const gitInventoryProbe = vi
         .fn<IGitInventoryProbe>()
-        .mockResolvedValue(Object.freeze({ entries: Object.freeze([]), kind: 'probed' }));
+        .mockResolvedValue(Object.freeze({ entries: inventoryEntries, kind: 'probed' }));
+      const repositoryReaderFactory = vi
+        .fn<IWorkingTreeRepositoryReaderFactory>()
+        .mockResolvedValue(createMemoryRepositoryReader([]));
       const executeCommand = createMoldeaCliCommandExecutor(
         workingTreeDiscovery,
         gitInventoryProbe,
+        repositoryReaderFactory,
       );
 
       await expect(executeCommand(createCommandInput(command))).resolves.toStrictEqual({
@@ -64,13 +81,32 @@ describe('createMoldeaCliCommandExecutor', () => {
         maxMetadataBytes: 134_217_728,
         repositoryRoot: '/workspace',
       });
+      expect(repositoryReaderFactory).toHaveBeenCalledOnce();
+      expect(repositoryReaderFactory).toHaveBeenCalledWith({
+        entries: inventoryEntries,
+        repositoryRoot: '/workspace',
+        resourceLimits: {
+          maxDiagnostics: 10_000,
+          maxEntries: 100_000,
+          maxEvidence: 10_000,
+          maxFileBytes: 8_388_608,
+          maxManifestBytes: 2_097_152,
+          maxTotalBytes: 134_217_728,
+        },
+      });
+      expect(repositoryReaderFactory.mock.calls[0]?.[0].entries).toBe(inventoryEntries);
     },
   );
 
   test('does not discover a working tree for compatibility', async () => {
     const workingTreeDiscovery = vi.fn<IGitWorkingTreeDiscovery>();
     const gitInventoryProbe = vi.fn<IGitInventoryProbe>();
-    const executeCommand = createMoldeaCliCommandExecutor(workingTreeDiscovery, gitInventoryProbe);
+    const repositoryReaderFactory = vi.fn<IWorkingTreeRepositoryReaderFactory>();
+    const executeCommand = createMoldeaCliCommandExecutor(
+      workingTreeDiscovery,
+      gitInventoryProbe,
+      repositoryReaderFactory,
+    );
 
     await expect(executeCommand(createCommandInput('compatibility'))).resolves.toStrictEqual({
       exitCode: 3,
@@ -79,6 +115,7 @@ describe('createMoldeaCliCommandExecutor', () => {
     });
     expect(workingTreeDiscovery).not.toHaveBeenCalled();
     expect(gitInventoryProbe).not.toHaveBeenCalled();
+    expect(repositoryReaderFactory).not.toHaveBeenCalled();
   });
 
   test('returns a safe human Git discovery error', async () => {

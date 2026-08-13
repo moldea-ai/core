@@ -2,7 +2,7 @@
 
 The canonical read-only local command-line composition for deterministic inspection of `moldea` repositories.
 
-The current unpublished `0.0.1` foundation provides the `moldea` executable, strict version 1 command and option parsing, deterministic help and version output, resource-limit validation, safe human or JSON errors, Git-owned working-tree discovery, bounded strict tracked/untracked candidate probing, submodule and nested-repository ownership filtering, deterministic stage collapse, no-follow current entry-type normalization, bounded effective `core.symlinks` resolution, portable logical-path normalization with exact Unicode code-point ordering, and the private immutable reader overlay required for materialized Git symlinks. Repository FS construction and composition, Git attribute classification, snapshot retries, Core execution, adapter composition, and compatibility reporting are not implemented yet.
+The current unpublished `0.0.1` foundation provides the `moldea` executable, strict version 1 command and option parsing, deterministic help and version output, resource-limit validation, safe human or JSON errors, Git-owned working-tree discovery, bounded strict tracked/untracked candidate probing, submodule and nested-repository ownership filtering, deterministic stage collapse, no-follow current entry-type normalization, bounded effective `core.symlinks` resolution, portable logical-path normalization with exact Unicode code-point ordering, exact-path Repository FS construction, and the private immutable reader overlay required for materialized Git symlinks. Git attribute classification, snapshot retries, Core execution, adapter composition, and compatibility reporting are not implemented yet.
 
 Tarball and installed-bin checks are the release boundary for now. This package is not ready to publish to npm.
 
@@ -28,7 +28,7 @@ The package exposes the `moldea` executable and no supported JavaScript or TypeS
 
 No package-backed runtime adapter is active yet. The `custom` adapter remains built into Core and requires no separate package.
 
-The executable performs no network requests, telemetry, repository writes, filesystem-reader construction, or Core inspection in this foundation. `validate` and `inspect` use read-only Git operations and no-follow filesystem metadata inspection to discover a working tree, establish selected-repository ownership, collapse candidate stages, and normalize current entry types; help, version, usage failures, and `compatibility` do not invoke Git.
+The executable performs no network requests, telemetry, repository writes, or Core inspection in this foundation. `validate` and `inspect` use read-only Git operations and no-follow filesystem metadata inspection to discover a working tree, establish selected-repository ownership, collapse candidate stages, normalize current entry types, and construct one exact-path filesystem reader; help, version, usage failures, and `compatibility` do not invoke Git or the filesystem reader.
 
 ## Runtime support
 
@@ -60,9 +60,9 @@ The effective `core.symlinks` value is queried at most once and only when a trac
 
 Every decoded Git candidate path is validated through `@moldea.ai/repository` before ownership filtering or missing-path omission, without case folding or Unicode normalization. Validation prepends exactly one `/`; for an untracked directory-boundary record, it first removes Git's one trailing directory terminator. A path outside the portable logical-path grammar, including a path containing ASCII control characters, invalid segments, backslashes, or a Windows drive prefix, fails the complete probe with `GIT_OUTPUT_INVALID`. Surviving entries are then converted to branded repository logical paths, and the resulting immutable inventory is sorted by exact Unicode code-point order.
 
-The private immutable overlay accepts validated repository logical paths during the later reader-composition step. It maps the underlying regular files to `type: 'symlink'` in exact lookup and listing, rejects their reads with the common non-retryable `ENTRY_NOT_FILE` contract, and never calls the underlying `readFile` for those paths. Missing or contradictory underlying overlay entries fail with `INVALID_SOURCE_DATA`.
+The CLI passes the complete normalized logical path set to `@moldea.ai/repository-fs` exact-path selection, so the filesystem reader synthesizes required parent directories without admitting unrelated files. `maxEntries` and `maxFileBytes` retain their filesystem meanings, while the CLI's `maxTotalBytes` becomes the reader's `maxCachedBytes` limit. The private immutable overlay then maps materialized Git symlink host files to `type: 'symlink'` in exact lookup and listing, rejects their reads with the common non-retryable `ENTRY_NOT_FILE` contract, and never calls the underlying `readFile` for those paths. Missing or contradictory underlying overlay entries fail with `INVALID_SOURCE_DATA`.
 
-The CLI does not expose selected paths, candidate paths, resolved repository roots, raw process errors, or Git diagnostics in failures. A successfully normalized entry set currently reaches the safe `INTERNAL_ERROR` placeholder because Repository FS composition, attribute classification, snapshot stabilization, Core execution, and command result composition belong to later implementation slices.
+The CLI does not expose selected paths, candidate paths, resolved repository roots, raw process errors, or Git diagnostics in failures. A successfully composed filesystem reader currently reaches the safe `INTERNAL_ERROR` placeholder because attribute classification, snapshot stabilization, Core execution, and command result composition belong to later implementation slices.
 
 ## Development
 

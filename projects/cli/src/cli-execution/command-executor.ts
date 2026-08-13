@@ -4,21 +4,27 @@ import {
   discoverGitWorkingTree,
   type IGitWorkingTreeDiscovery,
 } from '../git-working-tree/index.js';
+import {
+  createWorkingTreeRepositoryReader,
+  type IWorkingTreeRepositoryReaderFactory,
+} from '../repository-reader/index.js';
 
 import { MOLDEA_CLI_EXIT_CODES } from './constants.js';
 import { createMoldeaCliErrorResult } from './results.js';
 import type { IMoldeaCliCommandExecutor, IMoldeaCliExecutionResult } from './types.js';
 
 /**
- * Creates the private command dispatcher around injectable Git discovery and inventory probes.
+ * Creates the private command dispatcher around injectable discovery and reader composition.
  * @param workingTreeDiscovery The Git working-tree discovery operation.
  * @param gitInventoryProbe The strict normalized Git inventory probe.
+ * @param repositoryReaderFactory The exact-path working-tree reader factory.
  * @returns A command executor for the current behavioral slice.
  */
 export const createMoldeaCliCommandExecutor =
   (
     workingTreeDiscovery: IGitWorkingTreeDiscovery = discoverGitWorkingTree,
     gitInventoryProbe: IGitInventoryProbe = probeGitInventory,
+    repositoryReaderFactory: IWorkingTreeRepositoryReaderFactory = createWorkingTreeRepositoryReader,
   ): IMoldeaCliCommandExecutor =>
   async (input): Promise<IMoldeaCliExecutionResult> => {
     if (input.invocation.command !== MOLDEA_CLI_COMMANDS.Compatibility) {
@@ -52,6 +58,12 @@ export const createMoldeaCliCommandExecutor =
           MOLDEA_CLI_EXIT_CODES.OperationalError,
         );
       }
+
+      await repositoryReaderFactory({
+        entries: inventoryResult.entries,
+        repositoryRoot: discoveryResult.repositoryRoot,
+        resourceLimits: input.invocation.options.resourceLimits,
+      });
     }
 
     return createMoldeaCliErrorResult(
