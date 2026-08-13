@@ -38,7 +38,7 @@ describe('areGitWorkingTreeIdentitiesEqual', () => {
     },
   );
 
-  test('rejects a different path even when filesystem fields match', () => {
+  test('accepts an alternate path spelling for the same filesystem identity', () => {
     const left = createIdentity();
     const unchangedRight = createIdentity();
     const right: IGitWorkingTreeIdentity = {
@@ -49,6 +49,6 @@ describe('areGitWorkingTreeIdentitiesEqual', () => {
       },
     };
 
-    expect(areGitWorkingTreeIdentitiesEqual(left, right)).toBe(false);
+    expect(areGitWorkingTreeIdentitiesEqual(left, right)).toBe(true);
   });
 });

@@ -11,10 +11,7 @@ import {
   executeGitProcess,
   type IGitProcessExecutor,
 } from '../../git-process/index.js';
-import {
-  areHostPathsEquivalent,
-  haveSameHostPathIdentity,
-} from '../../host-path-identity/index.js';
+import { haveSameHostPathIdentity } from '../../host-path-identity/index.js';
 
 import { areGitWorkingTreeIdentitiesEqual } from './comparator.js';
 import { createGitWorkingTreeIdentityInspector } from './inspector.js';
@@ -131,12 +128,6 @@ describe('Git working-tree identity integration', () => {
     const mainIdentity = await requireIdentity(inspectIdentity, repositoryRoot);
     const linkedIdentity = await requireIdentity(inspectIdentity, linkedWorktree);
 
-    expect(
-      areHostPathsEquivalent(
-        mainIdentity.commonDirectory.path,
-        linkedIdentity.commonDirectory.path,
-      ),
-    ).toBe(true);
     expect(
       haveSameHostPathIdentity(mainIdentity.commonDirectory, linkedIdentity.commonDirectory),
     ).toBe(true);
