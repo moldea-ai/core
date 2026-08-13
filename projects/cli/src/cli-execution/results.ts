@@ -1,12 +1,15 @@
 import type { IProjectInspectionResult } from '@moldea.ai/core';
 
 import type { IMoldeaCliCommand } from '../command-line/index.js';
+import type { IMoldeaCliCompatibilityResult } from '../compatibility/index.js';
 import {
   createMoldeaCliInspectResult,
   createMoldeaCliValidateResult,
+  formatMoldeaCliHumanCompatibilityResult,
   formatMoldeaCliHumanError,
   formatMoldeaCliHumanInspectResult,
   formatMoldeaCliHumanValidateResult,
+  formatMoldeaCliJsonCompatibilityResult,
   formatMoldeaCliJsonError,
   formatMoldeaCliJsonInspectResult,
   formatMoldeaCliJsonValidateResult,
@@ -15,6 +18,26 @@ import {
 
 import { MOLDEA_CLI_EXIT_CODES } from './constants.js';
 import type { IMoldeaCliExecutionResult } from './types.js';
+
+/**
+ * Creates one process-neutral result for a valid compatibility composition.
+ * @param result The exact installed compatibility result.
+ * @param cliVersion The installed CLI package version.
+ * @param isJson Whether machine-readable output was requested.
+ * @returns The complete immutable successful process output.
+ */
+export const createMoldeaCliCompatibilityExecutionResult = (
+  result: IMoldeaCliCompatibilityResult,
+  cliVersion: string,
+  isJson: boolean,
+): IMoldeaCliExecutionResult =>
+  Object.freeze({
+    exitCode: MOLDEA_CLI_EXIT_CODES.Success,
+    stderr: '',
+    stdout: isJson
+      ? formatMoldeaCliJsonCompatibilityResult(result, cliVersion)
+      : formatMoldeaCliHumanCompatibilityResult(result, cliVersion),
+  });
 
 /**
  * Creates one safe process-neutral error result in the requested output mode.

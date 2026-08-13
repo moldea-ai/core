@@ -11,6 +11,7 @@ import {
   mkdtempSync,
   readFileSync,
   readdirSync,
+  renameSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
@@ -148,6 +149,7 @@ const expectPackageManifest = (
     '@moldea.ai/core': dependencyVersion,
     '@moldea.ai/repository': dependencyVersion,
     '@moldea.ai/repository-fs': dependencyVersion,
+    semver: '7.8.5',
   });
   expect(manifest).not.toHaveProperty('main');
   expect(manifest).not.toHaveProperty('sideEffects');
@@ -323,6 +325,56 @@ describe('published CLI package and executable', () => {
           encoding: 'utf8',
         }),
       ).toContain('Usage: moldea <command> [options]\n');
+
+      const humanCompatibility = spawnPackageManager(
+        packageManagerEntrypoint,
+        ['exec', 'moldea', 'compatibility'],
+        consumerDirectory,
+      );
+
+      expect(humanCompatibility.status).toBe(0);
+      expect(humanCompatibility.stderr).toBe('');
+      expect(humanCompatibility.stdout).toContain(
+        'The installed CLI compatibility state is valid.\nCLI version: 0.0.1\n',
+      );
+      expect(humanCompatibility.stdout).toContain(
+        'custom: active=yes, bundled=0.0.1, kind=built-in, package=@moldea.ai/core, status=planned\n',
+      );
+
+      const jsonCompatibility = spawnPackageManager(
+        packageManagerEntrypoint,
+        ['exec', 'moldea', 'compatibility', '--json'],
+        consumerDirectory,
+      );
+      const compatibilityEnvelope = JSON.parse(jsonCompatibility.stdout) as {
+        readonly command: string;
+        readonly result: {
+          readonly adapters: readonly {
+            readonly active: boolean;
+            readonly bundledVersion: string | null;
+            readonly id: string;
+          }[];
+          readonly packages: readonly { readonly name: string; readonly version: string }[];
+        };
+        readonly status: string;
+      };
+
+      expect(jsonCompatibility.status).toBe(0);
+      expect(jsonCompatibility.stderr).toBe('');
+      expect(compatibilityEnvelope).toMatchObject({
+        command: 'compatibility',
+        result: {
+          packages: [
+            { name: '@moldea.ai/core', version: '0.0.1' },
+            { name: '@moldea.ai/repository', version: '0.0.1' },
+            { name: '@moldea.ai/repository-fs', version: '0.0.1' },
+          ],
+        },
+        status: 'valid',
+      });
+      expect(compatibilityEnvelope.result.adapters.find(({ id }) => id === 'custom')).toStrictEqual(
+        expect.objectContaining({ active: true, bundledVersion: '0.0.1', id: 'custom' }),
+      );
 
       const jsonUsageFailure = spawnPackageManager(
         packageManagerEntrypoint,
@@ -558,6 +610,67 @@ Adapter evidence items: 0
       expect(missingGitResult.stdout).toBe(
         '{"cliVersion":"0.0.1","command":"validate","error":{"code":"GIT_NOT_FOUND","details":{},"message":"The Git executable is unavailable.","path":null,"retryable":false,"source":"git"},"result":null,"schemaVersion":1,"status":"error"}\n',
       );
+
+      const compatibilityWithoutGit = spawnSync(
+        process.execPath,
+        [installedExecutablePath, 'compatibility', '--json'],
+        {
+          cwd: consumerDirectory,
+          encoding: 'utf8',
+          env: {
+            ...environmentWithoutPath,
+            PATH: path.join(consumerDirectory, 'missing-executables'),
+          },
+        },
+      );
+
+      expect(compatibilityWithoutGit.status).toBe(0);
+      expect(compatibilityWithoutGit.stderr).toBe('');
+      expect(JSON.parse(compatibilityWithoutGit.stdout)).toMatchObject({
+        command: 'compatibility',
+        status: 'valid',
+      });
+
+      const installedCoreManifestPath = path.join(
+        consumerDirectory,
+        'node_modules',
+        '@moldea.ai',
+        'core',
+        'package.json',
+      );
+      const installedCoreManifest = JSON.parse(
+        readFileSync(installedCoreManifestPath, 'utf8'),
+      ) as IMoldeaCliPackageManifest;
+      const mismatchedCoreManifestPath = `${installedCoreManifestPath}.moldea-test`;
+
+      writeFileSync(
+        mismatchedCoreManifestPath,
+        `${JSON.stringify({ ...installedCoreManifest, version: '0.0.2' }, null, 2)}\n`,
+        'utf8',
+      );
+      renameSync(mismatchedCoreManifestPath, installedCoreManifestPath);
+
+      const mismatchedDependencyResult = spawnSync(
+        process.execPath,
+        [installedExecutablePath, 'compatibility', '--json'],
+        {
+          cwd: consumerDirectory,
+          encoding: 'utf8',
+          env: {
+            ...environmentWithoutPath,
+            PATH: path.join(consumerDirectory, 'missing-executables'),
+          },
+        },
+      );
+
+      expect(mismatchedDependencyResult.status).toBe(3);
+      expect(mismatchedDependencyResult.stderr).toBe('');
+      expect(JSON.parse(mismatchedDependencyResult.stdout)).toMatchObject({
+        command: 'compatibility',
+        error: { code: 'COMPATIBILITY_STATE_INVALID' },
+        result: null,
+        status: 'error',
+      });
     } finally {
       rmSync(testDirectory, { force: true, recursive: true });
     }

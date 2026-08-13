@@ -4,6 +4,8 @@ import { describe, expect, test } from 'vitest';
 import type { ICoreDiagnostic } from '@moldea.ai/core';
 import { parseRepositoryPath } from '@moldea.ai/repository';
 
+import type { IMoldeaCliCompatibilityResult } from '../compatibility/index.js';
+
 import {
   MOLDEA_CLI_COMMAND_HELP,
   MOLDEA_CLI_GIT_WORKING_TREE_SOURCE,
@@ -12,10 +14,12 @@ import {
 import { createMoldeaCliOwnedError } from './errors.js';
 import {
   formatMoldeaCliHelp,
+  formatMoldeaCliHumanCompatibilityResult,
   formatMoldeaCliHumanError,
   formatMoldeaCliHumanInspectResult,
   formatMoldeaCliHumanValidateResult,
   formatMoldeaCliJsonError,
+  formatMoldeaCliJsonCompatibilityResult,
   formatMoldeaCliJsonInspectResult,
   formatMoldeaCliJsonValidateResult,
 } from './formatters.js';
@@ -80,6 +84,103 @@ describe('CLI presentation formatters', () => {
         '0.0.1',
       ),
     ).toContain('"retryable":true,"source":"cli"');
+  });
+
+  test('formats the safe compatibility-state integrity error', () => {
+    const error = createMoldeaCliOwnedError('COMPATIBILITY_STATE_INVALID');
+
+    expect(formatMoldeaCliHumanError(error)).toBe(
+      'cli:COMPATIBILITY_STATE_INVALID The installed compatibility state is invalid.\n',
+    );
+    expect(formatMoldeaCliJsonError(error, 'compatibility', '0.0.1')).toContain(
+      '"retryable":false,"source":"cli"',
+    );
+  });
+
+  test('formats exact human and JSON compatibility reports with published matrix details', () => {
+    const result: IMoldeaCliCompatibilityResult = Object.freeze({
+      adapters: Object.freeze([
+        Object.freeze({
+          active: true,
+          bundledVersion: '0.0.1',
+          id: 'custom',
+          matrix: Object.freeze({
+            implementation: Object.freeze({
+              distribution: 'public' as const,
+              kind: 'built-in' as const,
+              package: '@moldea.ai/core',
+            }),
+            implementationStatus: 'planned' as const,
+          }),
+        }),
+        Object.freeze({
+          active: true,
+          bundledVersion: '0.0.1',
+          id: 'openai',
+          matrix: Object.freeze({
+            compatibleCoreRange: '^0.0.1',
+            implementation: Object.freeze({
+              distribution: 'public' as const,
+              kind: 'package' as const,
+              package: '@moldea.ai/adapter-openai',
+              versionRange: '^0.0.1',
+            }),
+            implementationStatus: 'available' as const,
+            lastVerifiedAt: '2026-08-13',
+            runtimeGuidance: Object.freeze({
+              expectation: 'optional' as const,
+              notes: 'Use when runtime evidence is available.',
+            }),
+            supportedRepositoryFormatVersions: Object.freeze([1]),
+            targets: Object.freeze([
+              Object.freeze({
+                id: 'typescript',
+                kind: 'package' as const,
+                language: 'typescript',
+                lastVerifiedAt: '2026-08-13',
+                supportLevel: 'supported' as const,
+              }),
+            ]),
+          }),
+        }),
+      ]),
+      matrixVersion: 1,
+      minimumGitVersion: '2.30.0',
+      outputSchemaVersion: 1,
+      packages: Object.freeze([
+        Object.freeze({ name: '@moldea.ai/adapter-openai', version: '0.0.1' }),
+        Object.freeze({ name: '@moldea.ai/core', version: '0.0.1' }),
+      ]),
+      repositoryFormatVersions: Object.freeze([1]),
+      supportedNodeRange: '^22.11.0 || ^24.11.0',
+    });
+
+    expect(formatMoldeaCliHumanCompatibilityResult(result, '0.0.1')).toBe(
+      `The installed CLI compatibility state is valid.
+CLI version: 0.0.1
+Supported Node.js: ^22.11.0 || ^24.11.0
+JSON output schema: 1
+Runtime compatibility matrix: 1
+Minimum Git: 2.30.0
+Repository formats: 1
+Packages:
+  @moldea.ai/adapter-openai: 0.0.1
+  @moldea.ai/core: 0.0.1
+Adapters:
+  custom: active=yes, bundled=0.0.1, kind=built-in, package=@moldea.ai/core, status=planned
+  openai: active=yes, bundled=0.0.1, kind=package, package=@moldea.ai/adapter-openai, status=available
+    Implementation range: ^0.0.1
+    Compatible Core range: ^0.0.1
+    Repository formats: 1
+    Runtime guidance: optional
+    Runtime guidance notes: Use when runtime evidence is available.
+    Last verified: 2026-08-13
+    Target typescript: kind=package, language=typescript, support=supported, verified=2026-08-13
+`,
+    );
+    expect(formatMoldeaCliJsonCompatibilityResult(result, '0.0.1')).toBe(
+      '{"cliVersion":"0.0.1","command":"compatibility","error":null,"result":{"adapters":[{"active":true,"bundledVersion":"0.0.1","id":"custom","matrix":{"implementation":{"distribution":"public","kind":"built-in","package":"@moldea.ai/core"},"implementationStatus":"planned"}},{"active":true,"bundledVersion":"0.0.1","id":"openai","matrix":{"compatibleCoreRange":"^0.0.1","implementation":{"distribution":"public","kind":"package","package":"@moldea.ai/adapter-openai","versionRange":"^0.0.1"},"implementationStatus":"available","lastVerifiedAt":"2026-08-13","runtimeGuidance":{"expectation":"optional","notes":"Use when runtime evidence is available."},"supportedRepositoryFormatVersions":[1],"targets":[{"id":"typescript","kind":"package","language":"typescript","lastVerifiedAt":"2026-08-13","supportLevel":"supported"}]}}],"matrixVersion":1,"minimumGitVersion":"2.30.0","outputSchemaVersion":1,"packages":[{"name":"@moldea.ai/adapter-openai","version":"0.0.1"},{"name":"@moldea.ai/core","version":"0.0.1"}],"repositoryFormatVersions":[1],"supportedNodeRange":"^22.11.0 || ^24.11.0"},"schemaVersion":1,"status":"valid"}\n',
+    );
   });
 
   test.each([

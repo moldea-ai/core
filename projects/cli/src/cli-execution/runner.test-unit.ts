@@ -8,6 +8,21 @@ import { runMoldeaCli } from './runner.js';
 import type { IMoldeaCliCommandExecutor } from './types.js';
 
 const INVOCATION_DIRECTORY = '/workspace';
+const INSTALLED_PACKAGE_METADATA = Object.freeze({
+  dependencies: Object.freeze({
+    '@moldea.ai/core': 'workspace:0.0.1',
+    '@moldea.ai/repository': 'workspace:0.0.1',
+    '@moldea.ai/repository-fs': 'workspace:0.0.1',
+    semver: '7.8.5',
+  }),
+  installedPackageVersions: Object.freeze({
+    '@moldea.ai/core': '0.0.1',
+    '@moldea.ai/repository': '0.0.1',
+    '@moldea.ai/repository-fs': '0.0.1',
+  }),
+  supportedNodeRange: '^22.11.0 || ^24.11.0',
+  version: '0.0.1',
+});
 
 describe('runMoldeaCli', () => {
   test('returns top-level help without dispatching a command', async () => {
@@ -15,10 +30,10 @@ describe('runMoldeaCli', () => {
 
     await expect(
       runMoldeaCli({
-        cliVersion: '0.0.1',
         commandLineArguments: [],
         executeCommand,
         invocationDirectory: INVOCATION_DIRECTORY,
+        packageMetadata: INSTALLED_PACKAGE_METADATA,
         releaseMetadata: MOLDEA_CLI_RELEASE_METADATA,
       }),
     ).resolves.toStrictEqual({
@@ -85,10 +100,10 @@ Options:
 
     await expect(
       runMoldeaCli({
-        cliVersion: '0.0.1',
         commandLineArguments: [command, '--help'],
         executeCommand,
         invocationDirectory: INVOCATION_DIRECTORY,
+        packageMetadata: INSTALLED_PACKAGE_METADATA,
         releaseMetadata: MOLDEA_CLI_RELEASE_METADATA,
       }),
     ).resolves.toStrictEqual({ exitCode: 0, stderr: '', stdout: expectedHelp });
@@ -100,10 +115,10 @@ Options:
 
     await expect(
       runMoldeaCli({
-        cliVersion: '0.0.1',
         commandLineArguments: ['--version'],
         executeCommand,
         invocationDirectory: INVOCATION_DIRECTORY,
+        packageMetadata: INSTALLED_PACKAGE_METADATA,
         releaseMetadata: MOLDEA_CLI_RELEASE_METADATA,
       }),
     ).resolves.toStrictEqual({ exitCode: 0, stderr: '', stdout: '0.0.1\n' });
@@ -113,9 +128,9 @@ Options:
   test('isolates human usage failures on stderr', async () => {
     await expect(
       runMoldeaCli({
-        cliVersion: '0.0.1',
         commandLineArguments: ['unknown'],
         invocationDirectory: INVOCATION_DIRECTORY,
+        packageMetadata: INSTALLED_PACKAGE_METADATA,
         releaseMetadata: MOLDEA_CLI_RELEASE_METADATA,
       }),
     ).resolves.toStrictEqual({
@@ -128,9 +143,9 @@ Options:
   test('isolates JSON usage failures on stdout with a null unresolved command', async () => {
     await expect(
       runMoldeaCli({
-        cliVersion: '0.0.1',
         commandLineArguments: ['--json'],
         invocationDirectory: INVOCATION_DIRECTORY,
+        packageMetadata: INSTALLED_PACKAGE_METADATA,
         releaseMetadata: MOLDEA_CLI_RELEASE_METADATA,
       }),
     ).resolves.toStrictEqual({
@@ -147,16 +162,15 @@ Options:
 
     await expect(
       runMoldeaCli({
-        cliVersion: '0.0.1',
         commandLineArguments: ['validate', '--json'],
         executeCommand,
         invocationDirectory: INVOCATION_DIRECTORY,
+        packageMetadata: INSTALLED_PACKAGE_METADATA,
         releaseMetadata: MOLDEA_CLI_RELEASE_METADATA,
       }),
     ).resolves.toBe(executionResult);
     expect(executeCommand).toHaveBeenCalledOnce();
     expect(executeCommand).toHaveBeenCalledWith({
-      cliVersion: '0.0.1',
       invocationDirectory: INVOCATION_DIRECTORY,
       invocation: {
         command: 'validate',
@@ -174,22 +188,26 @@ Options:
           },
         },
       },
+      packageMetadata: INSTALLED_PACKAGE_METADATA,
       releaseMetadata: MOLDEA_CLI_RELEASE_METADATA,
     });
   });
 
-  test('reports unavailable and failed command execution as a safe operational error', async () => {
-    await expect(
-      runMoldeaCli({
-        cliVersion: '0.0.1',
-        commandLineArguments: ['compatibility'],
-        invocationDirectory: INVOCATION_DIRECTORY,
-        releaseMetadata: MOLDEA_CLI_RELEASE_METADATA,
-      }),
-    ).resolves.toStrictEqual({
-      exitCode: 3,
-      stderr: 'cli:INTERNAL_ERROR The command could not be completed.\n',
-      stdout: '',
+  test('reports compatibility and maps failed command execution to a safe error', async () => {
+    const compatibilityResult = await runMoldeaCli({
+      commandLineArguments: ['compatibility', '--json'],
+      invocationDirectory: INVOCATION_DIRECTORY,
+      packageMetadata: INSTALLED_PACKAGE_METADATA,
+      releaseMetadata: MOLDEA_CLI_RELEASE_METADATA,
+    });
+
+    expect(compatibilityResult.exitCode).toBe(0);
+    expect(compatibilityResult.stderr).toBe('');
+    expect(JSON.parse(compatibilityResult.stdout)).toMatchObject({
+      cliVersion: '0.0.1',
+      command: 'compatibility',
+      result: { matrixVersion: 1 },
+      status: 'valid',
     });
 
     const executeCommand = vi
@@ -198,10 +216,10 @@ Options:
 
     await expect(
       runMoldeaCli({
-        cliVersion: '0.0.1',
         commandLineArguments: ['inspect', '--json'],
         executeCommand,
         invocationDirectory: INVOCATION_DIRECTORY,
+        packageMetadata: INSTALLED_PACKAGE_METADATA,
         releaseMetadata: MOLDEA_CLI_RELEASE_METADATA,
       }),
     ).resolves.toStrictEqual({

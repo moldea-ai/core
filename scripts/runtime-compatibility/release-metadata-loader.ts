@@ -4,12 +4,16 @@ import {
   RECOGNIZED_RUNTIME_ADAPTER_IDS,
   SUPPORTED_REPOSITORY_FORMAT_VERSIONS,
 } from '../../projects/core/src/constants/index.ts';
-import { ACTIVE_RUNTIME_ADAPTERS } from '../../projects/cli/src/core-composition/constants.ts';
+import { ACTIVE_RUNTIME_ADAPTER_RELEASE_DEFINITIONS } from '../../projects/cli/src/core-composition/release-definitions/index.ts';
 import { MINIMUM_GIT_VERSION } from '../../projects/cli/src/git-version/constants.ts';
 import { MOLDEA_CLI_JSON_SCHEMA_VERSION } from '../../projects/cli/src/json-output-contract/index.ts';
 
 import { createMoldeaCliReleaseMetadata } from './release-metadata-validations.ts';
-import type { IMoldeaCliGeneratedReleaseMetadata, IRuntimeCompatibilityMatrix } from './types.ts';
+import type {
+  IMoldeaCliGeneratedReleaseMetadata,
+  IRuntimeAdapterReleaseDefinition,
+  IRuntimeCompatibilityMatrix,
+} from './types.ts';
 
 const FOUNDATIONAL_PACKAGE_NAMES = [
   '@moldea.ai/core',
@@ -40,7 +44,9 @@ export const loadMoldeaCliReleaseMetadata = async (
   repositoryRoot: URL,
   matrix: IRuntimeCompatibilityMatrix,
 ): Promise<IMoldeaCliGeneratedReleaseMetadata> => {
-  const activePackageNames = ACTIVE_RUNTIME_ADAPTERS.map(({ id }) => {
+  const activeAdapters: readonly IRuntimeAdapterReleaseDefinition[] =
+    ACTIVE_RUNTIME_ADAPTER_RELEASE_DEFINITIONS;
+  const activePackageNames = activeAdapters.map(({ id }) => {
     const packageName = matrix.adapters[id]?.implementation.package;
 
     if (packageName === undefined) {
@@ -61,7 +67,7 @@ export const loadMoldeaCliReleaseMetadata = async (
   );
 
   return createMoldeaCliReleaseMetadata({
-    activeAdapters: ACTIVE_RUNTIME_ADAPTERS,
+    activeAdapters,
     cliManifest,
     coreRecognizedAdapterIds: RECOGNIZED_RUNTIME_ADAPTER_IDS,
     coreSupportedRepositoryFormatVersions: SUPPORTED_REPOSITORY_FORMAT_VERSIONS,

@@ -28,7 +28,7 @@ export const runMoldeaCli = async (
     return {
       exitCode: MOLDEA_CLI_EXIT_CODES.Success,
       stderr: '',
-      stdout: `${options.cliVersion}\n`,
+      stdout: `${options.packageMetadata.version}\n`,
     };
   }
 
@@ -36,7 +36,7 @@ export const runMoldeaCli = async (
     return createMoldeaCliErrorResult(
       createMoldeaCliOwnedError(parseResult.code),
       parseResult.command,
-      options.cliVersion,
+      options.packageMetadata.version,
       parseResult.isJson,
       MOLDEA_CLI_EXIT_CODES.UsageError,
     );
@@ -46,16 +46,16 @@ export const runMoldeaCli = async (
 
   try {
     return await executeCommand({
-      cliVersion: options.cliVersion,
       invocationDirectory: options.invocationDirectory,
       invocation: parseResult.invocation,
+      packageMetadata: options.packageMetadata,
       releaseMetadata: options.releaseMetadata,
     });
   } catch {
     return createMoldeaCliErrorResult(
       createMoldeaCliOwnedError('INTERNAL_ERROR'),
       parseResult.invocation.command,
-      options.cliVersion,
+      options.packageMetadata.version,
       parseResult.invocation.options.isJson,
       MOLDEA_CLI_EXIT_CODES.OperationalError,
     );

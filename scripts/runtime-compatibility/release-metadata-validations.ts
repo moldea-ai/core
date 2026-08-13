@@ -290,6 +290,7 @@ export const createMoldeaCliReleaseMetadata = (
       supportedNodeRange,
       version: cliManifest.version,
     },
+    coreRecognizedAdapterIds: [...sources.coreRecognizedAdapterIds].sort(compareExactStrings),
     matrix: sources.matrix,
     minimumGitVersion: sources.minimumGitVersion,
     outputSchemaVersion: sources.outputSchemaVersion,

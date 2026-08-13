@@ -11,6 +11,7 @@ import { parseRepositoryPath, type IRepositoryReader } from '@moldea.ai/reposito
 import { createMemoryRepositoryReader } from '@moldea.ai/repository/memory';
 
 import type { IMoldeaCliCommand } from '../command-line/index.js';
+import type { IMoldeaCliCompatibilityResolver } from '../compatibility/index.js';
 import type { IMoldeaCliCoreInspectionExecutor } from '../core-composition/index.js';
 import type { IGitWorkingTreeDiscovery } from '../git-working-tree/index.js';
 import type { IMoldeaCliOwnedErrorCode } from '../presentation/index.js';
@@ -25,12 +26,27 @@ import type {
 import { createMoldeaCliCommandExecutor } from './command-executor.js';
 import type { IMoldeaCliCommandExecutionInput } from './types.js';
 
+const INSTALLED_PACKAGE_METADATA = Object.freeze({
+  dependencies: Object.freeze({
+    '@moldea.ai/core': 'workspace:0.0.1',
+    '@moldea.ai/repository': 'workspace:0.0.1',
+    '@moldea.ai/repository-fs': 'workspace:0.0.1',
+    semver: '7.8.5',
+  }),
+  installedPackageVersions: Object.freeze({
+    '@moldea.ai/core': '0.0.1',
+    '@moldea.ai/repository': '0.0.1',
+    '@moldea.ai/repository-fs': '0.0.1',
+  }),
+  supportedNodeRange: '^22.11.0 || ^24.11.0',
+  version: '0.0.1',
+});
+
 /** Creates one normalized command execution input. */
 const createCommandInput = (
   command: IMoldeaCliCommand,
   isJson = false,
 ): IMoldeaCliCommandExecutionInput => ({
-  cliVersion: '0.0.1',
   invocationDirectory: '/workspace',
   invocation: {
     command,
@@ -48,6 +64,7 @@ const createCommandInput = (
       },
     },
   },
+  packageMetadata: INSTALLED_PACKAGE_METADATA,
   releaseMetadata: MOLDEA_CLI_RELEASE_METADATA,
 });
 
@@ -337,14 +354,67 @@ Adapter evidence items: 0
     const snapshot = createCompletedSnapshotExecutor();
     const executeCommand = createMoldeaCliCommandExecutor(workingTreeDiscovery, snapshot.executor);
 
-    await expect(executeCommand(createCommandInput('compatibility'))).resolves.toStrictEqual({
-      exitCode: 3,
-      stderr: 'cli:INTERNAL_ERROR The command could not be completed.\n',
-      stdout: '',
+    const result = await executeCommand(createCommandInput('compatibility', true));
+    const envelope = JSON.parse(result.stdout) as {
+      readonly command: string;
+      readonly result: {
+        readonly adapters: readonly { readonly id: string }[];
+        readonly matrixVersion: number;
+      };
+      readonly status: string;
+    };
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stderr).toBe('');
+    expect(envelope).toMatchObject({
+      command: 'compatibility',
+      result: { matrixVersion: 1 },
+      status: 'valid',
     });
+    expect(envelope.result.adapters.map(({ id }) => id)).toStrictEqual([
+      'anthropic',
+      'claude-agent-sdk',
+      'cloudflare-agents',
+      'custom',
+      'eve',
+      'google-genai',
+      'langchain',
+      'langgraph',
+      'openai',
+      'openai-agents-sdk',
+      'pydantic-ai',
+      'vercel-ai-sdk',
+    ]);
     expect(workingTreeDiscovery).not.toHaveBeenCalled();
     expect(snapshot.execution.calls).toBe(0);
   });
+
+  test.each(['validate', 'inspect', 'compatibility'] as const)(
+    'rejects invalid installed compatibility before %s side effects',
+    async (command) => {
+      const workingTreeDiscovery = vi.fn<IGitWorkingTreeDiscovery>();
+      const snapshot = createCompletedSnapshotExecutor();
+      const coreInspection = vi.fn<IMoldeaCliCoreInspectionExecutor>();
+      const compatibilityResolver = vi
+        .fn<IMoldeaCliCompatibilityResolver>()
+        .mockReturnValue(Object.freeze({ kind: 'invalid' }));
+      const executeCommand = createMoldeaCliCommandExecutor(
+        workingTreeDiscovery,
+        snapshot.executor,
+        coreInspection,
+        compatibilityResolver,
+      );
+
+      await expect(executeCommand(createCommandInput(command, true))).resolves.toStrictEqual({
+        exitCode: 3,
+        stderr: '',
+        stdout: `{"cliVersion":"0.0.1","command":"${command}","error":{"code":"COMPATIBILITY_STATE_INVALID","details":{},"message":"The installed compatibility state is invalid.","path":null,"retryable":false,"source":"cli"},"result":null,"schemaVersion":1,"status":"error"}\n`,
+      });
+      expect(workingTreeDiscovery).not.toHaveBeenCalled();
+      expect(snapshot.execution.calls).toBe(0);
+      expect(coreInspection).not.toHaveBeenCalled();
+    },
+  );
 
   test('returns a safe human Git discovery error', async () => {
     const workingTreeDiscovery = vi

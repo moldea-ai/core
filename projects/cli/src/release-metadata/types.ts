@@ -152,6 +152,7 @@ export interface IMoldeaCliRuntimeCompatibilityMatrix {
 export interface IMoldeaCliReleaseMetadata {
   readonly activeAdapterIds: readonly string[];
   readonly cliPackage: IMoldeaCliExpectedPackageMetadata;
+  readonly coreRecognizedAdapterIds: readonly string[];
   readonly matrix: IMoldeaCliRuntimeCompatibilityMatrix;
   readonly minimumGitVersion: string;
   readonly outputSchemaVersion: 1;

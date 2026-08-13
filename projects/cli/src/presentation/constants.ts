@@ -2,6 +2,11 @@ import { MOLDEA_CLI_COMMANDS } from '../command-line/index.js';
 
 // stable safe presentation contracts for errors implemented by the CLI
 export const MOLDEA_CLI_ERROR_DEFINITIONS = Object.freeze({
+  COMPATIBILITY_STATE_INVALID: Object.freeze({
+    message: 'The installed compatibility state is invalid.',
+    retryable: false,
+    source: 'cli',
+  }),
   GIT_ACCESS_DENIED: Object.freeze({
     message: 'Git access was denied.',
     retryable: true,

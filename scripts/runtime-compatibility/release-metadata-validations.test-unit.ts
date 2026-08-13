@@ -137,6 +137,7 @@ describe('CLI release metadata validation', () => {
         supportedNodeRange: '^22.11.0 || ^24.11.0',
         version: '0.0.1',
       },
+      coreRecognizedAdapterIds: Object.keys(OFFICIAL_RUNTIME_ADAPTER_PACKAGES),
       matrix: createPlannedMatrix(),
       minimumGitVersion: '2.30.0',
       outputSchemaVersion: 1,

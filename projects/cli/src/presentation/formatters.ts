@@ -1,6 +1,10 @@
 import type { IDiagnostic, IDiagnosticEntity } from '@moldea.ai/core';
 
 import { MOLDEA_CLI_COMMANDS, type IMoldeaCliCommand } from '../command-line/index.js';
+import type {
+  IMoldeaCliAdapterCompatibility,
+  IMoldeaCliCompatibilityResult,
+} from '../compatibility/index.js';
 import { MOLDEA_CLI_JSON_SCHEMA_VERSION } from '../json-output-contract/index.js';
 import { serializeJsonDeterministically } from '../json-serialization/index.js';
 
@@ -8,6 +12,7 @@ import { MOLDEA_CLI_COMMAND_HELP, MOLDEA_CLI_TOP_LEVEL_HELP } from './constants.
 import type {
   IMoldeaCliError,
   IMoldeaCliInspectResult,
+  IMoldeaCliJsonCompatibilityEnvelope,
   IMoldeaCliJsonErrorEnvelope,
   IMoldeaCliJsonInspectEnvelope,
   IMoldeaCliJsonValidateEnvelope,
@@ -87,6 +92,46 @@ const formatMoldeaCliHumanCount = (
   pluralLabel: string,
 ): string => `${count === 1 ? singularLabel : pluralLabel}: ${count}`;
 
+/** Formats optional published matrix details for one human adapter record. */
+const formatMoldeaCliHumanAdapterDetails = (
+  adapter: IMoldeaCliAdapterCompatibility,
+): readonly string[] => {
+  const { matrix } = adapter;
+  const lines: string[] = [];
+
+  if (matrix.implementation.versionRange !== undefined) {
+    lines.push(`    Implementation range: ${matrix.implementation.versionRange}`);
+  }
+
+  if (matrix.compatibleCoreRange !== undefined) {
+    lines.push(`    Compatible Core range: ${matrix.compatibleCoreRange}`);
+  }
+
+  if (matrix.supportedRepositoryFormatVersions !== undefined) {
+    lines.push(`    Repository formats: ${matrix.supportedRepositoryFormatVersions.join(', ')}`);
+  }
+
+  if (matrix.runtimeGuidance !== undefined) {
+    lines.push(`    Runtime guidance: ${matrix.runtimeGuidance.expectation}`);
+
+    if (matrix.runtimeGuidance.notes !== undefined) {
+      lines.push(`    Runtime guidance notes: ${matrix.runtimeGuidance.notes}`);
+    }
+  }
+
+  if (matrix.lastVerifiedAt !== undefined) {
+    lines.push(`    Last verified: ${matrix.lastVerifiedAt}`);
+  }
+
+  for (const target of matrix.targets ?? []) {
+    lines.push(
+      `    Target ${target.id}: kind=${target.kind}, language=${target.language}, support=${target.supportLevel}, verified=${target.lastVerifiedAt}`,
+    );
+  }
+
+  return lines;
+};
+
 /**
  * Formats top-level or command-specific help with its required trailing line feed.
  * @param command The resolved command, or null for top-level help.
@@ -127,6 +172,61 @@ export const formatMoldeaCliJsonError = (
     result: null,
     schemaVersion: MOLDEA_CLI_JSON_SCHEMA_VERSION,
     status: 'error',
+  };
+
+  return `${serializeJsonDeterministically(envelope)}\n`;
+};
+
+/**
+ * Formats one valid compatibility result for human stdout.
+ * @param result The exact installed compatibility composition.
+ * @param cliVersion The installed CLI package version.
+ * @returns A deterministic complete human report ending with LF.
+ */
+export const formatMoldeaCliHumanCompatibilityResult = (
+  result: IMoldeaCliCompatibilityResult,
+  cliVersion: string,
+): string => {
+  const lines = [
+    'The installed CLI compatibility state is valid.',
+    `CLI version: ${cliVersion}`,
+    `Supported Node.js: ${result.supportedNodeRange}`,
+    `JSON output schema: ${result.outputSchemaVersion}`,
+    `Runtime compatibility matrix: ${result.matrixVersion}`,
+    `Minimum Git: ${result.minimumGitVersion}`,
+    `Repository formats: ${result.repositoryFormatVersions.join(', ')}`,
+    'Packages:',
+    ...result.packages.map(({ name, version }) => `  ${name}: ${version}`),
+    'Adapters:',
+  ];
+
+  for (const adapter of result.adapters) {
+    lines.push(
+      `  ${adapter.id}: active=${adapter.active ? 'yes' : 'no'}, bundled=${adapter.bundledVersion ?? 'none'}, kind=${adapter.matrix.implementation.kind}, package=${adapter.matrix.implementation.package}, status=${adapter.matrix.implementationStatus}`,
+      ...formatMoldeaCliHumanAdapterDetails(adapter),
+    );
+  }
+
+  return `${lines.join('\n')}\n`;
+};
+
+/**
+ * Formats one valid compatibility result as a version 1 JSON envelope.
+ * @param result The exact installed compatibility composition.
+ * @param cliVersion The installed CLI package version.
+ * @returns One compact deterministic JSON document ending with LF.
+ */
+export const formatMoldeaCliJsonCompatibilityResult = (
+  result: IMoldeaCliCompatibilityResult,
+  cliVersion: string,
+): string => {
+  const envelope: IMoldeaCliJsonCompatibilityEnvelope = {
+    cliVersion,
+    command: MOLDEA_CLI_COMMANDS.Compatibility,
+    error: null,
+    result,
+    schemaVersion: MOLDEA_CLI_JSON_SCHEMA_VERSION,
+    status: 'valid',
   };
 
   return `${serializeJsonDeterministically(envelope)}\n`;

@@ -1,4 +1,5 @@
 import type { IMoldeaCliCommandInvocation } from '../command-line/index.js';
+import type { IMoldeaCliPackageMetadata } from '../package-metadata/index.js';
 import type { IMoldeaCliReleaseMetadata } from '../release-metadata/index.js';
 
 // complete process output produced by one handled CLI invocation
@@ -10,9 +11,9 @@ export interface IMoldeaCliExecutionResult {
 
 // private command-dispatch input and seam used by later behavioral slices
 export interface IMoldeaCliCommandExecutionInput {
-  readonly cliVersion: string;
   readonly invocationDirectory: string;
   readonly invocation: IMoldeaCliCommandInvocation;
+  readonly packageMetadata: IMoldeaCliPackageMetadata;
   readonly releaseMetadata: IMoldeaCliReleaseMetadata;
 }
 
@@ -23,9 +24,9 @@ export type IMoldeaCliCommandExecutor = (
 
 // process-neutral inputs required to handle one invocation
 export interface IRunMoldeaCliOptions {
-  readonly cliVersion: string;
   readonly commandLineArguments: readonly string[];
   readonly executeCommand?: IMoldeaCliCommandExecutor;
   readonly invocationDirectory: string;
+  readonly packageMetadata: IMoldeaCliPackageMetadata;
   readonly releaseMetadata: IMoldeaCliReleaseMetadata;
 }

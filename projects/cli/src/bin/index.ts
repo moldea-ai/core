@@ -14,9 +14,9 @@ try {
   const invocationDirectory = process.cwd();
   const packageMetadata = await loadMoldeaCliPackageMetadata(packageManifestPath);
   const executionResult = await runMoldeaCli({
-    cliVersion: packageMetadata.version,
     commandLineArguments: process.argv.slice(2),
     invocationDirectory,
+    packageMetadata,
     releaseMetadata: MOLDEA_CLI_RELEASE_METADATA,
   });
 

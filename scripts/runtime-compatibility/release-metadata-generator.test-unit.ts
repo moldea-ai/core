@@ -37,6 +37,7 @@ describe('CLI release metadata generation', () => {
         supportedNodeRange: '^24.11.0',
         name: '@moldea.ai/cli',
       },
+      coreRecognizedAdapterIds: ['custom'],
       matrix: {
         adapters: {
           custom: {

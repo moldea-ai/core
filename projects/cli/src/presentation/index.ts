@@ -13,6 +13,7 @@ export type {
   IMoldeaCliErrorSource,
   IMoldeaCliGitErrorCode,
   IMoldeaCliInspectResult,
+  IMoldeaCliJsonCompatibilityEnvelope,
   IMoldeaCliJsonErrorEnvelope,
   IMoldeaCliJsonInspectEnvelope,
   IMoldeaCliJsonValidateEnvelope,
@@ -27,10 +28,12 @@ export { createMoldeaCliOwnedError } from './errors.js';
 // formatters
 export {
   formatMoldeaCliHelp,
+  formatMoldeaCliHumanCompatibilityResult,
   formatMoldeaCliHumanError,
   formatMoldeaCliHumanInspectResult,
   formatMoldeaCliHumanValidateResult,
   formatMoldeaCliJsonError,
+  formatMoldeaCliJsonCompatibilityResult,
   formatMoldeaCliJsonInspectResult,
   formatMoldeaCliJsonValidateResult,
 } from './formatters.js';

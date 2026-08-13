@@ -34,7 +34,7 @@ export const generateMoldeaCliReleaseMetadataModule = async (
  * - /compatibility/runtimes.yaml
  * - /projects/<project>/package.json
  * - /projects/core/src/constants/index.ts
- * - /projects/cli/src/core-composition/constants.ts
+ * - /projects/cli/src/core-composition/release-definitions/index.ts
  * - /projects/cli/src/git-version/constants.ts
  * - /projects/cli/src/json-output-contract/index.ts
  */

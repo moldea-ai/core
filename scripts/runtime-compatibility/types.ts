@@ -162,6 +162,7 @@ export interface IMoldeaCliGeneratedPackageMetadata {
 export interface IMoldeaCliGeneratedReleaseMetadata {
   activeAdapterIds: string[];
   cliPackage: IMoldeaCliGeneratedPackageMetadata & { supportedNodeRange: string };
+  coreRecognizedAdapterIds: string[];
   matrix: IRuntimeCompatibilityMatrix;
   minimumGitVersion: string;
   outputSchemaVersion: 1;
