@@ -79,6 +79,11 @@ export const MOLDEA_CLI_ERROR_DEFINITIONS = Object.freeze({
   }),
 } as const);
 
+// source descriptor for results derived from the selected Git working tree
+export const MOLDEA_CLI_GIT_WORKING_TREE_SOURCE = Object.freeze({
+  kind: 'git-working-tree' as const,
+});
+
 // top-level help presented without repository access
 export const MOLDEA_CLI_TOP_LEVEL_HELP = `Usage: moldea <command> [options]
 

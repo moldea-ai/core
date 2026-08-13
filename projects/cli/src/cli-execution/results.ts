@@ -1,10 +1,16 @@
+import type { IProjectInspectionResult } from '@moldea.ai/core';
+
 import type { IMoldeaCliCommand } from '../command-line/index.js';
 import {
+  createMoldeaCliValidateResult,
   formatMoldeaCliHumanError,
+  formatMoldeaCliHumanValidateResult,
   formatMoldeaCliJsonError,
+  formatMoldeaCliJsonValidateResult,
   type IMoldeaCliError,
 } from '../presentation/index.js';
 
+import { MOLDEA_CLI_EXIT_CODES } from './constants.js';
 import type { IMoldeaCliExecutionResult } from './types.js';
 
 /**
@@ -36,3 +42,30 @@ export const createMoldeaCliErrorResult = (
           stdout: '',
         },
   );
+
+/**
+ * Creates one process-neutral result for a completed validate command.
+ * @param inspection The complete immutable Core inspection.
+ * @param cliVersion The installed CLI package version.
+ * @param isJson Whether machine-readable output was requested.
+ * @returns The complete immutable process output.
+ */
+export const createMoldeaCliValidateExecutionResult = (
+  inspection: IProjectInspectionResult,
+  cliVersion: string,
+  isJson: boolean,
+): IMoldeaCliExecutionResult => {
+  const result = createMoldeaCliValidateResult(inspection);
+  const exitCode =
+    result.diagnostics.length === 0
+      ? MOLDEA_CLI_EXIT_CODES.Success
+      : MOLDEA_CLI_EXIT_CODES.StructuralInvalid;
+
+  return Object.freeze({
+    exitCode,
+    stderr: '',
+    stdout: isJson
+      ? formatMoldeaCliJsonValidateResult(result, cliVersion)
+      : formatMoldeaCliHumanValidateResult(result),
+  });
+};

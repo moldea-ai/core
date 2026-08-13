@@ -2,7 +2,7 @@
 
 The canonical read-only local command-line composition for deterministic inspection of `moldea` repositories.
 
-The current unpublished `0.0.1` foundation provides the `moldea` executable, strict version 1 command and option parsing, deterministic help and version output, resource-limit validation, safe human or JSON errors, Git-owned working-tree discovery, bounded strict tracked/untracked candidate probing, submodule and nested-repository ownership filtering, deterministic stage collapse, no-follow current entry-type normalization, bounded effective `core.symlinks` resolution, portable logical-path normalization with exact Unicode code-point ordering, bounded effective Git content-transformation classification, exact-path Repository FS construction, private immutable reader wrappers for materialized Git symlinks and guarded regular-file reads, bounded whole-operation snapshot stabilization, attempt-local Core execution, and safe Repository/Core operational-error translation. Successful command-result presentation and compatibility reporting are not implemented yet.
+The current unpublished `0.0.1` foundation provides the `moldea` executable, strict version 1 command and option parsing, deterministic help and version output, resource-limit validation, safe human or JSON errors, Git-owned working-tree discovery, bounded strict tracked/untracked candidate probing, submodule and nested-repository ownership filtering, deterministic stage collapse, no-follow current entry-type normalization, bounded effective `core.symlinks` resolution, portable logical-path normalization with exact Unicode code-point ordering, bounded effective Git content-transformation classification, exact-path Repository FS construction, private immutable reader wrappers for materialized Git symlinks and guarded regular-file reads, bounded whole-operation snapshot stabilization, attempt-local Core execution, safe Repository/Core operational-error translation, and deterministic content-minimized `validate` human and JSON results. Successful `inspect` result presentation and compatibility reporting are not implemented yet.
 
 Tarball and installed-bin checks are the release boundary for now. This package is not ready to publish to npm.
 
@@ -16,7 +16,7 @@ moldea inspect
 moldea compatibility
 ```
 
-The foundation fully supports top-level and command-specific help, `moldea --version`, strict option validation, and usage failures. It discovers a selected working tree, pins its filesystem and Git identity, probes its raw tracked and non-ignored untracked candidates, excludes submodule and nested-repository-only content, collapses index stages by exact path, omits absent paths, classifies every remaining current file or symlink without following the leaf, derives its effective Git content-transformation state, converts the surviving records into deterministically sorted repository logical paths, retries a complete provisional reader operation when the source changes, and runs Core through the accepted reader. It does not return successful or structurally invalid command results yet.
+The foundation fully supports top-level and command-specific help, `moldea --version`, strict option validation, and usage failures. It discovers a selected working tree, pins its filesystem and Git identity, probes its raw tracked and non-ignored untracked candidates, excludes submodule and nested-repository-only content, collapses index stages by exact path, omits absent paths, classifies every remaining current file or symlink without following the leaf, derives its effective Git content-transformation state, converts the surviving records into deterministically sorted repository logical paths, retries a complete provisional reader operation when the source changes, and runs Core through the accepted reader. `validate` returns completed valid and structurally invalid results; `inspect` still reaches the safe operational placeholder after Core completes.
 
 ## Package boundary
 
@@ -74,7 +74,7 @@ The CLI does not expose selected paths, candidate paths, resolved repository roo
 
 Known `RepositorySourceException`, `CoreConfigurationException`, and `CoreOperationException` contracts become safe `repository` or `core` errors with their owning code, documented retryability, logical repository path when applicable, and non-confidential metadata. The private content-transformation marker is translated before the common repository-source case. Unexpected failures, including an internal `RepositoryPathException`, become the generic non-retryable `cli:INTERNAL_ERROR` contract without causes or rejected values.
 
-A successfully completed Core inspection, whether structurally valid or invalid, currently reaches the safe `INTERNAL_ERROR` placeholder because `validate` and `inspect` result presentation belong to the next implementation slices.
+A successfully completed Core inspection now produces `validate` human or JSON output without exposing the project index, canonical content, or adapter evidence. Zero diagnostics return status `valid` and exit code `0`; one or more diagnostics preserve Core order, return status `invalid`, and exit with code `1`. `inspect` still reaches the safe `INTERNAL_ERROR` placeholder because its complete result presentation belongs to the next implementation slice.
 
 ## Development
 

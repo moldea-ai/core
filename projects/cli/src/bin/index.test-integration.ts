@@ -377,6 +377,57 @@ describe('published CLI package and executable', () => {
       expect(discoveredRepositoryCommand.stdout).not.toContain(consumerDirectory);
       expect(discoveredRepositoryCommand.stdout).toContain('"code":"INTERNAL_ERROR"');
 
+      const invalidValidationCommand = spawnPackageManager(
+        packageManagerEntrypoint,
+        ['exec', 'moldea', 'validate', '--json'],
+        consumerDirectory,
+        gitEnvironment,
+      );
+
+      expect(invalidValidationCommand.status).toBe(1);
+      expect(invalidValidationCommand.stderr).toBe('');
+      expect(invalidValidationCommand.stdout).not.toContain(consumerDirectory);
+      expect(invalidValidationCommand.stdout).toBe(
+        '{"cliVersion":"0.0.1","command":"validate","error":null,"result":{"diagnostics":[{"code":"MOLDEA_MANIFEST_MISSING","details":{},"entity":null,"message":"The project manifest is missing.","path":"/moldea/moldea.yaml","pointer":null,"range":null,"source":"core"},{"code":"MOLDEA_PROJECT_FILE_MISSING","details":{},"entity":null,"message":"The project file is missing.","path":"/moldea/project.md","pointer":null,"range":null,"source":"core"}],"formatVersion":null,"source":{"kind":"git-working-tree"}},"schemaVersion":1,"status":"invalid"}\n',
+      );
+
+      const moldeaDirectory = path.join(consumerDirectory, 'moldea');
+
+      mkdirSync(moldeaDirectory);
+      writeFileSync(path.join(moldeaDirectory, 'moldea.yaml'), 'version: 1\n', 'utf8');
+      writeFileSync(path.join(moldeaDirectory, 'project.md'), '# Project\n', 'utf8');
+      execFileSync('git', ['add', '--force', '--', 'moldea/moldea.yaml', 'moldea/project.md'], {
+        cwd: consumerDirectory,
+        encoding: 'utf8',
+        env: gitEnvironment,
+      });
+
+      const validHumanValidationCommand = spawnPackageManager(
+        packageManagerEntrypoint,
+        ['exec', 'moldea', 'validate'],
+        consumerDirectory,
+        gitEnvironment,
+      );
+
+      expect(validHumanValidationCommand.status).toBe(0);
+      expect(validHumanValidationCommand.stderr).toBe('');
+      expect(validHumanValidationCommand.stdout).toBe(
+        'The moldea project is valid.\nRepository format: 1\n',
+      );
+
+      const validJsonValidationCommand = spawnPackageManager(
+        packageManagerEntrypoint,
+        ['exec', 'moldea', 'validate', '--json'],
+        consumerDirectory,
+        gitEnvironment,
+      );
+
+      expect(validJsonValidationCommand.status).toBe(0);
+      expect(validJsonValidationCommand.stderr).toBe('');
+      expect(validJsonValidationCommand.stdout).toBe(
+        '{"cliVersion":"0.0.1","command":"validate","error":null,"result":{"diagnostics":[],"formatVersion":1,"source":{"kind":"git-working-tree"}},"schemaVersion":1,"status":"valid"}\n',
+      );
+
       const inventoryLimitCommand = spawnPackageManager(
         packageManagerEntrypoint,
         ['exec', 'moldea', 'inspect', '--json', '--max-entries', '1'],

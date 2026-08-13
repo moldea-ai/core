@@ -1,4 +1,9 @@
-import type { ICoreConfigurationErrorCode, ICoreOperationErrorCode } from '@moldea.ai/core';
+import type {
+  ICoreConfigurationErrorCode,
+  ICoreOperationErrorCode,
+  IDiagnostic,
+  IProjectInspectionResult,
+} from '@moldea.ai/core';
 import type { IRepositorySourceErrorCode } from '@moldea.ai/repository';
 
 import type { IMoldeaCliCommand } from '../command-line/index.js';
@@ -31,6 +36,18 @@ export interface IMoldeaCliError {
   readonly source: IMoldeaCliErrorSource;
 }
 
+// source descriptor shared by validation and inspection results
+export interface IMoldeaCliSource {
+  readonly kind: 'git-working-tree';
+}
+
+// content-minimized validation result derived from one complete Core inspection
+export interface IMoldeaCliValidateResult {
+  readonly diagnostics: readonly IDiagnostic[];
+  readonly formatVersion: IProjectInspectionResult['formatVersion'];
+  readonly source: IMoldeaCliSource;
+}
+
 // error-only envelope implemented before command result composition
 export interface IMoldeaCliJsonErrorEnvelope {
   readonly cliVersion: string;
@@ -39,4 +56,14 @@ export interface IMoldeaCliJsonErrorEnvelope {
   readonly result: null;
   readonly schemaVersion: 1;
   readonly status: 'error';
+}
+
+// version 1 JSON envelope for a completed validate command
+export interface IMoldeaCliJsonValidateEnvelope {
+  readonly cliVersion: string;
+  readonly command: 'validate';
+  readonly error: null;
+  readonly result: IMoldeaCliValidateResult;
+  readonly schemaVersion: 1;
+  readonly status: 'valid' | 'invalid';
 }

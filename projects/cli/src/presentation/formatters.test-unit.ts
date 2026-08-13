@@ -1,13 +1,35 @@
 // @vitest-environment node
 import { describe, expect, test } from 'vitest';
 
-import { MOLDEA_CLI_COMMAND_HELP, MOLDEA_CLI_TOP_LEVEL_HELP } from './constants.js';
+import type { ICoreDiagnostic } from '@moldea.ai/core';
+import { parseRepositoryPath } from '@moldea.ai/repository';
+
+import {
+  MOLDEA_CLI_COMMAND_HELP,
+  MOLDEA_CLI_GIT_WORKING_TREE_SOURCE,
+  MOLDEA_CLI_TOP_LEVEL_HELP,
+} from './constants.js';
 import { createMoldeaCliOwnedError } from './errors.js';
 import {
   formatMoldeaCliHelp,
   formatMoldeaCliHumanError,
+  formatMoldeaCliHumanValidateResult,
   formatMoldeaCliJsonError,
+  formatMoldeaCliJsonValidateResult,
 } from './formatters.js';
+
+/** Creates one complete Core diagnostic for presentation tests. */
+const createDiagnostic = (overrides: Partial<ICoreDiagnostic> = {}): ICoreDiagnostic => ({
+  code: 'MOLDEA_MANIFEST_MISSING',
+  details: Object.freeze({}),
+  entity: null,
+  message: 'The project manifest is missing.',
+  path: parseRepositoryPath('/moldea/moldea.yaml'),
+  pointer: null,
+  range: null,
+  source: 'core',
+  ...overrides,
+});
 
 describe('CLI presentation formatters', () => {
   test('returns exact top-level and command help', () => {
@@ -108,6 +130,75 @@ describe('CLI presentation formatters', () => {
       ),
     ).toBe(
       '{"cliVersion":"0.0.1","command":"inspect","error":{"code":"ENTRY_NOT_FOUND","details":{},"message":"The requested repository entry was not found.","path":"/moldea/project.md","retryable":false,"source":"repository"},"result":null,"schemaVersion":1,"status":"error"}\n',
+    );
+  });
+
+  test('formats exact valid human and JSON validation results', () => {
+    const result = Object.freeze({
+      diagnostics: Object.freeze([]),
+      formatVersion: 1 as const,
+      source: MOLDEA_CLI_GIT_WORKING_TREE_SOURCE,
+    });
+
+    expect(formatMoldeaCliHumanValidateResult(result)).toBe(
+      'The moldea project is valid.\nRepository format: 1\n',
+    );
+    expect(formatMoldeaCliJsonValidateResult(result, '0.0.1')).toBe(
+      '{"cliVersion":"0.0.1","command":"validate","error":null,"result":{"diagnostics":[],"formatVersion":1,"source":{"kind":"git-working-tree"}},"schemaVersion":1,"status":"valid"}\n',
+    );
+  });
+
+  test('formats invalid diagnostics in supplied order with actionable locations and entities', () => {
+    const manifestDiagnostic = createDiagnostic();
+    const agentDiagnostic = createDiagnostic({
+      code: 'MOLDEA_AGENT_INSTRUCTION_EMPTY',
+      entity: Object.freeze({
+        adapterId: 'openai',
+        agentId: 'alpha',
+        capabilityId: 'inspect',
+        capabilityKind: 'tool',
+        decisionId: '1767225600000',
+        variableId: 'REGION',
+      }),
+      message: 'The agent instruction file is empty.',
+      path: parseRepositoryPath('/moldea/agents/alpha/instruction.md'),
+      pointer: '/agents/alpha/instruction',
+      range: Object.freeze({
+        end: Object.freeze({ column: 4, line: 2, offset: 8 }),
+        start: Object.freeze({ column: 3, line: 2, offset: 7 }),
+      }),
+    });
+    const result = Object.freeze({
+      diagnostics: Object.freeze([manifestDiagnostic, agentDiagnostic]),
+      formatVersion: 1 as const,
+      source: MOLDEA_CLI_GIT_WORKING_TREE_SOURCE,
+    });
+
+    expect(formatMoldeaCliHumanValidateResult(result)).toBe(
+      `The moldea project is invalid.
+Repository format: 1
+core:MOLDEA_MANIFEST_MISSING /moldea/moldea.yaml The project manifest is missing.
+core:MOLDEA_AGENT_INSTRUCTION_EMPTY /moldea/agents/alpha/instruction.md:2:3 The agent instruction file is empty.
+  pointer: /agents/alpha/instruction
+  entity: agentId=alpha, capabilityKind=tool, capabilityId=inspect, decisionId=1767225600000, variableId=REGION, adapterId=openai
+2 diagnostics.
+`,
+    );
+  });
+
+  test('omits an unavailable format and uses the singular diagnostic count', () => {
+    const diagnostic = createDiagnostic({ path: null });
+    const result = Object.freeze({
+      diagnostics: Object.freeze([diagnostic]),
+      formatVersion: null,
+      source: MOLDEA_CLI_GIT_WORKING_TREE_SOURCE,
+    });
+
+    expect(formatMoldeaCliHumanValidateResult(result)).toBe(
+      'The moldea project is invalid.\ncore:MOLDEA_MANIFEST_MISSING The project manifest is missing.\n1 diagnostic.\n',
+    );
+    expect(formatMoldeaCliJsonValidateResult(result, '0.0.1')).toBe(
+      '{"cliVersion":"0.0.1","command":"validate","error":null,"result":{"diagnostics":[{"code":"MOLDEA_MANIFEST_MISSING","details":{},"entity":null,"message":"The project manifest is missing.","path":null,"pointer":null,"range":null,"source":"core"}],"formatVersion":null,"source":{"kind":"git-working-tree"}},"schemaVersion":1,"status":"invalid"}\n',
     );
   });
 });

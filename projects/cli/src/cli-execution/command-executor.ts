@@ -15,7 +15,7 @@ import {
 } from '../working-tree-snapshot/index.js';
 
 import { MOLDEA_CLI_EXIT_CODES } from './constants.js';
-import { createMoldeaCliErrorResult } from './results.js';
+import { createMoldeaCliErrorResult, createMoldeaCliValidateExecutionResult } from './results.js';
 import type { IMoldeaCliCommandExecutor, IMoldeaCliExecutionResult } from './types.js';
 
 /**
@@ -63,6 +63,14 @@ export const createMoldeaCliCommandExecutor =
             input.cliVersion,
             input.invocation.options.isJson,
             MOLDEA_CLI_EXIT_CODES.OperationalError,
+          );
+        }
+
+        if (input.invocation.command === MOLDEA_CLI_COMMANDS.Validate) {
+          return createMoldeaCliValidateExecutionResult(
+            snapshotResult.result,
+            input.cliVersion,
+            input.invocation.options.isJson,
           );
         }
       } catch (error) {

@@ -88,65 +88,138 @@ const createFailedSnapshotExecutor =
     Promise.resolve(Object.freeze({ errorCode, kind: 'failed' }));
 
 describe('createMoldeaCliCommandExecutor', () => {
-  test.each(['validate', 'inspect'] as const)(
-    'discovers and executes one bounded working-tree snapshot for %s',
-    async (command) => {
-      const workingTreeDiscovery = vi
-        .fn<IGitWorkingTreeDiscovery>()
-        .mockResolvedValue(Object.freeze({ kind: 'discovered', repositoryRoot: '/workspace' }));
-      const snapshot = createCompletedSnapshotExecutor();
-      const coreInspection = vi.fn<IMoldeaCliCoreInspectionExecutor>().mockResolvedValue(
-        Object.freeze({
-          diagnostics: Object.freeze([]),
-          evidence: Object.freeze([]),
-          formatVersion: null,
-          project: null,
-          valid: false,
-        }),
-      );
-      const executeCommand = createMoldeaCliCommandExecutor(
-        workingTreeDiscovery,
-        snapshot.executor,
-        coreInspection,
-      );
+  test('returns a valid human result after one bounded validation snapshot', async () => {
+    const workingTreeDiscovery = vi
+      .fn<IGitWorkingTreeDiscovery>()
+      .mockResolvedValue(Object.freeze({ kind: 'discovered', repositoryRoot: '/workspace' }));
+    const snapshot = createCompletedSnapshotExecutor();
+    const coreInspection = vi.fn<IMoldeaCliCoreInspectionExecutor>().mockResolvedValue(
+      Object.freeze({
+        diagnostics: Object.freeze([]),
+        evidence: Object.freeze([]),
+        formatVersion: 1,
+        project: null,
+        valid: true,
+      }),
+    );
+    const executeCommand = createMoldeaCliCommandExecutor(
+      workingTreeDiscovery,
+      snapshot.executor,
+      coreInspection,
+    );
 
-      await expect(executeCommand(createCommandInput(command))).resolves.toStrictEqual({
-        exitCode: 3,
-        stderr: 'cli:INTERNAL_ERROR The command could not be completed.\n',
-        stdout: '',
-      });
-      expect(workingTreeDiscovery).toHaveBeenCalledOnce();
-      expect(workingTreeDiscovery).toHaveBeenCalledWith({
-        invocationDirectory: '/workspace',
-        repositoryDirectory: null,
-      });
-      expect(snapshot.execution).toStrictEqual({
-        calls: 1,
-        operationCalls: 1,
-        repositoryRoot: '/workspace',
-        resourceLimits: {
-          maxDiagnostics: 10_000,
-          maxEntries: 100_000,
-          maxEvidence: 10_000,
-          maxFileBytes: 8_388_608,
-          maxManifestBytes: 2_097_152,
-          maxTotalBytes: 134_217_728,
-        },
-      });
-      expect(coreInspection).toHaveBeenCalledOnce();
-      expect(coreInspection).toHaveBeenCalledWith({
-        repository: snapshot.reader,
-        resourceLimits: {
-          maxDiagnostics: 10_000,
-          maxEntries: 100_000,
-          maxEvidence: 10_000,
-          maxFileBytes: 8_388_608,
-          maxManifestBytes: 2_097_152,
-          maxTotalBytes: 134_217_728,
-        },
-      });
-    },
-  );
+    await expect(executeCommand(createCommandInput('validate'))).resolves.toStrictEqual({
+      exitCode: 0,
+      stderr: '',
+      stdout: 'The moldea project is valid.\nRepository format: 1\n',
+    });
+    expect(workingTreeDiscovery).toHaveBeenCalledOnce();
+    expect(workingTreeDiscovery).toHaveBeenCalledWith({
+      invocationDirectory: '/workspace',
+      repositoryDirectory: null,
+    });
+    expect(snapshot.execution).toStrictEqual({
+      calls: 1,
+      operationCalls: 1,
+      repositoryRoot: '/workspace',
+      resourceLimits: {
+        maxDiagnostics: 10_000,
+        maxEntries: 100_000,
+        maxEvidence: 10_000,
+        maxFileBytes: 8_388_608,
+        maxManifestBytes: 2_097_152,
+        maxTotalBytes: 134_217_728,
+      },
+    });
+    expect(coreInspection).toHaveBeenCalledOnce();
+    expect(coreInspection).toHaveBeenCalledWith({
+      repository: snapshot.reader,
+      resourceLimits: {
+        maxDiagnostics: 10_000,
+        maxEntries: 100_000,
+        maxEvidence: 10_000,
+        maxFileBytes: 8_388_608,
+        maxManifestBytes: 2_097_152,
+        maxTotalBytes: 134_217_728,
+      },
+    });
+  });
+
+  test('returns a structurally invalid JSON validation result without project or evidence', async () => {
+    const workingTreeDiscovery = vi
+      .fn<IGitWorkingTreeDiscovery>()
+      .mockResolvedValue(Object.freeze({ kind: 'discovered', repositoryRoot: '/workspace' }));
+    const snapshot = createCompletedSnapshotExecutor();
+    const coreInspection = vi.fn<IMoldeaCliCoreInspectionExecutor>().mockResolvedValue(
+      Object.freeze({
+        diagnostics: Object.freeze([
+          Object.freeze({
+            code: 'MOLDEA_MANIFEST_MISSING' as const,
+            details: Object.freeze({}),
+            entity: null,
+            message: 'The project manifest is missing.',
+            path: parseRepositoryPath('/moldea/moldea.yaml'),
+            pointer: null,
+            range: null,
+            source: 'core' as const,
+          }),
+        ]),
+        evidence: Object.freeze([]),
+        formatVersion: null,
+        project: null,
+        valid: false,
+      }),
+    );
+    const executeCommand = createMoldeaCliCommandExecutor(
+      workingTreeDiscovery,
+      snapshot.executor,
+      coreInspection,
+    );
+
+    const result = await executeCommand(createCommandInput('validate', true));
+
+    expect(result).toStrictEqual({
+      exitCode: 1,
+      stderr: '',
+      stdout:
+        '{"cliVersion":"0.0.1","command":"validate","error":null,"result":{"diagnostics":[{"code":"MOLDEA_MANIFEST_MISSING","details":{},"entity":null,"message":"The project manifest is missing.","path":"/moldea/moldea.yaml","pointer":null,"range":null,"source":"core"}],"formatVersion":null,"source":{"kind":"git-working-tree"}},"schemaVersion":1,"status":"invalid"}\n',
+    });
+    const envelope = JSON.parse(result.stdout) as {
+      readonly result: Readonly<Record<string, unknown>>;
+    };
+
+    expect(envelope.result).not.toHaveProperty('evidence');
+    expect(envelope.result).not.toHaveProperty('project');
+  });
+
+  test('keeps inspect on its current result-presentation placeholder', async () => {
+    const workingTreeDiscovery = vi
+      .fn<IGitWorkingTreeDiscovery>()
+      .mockResolvedValue(Object.freeze({ kind: 'discovered', repositoryRoot: '/workspace' }));
+    const snapshot = createCompletedSnapshotExecutor();
+    const coreInspection = vi.fn<IMoldeaCliCoreInspectionExecutor>().mockResolvedValue(
+      Object.freeze({
+        diagnostics: Object.freeze([]),
+        evidence: Object.freeze([]),
+        formatVersion: 1,
+        project: null,
+        valid: true,
+      }),
+    );
+    const executeCommand = createMoldeaCliCommandExecutor(
+      workingTreeDiscovery,
+      snapshot.executor,
+      coreInspection,
+    );
+
+    await expect(executeCommand(createCommandInput('inspect'))).resolves.toStrictEqual({
+      exitCode: 3,
+      stderr: 'cli:INTERNAL_ERROR The command could not be completed.\n',
+      stdout: '',
+    });
+    expect(snapshot.execution.operationCalls).toBe(1);
+    expect(coreInspection).toHaveBeenCalledOnce();
+  });
 
   test('does not discover a working tree for compatibility', async () => {
     const workingTreeDiscovery = vi.fn<IGitWorkingTreeDiscovery>();
