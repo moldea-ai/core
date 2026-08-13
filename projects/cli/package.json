@@ -30,7 +30,8 @@
     "build": "pnpm --dir ../.. compatibility:check && vite build --emptyOutDir",
     "dev": "vite build --watch",
     "lint": "eslint .",
-    "test": "pnpm run test:unit && pnpm run test:integration",
+    "test": "pnpm run test:unit && pnpm run test:integration && pnpm run test:e2e",
+    "test:e2e": "pnpm run build && vitest run --config vitest/test-e2e.config.ts",
     "test:integration": "pnpm run build && vitest run --config vitest/test-integration.config.ts",
     "test:unit": "vitest run --config vitest/test-unit.config.ts",
     "typecheck": "tsc -p tsconfig.src.json --noEmit && tsc -p tsconfig.json --noEmit"

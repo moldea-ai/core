@@ -1,162 +1,36 @@
 // @vitest-environment node
-import {
-  execFileSync,
-  spawn,
-  spawnSync,
-  type ExecFileSyncOptionsWithStringEncoding,
-  type SpawnSyncReturns,
-} from 'node:child_process';
+import { execFileSync, spawn, spawnSync } from 'node:child_process';
 import {
   chmodSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
-  readdirSync,
   renameSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { gunzipSync } from 'node:zlib';
 import { describe, expect, test } from 'vitest';
 
 import { createGitProcessEnvironment } from '../git-process/index.js';
 
-const projectDirectory = path.resolve(import.meta.dirname, '..', '..');
-const projectsDirectory = path.dirname(projectDirectory);
-const coreProjectDirectory = path.join(projectsDirectory, 'core');
-const repositoryProjectDirectory = path.join(projectsDirectory, 'repository');
-const repositoryFilesystemProjectDirectory = path.join(projectsDirectory, 'repository-fs');
-const distributionPath = path.join(projectDirectory, 'dist', 'moldea.js');
-
-interface IPackDryRunResult {
-  readonly files: readonly { readonly path: string }[];
-  readonly name: string;
-  readonly version: string;
-}
-
-interface IMoldeaCliPackageManifest {
-  readonly bin?: Readonly<Record<string, string>>;
-  readonly dependencies?: Readonly<Record<string, string>>;
-  readonly engines?: Readonly<Record<string, string>>;
-  readonly exports?: unknown;
-  readonly files?: readonly string[];
-  readonly main?: string;
-  readonly name?: string;
-  readonly sideEffects?: boolean;
-  readonly type?: string;
-  readonly types?: string;
-  readonly version?: string;
-}
-
-/** Executes native or JavaScript package-manager entrypoints without a platform shell. */
-const runPackageManager = (
-  packageManagerEntrypoint: string,
-  commandArguments: readonly string[],
-  options: ExecFileSyncOptionsWithStringEncoding,
-): string => {
-  const isJavaScriptEntrypoint = /\.(?:c|m)?js$/u.test(packageManagerEntrypoint);
-
-  return execFileSync(
-    isJavaScriptEntrypoint ? process.execPath : packageManagerEntrypoint,
-    isJavaScriptEntrypoint ? [packageManagerEntrypoint, ...commandArguments] : commandArguments,
-    options,
-  );
-};
-
-/** Spawns a package-manager command and retains nonzero handled CLI results. */
-const spawnPackageManager = (
-  packageManagerEntrypoint: string,
-  commandArguments: readonly string[],
-  cwd: string,
-  environment: NodeJS.ProcessEnv = process.env,
-): SpawnSyncReturns<string> => {
-  const isJavaScriptEntrypoint = /\.(?:c|m)?js$/u.test(packageManagerEntrypoint);
-
-  return spawnSync(
-    isJavaScriptEntrypoint ? process.execPath : packageManagerEntrypoint,
-    isJavaScriptEntrypoint ? [packageManagerEntrypoint, ...commandArguments] : commandArguments,
-    { cwd, encoding: 'utf8', env: environment },
-  );
-};
-
-/** Packs one project and returns the single newly created tarball name. */
-const packPackageTarball = (
-  packageManagerEntrypoint: string,
-  packageDirectory: string,
-  packDirectory: string,
-): string => {
-  const existingFiles = new Set(readdirSync(packDirectory));
-
-  runPackageManager(packageManagerEntrypoint, ['pack', '--pack-destination', packDirectory], {
-    cwd: packageDirectory,
-    encoding: 'utf8',
-  });
-  const tarballNames = readdirSync(packDirectory).filter(
-    (fileName) => fileName.endsWith('.tgz') && !existingFiles.has(fileName),
-  );
-
-  if (tarballNames.length !== 1 || tarballNames[0] === undefined) {
-    throw new Error('The package tarball was not created deterministically.');
-  }
-
-  return tarballNames[0];
-};
-
-/** Reads one regular entry from an uncompressed USTAR-compatible package archive. */
-const readTarEntry = (tarball: Buffer, entryPath: string): Buffer => {
-  const archive = gunzipSync(tarball);
-  let offset = 0;
-
-  while (offset + 512 <= archive.byteLength) {
-    const header = archive.subarray(offset, offset + 512);
-    const nameEnd = header.indexOf(0);
-
-    if (nameEnd === 0) {
-      break;
-    }
-
-    const name = header.subarray(0, nameEnd).toString('utf8');
-    const sizeText = header.subarray(124, 136).toString('ascii').replaceAll('\0', '').trim();
-    const size = Number.parseInt(sizeText, 8);
-    const contentOffset = offset + 512;
-
-    if (name === entryPath) {
-      return archive.subarray(contentOffset, contentOffset + size);
-    }
-
-    offset = contentOffset + Math.ceil(size / 512) * 512;
-  }
-
-  throw new Error(`The packed archive does not contain ${entryPath}.`);
-};
-
-/** Asserts exact source or packed CLI metadata and its deliberate closed import surface. */
-const expectPackageManifest = (
-  manifest: IMoldeaCliPackageManifest,
-  dependencyVersion: string,
-): void => {
-  expect(manifest).toMatchObject({
-    bin: { moldea: './dist/moldea.js' },
-    engines: { node: '^22.11.0 || ^24.11.0' },
-    exports: {},
-    files: ['dist', 'LICENSE', 'README.md'],
-    name: '@moldea.ai/cli',
-    type: 'module',
-    version: '0.0.1',
-  });
-  expect(manifest.dependencies).toStrictEqual({
-    '@moldea.ai/core': dependencyVersion,
-    '@moldea.ai/repository': dependencyVersion,
-    '@moldea.ai/repository-fs': dependencyVersion,
-    semver: '7.8.5',
-  });
-  expect(manifest).not.toHaveProperty('main');
-  expect(manifest).not.toHaveProperty('sideEffects');
-  expect(manifest).not.toHaveProperty('types');
-};
+import {
+  CLI_DISTRIBUTION_PATH,
+  CLI_PROJECT_DIRECTORY,
+  CORE_PROJECT_DIRECTORY,
+  expectPackageManifest,
+  type IMoldeaCliPackageManifest,
+  type IPackDryRunResult,
+  packPackageTarball,
+  readCliPackageManifest,
+  readTarEntry,
+  REPOSITORY_FILESYSTEM_PROJECT_DIRECTORY,
+  REPOSITORY_PROJECT_DIRECTORY,
+  runPackageManager,
+  spawnPackageManager,
+} from './index.test-fixtures.js';
 
 /** Waits until a process-owned signal fixture is materialized. */
 const waitForFixturePath = async (fixturePath: string): Promise<void> => {
@@ -303,13 +177,11 @@ describe('published CLI package and executable', () => {
     }
 
     const output = runPackageManager(packageManagerEntrypoint, ['pack', '--dry-run', '--json'], {
-      cwd: projectDirectory,
+      cwd: CLI_PROJECT_DIRECTORY,
       encoding: 'utf8',
     });
     const packResult = JSON.parse(output) as IPackDryRunResult;
-    const manifest = JSON.parse(
-      readFileSync(path.join(projectDirectory, 'package.json'), 'utf8'),
-    ) as IMoldeaCliPackageManifest;
+    const manifest = readCliPackageManifest();
     const packedPaths = packResult.files.map((file) => file.path);
 
     expect(packResult).toMatchObject({ name: '@moldea.ai/cli', version: '0.0.1' });
@@ -328,7 +200,7 @@ describe('published CLI package and executable', () => {
     ).toBe(true);
     expect(packedPaths.every((filePath) => !filePath.includes('.test-'))).toBe(true);
     expectPackageManifest(manifest, 'workspace:0.0.1');
-    const executable = readFileSync(distributionPath, 'utf8');
+    const executable = readFileSync(CLI_DISTRIBUTION_PATH, 'utf8');
     expect(executable.startsWith('#!/usr/bin/env node\n')).toBe(true);
     expect(executable).toContain('@moldea.ai/adapter-anthropic');
     expect(executable).toContain('minimumGitVersion');
@@ -346,7 +218,7 @@ describe('published CLI package and executable', () => {
     try {
       const tarballName = packPackageTarball(
         packageManagerEntrypoint,
-        projectDirectory,
+        CLI_PROJECT_DIRECTORY,
         packDirectory,
       );
       const tarball = readFileSync(path.join(packDirectory, tarballName));
@@ -394,22 +266,22 @@ describe('published CLI package and executable', () => {
     try {
       const repositoryTarballName = packPackageTarball(
         packageManagerEntrypoint,
-        repositoryProjectDirectory,
+        REPOSITORY_PROJECT_DIRECTORY,
         consumerDirectory,
       );
       const repositoryFilesystemTarballName = packPackageTarball(
         packageManagerEntrypoint,
-        repositoryFilesystemProjectDirectory,
+        REPOSITORY_FILESYSTEM_PROJECT_DIRECTORY,
         consumerDirectory,
       );
       const coreTarballName = packPackageTarball(
         packageManagerEntrypoint,
-        coreProjectDirectory,
+        CORE_PROJECT_DIRECTORY,
         consumerDirectory,
       );
       const cliTarballName = packPackageTarball(
         packageManagerEntrypoint,
-        projectDirectory,
+        CLI_PROJECT_DIRECTORY,
         consumerDirectory,
       );
       const packageTarballs = {
@@ -450,6 +322,15 @@ describe('published CLI package and executable', () => {
         },
       );
 
+      const installedExecutablePath = path.join(
+        consumerDirectory,
+        'node_modules',
+        '@moldea.ai',
+        'cli',
+        'dist',
+        'moldea.js',
+      );
+
       expect(existsSync(path.join(consumerDirectory, 'node_modules', '.bin', 'moldea'))).toBe(true);
       expect(
         runPackageManager(packageManagerEntrypoint, ['exec', 'moldea', '--version'], {
@@ -457,12 +338,75 @@ describe('published CLI package and executable', () => {
           encoding: 'utf8',
         }),
       ).toBe('0.0.1\n');
-      expect(
-        runPackageManager(packageManagerEntrypoint, ['exec', 'moldea', '--help'], {
+      const topLevelHelp = runPackageManager(
+        packageManagerEntrypoint,
+        ['exec', 'moldea', '--help'],
+        {
           cwd: consumerDirectory,
           encoding: 'utf8',
-        }),
-      ).toContain('Usage: moldea <command> [options]\n');
+        },
+      );
+
+      expect(topLevelHelp).toContain('Usage: moldea <command> [options]\n');
+
+      const zeroArgumentHelp = spawnSync(process.execPath, [installedExecutablePath], {
+        cwd: consumerDirectory,
+        encoding: 'utf8',
+      });
+
+      expect(zeroArgumentHelp).toMatchObject({ status: 0, stderr: '', stdout: topLevelHelp });
+
+      for (const command of ['compatibility', 'inspect', 'validate']) {
+        const commandHelp = spawnSync(
+          process.execPath,
+          [installedExecutablePath, command, '--help'],
+          { cwd: consumerDirectory, encoding: 'utf8' },
+        );
+
+        expect(commandHelp.status).toBe(0);
+        expect(commandHelp.stderr).toBe('');
+        expect(commandHelp.stdout).toContain(`Usage: moldea ${command} [options]\n`);
+      }
+
+      for (const invalidArguments of [
+        ['--help', 'extra'],
+        ['--version', '--no-color'],
+        ['unknown'],
+        ['validate', '--unknown'],
+        ['validate', '--repository', '.', '--repository', '..'],
+        ['validate', '--repository'],
+        ['validate', '--max-entries', '0'],
+        ['validate', '--max-entries', '1', '--max-entries', '2'],
+        ['compatibility', '--repository', '.'],
+      ]) {
+        const usageFailure = spawnSync(
+          process.execPath,
+          [installedExecutablePath, ...invalidArguments],
+          { cwd: consumerDirectory, encoding: 'utf8' },
+        );
+
+        expect(usageFailure.status).toBe(2);
+        expect(usageFailure.stdout).toBe('');
+        expect(usageFailure.stderr).toMatch(
+          /^(?:cli:INVALID_ARGUMENT|cli:RESOURCE_LIMIT_CONFIGURATION_INVALID) /u,
+        );
+        expect(usageFailure.stderr.endsWith('\n')).toBe(true);
+      }
+
+      const jsonHelpFailure = spawnSync(
+        process.execPath,
+        [installedExecutablePath, 'validate', '--help', '--json'],
+        { cwd: consumerDirectory, encoding: 'utf8' },
+      );
+
+      expect(jsonHelpFailure.status).toBe(2);
+      expect(jsonHelpFailure.stderr).toBe('');
+      expect(JSON.parse(jsonHelpFailure.stdout)).toMatchObject({
+        command: 'validate',
+        error: { code: 'INVALID_ARGUMENT' },
+        result: null,
+        status: 'error',
+      });
 
       const humanCompatibility = spawnPackageManager(
         packageManagerEntrypoint,
@@ -599,6 +543,42 @@ describe('published CLI package and executable', () => {
         env: gitEnvironment,
       });
 
+      const repositoryStatusBefore = execFileSync('git', ['status', '--porcelain=v2', '-z'], {
+        cwd: consumerDirectory,
+        encoding: 'buffer',
+        env: gitEnvironment,
+      });
+      const repositoryExecutionMarker = path.join(testDirectory, 'repository-code-executed');
+
+      if (process.platform !== 'win32') {
+        const repositoryExecutablePath = path.join(testDirectory, 'repository-executable');
+
+        writeFileSync(
+          repositoryExecutablePath,
+          `#!/usr/bin/env node
+require('node:fs').writeFileSync(${JSON.stringify(repositoryExecutionMarker)}, 'executed');
+process.exit(0);
+`,
+          'utf8',
+        );
+        chmodSync(repositoryExecutablePath, 0o755);
+        writeFileSync(
+          path.join(consumerDirectory, '.git', 'info', 'attributes'),
+          'inventory-one.txt filter=moldea\n',
+          'utf8',
+        );
+        execFileSync('git', ['config', '--local', 'core.fsmonitor', repositoryExecutablePath], {
+          cwd: consumerDirectory,
+          encoding: 'utf8',
+          env: gitEnvironment,
+        });
+        execFileSync(
+          'git',
+          ['config', '--local', 'filter.moldea.process', repositoryExecutablePath],
+          { cwd: consumerDirectory, encoding: 'utf8', env: gitEnvironment },
+        );
+      }
+
       const validHumanValidationCommand = spawnPackageManager(
         packageManagerEntrypoint,
         ['exec', 'moldea', 'validate'],
@@ -706,6 +686,50 @@ Adapter evidence items: 0
       ]);
       expect(validInspectionEnvelope.result.inspection.project).not.toBeNull();
 
+      const hostileEnvironmentInspection = spawnSync(
+        process.execPath,
+        [installedExecutablePath, 'inspect', '--json'],
+        {
+          cwd: consumerDirectory,
+          encoding: 'utf8',
+          env: {
+            ...Object.fromEntries(
+              Object.entries(gitEnvironment).filter(([name]) => name.toUpperCase() !== 'NO_COLOR'),
+            ),
+            FORCE_COLOR: '3',
+            LANG: 'tr_TR.UTF-8',
+            LC_ALL: 'tr_TR.UTF-8',
+            TERM: 'xterm-256color',
+            TZ: 'Pacific/Kiritimati',
+          },
+        },
+      );
+
+      expect(hostileEnvironmentInspection.status).toBe(0);
+      expect(hostileEnvironmentInspection.stderr).toBe('');
+      expect(hostileEnvironmentInspection.stdout).toBe(validJsonInspectionCommand.stdout);
+      expect(hostileEnvironmentInspection.stdout).not.toContain('\u001b[');
+      expect(
+        execFileSync(
+          'git',
+          [
+            '-c',
+            'core.fsmonitor=false',
+            '-c',
+            'submodule.recurse=false',
+            'status',
+            '--porcelain=v2',
+            '-z',
+          ],
+          {
+            cwd: consumerDirectory,
+            encoding: 'buffer',
+            env: gitEnvironment,
+          },
+        ),
+      ).toStrictEqual(repositoryStatusBefore);
+      expect(existsSync(repositoryExecutionMarker)).toBe(false);
+
       const inventoryLimitCommand = spawnPackageManager(
         packageManagerEntrypoint,
         ['exec', 'moldea', 'inspect', '--json', '--max-entries', '1'],
@@ -719,14 +743,6 @@ Adapter evidence items: 0
         '{"cliVersion":"0.0.1","command":"inspect","error":{"code":"RESOURCE_LIMIT_EXCEEDED","details":{},"message":"A resource limit was exceeded.","path":null,"retryable":false,"source":"cli"},"result":null,"schemaVersion":1,"status":"error"}\n',
       );
 
-      const installedExecutablePath = path.join(
-        consumerDirectory,
-        'node_modules',
-        '@moldea.ai',
-        'cli',
-        'dist',
-        'moldea.js',
-      );
       const environmentWithoutPath = Object.fromEntries(
         Object.entries(gitEnvironment).filter(([name]) => name.toUpperCase() !== 'PATH'),
       );
@@ -770,6 +786,60 @@ Adapter evidence items: 0
       });
 
       if (process.platform !== 'win32') {
+        const fakeGitVersionDirectory = path.join(testDirectory, 'fake-git-version');
+        const fakeGitVersionPath = path.join(fakeGitVersionDirectory, 'git');
+        const realGitPath = execFileSync('which', ['git'], { encoding: 'utf8' }).trim();
+
+        mkdirSync(fakeGitVersionDirectory);
+        writeFileSync(
+          fakeGitVersionPath,
+          `#!/usr/bin/env node
+const { spawnSync } = require('node:child_process');
+
+if (process.argv.includes('--version')) {
+  process.stdout.write(process.env.MOLDEA_TEST_GIT_VERSION_OUTPUT);
+  process.exit(0);
+}
+
+const result = spawnSync(${JSON.stringify(realGitPath)}, process.argv.slice(2), {
+  env: process.env,
+  stdio: 'inherit',
+});
+process.exit(result.status ?? 1);
+`,
+          'utf8',
+        );
+        chmodSync(fakeGitVersionPath, 0o755);
+
+        for (const [versionOutput, errorCode] of [
+          ['git version invalid\n', 'GIT_VERSION_INVALID'],
+          ['git version 2.29.9\n', 'GIT_VERSION_UNSUPPORTED'],
+        ] as const) {
+          const versionFailure = spawnSync(
+            process.execPath,
+            [installedExecutablePath, 'validate', '--json'],
+            {
+              cwd: consumerDirectory,
+              encoding: 'utf8',
+              env: {
+                ...gitEnvironment,
+                MOLDEA_TEST_GIT_VERSION_OUTPUT: versionOutput,
+                PATH: `${fakeGitVersionDirectory}${path.delimiter}${gitEnvironment['PATH'] ?? ''}`,
+              },
+            },
+          );
+
+          expect(versionFailure.status).toBe(3);
+          expect(versionFailure.stderr).toBe('');
+          expect(JSON.parse(versionFailure.stdout)).toMatchObject({
+            command: 'validate',
+            error: { code: errorCode, details: {}, path: null, source: 'git' },
+            result: null,
+            status: 'error',
+          });
+          expect(versionFailure.stdout).not.toContain(consumerDirectory);
+        }
+
         const fakeGitDirectory = path.join(testDirectory, 'fake-git');
         const fakeGitPath = path.join(fakeGitDirectory, 'git');
 
@@ -857,5 +927,5 @@ setInterval(() => undefined, 1000);
     } finally {
       rmSync(testDirectory, { force: true, recursive: true });
     }
-  }, 30_000);
+  }, 60_000);
 });

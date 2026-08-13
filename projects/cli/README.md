@@ -4,7 +4,7 @@ The canonical read-only local command-line composition for deterministic inspect
 
 The current unpublished `0.0.1` foundation provides the `moldea` executable, strict version 1 command and option parsing, deterministic help and version output, resource-limit validation, safe human or JSON errors, Git-owned working-tree discovery, bounded strict tracked/untracked candidate probing, submodule and nested-repository ownership filtering, deterministic stage collapse, no-follow current entry-type normalization, bounded effective `core.symlinks` resolution, portable logical-path normalization with exact Unicode code-point ordering, bounded effective Git content-transformation classification, exact-path Repository FS construction, private immutable reader wrappers for materialized Git symlinks and guarded regular-file reads, bounded whole-operation snapshot stabilization, attempt-local Core execution, safe Repository/Core operational-error translation, operation-scoped process-signal cancellation, deterministic content-minimized `validate` human and JSON results, concise content-free `inspect` human summaries, complete Core-result `inspect` JSON output, generated immutable compatibility and exact package-version metadata, command-wide release-integrity verification, and complete deterministic `compatibility` human and JSON reporting.
 
-Tarball and installed-bin checks are the release boundary for now. This package is not ready to publish to npm.
+Tarball and installed-bin checks are the release boundary for now. The version `1` executable conformance suite is complete, but this package is not ready to publish to npm.
 
 ## Commands
 
@@ -103,7 +103,12 @@ pnpm --filter @moldea.ai/cli typecheck
 pnpm --filter @moldea.ai/cli build
 pnpm --filter @moldea.ai/cli test:unit
 pnpm --filter @moldea.ai/cli test:integration
+pnpm --filter @moldea.ai/cli test:e2e
 pnpm --filter @moldea.ai/cli test
 ```
 
-Unit and integration tests are colocated with their owning modules. Integration tests install real package tarballs and execute the resulting package bin without requiring any `@moldea.ai/*` package to be published.
+Unit, integration, and end-to-end tests are colocated with their owning modules. The end-to-end suite installs real package tarballs and executes the resulting package bin without requiring any `@moldea.ai/*` package to be published. It verifies command, output, exit, security, package-content, process-signal, and repository-immutability behavior at the consumer boundary.
+
+CI separately packs Repository, Repository FS, Core, and CLI and installs them with npm scripts disabled and strict engine validation on Node.js `22.11.0`, latest Node.js 22, Node.js `24.11.0`, and latest Node.js 24. The runtime harness verifies installed identities and real `version`, `compatibility`, `validate`, and `inspect` execution. Linux owns this consumer-runtime matrix, while the complete repository tests continue to run on Linux, macOS, and Windows.
+
+The next implementation slice is the open-source skill integration over `inspect --json`. Package-backed runtime adapters remain excluded until their own implementations, fixtures, and verified compatibility claims exist.

@@ -28,6 +28,7 @@
     "lint": "pnpm lint:root && turbo run lint",
     "lint:root": "eslint eslint.config.js vitest.config.ts configs scripts",
     "test": "pnpm test:root && turbo run test",
+    "test:e2e": "turbo run test:e2e",
     "test:integration": "turbo run test:integration",
     "test:root": "vitest run",
     "test:unit": "pnpm test:root && turbo run test:unit",

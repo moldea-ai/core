@@ -29,4 +29,10 @@ describe('createTestConfig', () => {
     expect(config.test?.include).toEqual(include);
     expect(config.test?.include).not.toBe(include);
   });
+
+  it('creates the default end-to-end test include pattern', () => {
+    const config = createTestConfig({ suite: 'e2e' });
+
+    expect(config.test?.include).toEqual(['src/**/*.test-e2e.ts']);
+  });
 });

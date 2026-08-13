@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { describe, expect, test } from 'vitest';
+import { satisfies } from 'semver';
 
 import { OFFICIAL_RUNTIME_ADAPTER_PACKAGES } from './constants.ts';
 import { createMoldeaCliReleaseMetadata } from './release-metadata-validations.ts';
@@ -148,6 +149,22 @@ describe('CLI release metadata validation', () => {
       ],
       repositoryFormatVersions: [1],
     });
+  });
+
+  test.each([
+    ['22.11.0', true],
+    ['22.99.0', true],
+    ['24.11.0', true],
+    ['24.99.0', true],
+    ['22.10.9', false],
+    ['23.0.0', false],
+    ['24.10.9', false],
+    ['25.0.0', false],
+    ['26.0.0', false],
+  ])('publishes the intended Node.js runtime boundary for %s -> %s', (version, isSupported) => {
+    const metadata = createMoldeaCliReleaseMetadata(createSources());
+
+    expect(satisfies(version, metadata.cliPackage.supportedNodeRange)).toBe(isSupported);
   });
 
   test('accepts one available adapter only when package and runtime composition agree', () => {

@@ -224,6 +224,37 @@ describe('Git working-tree discovery integration', () => {
     );
   });
 
+  test('ignores ambient repository and command-scoped Git redirection', async () => {
+    const fixture = await createGitFixture();
+    const repositoryRoot = path.join(fixture.directory, 'selected');
+    const redirectedRoot = path.join(fixture.directory, 'redirected');
+
+    await mkdir(repositoryRoot);
+    await mkdir(redirectedRoot);
+    await executeFixtureGit(fixture, repositoryRoot, ['init']);
+    await executeFixtureGit(fixture, redirectedRoot, ['init']);
+
+    const processExecutor: IGitProcessExecutor = (options) =>
+      executeGitProcess({
+        ...options,
+        environment: {
+          ...fixture.environment,
+          GIT_CONFIG_COUNT: '1',
+          GIT_CONFIG_KEY_0: 'core.bare',
+          GIT_CONFIG_VALUE_0: 'true',
+          GIT_DIR: path.join(redirectedRoot, '.git'),
+          GIT_WORK_TREE: redirectedRoot,
+        },
+      });
+    const discoverWorkingTree = createGitWorkingTreeDiscovery(processExecutor);
+
+    await expectDiscoveredRepositoryRoot(
+      discoverWorkingTree,
+      { invocationDirectory: repositoryRoot, repositoryDirectory: null },
+      repositoryRoot,
+    );
+  });
+
   test('rejects bare repositories and paths inside a Git directory as unusable work trees', async () => {
     const fixture = await createGitFixture();
     const bareRepository = path.join(fixture.directory, 'bare.git');

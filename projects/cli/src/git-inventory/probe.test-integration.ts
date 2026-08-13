@@ -1,6 +1,6 @@
 // @vitest-environment node
-import { execFileSync } from 'node:child_process';
-import { mkdirSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
+import { execFileSync, spawnSync } from 'node:child_process';
+import { mkdirSync, renameSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, test } from 'vitest';
 
@@ -25,6 +25,24 @@ const CONTENT_TRANSFORMATION = Object.freeze({
 });
 
 describe('real Git inventory probe', () => {
+  test('returns an empty immutable inventory for an empty working tree', async () => {
+    const repository = createGitRepository();
+
+    try {
+      const result = await probeGitInventory({
+        maxEntries: 1,
+        maxMetadataBytes: 4096,
+        repositoryRoot: repository.directory,
+      });
+
+      expect(result).toStrictEqual({ entries: [], kind: 'probed' });
+      expect(Object.isFrozen(result)).toBe(true);
+      expect(result.kind === 'probed' && Object.isFrozen(result.entries)).toBe(true);
+    } finally {
+      repository.remove();
+    }
+  });
+
   test('enumerates tracked and non-ignored untracked paths in an unborn repository', async () => {
     const repository = createGitRepository();
 
@@ -69,6 +87,165 @@ describe('real Git inventory probe', () => {
             entryType: 'file',
             kind: 'untracked',
             path: '/untracked-😀.txt',
+            requiresSymlinkOverlay: false,
+          },
+        ],
+        kind: 'probed',
+      });
+    } finally {
+      repository.remove();
+    }
+  });
+
+  test('retains tracked files across committed, modified, staged, and ignored states', async () => {
+    const repository = createGitRepository();
+
+    try {
+      for (const fileName of ['ignored-tracked.txt', 'modified.txt', 'unchanged.txt']) {
+        writeFileSync(path.join(repository.directory, fileName), `${fileName}\n`, 'utf8');
+      }
+      runFixtureGit(repository, ['add', '--all']);
+      commitFixtureGitIndex(repository);
+
+      writeFileSync(path.join(repository.directory, '.gitignore'), 'ignored-tracked.txt\n', 'utf8');
+      writeFileSync(
+        path.join(repository.directory, 'modified.txt'),
+        'working-tree change\n',
+        'utf8',
+      );
+      writeFileSync(path.join(repository.directory, 'staged.txt'), 'staged\n', 'utf8');
+      writeFileSync(path.join(repository.directory, 'staged-modified.txt'), 'staged\n', 'utf8');
+      runFixtureGit(repository, ['add', '--', '.gitignore', 'staged.txt', 'staged-modified.txt']);
+      writeFileSync(
+        path.join(repository.directory, 'staged-modified.txt'),
+        'further working-tree change\n',
+        'utf8',
+      );
+
+      const result = await probeGitInventory({
+        maxEntries: 8,
+        maxMetadataBytes: 16_384,
+        repositoryRoot: repository.directory,
+      });
+
+      expect(result).toMatchObject({
+        entries: [
+          { kind: 'tracked', path: '/.gitignore' },
+          { kind: 'tracked', path: '/ignored-tracked.txt' },
+          { kind: 'tracked', path: '/modified.txt' },
+          { kind: 'tracked', path: '/staged-modified.txt' },
+          { kind: 'tracked', path: '/staged.txt' },
+          { kind: 'tracked', path: '/unchanged.txt' },
+        ],
+        kind: 'probed',
+      });
+      expect(
+        result.kind === 'probed' && result.entries.every((entry) => entry.entryType === 'file'),
+      ).toBe(true);
+    } finally {
+      repository.remove();
+    }
+  });
+
+  test('normalizes staged renames, unstaged renames, and copied paths by current ownership', async () => {
+    const repository = createGitRepository();
+
+    try {
+      writeFileSync(path.join(repository.directory, 'source.txt'), 'source\n', 'utf8');
+      writeFileSync(path.join(repository.directory, 'staged-old.txt'), 'staged rename\n', 'utf8');
+      writeFileSync(
+        path.join(repository.directory, 'unstaged-old.txt'),
+        'unstaged rename\n',
+        'utf8',
+      );
+      runFixtureGit(repository, ['add', '--all']);
+      commitFixtureGitIndex(repository);
+
+      runFixtureGit(repository, ['mv', '--', 'staged-old.txt', 'staged-renamed.txt']);
+      writeFileSync(path.join(repository.directory, 'copied.txt'), 'source\n', 'utf8');
+      runFixtureGit(repository, ['add', '--', 'copied.txt']);
+      renameSync(
+        path.join(repository.directory, 'unstaged-old.txt'),
+        path.join(repository.directory, 'unstaged-renamed.txt'),
+      );
+
+      await expect(
+        probeGitInventory({
+          maxEntries: 8,
+          maxMetadataBytes: 16_384,
+          repositoryRoot: repository.directory,
+        }),
+      ).resolves.toMatchObject({
+        entries: [
+          { kind: 'tracked', path: '/copied.txt' },
+          { kind: 'tracked', path: '/source.txt' },
+          { kind: 'tracked', path: '/staged-renamed.txt' },
+          { kind: 'untracked', path: '/unstaged-renamed.txt' },
+        ],
+        kind: 'probed',
+      });
+    } finally {
+      repository.remove();
+    }
+  });
+
+  test('retains every unmerged index stage for one current file', async () => {
+    const repository = createGitRepository();
+
+    try {
+      const conflictPath = path.join(repository.directory, 'conflict.txt');
+
+      writeFileSync(conflictPath, 'base\n', 'utf8');
+      runFixtureGit(repository, ['add', '--', 'conflict.txt']);
+      commitFixtureGitIndex(repository);
+      runFixtureGit(repository, ['switch', '-c', 'theirs']);
+      writeFileSync(conflictPath, 'theirs\n', 'utf8');
+      runFixtureGit(repository, ['add', '--', 'conflict.txt']);
+      commitFixtureGitIndex(repository);
+      runFixtureGit(repository, ['switch', 'main']);
+      writeFileSync(conflictPath, 'ours\n', 'utf8');
+      runFixtureGit(repository, ['add', '--', 'conflict.txt']);
+      commitFixtureGitIndex(repository);
+
+      const mergeResult = spawnSync(
+        'git',
+        [
+          '-c',
+          'user.name=Moldea Test',
+          '-c',
+          'user.email=moldea@example.invalid',
+          '-c',
+          'commit.gpgSign=false',
+          'merge',
+          '--no-edit',
+          'theirs',
+        ],
+        {
+          cwd: repository.directory,
+          env: repository.environment,
+          stdio: 'ignore',
+        },
+      );
+
+      expect(mergeResult.status).toBe(1);
+      await expect(
+        probeGitInventory({
+          maxEntries: 4,
+          maxMetadataBytes: 16_384,
+          repositoryRoot: repository.directory,
+        }),
+      ).resolves.toStrictEqual({
+        entries: [
+          {
+            contentTransformation: CONTENT_TRANSFORMATION,
+            entryType: 'file',
+            indexEntries: [
+              { mode: '100644', stage: 1 },
+              { mode: '100644', stage: 2 },
+              { mode: '100644', stage: 3 },
+            ],
+            kind: 'tracked',
+            path: '/conflict.txt',
             requiresSymlinkOverlay: false,
           },
         ],

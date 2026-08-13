@@ -1,7 +1,7 @@
 import { defineConfig, type ViteUserConfig } from 'vitest/config';
 
 // supported correctness-test categories and shared test-config inputs
-export type ITestSuiteKind = 'integration' | 'unit';
+export type ITestSuiteKind = 'e2e' | 'integration' | 'unit';
 
 export interface ITestConfigOptions {
   readonly include?: readonly string[];
