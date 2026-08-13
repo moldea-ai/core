@@ -4,7 +4,7 @@ import process from 'node:process';
 import { describe, expect, test } from 'vitest';
 
 import { MAX_GIT_DISCOVERY_OUTPUT_BYTES } from './constants.js';
-import { parseGitBooleanOutput, parseGitRepositoryRootOutput } from './parser.js';
+import { parseGitAbsolutePathOutput, parseGitBooleanOutput, parseGitPathOutput } from './parser.js';
 
 const ENCODER = new TextEncoder();
 
@@ -28,17 +28,13 @@ describe('Git working-tree output parsers', () => {
   test('parses an absolute repository root terminated by LF', () => {
     const repositoryRoot = path.resolve('repository root');
 
-    expect(parseGitRepositoryRootOutput(ENCODER.encode(`${repositoryRoot}\n`))).toBe(
-      repositoryRoot,
-    );
+    expect(parseGitAbsolutePathOutput(ENCODER.encode(`${repositoryRoot}\n`))).toBe(repositoryRoot);
   });
 
   test('preserves valid Unicode, embedded byte-order marks, and internal line breaks', () => {
     const repositoryRoot = path.resolve('répository\ufeff', 'line\nbreak');
 
-    expect(parseGitRepositoryRootOutput(ENCODER.encode(`${repositoryRoot}\n`))).toBe(
-      repositoryRoot,
-    );
+    expect(parseGitAbsolutePathOutput(ENCODER.encode(`${repositoryRoot}\n`))).toBe(repositoryRoot);
   });
 
   test('preserves the platform-valid meaning of carriage return before LF', () => {
@@ -46,9 +42,13 @@ describe('Git working-tree output parsers', () => {
     const expectedRepositoryRoot =
       process.platform === 'win32' ? repositoryRoot : `${repositoryRoot}\r`;
 
-    expect(parseGitRepositoryRootOutput(ENCODER.encode(`${repositoryRoot}\r\n`))).toBe(
+    expect(parseGitAbsolutePathOutput(ENCODER.encode(`${repositoryRoot}\r\n`))).toBe(
       expectedRepositoryRoot,
     );
+  });
+
+  test('parses relative Git paths without resolving their spelling', () => {
+    expect(parseGitPathOutput(ENCODER.encode('../common/.git\n'))).toBe('../common/.git');
   });
 
   test.each([
@@ -63,6 +63,11 @@ describe('Git working-tree output parsers', () => {
       Uint8Array.from({ length: MAX_GIT_DISCOVERY_OUTPUT_BYTES + 1 }, () => 0x61),
     ],
   ] as const)('rejects %s', (_description, output) => {
-    expect(parseGitRepositoryRootOutput(output)).toBeNull();
+    expect(parseGitAbsolutePathOutput(output)).toBeNull();
+  });
+
+  test('rejects an empty path while allowing a nonempty relative path', () => {
+    expect(parseGitPathOutput(ENCODER.encode('\n'))).toBeNull();
+    expect(parseGitPathOutput(ENCODER.encode('.git\n'))).toBe('.git');
   });
 });

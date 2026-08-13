@@ -1,30 +1,27 @@
 import { MOLDEA_CLI_COMMANDS } from '../command-line/index.js';
-import { probeGitInventory, type IGitInventoryProbe } from '../git-inventory/index.js';
 import {
   discoverGitWorkingTree,
   type IGitWorkingTreeDiscovery,
 } from '../git-working-tree/index.js';
 import {
-  createWorkingTreeRepositoryReader,
-  type IWorkingTreeRepositoryReaderFactory,
-} from '../repository-reader/index.js';
+  executeWorkingTreeSnapshot,
+  type IWorkingTreeSnapshotExecutor,
+} from '../working-tree-snapshot/index.js';
 
 import { MOLDEA_CLI_EXIT_CODES } from './constants.js';
 import { createMoldeaCliErrorResult } from './results.js';
 import type { IMoldeaCliCommandExecutor, IMoldeaCliExecutionResult } from './types.js';
 
 /**
- * Creates the private command dispatcher around injectable discovery and reader composition.
+ * Creates the private command dispatcher around discovery and bounded snapshot execution.
  * @param workingTreeDiscovery The Git working-tree discovery operation.
- * @param gitInventoryProbe The strict normalized Git inventory probe.
- * @param repositoryReaderFactory The exact-path working-tree reader factory.
+ * @param workingTreeSnapshotExecutor The complete working-tree snapshot operation.
  * @returns A command executor for the current behavioral slice.
  */
 export const createMoldeaCliCommandExecutor =
   (
     workingTreeDiscovery: IGitWorkingTreeDiscovery = discoverGitWorkingTree,
-    gitInventoryProbe: IGitInventoryProbe = probeGitInventory,
-    repositoryReaderFactory: IWorkingTreeRepositoryReaderFactory = createWorkingTreeRepositoryReader,
+    workingTreeSnapshotExecutor: IWorkingTreeSnapshotExecutor = executeWorkingTreeSnapshot,
   ): IMoldeaCliCommandExecutor =>
   async (input): Promise<IMoldeaCliExecutionResult> => {
     if (input.invocation.command !== MOLDEA_CLI_COMMANDS.Compatibility) {
@@ -43,27 +40,21 @@ export const createMoldeaCliCommandExecutor =
         );
       }
 
-      const inventoryResult = await gitInventoryProbe({
-        maxEntries: input.invocation.options.resourceLimits.maxEntries,
-        maxMetadataBytes: input.invocation.options.resourceLimits.maxTotalBytes,
+      const snapshotResult = await workingTreeSnapshotExecutor({
+        operation: () => Promise.resolve(),
         repositoryRoot: discoveryResult.repositoryRoot,
+        resourceLimits: input.invocation.options.resourceLimits,
       });
 
-      if (inventoryResult.kind === 'failed') {
+      if (snapshotResult.kind === 'failed') {
         return createMoldeaCliErrorResult(
-          inventoryResult.errorCode,
+          snapshotResult.errorCode,
           input.invocation.command,
           input.cliVersion,
           input.invocation.options.isJson,
           MOLDEA_CLI_EXIT_CODES.OperationalError,
         );
       }
-
-      await repositoryReaderFactory({
-        entries: inventoryResult.entries,
-        repositoryRoot: discoveryResult.repositoryRoot,
-        resourceLimits: input.invocation.options.resourceLimits,
-      });
     }
 
     return createMoldeaCliErrorResult(

@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 import { createGitProcessEnvironment } from '../git-process/index.js';
-import { parseGitRepositoryRootOutput } from '../git-working-tree/index.js';
+import { parseGitAbsolutePathOutput } from '../git-working-tree/index.js';
 
 // isolated Git repository and configuration used by inventory integration tests
 export interface IGitRepositoryFixture {
@@ -31,7 +31,7 @@ const discoverFixtureRepositoryRoot = (
     env: environment,
     stdio: ['ignore', 'pipe', 'ignore'],
   });
-  const repositoryRoot = parseGitRepositoryRootOutput(Uint8Array.from(output));
+  const repositoryRoot = parseGitAbsolutePathOutput(Uint8Array.from(output));
 
   if (repositoryRoot === null) {
     throw new Error('The Git fixture root output is invalid.');

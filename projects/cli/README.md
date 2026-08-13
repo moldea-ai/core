@@ -2,7 +2,7 @@
 
 The canonical read-only local command-line composition for deterministic inspection of `moldea` repositories.
 
-The current unpublished `0.0.1` foundation provides the `moldea` executable, strict version 1 command and option parsing, deterministic help and version output, resource-limit validation, safe human or JSON errors, Git-owned working-tree discovery, bounded strict tracked/untracked candidate probing, submodule and nested-repository ownership filtering, deterministic stage collapse, no-follow current entry-type normalization, bounded effective `core.symlinks` resolution, portable logical-path normalization with exact Unicode code-point ordering, bounded effective Git content-transformation classification, exact-path Repository FS construction, and private immutable reader wrappers for materialized Git symlinks and guarded regular-file reads. Snapshot retries, Core execution, adapter composition, and compatibility reporting are not implemented yet.
+The current unpublished `0.0.1` foundation provides the `moldea` executable, strict version 1 command and option parsing, deterministic help and version output, resource-limit validation, safe human or JSON errors, Git-owned working-tree discovery, bounded strict tracked/untracked candidate probing, submodule and nested-repository ownership filtering, deterministic stage collapse, no-follow current entry-type normalization, bounded effective `core.symlinks` resolution, portable logical-path normalization with exact Unicode code-point ordering, bounded effective Git content-transformation classification, exact-path Repository FS construction, private immutable reader wrappers for materialized Git symlinks and guarded regular-file reads, and bounded whole-operation snapshot stabilization. Core execution, adapter composition, and compatibility reporting are not implemented yet.
 
 Tarball and installed-bin checks are the release boundary for now. This package is not ready to publish to npm.
 
@@ -16,7 +16,7 @@ moldea inspect
 moldea compatibility
 ```
 
-The foundation fully supports top-level and command-specific help, `moldea --version`, strict option validation, and usage failures. It discovers a selected working tree, probes its raw tracked and non-ignored untracked candidates, excludes submodule and nested-repository-only content, collapses index stages by exact path, omits absent paths, classifies every remaining current file or symlink without following the leaf, derives its effective Git content-transformation state, and converts the surviving records into deterministically sorted repository logical paths. It does not complete repository inspection or return successful command results yet.
+The foundation fully supports top-level and command-specific help, `moldea --version`, strict option validation, and usage failures. It discovers a selected working tree, pins its filesystem and Git identity, probes its raw tracked and non-ignored untracked candidates, excludes submodule and nested-repository-only content, collapses index stages by exact path, omits absent paths, classifies every remaining current file or symlink without following the leaf, derives its effective Git content-transformation state, converts the surviving records into deterministically sorted repository logical paths, and retries a complete provisional reader operation when the source changes. It does not complete Core inspection or return successful command results yet.
 
 ## Package boundary
 
@@ -28,7 +28,7 @@ The package exposes the `moldea` executable and no supported JavaScript or TypeS
 
 No package-backed runtime adapter is active yet. The `custom` adapter remains built into Core and requires no separate package.
 
-The executable performs no network requests, telemetry, repository writes, configured Git content transformations, or Core inspection in this foundation. `validate` and `inspect` use read-only Git operations and no-follow filesystem metadata inspection to discover a working tree, establish selected-repository ownership, collapse candidate stages, normalize current entry types, classify effective Git attributes, and construct one exact-path guarded filesystem reader; help, version, usage failures, and `compatibility` do not invoke Git or the filesystem reader.
+The executable performs no network requests, telemetry, repository writes, configured Git content transformations, or Core inspection in this foundation. `validate` and `inspect` use read-only Git operations and no-follow filesystem metadata inspection to discover a working tree, establish and verify its identity, normalize the selected inventory, and construct an exact-path guarded filesystem reader within at most three complete snapshot attempts; help, version, usage failures, and `compatibility` do not invoke Git or the filesystem reader.
 
 ## Runtime support
 
@@ -66,7 +66,11 @@ Git attribute inspection never invokes configured filters, Git LFS, clean or smu
 
 The CLI passes the complete normalized logical path set to `@moldea.ai/repository-fs` exact-path selection, so the filesystem reader synthesizes required parent directories without admitting unrelated files. `maxEntries` and `maxFileBytes` retain their filesystem meanings, while the CLI's `maxTotalBytes` becomes the reader's `maxCachedBytes` limit. The private immutable overlay then maps materialized Git symlink host files to `type: 'symlink'` in exact lookup and listing, rejects their reads with the common non-retryable `ENTRY_NOT_FILE` contract, and never calls the underlying `readFile` for those paths. The content-transformation guard wraps that logical view so symlink semantics take precedence. Missing or contradictory wrapper entries fail with `INVALID_SOURCE_DATA`.
 
-The CLI does not expose selected paths, candidate paths, resolved repository roots, raw process errors, or Git diagnostics in failures. A successfully composed guarded filesystem reader currently reaches the safe `INTERNAL_ERROR` placeholder because snapshot stabilization, Core execution, and command result composition belong to later implementation slices.
+Before attempting a snapshot, the CLI pins the selected root directory, its worktree-specific Git directory, and its shared Git common directory by absolute host path plus nonzero device and inode identity. Linked worktrees therefore retain distinct worktree identity while sharing the expected common repository identity. Each attempt verifies the complete pin, derives normalized inventories before and after exact-path reader creation, and runs its provisional operation only when both inventories match exactly, including entry type, retained index stages, symlink-overlay state, and content-transformation classification.
+
+The CLI retries the complete provisional attempt for differing inventories, Repository FS `SNAPSHOT_CHANGED` failures, and reader-creation missing-entry or parent-type failures when a fresh inventory proves the source changed. It recreates the inventory, reader, wrappers, operation state, and filesystem resource budget for every retry and never reuses provisional bytes or results. Three total attempts are allowed. Exhaustion or a changed pinned identity returns `cli:WORKING_TREE_UNSTABLE` with message `The working tree did not remain stable.` and `retryable: true`.
+
+The CLI does not expose selected paths, candidate paths, resolved repository roots, raw process errors, or Git diagnostics in failures. A successfully stabilized guarded filesystem reader currently reaches the safe `INTERNAL_ERROR` placeholder because Core execution and command result composition belong to later implementation slices.
 
 ## Development
 

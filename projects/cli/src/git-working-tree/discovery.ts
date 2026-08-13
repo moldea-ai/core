@@ -7,7 +7,7 @@ import { createGitVersionPreflight, type IGitVersionPreflight } from '../git-ver
 import type { IMoldeaCliGitErrorCode } from '../presentation/index.js';
 
 import { MAX_GIT_DISCOVERY_OUTPUT_BYTES } from './constants.js';
-import { parseGitBooleanOutput, parseGitRepositoryRootOutput } from './parser.js';
+import { parseGitAbsolutePathOutput, parseGitBooleanOutput } from './parser.js';
 import { inspectGitStartingDirectory } from './starting-directory.js';
 import type {
   IGitStartingDirectoryInspector,
@@ -93,7 +93,7 @@ export const createGitWorkingTreeDiscovery =
       return createDiscoveryFailure('GIT_OUTPUT_INVALID');
     }
 
-    const repositoryRoot = parseGitRepositoryRootOutput(rootResult.stdout);
+    const repositoryRoot = parseGitAbsolutePathOutput(rootResult.stdout);
 
     if (repositoryRoot === null) {
       return createDiscoveryFailure('GIT_OUTPUT_INVALID');

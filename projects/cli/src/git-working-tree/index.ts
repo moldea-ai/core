@@ -17,7 +17,7 @@ export type {
 } from './types.js';
 
 // parsers
-export { parseGitBooleanOutput, parseGitRepositoryRootOutput } from './parser.js';
+export { parseGitAbsolutePathOutput, parseGitBooleanOutput, parseGitPathOutput } from './parser.js';
 
 // starting-directory inspection
 export {
@@ -27,3 +27,13 @@ export {
 
 // working-tree discovery
 export { createGitWorkingTreeDiscovery, discoverGitWorkingTree } from './discovery.js';
+
+// working-tree identity
+export {
+  areGitWorkingTreeIdentitiesEqual,
+  createGitWorkingTreeIdentityInspector,
+  inspectGitWorkingTreeIdentity,
+  type IGitWorkingTreeIdentity,
+  type IGitWorkingTreeIdentityInspectionResult,
+  type IGitWorkingTreeIdentityInspector,
+} from './identity/index.js';

@@ -28,3 +28,6 @@ export type {
 
 // normalized inventory probe
 export { createGitInventoryProbe, probeGitInventory } from './probe.js';
+
+// inventory comparison
+export { areGitInventoriesEqual } from './comparison/index.js';

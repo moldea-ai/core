@@ -37,6 +37,15 @@ describe('CLI presentation formatters', () => {
     );
   });
 
+  test('formats the safe retryable working-tree instability error', () => {
+    expect(formatMoldeaCliHumanError('WORKING_TREE_UNSTABLE')).toBe(
+      'cli:WORKING_TREE_UNSTABLE The working tree did not remain stable.\n',
+    );
+    expect(formatMoldeaCliJsonError('WORKING_TREE_UNSTABLE', 'validate', '0.0.1')).toContain(
+      '"retryable":true,"source":"cli"',
+    );
+  });
+
   test.each([
     ['GIT_NOT_FOUND', 'git:GIT_NOT_FOUND The Git executable is unavailable.\n', false],
     ['GIT_OUTPUT_INVALID', 'git:GIT_OUTPUT_INVALID Git returned invalid output.\n', false],

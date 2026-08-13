@@ -8,7 +8,11 @@ import {
   type IGitStreamingProcessExecutor,
   type IGitStreamingProcessFailureReason,
 } from '../../git-process/index.js';
-import { parseGitRepositoryRootOutput } from '../../git-working-tree/index.js';
+import { parseGitAbsolutePathOutput } from '../../git-working-tree/index.js';
+import {
+  areHostPathsEquivalent,
+  haveSameHostPathIdentity,
+} from '../../host-path-identity/index.js';
 import type { IGitInventoryProbeErrorCode } from '../types.js';
 
 import type {
@@ -21,7 +25,6 @@ import type {
   IGitInventoryOwnershipReadDirectory,
   IGitInventoryOwnershipStatistics,
 } from './types.js';
-import { areHostPathsEquivalent, haveSameHostPathIdentity } from './utilities.js';
 
 const GIT_CONTROL_SEGMENT = '.git';
 const GIT_REPOSITORY_ROOT_ARGUMENTS = ['rev-parse', '--show-toplevel'] as const;
@@ -205,7 +208,7 @@ const validateGitBoundary = async (
     return createInspectionFailure('GIT_OUTPUT_INVALID');
   }
 
-  const discoveredRoot = parseGitRepositoryRootOutput(
+  const discoveredRoot = parseGitAbsolutePathOutput(
     concatenateChunks(stdoutChunks, consumedStdoutBytes),
   );
 

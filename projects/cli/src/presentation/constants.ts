@@ -67,6 +67,11 @@ export const MOLDEA_CLI_ERROR_DEFINITIONS = Object.freeze({
     retryable: false,
     source: 'cli',
   }),
+  WORKING_TREE_UNSTABLE: Object.freeze({
+    message: 'The working tree did not remain stable.',
+    retryable: true,
+    source: 'cli',
+  }),
 } as const);
 
 // top-level help presented without repository access

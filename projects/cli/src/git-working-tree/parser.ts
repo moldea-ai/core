@@ -56,25 +56,36 @@ export const parseGitBooleanOutput = (output: Uint8Array): boolean | null => {
 };
 
 /**
- * Parses the absolute top-level path returned by Git.
+ * Parses one nonempty path returned by Git.
  * @param output The raw bounded Git stdout bytes.
- * @returns The absolute repository root, or null when the output is invalid.
+ * @returns The exact relative or absolute path, or null when the output is invalid.
  */
-export const parseGitRepositoryRootOutput = (output: Uint8Array): string | null => {
+export const parseGitPathOutput = (output: Uint8Array): string | null => {
   const decodedOutput = decodeGitOutput(output);
 
   if (decodedOutput === null || !decodedOutput.endsWith('\n')) {
     return null;
   }
 
-  const repositoryRoot =
+  const gitPath =
     process.platform === 'win32' && decodedOutput.endsWith('\r\n')
       ? decodedOutput.slice(0, -2)
       : decodedOutput.slice(0, -1);
 
-  if (repositoryRoot.length === 0 || !path.isAbsolute(repositoryRoot)) {
+  return gitPath.length === 0 ? null : gitPath;
+};
+
+/**
+ * Parses one absolute path returned by Git.
+ * @param output The raw bounded Git stdout bytes.
+ * @returns The exact absolute path, or null when the output is invalid.
+ */
+export const parseGitAbsolutePathOutput = (output: Uint8Array): string | null => {
+  const gitPath = parseGitPathOutput(output);
+
+  if (gitPath === null || !path.isAbsolute(gitPath)) {
     return null;
   }
 
-  return repositoryRoot;
+  return gitPath;
 };
