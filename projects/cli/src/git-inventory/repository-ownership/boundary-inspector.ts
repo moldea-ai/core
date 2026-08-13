@@ -21,7 +21,7 @@ import type {
   IGitInventoryOwnershipReadDirectory,
   IGitInventoryOwnershipStatistics,
 } from './types.js';
-import { areHostPathsEquivalent } from './utilities.js';
+import { areHostPathsEquivalent, haveSameHostPathIdentity } from './utilities.js';
 
 const GIT_CONTROL_SEGMENT = '.git';
 const GIT_REPOSITORY_ROOT_ARGUMENTS = ['rev-parse', '--show-toplevel'] as const;
@@ -167,15 +167,19 @@ const concatenateChunks = (chunks: readonly Uint8Array[], byteLength: number): U
  * Confirms whether a directory with an exact `.git` marker owns another working tree.
  * @param directory The exact no-follow directory being classified.
  * @param repositoryRoot The selected repository root.
+ * @param directoryStatistics The stable no-follow boundary observation.
  * @param maxMetadataBytes The remaining bounded Git stdout budget.
  * @param processExecutor The sanitized streamed Git boundary.
+ * @param inspectHostPath The no-follow filesystem stat operation.
  * @returns A safe ownership classification and the consumed Git metadata bytes.
  */
 const validateGitBoundary = async (
   directory: string,
   repositoryRoot: string,
+  directoryStatistics: IGitInventoryOwnershipStatistics,
   maxMetadataBytes: number,
   processExecutor: IGitStreamingProcessExecutor,
+  inspectHostPath: IGitInventoryOwnershipLstat,
 ): Promise<IGitInventoryBoundaryValidationAttempt> => {
   if (!Number.isSafeInteger(maxMetadataBytes) || maxMetadataBytes < 0) {
     return createInspectionFailure('RESOURCE_LIMIT_EXCEEDED');
@@ -218,6 +222,48 @@ const validateGitBoundary = async (
   }
 
   if (areHostPathsEquivalent(discoveredRoot, repositoryRoot)) {
+    return Object.freeze({
+      gitMetadataBytes: processResult.stdoutBytes,
+      kind: 'validated',
+      ownership: 'selected-repository',
+    });
+  }
+
+  const discoveredRootInspection = await inspectPath(discoveredRoot, inspectHostPath);
+
+  if (discoveredRootInspection.kind === 'failed') {
+    return discoveredRootInspection;
+  }
+
+  if (
+    !discoveredRootInspection.statistics.isDirectory() ||
+    discoveredRootInspection.statistics.isSymbolicLink()
+  ) {
+    return createInspectionFailure('GIT_OUTPUT_INVALID');
+  }
+
+  if (haveSameHostPathIdentity(discoveredRootInspection.statistics, directoryStatistics)) {
+    return Object.freeze({
+      gitMetadataBytes: processResult.stdoutBytes,
+      kind: 'validated',
+      ownership: 'nested-repository',
+    });
+  }
+
+  const repositoryRootInspection = await inspectPath(repositoryRoot, inspectHostPath);
+
+  if (repositoryRootInspection.kind === 'failed') {
+    return repositoryRootInspection;
+  }
+
+  if (
+    repositoryRootInspection.statistics.isDirectory() &&
+    !repositoryRootInspection.statistics.isSymbolicLink() &&
+    haveSameHostPathIdentity(
+      discoveredRootInspection.statistics,
+      repositoryRootInspection.statistics,
+    )
+  ) {
     return Object.freeze({
       gitMetadataBytes: processResult.stdoutBytes,
       kind: 'validated',
@@ -366,8 +412,10 @@ export const createGitInventoryBoundaryInspector = (
         const boundaryValidation = await validateGitBoundary(
           hostPath,
           input.repositoryRoot,
+          revalidatedInspection.statistics,
           input.maxMetadataBytes - gitMetadataBytes,
           processExecutor,
+          inspectHostPath,
         );
 
         if (boundaryValidation.kind === 'failed') {

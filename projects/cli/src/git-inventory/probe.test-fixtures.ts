@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 import { createGitProcessEnvironment } from '../git-process/index.js';
+import { parseGitRepositoryRootOutput } from '../git-working-tree/index.js';
 
 // isolated Git repository and configuration used by inventory integration tests
 export interface IGitRepositoryFixture {
@@ -13,6 +14,31 @@ export interface IGitRepositoryFixture {
   readonly remove: () => void;
   readonly testDirectory: string;
 }
+
+/**
+ * Discovers the fixture root through the same canonical Git output used by production.
+ * @param directory The initialized fixture working tree.
+ * @param environment The isolated Git fixture environment.
+ * @returns The strictly parsed absolute working-tree root.
+ */
+const discoverFixtureRepositoryRoot = (
+  directory: string,
+  environment: NodeJS.ProcessEnv,
+): string => {
+  const output = execFileSync('git', ['rev-parse', '--show-toplevel'], {
+    cwd: directory,
+    encoding: 'buffer',
+    env: environment,
+    stdio: ['ignore', 'pipe', 'ignore'],
+  });
+  const repositoryRoot = parseGitRepositoryRootOutput(Uint8Array.from(output));
+
+  if (repositoryRoot === null) {
+    throw new Error('The Git fixture root output is invalid.');
+  }
+
+  return repositoryRoot;
+};
 
 /** Initializes one ordinary Git repository with isolated deterministic configuration. */
 export const initializeGitRepository = (
@@ -32,7 +58,7 @@ export const initializeGitRepository = (
 export const createGitRepository = (): IGitRepositoryFixture => {
   const temporaryDirectory = mkdtempSync(path.join(tmpdir(), 'moldea-git-inventory-'));
   const testDirectory = realpathSync(temporaryDirectory);
-  const directory = path.join(testDirectory, 'repository');
+  const initialDirectory = path.join(testDirectory, 'repository');
   const homeDirectory = path.join(testDirectory, 'home');
   const configDirectory = path.join(testDirectory, 'config');
   const hooksDirectory = path.join(testDirectory, 'hooks');
@@ -46,7 +72,8 @@ export const createGitRepository = (): IGitRepositoryFixture => {
     mkdirSync(fixtureDirectory, { recursive: true });
   }
 
-  initializeGitRepository(directory, environment, hooksDirectory);
+  initializeGitRepository(initialDirectory, environment, hooksDirectory);
+  const directory = discoverFixtureRepositoryRoot(initialDirectory, environment);
 
   return {
     directory,

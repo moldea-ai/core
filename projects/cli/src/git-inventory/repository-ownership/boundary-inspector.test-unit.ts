@@ -153,6 +153,41 @@ describe('createGitInventoryBoundaryInspector', () => {
     expect(inspectHostPath).not.toHaveBeenCalledWith(path.join(nestedDirectory, 'first.txt'));
   });
 
+  test('classifies a nested root returned through a host path alias', async () => {
+    const nestedDirectory = path.join(REPOSITORY_ROOT, 'nested');
+    const nestedDirectoryAlias = path.resolve('host-alias', 'nested');
+    const nestedStatistics = createStatistics('directory', 2n);
+    const { inspectHostPath, readDirectory } = createFilesystem(
+      {
+        [REPOSITORY_ROOT]: ['nested'],
+        [nestedDirectory]: ['.git', 'file.txt'],
+      },
+      {
+        [nestedDirectory]: nestedStatistics,
+        [nestedDirectoryAlias]: nestedStatistics,
+        [path.join(nestedDirectory, '.git')]: createStatistics('directory', 3n),
+      },
+    );
+    const inspectBoundaries = createGitInventoryBoundaryInspector(
+      createRootProcessExecutor(nestedDirectoryAlias),
+      inspectHostPath,
+      readDirectory,
+    );
+
+    await expect(
+      inspectBoundaries({
+        maxMetadataBytes: 4096,
+        plans: [createUntrackedPlan('nested/file.txt')],
+        repositoryRoot: REPOSITORY_ROOT,
+      }),
+    ).resolves.toStrictEqual({
+      gitMetadataBytes: ENCODER.encode(`${nestedDirectoryAlias}\n`).byteLength,
+      kind: 'inspected',
+      ownership: ['nested-repository'],
+    });
+    expect(inspectHostPath).toHaveBeenCalledWith(nestedDirectoryAlias);
+  });
+
   test('requires a trailing-slash directory record to resolve to a nested boundary', async () => {
     const ordinaryDirectory = path.join(REPOSITORY_ROOT, 'ordinary');
     const { inspectHostPath, readDirectory } = createFilesystem(

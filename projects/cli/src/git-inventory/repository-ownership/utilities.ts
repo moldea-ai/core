@@ -1,7 +1,13 @@
 import path from 'node:path';
 
 // host-path operations accepted by the equivalence check
-export type IHostPathOperations = Pick<typeof path, 'relative' | 'resolve'>;
+type IHostPathOperations = Pick<typeof path, 'relative' | 'resolve'>;
+
+// stable filesystem identity fields used to compare host path aliases
+interface IHostPathIdentity {
+  readonly dev: bigint;
+  readonly ino: bigint;
+}
 
 /**
  * Determines whether two absolute path spellings identify the same host path.
@@ -19,3 +25,14 @@ export const areHostPathsEquivalent = (
     hostPathOperations.resolve(left),
     hostPathOperations.resolve(right),
   ) === '';
+
+/**
+ * Determines whether two no-follow observations identify the same filesystem entry.
+ * @param left The first filesystem observation.
+ * @param right The second filesystem observation.
+ * @returns Whether both observations have the same device and inode identity.
+ */
+export const haveSameHostPathIdentity = (
+  left: IHostPathIdentity,
+  right: IHostPathIdentity,
+): boolean => left.ino !== 0n && left.dev === right.dev && left.ino === right.ino;
