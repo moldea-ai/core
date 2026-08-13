@@ -1,7 +1,12 @@
 // @vitest-environment node
 import { describe, expect, test, vi } from 'vitest';
 
-import { CoreOperationException } from '@moldea.ai/core';
+import {
+  CoreOperationException,
+  type IContentDigest,
+  type IIndexedTextAsset,
+  type IProjectInspectionResult,
+} from '@moldea.ai/core';
 import { parseRepositoryPath, type IRepositoryReader } from '@moldea.ai/repository';
 import { createMemoryRepositoryReader } from '@moldea.ai/repository/memory';
 
@@ -43,6 +48,41 @@ const createCommandInput = (
     },
   },
 });
+
+/** Creates one immutable ASCII text asset for command-result composition tests. */
+const createTextAsset = (path: string, content: string): IIndexedTextAsset =>
+  Object.freeze({
+    content,
+    digest: `sha256:${path}` as IContentDigest,
+    path: parseRepositoryPath(path),
+    scalarLength: content.length,
+    utf8ByteLength: content.length,
+  });
+
+/** Creates one contract-complete valid Core result without invoking the mocked dependency. */
+const createValidInspection = (): IProjectInspectionResult => {
+  const manifestAsset = createTextAsset('/moldea/moldea.yaml', 'version: 1\n');
+
+  return Object.freeze({
+    diagnostics: Object.freeze([]),
+    evidence: Object.freeze([]),
+    formatVersion: 1,
+    project: Object.freeze({
+      agents: Object.freeze([]),
+      context: Object.freeze([]),
+      decisions: Object.freeze([]),
+      formatVersion: 1,
+      manifest: Object.freeze({
+        asset: manifestAsset,
+        value: Object.freeze({ version: 1 as const }),
+      }),
+      project: createTextAsset('/moldea/project.md', '# Project\n'),
+      runtimes: Object.freeze([]),
+      unresolved: Object.freeze({}),
+    }),
+    valid: true,
+  });
+};
 
 // observable state from one test snapshot executor
 interface ITestSnapshotExecution {
@@ -192,7 +232,77 @@ describe('createMoldeaCliCommandExecutor', () => {
     expect(envelope.result).not.toHaveProperty('project');
   });
 
-  test('keeps inspect on its current result-presentation placeholder', async () => {
+  test('returns a valid human inspection result after one completed snapshot', async () => {
+    const workingTreeDiscovery = vi
+      .fn<IGitWorkingTreeDiscovery>()
+      .mockResolvedValue(Object.freeze({ kind: 'discovered', repositoryRoot: '/workspace' }));
+    const snapshot = createCompletedSnapshotExecutor();
+    const coreInspection = vi
+      .fn<IMoldeaCliCoreInspectionExecutor>()
+      .mockResolvedValue(createValidInspection());
+    const executeCommand = createMoldeaCliCommandExecutor(
+      workingTreeDiscovery,
+      snapshot.executor,
+      coreInspection,
+    );
+
+    await expect(executeCommand(createCommandInput('inspect'))).resolves.toStrictEqual({
+      exitCode: 0,
+      stderr: '',
+      stdout: `The moldea project is valid.
+Repository format: 1
+Context assets: 0
+Decisions: 0
+Runtime-guidance assets: 0
+Agents: 0
+Mirrors: 0
+Adapter evidence items: 0
+`,
+    });
+    expect(snapshot.execution.operationCalls).toBe(1);
+    expect(coreInspection).toHaveBeenCalledOnce();
+  });
+
+  test('returns a structurally invalid JSON inspection with the complete Core result', async () => {
+    const workingTreeDiscovery = vi
+      .fn<IGitWorkingTreeDiscovery>()
+      .mockResolvedValue(Object.freeze({ kind: 'discovered', repositoryRoot: '/workspace' }));
+    const snapshot = createCompletedSnapshotExecutor();
+    const coreInspection = vi.fn<IMoldeaCliCoreInspectionExecutor>().mockResolvedValue(
+      Object.freeze({
+        diagnostics: Object.freeze([
+          Object.freeze({
+            code: 'MOLDEA_MANIFEST_MISSING' as const,
+            details: Object.freeze({}),
+            entity: null,
+            message: 'The project manifest is missing.',
+            path: parseRepositoryPath('/moldea/moldea.yaml'),
+            pointer: null,
+            range: null,
+            source: 'core' as const,
+          }),
+        ]),
+        evidence: Object.freeze([]),
+        formatVersion: null,
+        project: null,
+        valid: false,
+      }),
+    );
+    const executeCommand = createMoldeaCliCommandExecutor(
+      workingTreeDiscovery,
+      snapshot.executor,
+      coreInspection,
+    );
+
+    await expect(executeCommand(createCommandInput('inspect', true))).resolves.toStrictEqual({
+      exitCode: 1,
+      stderr: '',
+      stdout:
+        '{"cliVersion":"0.0.1","command":"inspect","error":null,"result":{"inspection":{"diagnostics":[{"code":"MOLDEA_MANIFEST_MISSING","details":{},"entity":null,"message":"The project manifest is missing.","path":"/moldea/moldea.yaml","pointer":null,"range":null,"source":"core"}],"evidence":[],"formatVersion":null,"project":null,"valid":false},"source":{"kind":"git-working-tree"}},"schemaVersion":1,"status":"invalid"}\n',
+    });
+  });
+
+  test('maps a contradictory completed Core result to the safe internal error', async () => {
     const workingTreeDiscovery = vi
       .fn<IGitWorkingTreeDiscovery>()
       .mockResolvedValue(Object.freeze({ kind: 'discovered', repositoryRoot: '/workspace' }));
@@ -212,13 +322,12 @@ describe('createMoldeaCliCommandExecutor', () => {
       coreInspection,
     );
 
-    await expect(executeCommand(createCommandInput('inspect'))).resolves.toStrictEqual({
+    await expect(executeCommand(createCommandInput('inspect', true))).resolves.toStrictEqual({
       exitCode: 3,
-      stderr: 'cli:INTERNAL_ERROR The command could not be completed.\n',
-      stdout: '',
+      stderr: '',
+      stdout:
+        '{"cliVersion":"0.0.1","command":"inspect","error":{"code":"INTERNAL_ERROR","details":{},"message":"The command could not be completed.","path":null,"retryable":false,"source":"cli"},"result":null,"schemaVersion":1,"status":"error"}\n',
     });
-    expect(snapshot.execution.operationCalls).toBe(1);
-    expect(coreInspection).toHaveBeenCalledOnce();
   });
 
   test('does not discover a working tree for compatibility', async () => {

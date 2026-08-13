@@ -372,10 +372,12 @@ describe('published CLI package and executable', () => {
         gitEnvironment,
       );
 
-      expect(discoveredRepositoryCommand.status).toBe(3);
+      expect(discoveredRepositoryCommand.status).toBe(1);
       expect(discoveredRepositoryCommand.stderr).toBe('');
       expect(discoveredRepositoryCommand.stdout).not.toContain(consumerDirectory);
-      expect(discoveredRepositoryCommand.stdout).toContain('"code":"INTERNAL_ERROR"');
+      expect(discoveredRepositoryCommand.stdout).toBe(
+        '{"cliVersion":"0.0.1","command":"inspect","error":null,"result":{"inspection":{"diagnostics":[{"code":"MOLDEA_MANIFEST_MISSING","details":{},"entity":null,"message":"The project manifest is missing.","path":"/moldea/moldea.yaml","pointer":null,"range":null,"source":"core"},{"code":"MOLDEA_PROJECT_FILE_MISSING","details":{},"entity":null,"message":"The project file is missing.","path":"/moldea/project.md","pointer":null,"range":null,"source":"core"}],"evidence":[],"formatVersion":null,"project":null,"valid":false},"source":{"kind":"git-working-tree"}},"schemaVersion":1,"status":"invalid"}\n',
+      );
 
       const invalidValidationCommand = spawnPackageManager(
         packageManagerEntrypoint,
@@ -427,6 +429,87 @@ describe('published CLI package and executable', () => {
       expect(validJsonValidationCommand.stdout).toBe(
         '{"cliVersion":"0.0.1","command":"validate","error":null,"result":{"diagnostics":[],"formatVersion":1,"source":{"kind":"git-working-tree"}},"schemaVersion":1,"status":"valid"}\n',
       );
+
+      const validHumanInspectionCommand = spawnPackageManager(
+        packageManagerEntrypoint,
+        ['exec', 'moldea', 'inspect'],
+        consumerDirectory,
+        gitEnvironment,
+      );
+
+      expect(validHumanInspectionCommand.status).toBe(0);
+      expect(validHumanInspectionCommand.stderr).toBe('');
+      expect(validHumanInspectionCommand.stdout).toBe(
+        `The moldea project is valid.
+Repository format: 1
+Context assets: 0
+Decisions: 0
+Runtime-guidance assets: 0
+Agents: 0
+Mirrors: 0
+Adapter evidence items: 0
+`,
+      );
+
+      const validJsonInspectionCommand = spawnPackageManager(
+        packageManagerEntrypoint,
+        ['exec', 'moldea', 'inspect', '--json'],
+        consumerDirectory,
+        gitEnvironment,
+      );
+      const validInspectionEnvelope = JSON.parse(validJsonInspectionCommand.stdout) as {
+        readonly result: {
+          readonly inspection: {
+            readonly diagnostics: readonly unknown[];
+            readonly evidence: readonly unknown[];
+            readonly formatVersion: number | null;
+            readonly project: {
+              readonly agents: readonly unknown[];
+              readonly context: readonly unknown[];
+              readonly decisions: readonly unknown[];
+              readonly project: { readonly content: string; readonly path: string };
+              readonly runtimes: readonly unknown[];
+            } | null;
+            readonly valid: boolean;
+          };
+          readonly source: { readonly kind: string };
+        };
+        readonly status: string;
+      };
+
+      expect(validJsonInspectionCommand.status).toBe(0);
+      expect(validJsonInspectionCommand.stderr).toBe('');
+      expect(validInspectionEnvelope).toMatchObject({
+        cliVersion: '0.0.1',
+        command: 'inspect',
+        error: null,
+        result: {
+          inspection: {
+            diagnostics: [],
+            evidence: [],
+            formatVersion: 1,
+            project: {
+              agents: [],
+              context: [],
+              decisions: [],
+              project: { content: '# Project\n', path: '/moldea/project.md' },
+              runtimes: [],
+            },
+            valid: true,
+          },
+          source: { kind: 'git-working-tree' },
+        },
+        schemaVersion: 1,
+        status: 'valid',
+      });
+      expect(Object.keys(validInspectionEnvelope.result.inspection)).toStrictEqual([
+        'diagnostics',
+        'evidence',
+        'formatVersion',
+        'project',
+        'valid',
+      ]);
+      expect(validInspectionEnvelope.result.inspection.project).not.toBeNull();
 
       const inventoryLimitCommand = spawnPackageManager(
         packageManagerEntrypoint,

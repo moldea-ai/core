@@ -13,10 +13,13 @@ import { createMoldeaCliOwnedError } from './errors.js';
 import {
   formatMoldeaCliHelp,
   formatMoldeaCliHumanError,
+  formatMoldeaCliHumanInspectResult,
   formatMoldeaCliHumanValidateResult,
   formatMoldeaCliJsonError,
+  formatMoldeaCliJsonInspectResult,
   formatMoldeaCliJsonValidateResult,
 } from './formatters.js';
+import { createMoldeaCliInspectResult } from './transformers.js';
 
 /** Creates one complete Core diagnostic for presentation tests. */
 const createDiagnostic = (overrides: Partial<ICoreDiagnostic> = {}): ICoreDiagnostic => ({
@@ -199,6 +202,48 @@ core:MOLDEA_AGENT_INSTRUCTION_EMPTY /moldea/agents/alpha/instruction.md:2:3 The 
     );
     expect(formatMoldeaCliJsonValidateResult(result, '0.0.1')).toBe(
       '{"cliVersion":"0.0.1","command":"validate","error":null,"result":{"diagnostics":[{"code":"MOLDEA_MANIFEST_MISSING","details":{},"entity":null,"message":"The project manifest is missing.","path":null,"pointer":null,"range":null,"source":"core"}],"formatVersion":null,"source":{"kind":"git-working-tree"}},"schemaVersion":1,"status":"invalid"}\n',
+    );
+  });
+
+  test('formats invalid inspection evidence and diagnostics without exposing partial project data', () => {
+    const manifestDiagnostic = createDiagnostic();
+    const projectDiagnostic = createDiagnostic({
+      code: 'MOLDEA_PROJECT_FILE_MISSING',
+      message: 'The project file is missing.',
+      path: parseRepositoryPath('/moldea/project.md'),
+    });
+    const result = createMoldeaCliInspectResult(
+      Object.freeze({
+        diagnostics: Object.freeze([manifestDiagnostic, projectDiagnostic]),
+        evidence: Object.freeze([
+          Object.freeze({
+            agentId: 'alpha',
+            capabilityId: null,
+            capabilityKind: null,
+            details: Object.freeze({ package: '@example/runtime' }),
+            kind: 'runtime-package' as const,
+            references: Object.freeze([]),
+            runtimeName: 'example-runtime',
+            source: 'example',
+          }),
+        ]),
+        formatVersion: 1,
+        project: null,
+        valid: false,
+      }),
+    );
+
+    expect(formatMoldeaCliHumanInspectResult(result)).toBe(
+      `The moldea project is invalid.
+Repository format: 1
+Adapter evidence item: 1
+core:MOLDEA_MANIFEST_MISSING /moldea/moldea.yaml The project manifest is missing.
+core:MOLDEA_PROJECT_FILE_MISSING /moldea/project.md The project file is missing.
+2 diagnostics.
+`,
+    );
+    expect(formatMoldeaCliJsonInspectResult(result, '0.0.1')).toBe(
+      '{"cliVersion":"0.0.1","command":"inspect","error":null,"result":{"inspection":{"diagnostics":[{"code":"MOLDEA_MANIFEST_MISSING","details":{},"entity":null,"message":"The project manifest is missing.","path":"/moldea/moldea.yaml","pointer":null,"range":null,"source":"core"},{"code":"MOLDEA_PROJECT_FILE_MISSING","details":{},"entity":null,"message":"The project file is missing.","path":"/moldea/project.md","pointer":null,"range":null,"source":"core"}],"evidence":[{"agentId":"alpha","capabilityId":null,"capabilityKind":null,"details":{"package":"@example/runtime"},"kind":"runtime-package","references":[],"runtimeName":"example-runtime","source":"example"}],"formatVersion":1,"project":null,"valid":false},"source":{"kind":"git-working-tree"}},"schemaVersion":1,"status":"invalid"}\n',
     );
   });
 });

@@ -12,7 +12,9 @@ export type {
   IMoldeaCliErrorCode,
   IMoldeaCliErrorSource,
   IMoldeaCliGitErrorCode,
+  IMoldeaCliInspectResult,
   IMoldeaCliJsonErrorEnvelope,
+  IMoldeaCliJsonInspectEnvelope,
   IMoldeaCliJsonValidateEnvelope,
   IMoldeaCliOwnedErrorCode,
   IMoldeaCliSource,
@@ -26,10 +28,12 @@ export { createMoldeaCliOwnedError } from './errors.js';
 export {
   formatMoldeaCliHelp,
   formatMoldeaCliHumanError,
+  formatMoldeaCliHumanInspectResult,
   formatMoldeaCliHumanValidateResult,
   formatMoldeaCliJsonError,
+  formatMoldeaCliJsonInspectResult,
   formatMoldeaCliJsonValidateResult,
 } from './formatters.js';
 
 // transformers
-export { createMoldeaCliValidateResult } from './transformers.js';
+export { createMoldeaCliInspectResult, createMoldeaCliValidateResult } from './transformers.js';

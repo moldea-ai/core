@@ -6,7 +6,9 @@ import { serializeJsonDeterministically } from '../json-serialization/index.js';
 import { MOLDEA_CLI_COMMAND_HELP, MOLDEA_CLI_TOP_LEVEL_HELP } from './constants.js';
 import type {
   IMoldeaCliError,
+  IMoldeaCliInspectResult,
   IMoldeaCliJsonErrorEnvelope,
+  IMoldeaCliJsonInspectEnvelope,
   IMoldeaCliJsonValidateEnvelope,
   IMoldeaCliValidateResult,
 } from './types.js';
@@ -48,6 +50,41 @@ const formatMoldeaCliHumanDiagnostic = (diagnostic: IDiagnostic): string => {
 
   return lines.join('\n');
 };
+
+/** Creates the shared human summary lines for one completed inspection state. */
+const createMoldeaCliHumanStatusLines = (
+  isValid: boolean,
+  formatVersion: IMoldeaCliValidateResult['formatVersion'],
+): string[] => {
+  const lines = [`The moldea project is ${isValid ? 'valid' : 'invalid'}.`];
+
+  if (formatVersion !== null) {
+    lines.push(`Repository format: ${formatVersion}`);
+  }
+
+  return lines;
+};
+
+/** Appends Core diagnostics and their final count without changing supplied order. */
+const appendMoldeaCliHumanDiagnostics = (
+  lines: string[],
+  diagnostics: readonly IDiagnostic[],
+): void => {
+  for (const diagnostic of diagnostics) {
+    lines.push(formatMoldeaCliHumanDiagnostic(diagnostic));
+  }
+
+  const diagnosticLabel = diagnostics.length === 1 ? 'diagnostic' : 'diagnostics';
+
+  lines.push(`${diagnostics.length} ${diagnosticLabel}.`);
+};
+
+/** Formats one count label with correct singular or plural grammar. */
+const formatMoldeaCliHumanCount = (
+  count: number,
+  singularLabel: string,
+  pluralLabel: string,
+): string => `${count === 1 ? singularLabel : pluralLabel}: ${count}`;
 
 /**
  * Formats top-level or command-specific help with its required trailing line feed.
@@ -101,20 +138,10 @@ export const formatMoldeaCliJsonError = (
  */
 export const formatMoldeaCliHumanValidateResult = (result: IMoldeaCliValidateResult): string => {
   const isValid = result.diagnostics.length === 0;
-  const lines = [`The moldea project is ${isValid ? 'valid' : 'invalid'}.`];
-
-  if (result.formatVersion !== null) {
-    lines.push(`Repository format: ${result.formatVersion}`);
-  }
-
-  for (const diagnostic of result.diagnostics) {
-    lines.push(formatMoldeaCliHumanDiagnostic(diagnostic));
-  }
+  const lines = createMoldeaCliHumanStatusLines(isValid, result.formatVersion);
 
   if (!isValid) {
-    const diagnosticLabel = result.diagnostics.length === 1 ? 'diagnostic' : 'diagnostics';
-
-    lines.push(`${result.diagnostics.length} ${diagnosticLabel}.`);
+    appendMoldeaCliHumanDiagnostics(lines, result.diagnostics);
   }
 
   return `${lines.join('\n')}\n`;
@@ -137,6 +164,83 @@ export const formatMoldeaCliJsonValidateResult = (
     result,
     schemaVersion: 1,
     status: result.diagnostics.length === 0 ? 'valid' : 'invalid',
+  };
+
+  return `${serializeJsonDeterministically(envelope)}\n`;
+};
+
+/**
+ * Formats one completed inspection result for human stdout.
+ * @param result The complete inspection result and its source descriptor.
+ * @returns A deterministic content-free summary or diagnostic report ending with LF.
+ * @throws If a Core-valid result does not include its complete project index.
+ */
+export const formatMoldeaCliHumanInspectResult = (result: IMoldeaCliInspectResult): string => {
+  const { inspection } = result;
+  const lines = createMoldeaCliHumanStatusLines(inspection.valid, inspection.formatVersion);
+
+  if (!inspection.valid) {
+    if (inspection.evidence.length > 0) {
+      lines.push(
+        formatMoldeaCliHumanCount(
+          inspection.evidence.length,
+          'Adapter evidence item',
+          'Adapter evidence items',
+        ),
+      );
+    }
+
+    appendMoldeaCliHumanDiagnostics(lines, inspection.diagnostics);
+
+    return `${lines.join('\n')}\n`;
+  }
+
+  if (inspection.project === null) {
+    throw new TypeError('A valid Core inspection must include its project index.');
+  }
+
+  const mirrorCount = inspection.project.agents.reduce(
+    (count, agent) => count + agent.mirrors.length,
+    0,
+  );
+
+  lines.push(
+    formatMoldeaCliHumanCount(inspection.project.context.length, 'Context asset', 'Context assets'),
+    formatMoldeaCliHumanCount(inspection.project.decisions.length, 'Decision', 'Decisions'),
+    formatMoldeaCliHumanCount(
+      inspection.project.runtimes.length,
+      'Runtime-guidance asset',
+      'Runtime-guidance assets',
+    ),
+    formatMoldeaCliHumanCount(inspection.project.agents.length, 'Agent', 'Agents'),
+    formatMoldeaCliHumanCount(mirrorCount, 'Mirror', 'Mirrors'),
+    formatMoldeaCliHumanCount(
+      inspection.evidence.length,
+      'Adapter evidence item',
+      'Adapter evidence items',
+    ),
+  );
+
+  return `${lines.join('\n')}\n`;
+};
+
+/**
+ * Formats one completed inspection result as a version 1 JSON envelope.
+ * @param result The complete inspection result and its source descriptor.
+ * @param cliVersion The installed CLI package version.
+ * @returns One compact deterministic JSON document ending with LF.
+ */
+export const formatMoldeaCliJsonInspectResult = (
+  result: IMoldeaCliInspectResult,
+  cliVersion: string,
+): string => {
+  const envelope: IMoldeaCliJsonInspectEnvelope = {
+    cliVersion,
+    command: MOLDEA_CLI_COMMANDS.Inspect,
+    error: null,
+    result,
+    schemaVersion: 1,
+    status: result.inspection.valid ? 'valid' : 'invalid',
   };
 
   return `${serializeJsonDeterministically(envelope)}\n`;

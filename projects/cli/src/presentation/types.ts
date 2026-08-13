@@ -48,6 +48,12 @@ export interface IMoldeaCliValidateResult {
   readonly source: IMoldeaCliSource;
 }
 
+// complete inspection result paired with its non-confidential source descriptor
+export interface IMoldeaCliInspectResult {
+  readonly inspection: IProjectInspectionResult;
+  readonly source: IMoldeaCliSource;
+}
+
 // error-only envelope implemented before command result composition
 export interface IMoldeaCliJsonErrorEnvelope {
   readonly cliVersion: string;
@@ -64,6 +70,16 @@ export interface IMoldeaCliJsonValidateEnvelope {
   readonly command: 'validate';
   readonly error: null;
   readonly result: IMoldeaCliValidateResult;
+  readonly schemaVersion: 1;
+  readonly status: 'valid' | 'invalid';
+}
+
+// version 1 JSON envelope for a completed inspect command
+export interface IMoldeaCliJsonInspectEnvelope {
+  readonly cliVersion: string;
+  readonly command: 'inspect';
+  readonly error: null;
+  readonly result: IMoldeaCliInspectResult;
   readonly schemaVersion: 1;
   readonly status: 'valid' | 'invalid';
 }
