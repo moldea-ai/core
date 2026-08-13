@@ -6,6 +6,10 @@ import {
 } from '../git-process/index.js';
 import { GIT_TRACKED_INVENTORY_ARGUMENTS, GIT_UNTRACKED_INVENTORY_ARGUMENTS } from './constants.js';
 import {
+  createGitContentTransformationClassifier,
+  type IGitContentTransformationClassifier,
+} from './content-transformation/index.js';
+import {
   createGitInventoryEntryTypeNormalizer,
   createGitSymlinkConfigurationResolver,
   inspectGitInventoryEntry,
@@ -82,6 +86,7 @@ const isProbeFailure = (
  * @param processExecutor The bounded incremental Git process executor.
  * @param ownershipFilter The submodule and nested-repository ownership filter.
  * @param entryTypeNormalizer The current filesystem and Git mode entry-type normalizer.
+ * @param contentTransformationClassifier The bounded effective Git attribute classifier.
  * @param logicalPathNormalizer The portable repository logical-path normalizer.
  * @returns An all-or-nothing selected-repository entry probe.
  */
@@ -94,6 +99,9 @@ export const createGitInventoryProbe =
     entryTypeNormalizer: IGitInventoryEntryTypeNormalizer = createGitInventoryEntryTypeNormalizer(
       inspectGitInventoryEntry,
       createGitSymlinkConfigurationResolver(processExecutor),
+    ),
+    contentTransformationClassifier: IGitContentTransformationClassifier = createGitContentTransformationClassifier(
+      processExecutor,
     ),
     logicalPathNormalizer: IGitInventoryLogicalPathNormalizer = normalizeGitInventoryLogicalPaths,
   ): IGitInventoryProbe =>
@@ -178,7 +186,24 @@ export const createGitInventoryProbe =
       return entryTypeResult;
     }
 
-    const logicalPathResult = logicalPathNormalizer({ entries: entryTypeResult.entries });
+    const contentTransformationResult = await contentTransformationClassifier({
+      entries: entryTypeResult.entries,
+      maxMetadataBytes:
+        input.maxMetadataBytes -
+        trackedProcessResult.stdoutBytes -
+        untrackedProcessResult.stdoutBytes -
+        ownershipResult.gitMetadataBytes -
+        entryTypeResult.gitMetadataBytes,
+      repositoryRoot: input.repositoryRoot,
+    });
+
+    if (contentTransformationResult.kind === 'failed') {
+      return contentTransformationResult;
+    }
+
+    const logicalPathResult = logicalPathNormalizer({
+      entries: contentTransformationResult.entries,
+    });
 
     if (logicalPathResult.kind === 'failed') {
       return logicalPathResult;

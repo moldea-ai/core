@@ -4,13 +4,25 @@ import { mkdirSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, test } from 'vitest';
 
-import { probeGitInventory } from './probe.js';
+import {
+  executeGitStreamingProcess,
+  type IGitStreamingProcessExecutor,
+} from '../git-process/index.js';
+
+import { createGitInventoryProbe, probeGitInventory } from './probe.js';
 import {
   commitFixtureGitIndex,
   createGitRepository,
   initializeGitRepository,
   runFixtureGit,
 } from './probe.test-fixtures.js';
+
+const CONTENT_TRANSFORMATION = Object.freeze({
+  filter: 'unspecified',
+  ident: 'unspecified',
+  isGuarded: false,
+  workingTreeEncoding: 'unspecified',
+});
 
 describe('real Git inventory probe', () => {
   test('enumerates tracked and non-ignored untracked paths in an unborn repository', async () => {
@@ -37,6 +49,7 @@ describe('real Git inventory probe', () => {
       expect(result).toStrictEqual({
         entries: [
           {
+            contentTransformation: CONTENT_TRANSFORMATION,
             entryType: 'file',
             indexEntries: [{ mode: '100644', stage: 0 }],
             kind: 'tracked',
@@ -44,6 +57,7 @@ describe('real Git inventory probe', () => {
             requiresSymlinkOverlay: false,
           },
           {
+            contentTransformation: CONTENT_TRANSFORMATION,
             entryType: 'file',
             indexEntries: [{ mode: '100644', stage: 0 }],
             kind: 'tracked',
@@ -51,6 +65,7 @@ describe('real Git inventory probe', () => {
             requiresSymlinkOverlay: false,
           },
           {
+            contentTransformation: CONTENT_TRANSFORMATION,
             entryType: 'file',
             kind: 'untracked',
             path: '/untracked-😀.txt',
@@ -145,6 +160,7 @@ describe('real Git inventory probe', () => {
       ).resolves.toStrictEqual({
         entries: [
           {
+            contentTransformation: CONTENT_TRANSFORMATION,
             entryType: 'symlink',
             indexEntries: [{ mode: '120000', stage: 0 }],
             kind: 'tracked',
@@ -190,6 +206,7 @@ describe('real Git inventory probe', () => {
       ).resolves.toStrictEqual({
         entries: [
           {
+            contentTransformation: CONTENT_TRANSFORMATION,
             entryType: 'file',
             indexEntries: [{ mode: '120000', stage: 0 }],
             kind: 'tracked',
@@ -227,6 +244,7 @@ describe('real Git inventory probe', () => {
         ).resolves.toStrictEqual({
           entries: [
             {
+              contentTransformation: CONTENT_TRANSFORMATION,
               entryType: 'symlink',
               indexEntries: [{ mode: '100644', stage: 0 }],
               kind: 'tracked',
@@ -234,6 +252,7 @@ describe('real Git inventory probe', () => {
               requiresSymlinkOverlay: false,
             },
             {
+              contentTransformation: CONTENT_TRANSFORMATION,
               entryType: 'symlink',
               kind: 'untracked',
               path: '/untracked-link',
@@ -336,6 +355,7 @@ describe('real Git inventory probe', () => {
       ).resolves.toStrictEqual({
         entries: [
           {
+            contentTransformation: CONTENT_TRANSFORMATION,
             entryType: 'file',
             indexEntries: [{ mode: '100644', stage: 0 }],
             kind: 'tracked',
@@ -343,12 +363,14 @@ describe('real Git inventory probe', () => {
             requiresSymlinkOverlay: false,
           },
           {
+            contentTransformation: CONTENT_TRANSFORMATION,
             entryType: 'file',
             kind: 'untracked',
             path: '/.github/workflow.yml',
             requiresSymlinkOverlay: false,
           },
           {
+            contentTransformation: CONTENT_TRANSFORMATION,
             entryType: 'file',
             indexEntries: [{ mode: '100644', stage: 0 }],
             kind: 'tracked',
@@ -356,6 +378,7 @@ describe('real Git inventory probe', () => {
             requiresSymlinkOverlay: false,
           },
           {
+            contentTransformation: CONTENT_TRANSFORMATION,
             entryType: 'file',
             indexEntries: [{ mode: '100644', stage: 0 }],
             kind: 'tracked',
@@ -407,6 +430,7 @@ describe('real Git inventory probe', () => {
       await expect(probe()).resolves.toStrictEqual({
         entries: [
           {
+            contentTransformation: CONTENT_TRANSFORMATION,
             entryType: 'file',
             indexEntries: [{ mode: '100644', stage: 0 }],
             kind: 'tracked',
@@ -422,6 +446,7 @@ describe('real Git inventory probe', () => {
       await expect(probe()).resolves.toStrictEqual({
         entries: [
           {
+            contentTransformation: CONTENT_TRANSFORMATION,
             entryType: 'file',
             indexEntries: [{ mode: '100644', stage: 0 }],
             kind: 'tracked',
@@ -460,6 +485,151 @@ describe('real Git inventory probe', () => {
           repositoryRoot: repository.directory,
         }),
       ).resolves.toStrictEqual({ entries: [], kind: 'probed' });
+    } finally {
+      repository.remove();
+    }
+  });
+
+  test('classifies guarded transformations while ordinary text and eol remain unguarded', async () => {
+    const repository = createGitRepository();
+
+    try {
+      writeFileSync(
+        path.join(repository.directory, '.git', 'info', 'attributes'),
+        [
+          'guarded.txt filter=private working-tree-encoding=UTF-16LE ident',
+          'ordinary.txt text eol=crlf',
+          '',
+        ].join('\n'),
+        'utf8',
+      );
+      writeFileSync(path.join(repository.directory, 'guarded.txt'), 'guarded', 'utf8');
+      writeFileSync(path.join(repository.directory, 'ordinary.txt'), 'ordinary', 'utf8');
+      runFixtureGit(repository, ['config', 'filter.private.clean', 'moldea-filter-must-not-run']);
+
+      await expect(
+        probeGitInventory({
+          maxEntries: 2,
+          maxMetadataBytes: 4096,
+          repositoryRoot: repository.directory,
+        }),
+      ).resolves.toStrictEqual({
+        entries: [
+          {
+            contentTransformation: {
+              filter: 'private',
+              ident: 'set',
+              isGuarded: true,
+              workingTreeEncoding: 'UTF-16LE',
+            },
+            entryType: 'file',
+            kind: 'untracked',
+            path: '/guarded.txt',
+            requiresSymlinkOverlay: false,
+          },
+          {
+            contentTransformation: CONTENT_TRANSFORMATION,
+            entryType: 'file',
+            kind: 'untracked',
+            path: '/ordinary.txt',
+            requiresSymlinkOverlay: false,
+          },
+        ],
+        kind: 'probed',
+      });
+    } finally {
+      repository.remove();
+    }
+  });
+
+  test('ignores ambient attribute-source redirection when classifying working-tree attributes', async () => {
+    const repository = createGitRepository();
+
+    try {
+      writeFileSync(
+        path.join(repository.directory, '.gitattributes'),
+        'guarded.txt -filter -working-tree-encoding -ident\n',
+        'utf8',
+      );
+      writeFileSync(path.join(repository.directory, 'guarded.txt'), 'guarded', 'utf8');
+      runFixtureGit(repository, ['add', '--', '.gitattributes', 'guarded.txt']);
+      commitFixtureGitIndex(repository);
+      writeFileSync(
+        path.join(repository.directory, '.gitattributes'),
+        'guarded.txt filter=private\n',
+        'utf8',
+      );
+
+      const processExecutor: IGitStreamingProcessExecutor = (options) =>
+        executeGitStreamingProcess({
+          ...options,
+          environment: {
+            ...repository.environment,
+            GIT_ATTR_SOURCE: 'HEAD',
+          },
+        });
+      const probe = createGitInventoryProbe(processExecutor);
+
+      await expect(
+        probe({
+          maxEntries: 2,
+          maxMetadataBytes: 4096,
+          repositoryRoot: repository.directory,
+        }),
+      ).resolves.toMatchObject({
+        entries: [
+          { path: '/.gitattributes' },
+          {
+            contentTransformation: {
+              filter: 'private',
+              ident: 'unspecified',
+              isGuarded: true,
+              workingTreeEncoding: 'unspecified',
+            },
+            path: '/guarded.txt',
+          },
+        ],
+        kind: 'probed',
+      });
+    } finally {
+      repository.remove();
+    }
+  });
+
+  test('counts attribute stdout against the shared per-probe Git metadata budget', async () => {
+    const repository = createGitRepository();
+
+    try {
+      const candidatePath = 'guarded.txt';
+
+      writeFileSync(
+        path.join(repository.directory, '.git', 'info', 'attributes'),
+        `${candidatePath} filter=private working-tree-encoding=UTF-16LE ident\n`,
+        'utf8',
+      );
+      writeFileSync(path.join(repository.directory, candidatePath), 'guarded', 'utf8');
+
+      const encoder = new TextEncoder();
+      const rawInventoryBytes = encoder.encode(`${candidatePath}\u0000`).byteLength;
+      const attributeBytes = encoder.encode(
+        `${candidatePath}\u0000filter\u0000private\u0000${candidatePath}\u0000working-tree-encoding\u0000UTF-16LE\u0000${candidatePath}\u0000ident\u0000set\u0000`,
+      ).byteLength;
+      const exactMetadataBytes = rawInventoryBytes + attributeBytes;
+
+      await expect(
+        probeGitInventory({
+          maxEntries: 1,
+          maxMetadataBytes: exactMetadataBytes,
+          repositoryRoot: repository.directory,
+        }),
+      ).resolves.toMatchObject({ kind: 'probed' });
+      await expect(
+        probeGitInventory({
+          maxEntries: 1,
+          maxMetadataBytes: exactMetadataBytes - 1,
+          repositoryRoot: repository.directory,
+        }),
+      ).resolves.toStrictEqual({ errorCode: 'RESOURCE_LIMIT_EXCEEDED', kind: 'failed' });
     } finally {
       repository.remove();
     }

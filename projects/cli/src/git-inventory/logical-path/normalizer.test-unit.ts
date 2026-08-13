@@ -6,6 +6,13 @@ import {
   validateGitInventoryCandidateLogicalPaths,
 } from './normalizer.js';
 
+const CONTENT_TRANSFORMATION = Object.freeze({
+  filter: 'unspecified',
+  ident: 'unspecified',
+  isGuarded: false,
+  workingTreeEncoding: 'unspecified',
+});
+
 describe('validateGitInventoryCandidateLogicalPaths', () => {
   test('validates every candidate while allowing repeated unmerged paths', () => {
     expect(
@@ -47,8 +54,15 @@ describe('normalizeGitInventoryLogicalPaths', () => {
   test('brands, preserves, and code-point-sorts exact logical paths', () => {
     const result = normalizeGitInventoryLogicalPaths({
       entries: [
-        { entryType: 'file', kind: 'untracked', path: '😀.txt', requiresSymlinkOverlay: false },
         {
+          contentTransformation: CONTENT_TRANSFORMATION,
+          entryType: 'file',
+          kind: 'untracked',
+          path: '😀.txt',
+          requiresSymlinkOverlay: false,
+        },
+        {
+          contentTransformation: CONTENT_TRANSFORMATION,
           entryType: 'file',
           indexEntries: Object.freeze([
             Object.freeze({ mode: '100644' as const, stage: 0 as const }),
@@ -57,31 +71,76 @@ describe('normalizeGitInventoryLogicalPaths', () => {
           path: '\ue000.txt',
           requiresSymlinkOverlay: false,
         },
-        { entryType: 'file', kind: 'untracked', path: 'case.txt', requiresSymlinkOverlay: false },
-        { entryType: 'file', kind: 'untracked', path: 'Case.txt', requiresSymlinkOverlay: false },
-        { entryType: 'file', kind: 'untracked', path: 'café.txt', requiresSymlinkOverlay: false },
         {
+          contentTransformation: CONTENT_TRANSFORMATION,
+          entryType: 'file',
+          kind: 'untracked',
+          path: 'case.txt',
+          requiresSymlinkOverlay: false,
+        },
+        {
+          contentTransformation: CONTENT_TRANSFORMATION,
+          entryType: 'file',
+          kind: 'untracked',
+          path: 'Case.txt',
+          requiresSymlinkOverlay: false,
+        },
+        {
+          contentTransformation: CONTENT_TRANSFORMATION,
+          entryType: 'file',
+          kind: 'untracked',
+          path: 'café.txt',
+          requiresSymlinkOverlay: false,
+        },
+        {
+          contentTransformation: CONTENT_TRANSFORMATION,
           entryType: 'file',
           kind: 'untracked',
           path: 'cafe\u0301.txt',
           requiresSymlinkOverlay: false,
         },
-        { entryType: 'file', kind: 'untracked', path: '\ufeff.txt', requiresSymlinkOverlay: false },
+        {
+          contentTransformation: CONTENT_TRANSFORMATION,
+          entryType: 'file',
+          kind: 'untracked',
+          path: '\ufeff.txt',
+          requiresSymlinkOverlay: false,
+        },
       ],
     });
 
     expect(result).toStrictEqual({
       entries: [
-        { entryType: 'file', kind: 'untracked', path: '/Case.txt', requiresSymlinkOverlay: false },
         {
+          contentTransformation: CONTENT_TRANSFORMATION,
+          entryType: 'file',
+          kind: 'untracked',
+          path: '/Case.txt',
+          requiresSymlinkOverlay: false,
+        },
+        {
+          contentTransformation: CONTENT_TRANSFORMATION,
           entryType: 'file',
           kind: 'untracked',
           path: '/cafe\u0301.txt',
           requiresSymlinkOverlay: false,
         },
-        { entryType: 'file', kind: 'untracked', path: '/café.txt', requiresSymlinkOverlay: false },
-        { entryType: 'file', kind: 'untracked', path: '/case.txt', requiresSymlinkOverlay: false },
         {
+          contentTransformation: CONTENT_TRANSFORMATION,
+          entryType: 'file',
+          kind: 'untracked',
+          path: '/café.txt',
+          requiresSymlinkOverlay: false,
+        },
+        {
+          contentTransformation: CONTENT_TRANSFORMATION,
+          entryType: 'file',
+          kind: 'untracked',
+          path: '/case.txt',
+          requiresSymlinkOverlay: false,
+        },
+        {
+          contentTransformation: CONTENT_TRANSFORMATION,
           entryType: 'file',
           indexEntries: [{ mode: '100644', stage: 0 }],
           kind: 'tracked',
@@ -89,12 +148,19 @@ describe('normalizeGitInventoryLogicalPaths', () => {
           requiresSymlinkOverlay: false,
         },
         {
+          contentTransformation: CONTENT_TRANSFORMATION,
           entryType: 'file',
           kind: 'untracked',
           path: '/\ufeff.txt',
           requiresSymlinkOverlay: false,
         },
-        { entryType: 'file', kind: 'untracked', path: '/😀.txt', requiresSymlinkOverlay: false },
+        {
+          contentTransformation: CONTENT_TRANSFORMATION,
+          entryType: 'file',
+          kind: 'untracked',
+          path: '/😀.txt',
+          requiresSymlinkOverlay: false,
+        },
       ],
       kind: 'normalized',
     });
@@ -121,6 +187,7 @@ describe('normalizeGitInventoryLogicalPaths', () => {
       normalizeGitInventoryLogicalPaths({
         entries: [
           {
+            contentTransformation: CONTENT_TRANSFORMATION,
             entryType: 'file',
             kind: 'untracked',
             path: candidatePath,
@@ -135,8 +202,20 @@ describe('normalizeGitInventoryLogicalPaths', () => {
     expect(
       normalizeGitInventoryLogicalPaths({
         entries: [
-          { entryType: 'file', kind: 'untracked', path: 'same', requiresSymlinkOverlay: false },
-          { entryType: 'symlink', kind: 'untracked', path: 'same', requiresSymlinkOverlay: false },
+          {
+            contentTransformation: CONTENT_TRANSFORMATION,
+            entryType: 'file',
+            kind: 'untracked',
+            path: 'same',
+            requiresSymlinkOverlay: false,
+          },
+          {
+            contentTransformation: CONTENT_TRANSFORMATION,
+            entryType: 'symlink',
+            kind: 'untracked',
+            path: 'same',
+            requiresSymlinkOverlay: false,
+          },
         ],
       }),
     ).toStrictEqual({ errorCode: 'GIT_OUTPUT_INVALID', kind: 'failed' });

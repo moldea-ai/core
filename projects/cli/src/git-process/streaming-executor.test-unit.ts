@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 interface ISpawnTestOptions {
   readonly env: NodeJS.ProcessEnv;
   readonly shell: false;
-  readonly stdio: readonly ['ignore', 'pipe', 'pipe'];
+  readonly stdio: readonly ['ignore' | 'pipe', 'pipe', 'pipe'];
   readonly windowsHide: true;
 }
 
@@ -30,6 +30,7 @@ interface ITestChildProcess {
   readonly childProcess: ChildProcessWithoutNullStreams;
   readonly kill: ReturnType<typeof vi.fn<() => boolean>>;
   readonly stderr: PassThrough;
+  readonly stdin: PassThrough;
   readonly stdout: PassThrough;
 }
 
@@ -47,7 +48,7 @@ const createTestChildProcess = (): ITestChildProcess => {
     stdout,
   }) as unknown as ChildProcessWithoutNullStreams;
 
-  return { childProcess, kill, stderr, stdout };
+  return { childProcess, kill, stderr, stdin, stdout };
 };
 
 describe('executeGitStreamingProcess', () => {
@@ -145,6 +146,62 @@ describe('executeGitStreamingProcess', () => {
     await expect(resultPromise).resolves.toStrictEqual({
       kind: 'failed',
       reason: 'stderr-limit-exceeded',
+    });
+    expect(testProcess.kill).toHaveBeenCalledOnce();
+  });
+
+  test('writes one detached stdin snapshot and closes the piped stream', async () => {
+    const testProcess = createTestChildProcess();
+    const stdinChunks: Buffer[] = [];
+    const stdin = new Uint8Array([1, 2, 3]);
+
+    testProcess.stdin.on('data', (chunk: Buffer) => stdinChunks.push(chunk));
+    spawnTestDouble.mockReturnValue(testProcess.childProcess);
+
+    const resultPromise = executeGitStreamingProcess({
+      arguments: ['check-attr', '--stdin', '-z', 'filter'],
+      consumeStdout: vi.fn(),
+      maxStderrBytes: 16,
+      maxStdoutBytes: 16,
+      stdin,
+    });
+
+    stdin.fill(9);
+    testProcess.childProcess.emit('close', 0);
+
+    await expect(resultPromise).resolves.toStrictEqual({
+      kind: 'completed',
+      stderr: new Uint8Array(),
+      stdoutBytes: 0,
+    });
+    expect(Buffer.concat(stdinChunks)).toStrictEqual(Buffer.from([1, 2, 3]));
+    expect(testProcess.stdin.writableEnded).toBe(true);
+    expect(spawnTestDouble).toHaveBeenCalledWith(
+      'git',
+      [...GIT_PROCESS_GLOBAL_ARGUMENTS, 'check-attr', '--stdin', '-z', 'filter'],
+      expect.objectContaining({ stdio: ['pipe', 'pipe', 'pipe'] }),
+    );
+  });
+
+  test('normalizes a piped stdin failure and terminates Git', async () => {
+    const testProcess = createTestChildProcess();
+
+    spawnTestDouble.mockReturnValue(testProcess.childProcess);
+
+    const resultPromise = executeGitStreamingProcess({
+      arguments: ['check-attr', '--stdin', '-z', 'filter'],
+      consumeStdout: vi.fn(),
+      maxStderrBytes: 16,
+      maxStdoutBytes: 16,
+      stdin: new Uint8Array([1]),
+    });
+
+    testProcess.stdin.emit('error', new Error('private pipe failure'));
+    testProcess.childProcess.emit('close', null);
+
+    await expect(resultPromise).resolves.toStrictEqual({
+      kind: 'failed',
+      reason: 'command-failed',
     });
     expect(testProcess.kill).toHaveBeenCalledOnce();
   });

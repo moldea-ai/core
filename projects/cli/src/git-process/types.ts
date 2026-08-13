@@ -44,13 +44,14 @@ export type IGitProcessExecutor = (
 // consumer for one bounded Git stdout chunk
 export type IGitProcessStdoutConsumer = (chunk: Uint8Array) => void;
 
-// trusted arguments and independent stream limits for one Git subprocess
+// trusted arguments, optional input, and independent stream limits for one Git subprocess
 export interface IExecuteGitStreamingProcessOptions {
   readonly arguments: readonly string[];
   readonly consumeStdout: IGitProcessStdoutConsumer;
   readonly environment?: NodeJS.ProcessEnv;
   readonly maxStderrBytes: number;
   readonly maxStdoutBytes: number;
+  readonly stdin?: Uint8Array;
 }
 
 // successful streamed Git process result without retained stdout

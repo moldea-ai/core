@@ -5,6 +5,7 @@ import { parseRepositoryPath } from '@moldea.ai/repository';
 import { createMemoryRepositoryReader } from '@moldea.ai/repository/memory';
 import type { createFilesystemRepositoryReader } from '@moldea.ai/repository-fs';
 
+import type { createGitContentTransformationGuardRepositoryReader } from '../repository-content-transformation-guard/index.js';
 import type { createGitSymlinkOverlayRepositoryReader } from '../repository-symlink-overlay/index.js';
 
 import { createWorkingTreeRepositoryReaderFactory } from './factory.js';
@@ -14,6 +15,12 @@ import type { IWorkingTreeRepositoryReaderInput } from './types.js';
 const createReaderInput = (): IWorkingTreeRepositoryReaderInput => ({
   entries: Object.freeze([
     Object.freeze({
+      contentTransformation: Object.freeze({
+        filter: 'private',
+        ident: 'unspecified',
+        isGuarded: true,
+        workingTreeEncoding: 'unspecified',
+      }),
       entryType: 'file' as const,
       indexEntries: Object.freeze([Object.freeze({ mode: '120000' as const, stage: 0 as const })]),
       kind: 'tracked' as const,
@@ -21,6 +28,12 @@ const createReaderInput = (): IWorkingTreeRepositoryReaderInput => ({
       requiresSymlinkOverlay: true,
     }),
     Object.freeze({
+      contentTransformation: Object.freeze({
+        filter: 'unspecified',
+        ident: 'unspecified',
+        isGuarded: false,
+        workingTreeEncoding: 'unspecified',
+      }),
       entryType: 'file' as const,
       kind: 'untracked' as const,
       path: parseRepositoryPath('/moldea/project.md'),
@@ -42,18 +55,23 @@ describe('createWorkingTreeRepositoryReaderFactory', () => {
   test('composes exact paths, filesystem limits, and only required symlink overlays', async () => {
     const filesystemReader = createMemoryRepositoryReader([]);
     const overlaidReader = createMemoryRepositoryReader([]);
+    const guardedReader = createMemoryRepositoryReader([]);
     const filesystemReaderFactory = vi
       .fn<typeof createFilesystemRepositoryReader>()
       .mockResolvedValue(filesystemReader);
     const symlinkOverlayFactory = vi
       .fn<typeof createGitSymlinkOverlayRepositoryReader>()
       .mockReturnValue(overlaidReader);
+    const contentTransformationGuardFactory = vi
+      .fn<typeof createGitContentTransformationGuardRepositoryReader>()
+      .mockReturnValue(guardedReader);
     const createReader = createWorkingTreeRepositoryReaderFactory(
       filesystemReaderFactory,
       symlinkOverlayFactory,
+      contentTransformationGuardFactory,
     );
 
-    await expect(createReader(createReaderInput())).resolves.toBe(overlaidReader);
+    await expect(createReader(createReaderInput())).resolves.toBe(guardedReader);
     expect(filesystemReaderFactory).toHaveBeenCalledOnce();
     expect(filesystemReaderFactory).toHaveBeenCalledWith({
       limits: {
@@ -71,9 +89,14 @@ describe('createWorkingTreeRepositoryReaderFactory', () => {
     expect(symlinkOverlayFactory).toHaveBeenCalledWith(filesystemReader, [
       parseRepositoryPath('/moldea/link'),
     ]);
+    expect(contentTransformationGuardFactory).toHaveBeenCalledOnce();
+    expect(contentTransformationGuardFactory).toHaveBeenCalledWith(overlaidReader, [
+      parseRepositoryPath('/moldea/link'),
+    ]);
 
     const filesystemOptions = filesystemReaderFactory.mock.calls[0]?.[0];
     const symlinkPaths = symlinkOverlayFactory.mock.calls[0]?.[1];
+    const guardedPaths = contentTransformationGuardFactory.mock.calls[0]?.[1];
 
     expect(Object.isFrozen(filesystemOptions?.limits)).toBe(true);
     expect(Object.isFrozen(filesystemOptions?.selection)).toBe(true);
@@ -82,5 +105,6 @@ describe('createWorkingTreeRepositoryReaderFactory', () => {
         Object.isFrozen(filesystemOptions.selection.paths),
     ).toBe(true);
     expect(Object.isFrozen(symlinkPaths)).toBe(true);
+    expect(Object.isFrozen(guardedPaths)).toBe(true);
   });
 });

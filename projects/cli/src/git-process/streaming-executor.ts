@@ -16,13 +16,14 @@ const concatenateChunks = (chunks: readonly Buffer[], byteLength: number): Uint8
 
 /**
  * Executes Git directly while consuming bounded stdout incrementally.
- * @param options The trusted arguments, stream consumer, environment, and independent limits.
+ * @param options The trusted arguments, optional stdin, stream consumer, environment, and limits.
  * @returns A promise that resolves to a normalized streamed process result.
  */
 export const executeGitStreamingProcess: IGitStreamingProcessExecutor = async (
   options,
 ): Promise<IGitStreamingProcessResult> =>
   new Promise((resolve, reject) => {
+    const stdin = options.stdin === undefined ? null : Uint8Array.from(options.stdin);
     const stderrChunks: Buffer[] = [];
     let failureReason: IGitStreamingProcessFailureReason | null = null;
     let isSettled = false;
@@ -32,11 +33,19 @@ export const executeGitStreamingProcess: IGitStreamingProcessExecutor = async (
     const childProcess = spawn('git', [...GIT_PROCESS_GLOBAL_ARGUMENTS, ...options.arguments], {
       env: createGitProcessEnvironment(options.environment ?? process.env),
       shell: false,
-      stdio: ['ignore', 'pipe', 'pipe'],
+      stdio: [stdin === null ? 'ignore' : 'pipe', 'pipe', 'pipe'],
       windowsHide: true,
     });
+    const { stderr, stdout } = childProcess;
 
-    childProcess.stdout.on('data', (chunk: Buffer) => {
+    if (stderr === null || stdout === null) {
+      childProcess.on('error', () => undefined);
+      childProcess.kill();
+      resolve(Object.freeze({ kind: 'failed', reason: 'command-failed' }));
+      return;
+    }
+
+    stdout.on('data', (chunk: Buffer) => {
       if (failureReason !== null || isSettled) {
         return;
       }
@@ -62,7 +71,7 @@ export const executeGitStreamingProcess: IGitStreamingProcessExecutor = async (
       }
     });
 
-    childProcess.stderr.on('data', (chunk: Buffer) => {
+    stderr.on('data', (chunk: Buffer) => {
       if (failureReason !== null || isSettled) {
         return;
       }
@@ -117,4 +126,28 @@ export const executeGitStreamingProcess: IGitStreamingProcessExecutor = async (
 
       resolve(Object.freeze({ kind: 'completed', stderr, stdoutBytes }));
     });
+
+    if (stdin !== null) {
+      if (childProcess.stdin === null) {
+        failureReason = 'command-failed';
+        childProcess.kill();
+        return;
+      }
+
+      childProcess.stdin.on('error', () => {
+        if (failureReason !== null || isSettled) {
+          return;
+        }
+
+        failureReason = 'command-failed';
+        childProcess.kill();
+      });
+
+      try {
+        childProcess.stdin.end(stdin);
+      } catch {
+        failureReason = 'command-failed';
+        childProcess.kill();
+      }
+    }
   });

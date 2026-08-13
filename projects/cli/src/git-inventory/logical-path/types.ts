@@ -1,14 +1,14 @@
 import type { IRepositoryPath } from '@moldea.ai/repository';
 
 import type {
-  IGitEntryTypeNormalizedEntry,
-  IGitEntryTypeNormalizedTrackedEntry,
-  IGitEntryTypeNormalizedUntrackedEntry,
-} from '../entry-type/index.js';
+  IGitContentTransformationClassifiedEntry,
+  IGitContentTransformationClassifiedTrackedEntry,
+  IGitContentTransformationClassifiedUntrackedEntry,
+} from '../content-transformation/index.js';
 
 // tracked effective inventory entry with one validated logical path
 export interface IGitTrackedInventoryEntry extends Omit<
-  IGitEntryTypeNormalizedTrackedEntry,
+  IGitContentTransformationClassifiedTrackedEntry,
   'path'
 > {
   readonly path: IRepositoryPath;
@@ -16,7 +16,7 @@ export interface IGitTrackedInventoryEntry extends Omit<
 
 // untracked effective inventory entry with one validated logical path
 export interface IGitUntrackedInventoryEntry extends Omit<
-  IGitEntryTypeNormalizedUntrackedEntry,
+  IGitContentTransformationClassifiedUntrackedEntry,
   'path'
 > {
   readonly path: IRepositoryPath;
@@ -53,7 +53,7 @@ export type IGitInventoryCandidateLogicalPathValidationResult =
 
 // entry-type-normalized paths entering logical-path normalization
 export interface IGitInventoryLogicalPathNormalizerInput {
-  readonly entries: readonly IGitEntryTypeNormalizedEntry[];
+  readonly entries: readonly IGitContentTransformationClassifiedEntry[];
 }
 
 // complete logical-path-normalized effective inventory

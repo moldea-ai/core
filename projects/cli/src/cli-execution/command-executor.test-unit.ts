@@ -43,6 +43,12 @@ describe('createMoldeaCliCommandExecutor', () => {
     async (command) => {
       const inventoryEntries: readonly IGitInventoryEntry[] = Object.freeze([
         Object.freeze({
+          contentTransformation: Object.freeze({
+            filter: 'unspecified',
+            ident: 'unspecified',
+            isGuarded: false,
+            workingTreeEncoding: 'unspecified',
+          }),
           entryType: 'file',
           indexEntries: Object.freeze([Object.freeze({ mode: '120000', stage: 0 })]),
           kind: 'tracked',

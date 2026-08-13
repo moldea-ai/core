@@ -25,14 +25,22 @@ describe('working-tree reader composition with repository-fs', () => {
     temporaryDirectories.push(repositoryRoot);
     await mkdir(join(repositoryRoot, 'moldea'));
     await writeFile(join(repositoryRoot, 'moldea', 'link'), '../target');
+    await writeFile(join(repositoryRoot, 'moldea', 'guarded.md'), 'guarded context');
     await writeFile(join(repositoryRoot, 'moldea', 'project.md'), 'project context');
     await writeFile(join(repositoryRoot, 'unselected.txt'), 'excluded');
 
     const linkPath = parseRepositoryPath('/moldea/link');
+    const guardedPath = parseRepositoryPath('/moldea/guarded.md');
     const projectPath = parseRepositoryPath('/moldea/project.md');
     const reader = await createWorkingTreeRepositoryReader({
       entries: [
         {
+          contentTransformation: {
+            filter: 'private',
+            ident: 'unspecified',
+            isGuarded: true,
+            workingTreeEncoding: 'unspecified',
+          },
           entryType: 'file',
           indexEntries: [{ mode: '120000', stage: 0 }],
           kind: 'tracked',
@@ -40,6 +48,24 @@ describe('working-tree reader composition with repository-fs', () => {
           requiresSymlinkOverlay: true,
         },
         {
+          contentTransformation: {
+            filter: 'private',
+            ident: 'unspecified',
+            isGuarded: true,
+            workingTreeEncoding: 'unspecified',
+          },
+          entryType: 'file',
+          kind: 'untracked',
+          path: guardedPath,
+          requiresSymlinkOverlay: false,
+        },
+        {
+          contentTransformation: {
+            filter: 'unspecified',
+            ident: 'unspecified',
+            isGuarded: false,
+            workingTreeEncoding: 'unspecified',
+          },
           entryType: 'file',
           kind: 'untracked',
           path: projectPath,
@@ -65,6 +91,7 @@ describe('working-tree reader composition with repository-fs', () => {
 
     expect(entries).toStrictEqual([
       { path: parseRepositoryPath('/moldea'), type: 'directory' },
+      { path: guardedPath, type: 'file' },
       { path: linkPath, type: 'symlink' },
       { path: projectPath, type: 'file' },
     ]);
@@ -72,6 +99,12 @@ describe('working-tree reader composition with repository-fs', () => {
       code: 'ENTRY_NOT_FILE',
       operation: 'read-file',
       path: linkPath,
+      retryable: false,
+    });
+    await expect(reader.readFile(guardedPath)).rejects.toMatchObject({
+      code: 'SOURCE_UNAVAILABLE',
+      operation: 'read-file',
+      path: guardedPath,
       retryable: false,
     });
     await expect(reader.readFile(projectPath)).resolves.toStrictEqual(

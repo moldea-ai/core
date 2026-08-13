@@ -7,6 +7,7 @@ import type {
 } from '../git-process/index.js';
 
 import { GIT_TRACKED_INVENTORY_ARGUMENTS, GIT_UNTRACKED_INVENTORY_ARGUMENTS } from './constants.js';
+import type { IGitContentTransformationClassifier } from './content-transformation/index.js';
 import type { IGitInventoryEntryTypeNormalizer } from './entry-type/index.js';
 import type { IGitInventoryLogicalPathNormalizer } from './logical-path/index.js';
 import { createGitInventoryProbe } from './probe.js';
@@ -14,6 +15,12 @@ import type { IGitInventoryOwnershipFilter } from './repository-ownership/index.
 
 const ENCODER = new TextEncoder();
 const OBJECT_ID = '0123456789abcdef0123456789abcdef01234567';
+const CONTENT_TRANSFORMATION = Object.freeze({
+  filter: 'unspecified',
+  ident: 'unspecified',
+  isGuarded: false,
+  workingTreeEncoding: 'unspecified',
+});
 
 interface IProcessFixture {
   readonly failureReason?: IGitStreamingProcessFailureReason;
@@ -54,6 +61,24 @@ const createProcessExecutor = (
     );
   });
 };
+
+/** Classifies every fixture entry without invoking another process fixture. */
+const createContentTransformationClassifier = (
+  gitMetadataBytes = 0,
+): ReturnType<typeof vi.fn<IGitContentTransformationClassifier>> =>
+  vi.fn<IGitContentTransformationClassifier>((input) =>
+    Promise.resolve(
+      Object.freeze({
+        entries: Object.freeze(
+          input.entries.map((entry) =>
+            Object.freeze({ ...entry, contentTransformation: CONTENT_TRANSFORMATION }),
+          ),
+        ),
+        gitMetadataBytes,
+        kind: 'classified',
+      }),
+    ),
+  );
 
 describe('createGitInventoryProbe', () => {
   test('streams tracked and untracked candidates under one combined budget', async () => {
@@ -102,7 +127,13 @@ describe('createGitInventoryProbe', () => {
         kind: 'normalized',
       }),
     );
-    const probe = createGitInventoryProbe(processExecutor, ownershipFilter, entryTypeNormalizer);
+    const contentTransformationClassifier = createContentTransformationClassifier(11);
+    const probe = createGitInventoryProbe(
+      processExecutor,
+      ownershipFilter,
+      entryTypeNormalizer,
+      contentTransformationClassifier,
+    );
     const result = await probe({
       maxEntries: 3,
       maxMetadataBytes: 512,
@@ -112,6 +143,7 @@ describe('createGitInventoryProbe', () => {
     expect(result).toStrictEqual({
       entries: [
         {
+          contentTransformation: CONTENT_TRANSFORMATION,
           entryType: 'file',
           indexEntries: [{ mode: '100755', stage: 2 }],
           kind: 'tracked',
@@ -119,6 +151,7 @@ describe('createGitInventoryProbe', () => {
           requiresSymlinkOverlay: false,
         },
         {
+          contentTransformation: CONTENT_TRANSFORMATION,
           entryType: 'file',
           indexEntries: [{ mode: '100644', stage: 0 }],
           kind: 'tracked',
@@ -126,6 +159,7 @@ describe('createGitInventoryProbe', () => {
           requiresSymlinkOverlay: false,
         },
         {
+          contentTransformation: CONTENT_TRANSFORMATION,
           entryType: 'file',
           kind: 'untracked',
           path: '/untracked',
@@ -174,6 +208,33 @@ describe('createGitInventoryProbe', () => {
         { kind: 'tracked', mode: '100644', path: 'tracked', stage: 0 },
         { kind: 'tracked', mode: '100755', path: 'conflict', stage: 2 },
         { kind: 'untracked', path: 'untracked' },
+      ],
+      maxMetadataBytes: 512 - trackedOutput.byteLength - untrackedOutput.byteLength - 7,
+      repositoryRoot: '/repository',
+    });
+    expect(contentTransformationClassifier).toHaveBeenCalledOnce();
+    expect(contentTransformationClassifier).toHaveBeenCalledWith({
+      entries: [
+        {
+          entryType: 'file',
+          indexEntries: [{ mode: '100644', stage: 0 }],
+          kind: 'tracked',
+          path: 'tracked',
+          requiresSymlinkOverlay: false,
+        },
+        {
+          entryType: 'file',
+          indexEntries: [{ mode: '100755', stage: 2 }],
+          kind: 'tracked',
+          path: 'conflict',
+          requiresSymlinkOverlay: false,
+        },
+        {
+          entryType: 'file',
+          kind: 'untracked',
+          path: 'untracked',
+          requiresSymlinkOverlay: false,
+        },
       ],
       maxMetadataBytes: 512 - trackedOutput.byteLength - untrackedOutput.byteLength - 7,
       repositoryRoot: '/repository',
@@ -313,6 +374,7 @@ describe('createGitInventoryProbe', () => {
       processExecutor,
       ownershipFilter,
       entryTypeNormalizer,
+      createContentTransformationClassifier(),
       logicalPathNormalizer,
     );
 
@@ -323,6 +385,7 @@ describe('createGitInventoryProbe', () => {
     expect(logicalPathNormalizer).toHaveBeenCalledWith({
       entries: [
         {
+          contentTransformation: CONTENT_TRANSFORMATION,
           entryType: 'file',
           indexEntries: [{ mode: '100644', stage: 0 }],
           kind: 'tracked',
@@ -331,5 +394,49 @@ describe('createGitInventoryProbe', () => {
         },
       ],
     });
+  });
+
+  test('returns an atomic content-transformation failure before path normalization', async () => {
+    const processExecutor = createProcessExecutor([
+      { stdout: ENCODER.encode(`100644 ${OBJECT_ID} 0\tguarded\u0000`) },
+      { stdout: new Uint8Array() },
+    ]);
+    const ownershipFilter = vi.fn<IGitInventoryOwnershipFilter>((input) =>
+      Promise.resolve(
+        Object.freeze({ candidates: input.candidates, gitMetadataBytes: 0, kind: 'filtered' }),
+      ),
+    );
+    const entryTypeNormalizer = vi.fn<IGitInventoryEntryTypeNormalizer>().mockResolvedValue(
+      Object.freeze({
+        entries: Object.freeze([
+          Object.freeze({
+            entryType: 'file',
+            indexEntries: Object.freeze([Object.freeze({ mode: '100644', stage: 0 as const })]),
+            kind: 'tracked',
+            path: 'guarded',
+            requiresSymlinkOverlay: false,
+          }),
+        ]),
+        gitMetadataBytes: 0,
+        kind: 'normalized',
+      }),
+    );
+    const contentTransformationClassifier = vi
+      .fn<IGitContentTransformationClassifier>()
+      .mockResolvedValue(Object.freeze({ errorCode: 'GIT_OUTPUT_INVALID', kind: 'failed' }));
+    const logicalPathNormalizer = vi.fn<IGitInventoryLogicalPathNormalizer>();
+    const probe = createGitInventoryProbe(
+      processExecutor,
+      ownershipFilter,
+      entryTypeNormalizer,
+      contentTransformationClassifier,
+      logicalPathNormalizer,
+    );
+
+    await expect(
+      probe({ maxEntries: 1, maxMetadataBytes: 128, repositoryRoot: '/repository' }),
+    ).resolves.toStrictEqual({ errorCode: 'GIT_OUTPUT_INVALID', kind: 'failed' });
+    expect(contentTransformationClassifier).toHaveBeenCalledOnce();
+    expect(logicalPathNormalizer).not.toHaveBeenCalled();
   });
 });
