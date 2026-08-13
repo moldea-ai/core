@@ -2,9 +2,9 @@
 
 Node.js-specific implementation for exposing one explicitly selected local directory through the source-neutral repository contract.
 
-The current unpublished `0.0.1` package exposes the complete version 1 option, selection, resource-limit, and immutable reader contracts. Its public factory validates and detaches caller options, canonicalizes an explicit filesystem root, constructs and verifies strict private exact-path or recursive-directory inventories, provides frozen lookup and recursive listing, coordinates verified file capture into a private immutable cache, and permanently invalidates that shared state after snapshot loss. The filesystem implementation passes the same source-neutral reader conformance contract as `@moldea.ai/repository/memory`.
+The current unpublished `1.0.0` release candidate exposes the complete version 1 option, selection, resource-limit, and immutable reader contracts. Its public factory validates and detaches caller options, canonicalizes an explicit filesystem root, constructs and verifies strict private exact-path or recursive-directory inventories, provides frozen lookup and recursive listing, coordinates verified file capture into a private immutable cache, and permanently invalidates that shared state after snapshot loss. The filesystem implementation passes the same source-neutral reader conformance contract as `@moldea.ai/repository/memory`.
 
-Tarball and consumer-type checks are the release boundary for now. This package is not ready to publish to npm.
+Tarball and consumer-type checks are the release boundary until npm publication is separately authorized.
 
 ## Responsibility
 

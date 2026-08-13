@@ -2,7 +2,7 @@
 
 Source-neutral, deterministic interpretation of the `moldea` repository format.
 
-The current `0.0.1` public foundation accepts caller-supplied text documents and source-neutral repository readers. It does not access a filesystem, Git provider, or network independently. Invalid repository content produces stable diagnostics, while invalid configuration and operational failures use typed exceptions. Strict version 1 manifest and decision parsing, complete repository inspection, deterministic project indexing, and all-or-nothing runtime-adapter execution are available now.
+The current unpublished `1.0.0` release candidate accepts caller-supplied text documents and source-neutral repository readers. It does not access a filesystem, Git provider, or network independently. Invalid repository content produces stable diagnostics, while invalid configuration and operational failures use typed exceptions. Strict version 1 manifest and decision parsing, complete repository inspection, deterministic project indexing, built-in custom-runtime behavior, and all-or-nothing package-backed runtime-adapter execution are available now. Tarball and consumer-type checks are the release boundary until npm publication is separately authorized.
 
 ## Public entry points
 

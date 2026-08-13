@@ -18,14 +18,24 @@ interface IFixtureEntry {
   readonly bytes?: readonly number[];
 }
 
+interface IRepositoryFixtureCase {
+  readonly manifest: string;
+  readonly entries: readonly IFixtureEntry[];
+}
+
 interface IProjectIndexFixture {
-  readonly cases: readonly {
+  readonly cases: readonly (IRepositoryFixtureCase & {
     readonly name: string;
-    readonly manifest: string;
-    readonly entries: readonly IFixtureEntry[];
     readonly expectedFormatVersion: 1;
     readonly expectedProjectFixture: string | null;
-  }[];
+  })[];
+}
+
+interface ICustomRuntimeFixture {
+  readonly cases: readonly (IRepositoryFixtureCase & {
+    readonly name: string;
+    readonly expectedGuidancePaths: readonly string[];
+  })[];
 }
 
 const fixture = JSON.parse(
@@ -40,11 +50,15 @@ const expectedDiagnosticsByCase = JSON.parse(
     'utf8',
   ),
 ) as Readonly<Record<string, readonly unknown[]>>;
+const customRuntimeFixture = JSON.parse(
+  readFileSync(
+    new URL('../../../../fixtures/core/custom-runtime/cases.json', import.meta.url),
+    'utf8',
+  ),
+) as ICustomRuntimeFixture;
 const manifestPath = parseRepositoryPath('/moldea/moldea.yaml');
 
-const createEntries = (
-  fixtureCase: IProjectIndexFixture['cases'][number],
-): readonly IMemoryRepositoryEntry[] => [
+const createEntries = (fixtureCase: IRepositoryFixtureCase): readonly IMemoryRepositoryEntry[] => [
   { content: fixtureCase.manifest, path: manifestPath, type: 'file' },
   ...fixtureCase.entries.map((entry): IMemoryRepositoryEntry => {
     if (entry.type !== 'file') {
@@ -105,4 +119,40 @@ describe('public Core project inspection', () => {
     expect(Object.isFrozen(result.evidence)).toBe(true);
     expect(result.project === null || Object.isFrozen(result.project)).toBe(true);
   });
+
+  test.each(customRuntimeFixture.cases)(
+    'supports $name through the universal memory-reader path',
+    async (case_) => {
+      const core = createCore();
+      const repository = createMemoryRepositoryReader(createEntries(case_));
+      const firstResult = await core.inspectProject({ repository });
+      const secondResult = await core.inspectProject({ repository });
+      const agent = firstResult.project?.agents[0];
+
+      expect(toJsonValue(secondResult)).toStrictEqual(toJsonValue(firstResult));
+      expect(firstResult.valid).toBe(true);
+      expect(firstResult.diagnostics).toStrictEqual([]);
+      expect(firstResult.evidence).toStrictEqual([]);
+      expect(firstResult.formatVersion).toBe(1);
+      expect(agent?.id).toBe('custom-agent');
+      expect(agent?.declaration).toStrictEqual({
+        affectedBy: ['/src/**'],
+        bindings: {
+          runtimeAgent: {
+            path: '/src/custom-agent.ts',
+            symbol: 'customAgent',
+          },
+        },
+        runtime: {
+          id: 'custom',
+          ...(case_.expectedGuidancePaths.length === 0
+            ? {}
+            : { guidance: case_.expectedGuidancePaths[0] }),
+        },
+      });
+      expect(firstResult.project?.runtimes.map(({ asset }) => asset.path)).toStrictEqual(
+        case_.expectedGuidancePaths,
+      );
+    },
+  );
 });

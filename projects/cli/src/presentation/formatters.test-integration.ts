@@ -83,7 +83,7 @@ describe('CLI inspection presentation through Core and the memory repository rea
     const inspection = await inspectCompleteProject();
     const result = createMoldeaCliInspectResult(inspection);
     const humanOutput = formatMoldeaCliHumanInspectResult(result);
-    const jsonOutput = formatMoldeaCliJsonInspectResult(result, '0.0.1');
+    const jsonOutput = formatMoldeaCliJsonInspectResult(result, '1.0.0');
     const envelope = JSON.parse(jsonOutput) as {
       readonly command: string;
       readonly result: { readonly inspection: unknown; readonly source: unknown };
@@ -103,7 +103,7 @@ Adapter evidence items: 0
     );
     expect(humanOutput).not.toContain('Universal project.');
     expect(envelope).toStrictEqual({
-      cliVersion: '0.0.1',
+      cliVersion: '1.0.0',
       command: 'inspect',
       error: null,
       result: {

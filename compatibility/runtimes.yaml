@@ -23,7 +23,25 @@ adapters:
       kind: built-in
       package: '@moldea.ai/core'
       distribution: public
-    implementationStatus: planned
+    implementationStatus: available
+    supportedRepositoryFormatVersions:
+      - 1
+    compatibleCoreRange: '^1.0.0'
+    runtimeGuidance:
+      expectation: required
+      notes: Project-local guidance defines the custom runtime integration.
+    targets:
+      - id: custom
+        kind: custom
+        supportLevel: supported
+        language: any
+        patterns:
+          - id: explicit-repository-relationships
+            kind: runtime
+            support: full
+            description: Universal Core validation of explicit repository relationships without runtime-specific inference.
+        lastVerifiedAt: '2026-08-13'
+    lastVerifiedAt: '2026-08-13'
   eve:
     implementation:
       kind: package

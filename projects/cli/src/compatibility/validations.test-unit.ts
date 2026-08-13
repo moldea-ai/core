@@ -69,23 +69,23 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
     [null],
     [
       {
-        '@moldea.ai/core': 'workspace:^0.0.1',
-        '@moldea.ai/repository': 'workspace:0.0.1',
-        '@moldea.ai/repository-fs': 'workspace:0.0.1',
+        '@moldea.ai/core': 'workspace:^1.0.0',
+        '@moldea.ai/repository': 'workspace:1.0.0',
+        '@moldea.ai/repository-fs': 'workspace:1.0.0',
       },
     ],
     [
       {
-        '@moldea.ai/core': '0.0.1',
-        '@moldea.ai/repository': '0.0.1',
+        '@moldea.ai/core': '1.0.0',
+        '@moldea.ai/repository': '1.0.0',
       },
     ],
     [
       {
-        '@moldea.ai/core': '0.0.1',
-        '@moldea.ai/repository': '0.0.1',
-        '@moldea.ai/repository-fs': '0.0.1',
-        '@moldea.ai/unexpected': '0.0.1',
+        '@moldea.ai/core': '1.0.0',
+        '@moldea.ai/repository': '1.0.0',
+        '@moldea.ai/repository-fs': '1.0.0',
+        '@moldea.ai/unexpected': '1.0.0',
       },
     ],
   ])('rejects invalid installed first-class dependency composition %o', (dependencies) => {
@@ -104,14 +104,14 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
     [
       {
         '@moldea.ai/core': '0.0.2',
-        '@moldea.ai/repository': '0.0.1',
-        '@moldea.ai/repository-fs': '0.0.1',
+        '@moldea.ai/repository': '1.0.0',
+        '@moldea.ai/repository-fs': '1.0.0',
       },
     ],
     [
       {
-        '@moldea.ai/core': '0.0.1',
-        '@moldea.ai/repository': '0.0.1',
+        '@moldea.ai/core': '1.0.0',
+        '@moldea.ai/repository': '1.0.0',
       },
     ],
   ])('rejects invalid actually installed package composition %o', (installedPackageVersions) => {
@@ -134,9 +134,9 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
         packageMetadata: {
           ...state.packageMetadata,
           dependencies: {
-            '@moldea.ai/core': '0.0.1',
-            '@moldea.ai/repository': '0.0.1',
-            '@moldea.ai/repository-fs': '0.0.1',
+            '@moldea.ai/core': '1.0.0',
+            '@moldea.ai/repository': '1.0.0',
+            '@moldea.ai/repository-fs': '1.0.0',
             semver: '7.8.5',
           },
         },
@@ -160,11 +160,11 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
           ...state.packageMetadata,
           dependencies: {
             ...state.packageMetadata.dependencies,
-            '@moldea.ai/adapter-anthropic': 'workspace:0.0.1',
+            '@moldea.ai/adapter-anthropic': 'workspace:1.0.0',
           },
           installedPackageVersions: {
             ...state.packageMetadata.installedPackageVersions,
-            '@moldea.ai/adapter-anthropic': '0.0.1',
+            '@moldea.ai/adapter-anthropic': '1.0.0',
           },
         },
         releaseMetadata: {
@@ -184,7 +184,7 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
             },
           },
           packages: [
-            { name: '@moldea.ai/adapter-anthropic', version: '0.0.1' },
+            { name: '@moldea.ai/adapter-anthropic', version: '1.0.0' },
             ...state.releaseMetadata.packages,
           ],
         },
@@ -261,7 +261,7 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
                 ...state.releaseMetadata.matrix.adapters,
                 openai: {
                   ...openAiEntry,
-                  implementation: { ...openAiEntry.implementation, versionRange: '^1.0.0' },
+                  implementation: { ...openAiEntry.implementation, versionRange: '^2.0.0' },
                 },
               },
             },
@@ -286,7 +286,7 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
               ...state.releaseMetadata.matrix,
               adapters: {
                 ...state.releaseMetadata.matrix.adapters,
-                openai: { ...openAiEntry, compatibleCoreRange: '^1.0.0' },
+                openai: { ...openAiEntry, compatibleCoreRange: '^2.0.0' },
               },
             },
           },
@@ -323,7 +323,7 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
               ...state.releaseMetadata.matrix.adapters,
               custom: {
                 ...customEntry,
-                compatibleCoreRange: '^1.0.0',
+                compatibleCoreRange: '^2.0.0',
                 implementationStatus: 'available',
                 supportedRepositoryFormatVersions: [1],
               },
@@ -339,12 +339,12 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
       'implementation version range',
       (entry: IMoldeaCliRuntimeAdapterEntry) => ({
         ...entry,
-        implementation: { ...entry.implementation, versionRange: '^0.0.1' },
+        implementation: { ...entry.implementation, versionRange: '^1.0.0' },
       }),
     ],
     [
       'Core compatibility range',
-      (entry: IMoldeaCliRuntimeAdapterEntry) => ({ ...entry, compatibleCoreRange: '^0.0.1' }),
+      (entry: IMoldeaCliRuntimeAdapterEntry) => ({ ...entry, compatibleCoreRange: '^1.0.0' }),
     ],
     [
       'runtime guidance',
@@ -374,10 +374,10 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
     ],
   ])('rejects a planned entry carrying prohibited %s', (_description, mutate) => {
     const state = createTestCompatibilityState();
-    const customEntry = state.releaseMetadata.matrix.adapters['custom'];
+    const openAiEntry = state.releaseMetadata.matrix.adapters['openai'];
 
-    if (customEntry === undefined) {
-      throw new TypeError('The custom matrix entry is required.');
+    if (openAiEntry === undefined) {
+      throw new TypeError('The OpenAI matrix entry is required.');
     }
 
     expect(
@@ -389,7 +389,7 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
             ...state.releaseMetadata.matrix,
             adapters: {
               ...state.releaseMetadata.matrix.adapters,
-              custom: mutate(customEntry),
+              openai: mutate(openAiEntry),
             },
           },
         },
@@ -476,7 +476,7 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
     } as const;
     const availableCustomEntry: IMoldeaCliRuntimeAdapterEntry = {
       ...customEntry,
-      compatibleCoreRange: '^0.0.1',
+      compatibleCoreRange: '^1.0.0',
       implementationStatus: 'available',
       lastVerifiedAt: '2026-08-13',
       runtimeGuidance: { expectation: 'optional' },

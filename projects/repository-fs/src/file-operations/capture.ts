@@ -1,3 +1,4 @@
+import { Buffer } from 'node:buffer';
 import { constants, type BigIntStats } from 'node:fs';
 import { lstat, open, type FileHandle } from 'node:fs/promises';
 
@@ -287,7 +288,8 @@ export const captureFilesystemRepositoryFile = async (
     }
 
     const expectedByteLength = Number(target.file.fingerprint.size);
-    const pendingBytes = new Uint8Array(expectedByteLength);
+    // Buffer preserves FileHandle compatibility through supported Yarn Plug'n'Play shims.
+    const pendingBytes = Buffer.alloc(expectedByteLength);
     let capturedByteCount = 0;
 
     while (capturedByteCount < expectedByteLength) {
@@ -344,7 +346,11 @@ export const captureFilesystemRepositoryFile = async (
 
     await throwIfFilesystemFileCaptureAborted(state, signal, target, fileHandle);
     throwIfFilesystemRepositoryReaderInvalidated(state, 'read-file', target.file.path);
-    capturedBytes = pendingBytes;
+    capturedBytes = new Uint8Array(
+      pendingBytes.buffer,
+      pendingBytes.byteOffset,
+      pendingBytes.byteLength,
+    );
   } catch (cause) {
     if (cause instanceof RepositorySourceException && cause.code === 'SNAPSHOT_CHANGED') {
       markFilesystemRepositoryReaderInvalidated(state, cause);

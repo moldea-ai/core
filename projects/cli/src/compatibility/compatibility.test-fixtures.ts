@@ -12,28 +12,28 @@ import type { IMoldeaCliCompatibilityStateInput } from './types.js';
 // exact source-workspace package metadata used by compatibility tests
 export const INSTALLED_PACKAGE_METADATA: IMoldeaCliPackageMetadata = Object.freeze({
   dependencies: Object.freeze({
-    '@moldea.ai/core': 'workspace:0.0.1',
-    '@moldea.ai/repository': 'workspace:0.0.1',
-    '@moldea.ai/repository-fs': 'workspace:0.0.1',
+    '@moldea.ai/core': 'workspace:1.0.0',
+    '@moldea.ai/repository': 'workspace:1.0.0',
+    '@moldea.ai/repository-fs': 'workspace:1.0.0',
     semver: '7.8.5',
   }),
   installedPackageVersions: Object.freeze({
-    '@moldea.ai/core': '0.0.1',
-    '@moldea.ai/repository': '0.0.1',
-    '@moldea.ai/repository-fs': '0.0.1',
+    '@moldea.ai/core': '1.0.0',
+    '@moldea.ai/repository': '1.0.0',
+    '@moldea.ai/repository-fs': '1.0.0',
   }),
   supportedNodeRange: '^22.11.0 || ^24.11.0',
-  version: '0.0.1',
+  version: '1.0.0',
 });
 
 // complete available package-backed matrix claim used by activation tests
 export const AVAILABLE_OPENAI_MATRIX_ENTRY: IMoldeaCliRuntimeAdapterEntry = Object.freeze({
-  compatibleCoreRange: '^0.0.1',
+  compatibleCoreRange: '^1.0.0',
   implementation: Object.freeze({
     distribution: 'public',
     kind: 'package',
     package: '@moldea.ai/adapter-openai',
-    versionRange: '^0.0.1',
+    versionRange: '^1.0.0',
   }),
   implementationStatus: 'available',
   lastVerifiedAt: '2026-08-13',
@@ -94,11 +94,11 @@ export const createTestActiveOpenAiState = (): IMoldeaCliCompatibilityStateInput
       ...baseState.packageMetadata,
       dependencies: {
         ...baseState.packageMetadata.dependencies,
-        '@moldea.ai/adapter-openai': 'workspace:0.0.1',
+        '@moldea.ai/adapter-openai': 'workspace:1.0.0',
       },
       installedPackageVersions: {
         ...baseState.packageMetadata.installedPackageVersions,
-        '@moldea.ai/adapter-openai': '0.0.1',
+        '@moldea.ai/adapter-openai': '1.0.0',
       },
     },
     releaseMetadata: {
@@ -106,7 +106,7 @@ export const createTestActiveOpenAiState = (): IMoldeaCliCompatibilityStateInput
       activeAdapterIds: ['openai'],
       matrix: { adapters: matrixAdapters, version: 1 },
       packages: [
-        { name: '@moldea.ai/adapter-openai', version: '0.0.1' },
+        { name: '@moldea.ai/adapter-openai', version: '1.0.0' },
         ...baseState.releaseMetadata.packages,
       ],
     },

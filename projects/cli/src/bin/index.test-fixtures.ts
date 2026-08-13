@@ -36,6 +36,7 @@ export interface IMoldeaCliPackageManifest {
   readonly files?: readonly string[];
   readonly main?: string;
   readonly name?: string;
+  readonly preferUnplugged?: boolean;
   readonly sideEffects?: boolean;
   readonly type?: string;
   readonly types?: string;
@@ -135,8 +136,9 @@ export const expectPackageManifest = (
     exports: {},
     files: ['dist', 'LICENSE', 'README.md'],
     name: '@moldea.ai/cli',
+    preferUnplugged: true,
     type: 'module',
-    version: '0.0.1',
+    version: '1.0.0',
   });
   expect(manifest.dependencies).toStrictEqual({
     '@moldea.ai/core': dependencyVersion,

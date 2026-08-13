@@ -2,11 +2,15 @@
 
 Source-neutral, read-only repository contracts for the `moldea` ecosystem.
 
+The current unpublished `1.0.0` release candidate provides the complete source-neutral reader contract and immutable in-memory reference implementation. Tarball, consumer-type, and conformance checks are the release boundary until npm publication is separately authorized.
+
 One reader represents one coherent repository snapshot through portable logical paths. The package
 does not access a filesystem or network, interpret the `moldea` format, follow symlinks, decode file
 content, or expose write operations.
 
-## Install
+## Install after release
+
+The registry command below applies after the immutable `1.0.0` release is published. Current candidate verification installs the packed artifact directly.
 
 ```bash
 pnpm add @moldea.ai/repository

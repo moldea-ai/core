@@ -34,7 +34,7 @@ describe('CLI release metadata immutability', () => {
       cliPackage: {
         name: '@moldea.ai/cli',
         supportedNodeRange: '^22.11.0 || ^24.11.0',
-        version: '0.0.1',
+        version: '1.0.0',
       },
       coreRecognizedAdapterIds: [
         'anthropic',
@@ -53,9 +53,9 @@ describe('CLI release metadata immutability', () => {
       minimumGitVersion: '2.30.0',
       outputSchemaVersion: 1,
       packages: [
-        { name: '@moldea.ai/core', version: '0.0.1' },
-        { name: '@moldea.ai/repository', version: '0.0.1' },
-        { name: '@moldea.ai/repository-fs', version: '0.0.1' },
+        { name: '@moldea.ai/core', version: '1.0.0' },
+        { name: '@moldea.ai/repository', version: '1.0.0' },
+        { name: '@moldea.ai/repository-fs', version: '1.0.0' },
       ],
       repositoryFormatVersions: [1],
     });
@@ -73,9 +73,17 @@ describe('CLI release metadata immutability', () => {
       'pydantic-ai',
       'vercel-ai-sdk',
     ]);
+    expect(MOLDEA_CLI_RELEASE_METADATA.matrix.adapters['custom']).toMatchObject({
+      compatibleCoreRange: '^1.0.0',
+      implementationStatus: 'available',
+      runtimeGuidance: { expectation: 'required' },
+      supportedRepositoryFormatVersions: [1],
+      targets: [{ id: 'custom' }],
+    });
     expect(
-      Object.values(MOLDEA_CLI_RELEASE_METADATA.matrix.adapters).every(
-        ({ implementationStatus }) => implementationStatus === 'planned',
+      Object.entries(MOLDEA_CLI_RELEASE_METADATA.matrix.adapters).every(
+        ([adapterId, { implementationStatus }]) =>
+          adapterId === 'custom' || implementationStatus === 'planned',
       ),
     ).toBe(true);
     expectDeeplyFrozen(MOLDEA_CLI_RELEASE_METADATA);
@@ -87,7 +95,7 @@ describe('CLI release metadata immutability', () => {
       cliPackage: {
         name: '@moldea.ai/cli',
         supportedNodeRange: '^24.11.0',
-        version: '0.0.1',
+        version: '1.0.0',
       },
       coreRecognizedAdapterIds: [],
       matrix: { adapters: {}, version: 1 },

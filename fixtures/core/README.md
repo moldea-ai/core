@@ -9,6 +9,7 @@ These fixtures are the repository-owned conformance data for `@moldea.ai/core`. 
 | `discovery/`              | Canonical asset discovery, entry types, symlink rejection, and unknown canonical paths.                                                                            |
 | `agent-assets/`           | Mandatory descriptions and instructions, optional handoff descriptions, identities, and runtime placeholders.                                                      |
 | `runtime-guidance/`       | Referenced and discovered runtime guidance, empty content, missing content, and shared reads.                                                                      |
+| `custom-runtime/`         | Built-in custom runtime inspection, explicit repository relationships, optional structural guidance, determinism, and empty adapter evidence.                      |
 | `manifest-relationships/` | Global and agent context and decision relationships.                                                                                                               |
 | `decision-graph/`         | Decision IDs, active and historical supersession, cycles, missing references, status consistency, and orphans.                                                     |
 | `repository-references/`  | Exact bindings, repository references, implementation files, impact paths, wrong entry types, and symlinks.                                                        |

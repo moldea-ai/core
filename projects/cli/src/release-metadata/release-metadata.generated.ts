@@ -17,7 +17,7 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
   cliPackage: {
     name: '@moldea.ai/cli',
     supportedNodeRange: '^22.11.0 || ^24.11.0',
-    version: '0.0.1',
+    version: '1.0.0',
   },
   coreRecognizedAdapterIds: [
     'anthropic',
@@ -60,12 +60,37 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
         implementationStatus: 'planned',
       },
       custom: {
+        compatibleCoreRange: '^1.0.0',
         implementation: {
           distribution: 'public',
           kind: 'built-in',
           package: '@moldea.ai/core',
         },
-        implementationStatus: 'planned',
+        implementationStatus: 'available',
+        lastVerifiedAt: '2026-08-13',
+        runtimeGuidance: {
+          expectation: 'required',
+          notes: 'Project-local guidance defines the custom runtime integration.',
+        },
+        supportedRepositoryFormatVersions: [1],
+        targets: [
+          {
+            id: 'custom',
+            kind: 'custom',
+            language: 'any',
+            lastVerifiedAt: '2026-08-13',
+            patterns: [
+              {
+                description:
+                  'Universal Core validation of explicit repository relationships without runtime-specific inference.',
+                id: 'explicit-repository-relationships',
+                kind: 'runtime',
+                support: 'full',
+              },
+            ],
+            supportLevel: 'supported',
+          },
+        ],
       },
       eve: {
         implementation: {
@@ -139,15 +164,15 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
   packages: [
     {
       name: '@moldea.ai/core',
-      version: '0.0.1',
+      version: '1.0.0',
     },
     {
       name: '@moldea.ai/repository',
-      version: '0.0.1',
+      version: '1.0.0',
     },
     {
       name: '@moldea.ai/repository-fs',
-      version: '0.0.1',
+      version: '1.0.0',
     },
   ],
   repositoryFormatVersions: [1],

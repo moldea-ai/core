@@ -150,7 +150,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     };
 
     assertRuntimeInvariant(cliManifest?.name === '@moldea.ai/cli', 'The CLI identity is invalid.');
-    assertRuntimeInvariant(cliManifest?.version === '0.0.1', 'The CLI version is invalid.');
+    assertRuntimeInvariant(cliManifest?.version === '1.0.0', 'The CLI version is invalid.');
     assertRuntimeInvariant(
       cliManifest?.engines?.node === '^22.11.0 || ^24.11.0',
       'The CLI runtime range is invalid.',
@@ -174,7 +174,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
 
     assertRuntimeInvariant(versionResult.status === 0, 'The installed CLI version command failed.');
     assertRuntimeInvariant(versionResult.stderr === '', 'The version command wrote stderr.');
-    assertRuntimeInvariant(versionResult.stdout === '0.0.1\n', 'The version output is invalid.');
+    assertRuntimeInvariant(versionResult.stdout === '1.0.0\n', 'The version output is invalid.');
 
     const compatibilityResult = executeCli(
       executablePath,
@@ -183,6 +183,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
       environment,
     );
     const compatibilityEnvelope = JSON.parse(compatibilityResult.stdout);
+    const customAdapter = compatibilityEnvelope.result?.adapters?.find(({ id }) => id === 'custom');
 
     assertRuntimeInvariant(
       compatibilityResult.status === 0,
@@ -196,6 +197,34 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
       compatibilityEnvelope.status === 'valid' &&
         compatibilityEnvelope.result?.supportedNodeRange === '^22.11.0 || ^24.11.0',
       'The compatibility result is invalid.',
+    );
+    assertRuntimeInvariant(
+      compatibilityEnvelope.cliVersion === '1.0.0' &&
+        compatibilityEnvelope.schemaVersion === 1 &&
+        compatibilityEnvelope.result?.outputSchemaVersion === 1,
+      'The compatibility envelope is invalid.',
+    );
+    assertRuntimeInvariant(
+      JSON.stringify(compatibilityEnvelope.result?.packages) ===
+        JSON.stringify([
+          { name: '@moldea.ai/core', version: '1.0.0' },
+          { name: '@moldea.ai/repository', version: '1.0.0' },
+          { name: '@moldea.ai/repository-fs', version: '1.0.0' },
+        ]),
+      'The compatibility package list is invalid.',
+    );
+    assertRuntimeInvariant(
+      customAdapter?.active === true &&
+        customAdapter.bundledVersion === '1.0.0' &&
+        customAdapter.matrix?.implementationStatus === 'available' &&
+        customAdapter.matrix?.compatibleCoreRange === '^1.0.0' &&
+        customAdapter.matrix?.runtimeGuidance?.expectation === 'required' &&
+        JSON.stringify(customAdapter.matrix?.supportedRepositoryFormatVersions) === '[1]' &&
+        customAdapter.matrix?.targets?.[0]?.id === 'custom' &&
+        customAdapter.matrix?.targets?.[0]?.patterns?.[0]?.id ===
+          'explicit-repository-relationships' &&
+        customAdapter.matrix?.targets?.[0]?.patterns?.[0]?.support === 'full',
+      'The custom compatibility claim is invalid.',
     );
 
     executeFixtureGit(consumerDirectory, hooksDirectory, environment, ['init']);

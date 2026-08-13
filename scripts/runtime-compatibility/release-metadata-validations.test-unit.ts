@@ -11,9 +11,9 @@ import type {
 } from './types.ts';
 
 const FOUNDATIONAL_DEPENDENCIES = {
-  '@moldea.ai/core': 'workspace:0.0.1',
-  '@moldea.ai/repository': 'workspace:0.0.1',
-  '@moldea.ai/repository-fs': 'workspace:0.0.1',
+  '@moldea.ai/core': 'workspace:1.0.0',
+  '@moldea.ai/repository': 'workspace:1.0.0',
+  '@moldea.ai/repository-fs': 'workspace:1.0.0',
 };
 
 const createPlannedMatrix = (): IRuntimeCompatibilityMatrix => ({
@@ -39,7 +39,7 @@ const createSources = (): IMoldeaCliReleaseMetadataSources => ({
     dependencies: { ...FOUNDATIONAL_DEPENDENCIES },
     engines: { node: '^22.11.0 || ^24.11.0' },
     name: '@moldea.ai/cli',
-    version: '0.0.1',
+    version: '1.0.0',
   },
   coreRecognizedAdapterIds: Object.keys(OFFICIAL_RUNTIME_ADAPTER_PACKAGES),
   coreSupportedRepositoryFormatVersions: [1],
@@ -47,19 +47,19 @@ const createSources = (): IMoldeaCliReleaseMetadataSources => ({
   minimumGitVersion: '2.30.0',
   outputSchemaVersion: 1,
   packageManifests: {
-    '@moldea.ai/core': { name: '@moldea.ai/core', version: '0.0.1' },
-    '@moldea.ai/repository': { name: '@moldea.ai/repository', version: '0.0.1' },
-    '@moldea.ai/repository-fs': { name: '@moldea.ai/repository-fs', version: '0.0.1' },
+    '@moldea.ai/core': { name: '@moldea.ai/core', version: '1.0.0' },
+    '@moldea.ai/repository': { name: '@moldea.ai/repository', version: '1.0.0' },
+    '@moldea.ai/repository-fs': { name: '@moldea.ai/repository-fs', version: '1.0.0' },
   },
 });
 
 const AVAILABLE_OPENAI_ENTRY: IRuntimeAdapterEntry = {
-  compatibleCoreRange: '^0.0.1',
+  compatibleCoreRange: '^1.0.0',
   implementation: {
     distribution: 'public',
     kind: 'package',
     package: '@moldea.ai/adapter-openai',
-    versionRange: '^0.0.1',
+    versionRange: '^1.0.0',
   },
   implementationStatus: 'available',
   lastVerifiedAt: '2026-08-13',
@@ -85,7 +85,7 @@ const AVAILABLE_OPENAI_ENTRY: IRuntimeAdapterEntry = {
 };
 
 const AVAILABLE_CUSTOM_ENTRY: IRuntimeAdapterEntry = {
-  compatibleCoreRange: '^0.0.1',
+  compatibleCoreRange: '^1.0.0',
   implementation: {
     distribution: 'public',
     kind: 'built-in',
@@ -113,7 +113,7 @@ const activateOpenAi = (
   const cliManifest = sources.cliManifest as {
     dependencies: Record<string, string>;
   };
-  cliManifest.dependencies['@moldea.ai/adapter-openai'] = 'workspace:0.0.1';
+  cliManifest.dependencies['@moldea.ai/adapter-openai'] = 'workspace:1.0.0';
   return {
     ...sources,
     activeAdapters: [{ id: 'openai', supportedRepositoryFormatVersions: [1] }],
@@ -121,7 +121,7 @@ const activateOpenAi = (
       ...sources.packageManifests,
       '@moldea.ai/adapter-openai': {
         name: '@moldea.ai/adapter-openai',
-        version: '0.0.1',
+        version: '1.0.0',
       },
     },
   };
@@ -136,16 +136,16 @@ describe('CLI release metadata validation', () => {
       cliPackage: {
         name: '@moldea.ai/cli',
         supportedNodeRange: '^22.11.0 || ^24.11.0',
-        version: '0.0.1',
+        version: '1.0.0',
       },
       coreRecognizedAdapterIds: Object.keys(OFFICIAL_RUNTIME_ADAPTER_PACKAGES),
       matrix: createPlannedMatrix(),
       minimumGitVersion: '2.30.0',
       outputSchemaVersion: 1,
       packages: [
-        { name: '@moldea.ai/core', version: '0.0.1' },
-        { name: '@moldea.ai/repository', version: '0.0.1' },
-        { name: '@moldea.ai/repository-fs', version: '0.0.1' },
+        { name: '@moldea.ai/core', version: '1.0.0' },
+        { name: '@moldea.ai/repository', version: '1.0.0' },
+        { name: '@moldea.ai/repository-fs', version: '1.0.0' },
       ],
       repositoryFormatVersions: [1],
     });
@@ -175,7 +175,7 @@ describe('CLI release metadata validation', () => {
     expect(metadata.activeAdapterIds).toStrictEqual(['openai']);
     expect(metadata.packages).toContainEqual({
       name: '@moldea.ai/adapter-openai',
-      version: '0.0.1',
+      version: '1.0.0',
     });
   });
 
@@ -196,7 +196,7 @@ describe('CLI release metadata validation', () => {
       'non-exact Core dependency',
       (sources: IMoldeaCliReleaseMetadataSources): void => {
         const cliManifest = sources.cliManifest as { dependencies: Record<string, string> };
-        cliManifest.dependencies['@moldea.ai/core'] = 'workspace:^0.0.1';
+        cliManifest.dependencies['@moldea.ai/core'] = 'workspace:^1.0.0';
       },
       'The @moldea.ai/core CLI dependency is not pinned to its exact version.',
     ],
@@ -212,7 +212,7 @@ describe('CLI release metadata validation', () => {
       'unexpected first-class dependency',
       (sources: IMoldeaCliReleaseMetadataSources): void => {
         const cliManifest = sources.cliManifest as { dependencies: Record<string, string> };
-        cliManifest.dependencies['@moldea.ai/unexpected'] = 'workspace:0.0.1';
+        cliManifest.dependencies['@moldea.ai/unexpected'] = 'workspace:1.0.0';
       },
       'The CLI first-class dependency set is inconsistent.',
     ],
@@ -261,7 +261,7 @@ describe('CLI release metadata validation', () => {
       activeAdapters: [{ id: 'openai', supportedRepositoryFormatVersions: [1] }],
     };
     const cliManifest = sources.cliManifest as { dependencies: Record<string, string> };
-    cliManifest.dependencies['@moldea.ai/adapter-openai'] = 'workspace:0.0.1';
+    cliManifest.dependencies['@moldea.ai/adapter-openai'] = 'workspace:1.0.0';
 
     expect(() => createMoldeaCliReleaseMetadata(sources)).toThrow(
       'The openai adapter cannot be active while unpublished.',
@@ -270,7 +270,7 @@ describe('CLI release metadata validation', () => {
 
   test.each([
     [
-      'workspace:^0.0.1',
+      'workspace:^1.0.0',
       'The @moldea.ai/adapter-openai CLI dependency is not pinned to its exact version.',
       undefined,
       undefined,
@@ -282,16 +282,16 @@ describe('CLI release metadata validation', () => {
       undefined,
     ],
     [
-      'workspace:0.0.1',
+      'workspace:1.0.0',
       'The @moldea.ai/adapter-openai version is outside its matrix implementation range.',
-      '^1.0.0',
+      '^2.0.0',
       undefined,
     ],
     [
-      'workspace:0.0.1',
+      'workspace:1.0.0',
       'The @moldea.ai/adapter-openai Core compatibility range is inconsistent.',
       undefined,
-      '^1.0.0',
+      '^2.0.0',
     ],
   ])(
     'rejects inconsistent active adapter release metadata for %s -> %s',

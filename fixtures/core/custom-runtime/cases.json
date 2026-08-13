@@ -1,0 +1,63 @@
+{
+  "cases": [
+    {
+      "name": "custom runtime with explicit relationships and guidance",
+      "manifest": "version: 1\nagents:\n  custom-agent:\n    runtime:\n      id: custom\n      guidance: /moldea/runtimes/custom.md\n    bindings:\n      runtimeAgent:\n        path: /src/custom-agent.ts\n        symbol: customAgent\n    affectedBy:\n      - /src/**\n",
+      "entries": [
+        {
+          "path": "/moldea/project.md",
+          "type": "file",
+          "text": "# Custom runtime project\n"
+        },
+        {
+          "path": "/moldea/agents/custom-agent/description.md",
+          "type": "file",
+          "text": "A custom runtime agent.\n"
+        },
+        {
+          "path": "/moldea/agents/custom-agent/instruction.md",
+          "type": "file",
+          "text": "You are the `custom-agent` agent.\n"
+        },
+        {
+          "path": "/moldea/runtimes/custom.md",
+          "type": "file",
+          "text": "Use the project-local custom runtime.\n"
+        },
+        {
+          "path": "/src/custom-agent.ts",
+          "type": "file",
+          "text": "export const customAgent = {};\n"
+        }
+      ],
+      "expectedGuidancePaths": ["/moldea/runtimes/custom.md"]
+    },
+    {
+      "name": "custom runtime without semantic guidance",
+      "manifest": "version: 1\nagents:\n  custom-agent:\n    runtime:\n      id: custom\n    bindings:\n      runtimeAgent:\n        path: /src/custom-agent.ts\n        symbol: customAgent\n    affectedBy:\n      - /src/**\n",
+      "entries": [
+        {
+          "path": "/moldea/project.md",
+          "type": "file",
+          "text": "# Custom runtime project\n"
+        },
+        {
+          "path": "/moldea/agents/custom-agent/description.md",
+          "type": "file",
+          "text": "A custom runtime agent.\n"
+        },
+        {
+          "path": "/moldea/agents/custom-agent/instruction.md",
+          "type": "file",
+          "text": "You are the `custom-agent` agent.\n"
+        },
+        {
+          "path": "/src/custom-agent.ts",
+          "type": "file",
+          "text": "export const customAgent = {};\n"
+        }
+      ],
+      "expectedGuidancePaths": []
+    }
+  ]
+}

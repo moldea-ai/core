@@ -68,31 +68,31 @@ describe('loadMoldeaCliPackageMetadata', () => {
   test('loads and freezes exact installed package metadata', async () => {
     const manifestPath = await writeManifest({
       dependencies: {
-        '@moldea.ai/core': '0.0.1',
-        '@moldea.ai/repository': '0.0.1',
-        '@moldea.ai/repository-fs': '0.0.1',
+        '@moldea.ai/core': '1.0.0',
+        '@moldea.ai/repository': '1.0.0',
+        '@moldea.ai/repository-fs': '1.0.0',
         semver: '7.8.5',
       },
       engines: { node: '^22.11.0 || ^24.11.0' },
       name: '@moldea.ai/cli',
-      version: '0.0.1',
+      version: '1.0.0',
     });
     const metadata = await loadMoldeaCliPackageMetadata(manifestPath);
 
     expect(metadata).toStrictEqual({
       dependencies: {
-        '@moldea.ai/core': '0.0.1',
-        '@moldea.ai/repository': '0.0.1',
-        '@moldea.ai/repository-fs': '0.0.1',
+        '@moldea.ai/core': '1.0.0',
+        '@moldea.ai/repository': '1.0.0',
+        '@moldea.ai/repository-fs': '1.0.0',
         semver: '7.8.5',
       },
       installedPackageVersions: {
-        '@moldea.ai/core': '0.0.1',
-        '@moldea.ai/repository': '0.0.1',
-        '@moldea.ai/repository-fs': '0.0.1',
+        '@moldea.ai/core': '1.0.0',
+        '@moldea.ai/repository': '1.0.0',
+        '@moldea.ai/repository-fs': '1.0.0',
       },
       supportedNodeRange: '^22.11.0 || ^24.11.0',
-      version: '0.0.1',
+      version: '1.0.0',
     });
     expect(Object.isFrozen(metadata)).toBe(true);
     expect(Object.isFrozen(metadata.dependencies)).toBe(true);
@@ -124,14 +124,14 @@ describe('loadMoldeaCliPackageMetadata', () => {
       const manifestPath = await writeManifest({
         ...fields,
         name: '@moldea.ai/cli',
-        version: '0.0.1',
+        version: '1.0.0',
       });
 
       await expect(loadMoldeaCliPackageMetadata(manifestPath)).resolves.toStrictEqual({
         dependencies,
         installedPackageVersions: dependencies === null ? null : {},
         supportedNodeRange,
-        version: '0.0.1',
+        version: '1.0.0',
       });
     },
   );
@@ -139,24 +139,24 @@ describe('loadMoldeaCliPackageMetadata', () => {
   test('retains the actual resolved package version for compatibility rejection', async () => {
     const manifestPath = await writeManifest({
       dependencies: {
-        '@moldea.ai/core': '0.0.1',
-        '@moldea.ai/repository': '0.0.1',
-        '@moldea.ai/repository-fs': '0.0.1',
+        '@moldea.ai/core': '1.0.0',
+        '@moldea.ai/repository': '1.0.0',
+        '@moldea.ai/repository-fs': '1.0.0',
       },
       engines: { node: '^22.11.0 || ^24.11.0' },
       name: '@moldea.ai/cli',
-      version: '0.0.1',
+      version: '1.0.0',
     });
     const packageEntryResolver = await createPackageEntryResolver(manifestPath, {
       '@moldea.ai/core': '0.0.2',
-      '@moldea.ai/repository': '0.0.1',
-      '@moldea.ai/repository-fs': '0.0.1',
+      '@moldea.ai/repository': '1.0.0',
+      '@moldea.ai/repository-fs': '1.0.0',
     });
 
     await expect(
       loadMoldeaCliPackageMetadata(manifestPath, packageEntryResolver),
     ).resolves.toMatchObject({
-      dependencies: { '@moldea.ai/core': '0.0.1' },
+      dependencies: { '@moldea.ai/core': '1.0.0' },
       installedPackageVersions: { '@moldea.ai/core': '0.0.2' },
     });
   });
@@ -166,7 +166,7 @@ describe('loadMoldeaCliPackageMetadata', () => {
     const manifestPath = await writeManifest({
       dependencies: { '@moldea.ai/core': packageVersion },
       name: '@moldea.ai/cli',
-      version: '0.0.1',
+      version: '1.0.0',
     });
     const packageEntryResolver = await createPackageEntryResolver(manifestPath, {
       '@moldea.ai/core': packageVersion,
@@ -180,7 +180,7 @@ describe('loadMoldeaCliPackageMetadata', () => {
   });
 
   test.each([
-    [{ name: '@moldea.ai/not-cli', version: '0.0.1' }],
+    [{ name: '@moldea.ai/not-cli', version: '1.0.0' }],
     [{ name: '@moldea.ai/cli', version: '01.0.0' }],
     [{ name: '@moldea.ai/cli', version: '1.0.0-01' }],
     [{ name: '@moldea.ai/cli', version: 'v1.0.0' }],

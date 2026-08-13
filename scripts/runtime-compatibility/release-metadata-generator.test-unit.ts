@@ -33,7 +33,7 @@ describe('CLI release metadata generation', () => {
     const metadata: IMoldeaCliGeneratedReleaseMetadata = {
       activeAdapterIds: [],
       cliPackage: {
-        version: '0.0.1',
+        version: '1.0.0',
         supportedNodeRange: '^24.11.0',
         name: '@moldea.ai/cli',
       },

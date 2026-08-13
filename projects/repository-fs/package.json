@@ -1,6 +1,6 @@
 {
   "name": "@moldea.ai/repository-fs",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "A coherent, read-only repository reader over an explicitly selected local filesystem root.",
   "homepage": "https://github.com/moldea-ai/packages/tree/main/projects/repository-fs#readme",
   "bugs": {
@@ -41,7 +41,7 @@
     "typecheck": "tsc -p tsconfig.src.json --noEmit && tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@moldea.ai/repository": "workspace:^0.0.1"
+    "@moldea.ai/repository": "workspace:^1.0.0"
   },
   "devDependencies": {
     "@types/node": "22.20.1",

@@ -30,7 +30,7 @@ const expectDeeplyFrozen = (root: object): void => {
 };
 
 describe('createMoldeaCliCompatibilityResult', () => {
-  test('reports the exact current release without inferring planned adapter support', () => {
+  test('reports the exact current release without inferring package-backed adapter support', () => {
     const state = createTestCompatibilityState();
     const result = createMoldeaCliCompatibilityResult(state);
     const customAdapter = result.adapters.find(({ id }) => id === 'custom');
@@ -41,18 +41,29 @@ describe('createMoldeaCliCompatibilityResult', () => {
       minimumGitVersion: '2.30.0',
       outputSchemaVersion: 1,
       packages: [
-        { name: '@moldea.ai/core', version: '0.0.1' },
-        { name: '@moldea.ai/repository', version: '0.0.1' },
-        { name: '@moldea.ai/repository-fs', version: '0.0.1' },
+        { name: '@moldea.ai/core', version: '1.0.0' },
+        { name: '@moldea.ai/repository', version: '1.0.0' },
+        { name: '@moldea.ai/repository-fs', version: '1.0.0' },
       ],
       repositoryFormatVersions: [1],
       supportedNodeRange: '^22.11.0 || ^24.11.0',
     });
     expect(customAdapter).toMatchObject({
       active: true,
-      bundledVersion: '0.0.1',
+      bundledVersion: '1.0.0',
       id: 'custom',
-      matrix: { implementationStatus: 'planned' },
+      matrix: {
+        compatibleCoreRange: '^1.0.0',
+        implementationStatus: 'available',
+        runtimeGuidance: { expectation: 'required' },
+        supportedRepositoryFormatVersions: [1],
+        targets: [
+          {
+            id: 'custom',
+            patterns: [{ id: 'explicit-repository-relationships', support: 'full' }],
+          },
+        ],
+      },
     });
     expect(openAiAdapter).toMatchObject({
       active: false,
@@ -69,9 +80,9 @@ describe('createMoldeaCliCompatibilityResult', () => {
 
     expect(result.adapters.find(({ id }) => id === 'openai')).toMatchObject({
       active: true,
-      bundledVersion: '0.0.1',
+      bundledVersion: '1.0.0',
       matrix: {
-        implementation: { versionRange: '^0.0.1' },
+        implementation: { versionRange: '^1.0.0' },
         implementationStatus: 'available',
         targets: [{ id: 'typescript', lastVerifiedAt: '2026-08-13' }],
       },
