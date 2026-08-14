@@ -885,11 +885,11 @@ process.exit(result.status ?? 1);
           fakeGitPath,
           `#!/usr/bin/env node
 const { writeFileSync } = require('node:fs');
-writeFileSync(process.env.MOLDEA_TEST_GIT_STARTED, 'started');
 process.on('SIGTERM', () => {
   writeFileSync(process.env.MOLDEA_TEST_GIT_STOPPED, 'stopped');
   process.exit(0);
 });
+writeFileSync(process.env.MOLDEA_TEST_GIT_STARTED, 'started');
 setInterval(() => undefined, 1000);
 `,
           'utf8',
