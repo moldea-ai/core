@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { mkdir, mkdtemp, rename, rm, symlink, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rename, rm, stat, symlink, utimes, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { expectToRejectCode } from 'web-utils-kit';
@@ -105,11 +105,17 @@ describe('verified filesystem file capture', () => {
 
       const state = await createDirectoryState(temporaryDirectory);
       const logicalPath = parseRepositoryPath('/file.bin');
+      const originalStatistics = await stat(filePath);
 
       if (mutation === 'delete') {
         await rm(filePath);
       } else if (mutation === 'mutate') {
         await writeFile(filePath, Uint8Array.from([4, 3, 2, 1]));
+        await utimes(
+          filePath,
+          originalStatistics.atime,
+          new Date(originalStatistics.mtimeMs + 1000),
+        );
       } else {
         await rename(filePath, replacedPath);
         await writeFile(filePath, Uint8Array.from([1, 2, 3, 4]));

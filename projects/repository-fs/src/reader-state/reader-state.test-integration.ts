@@ -58,7 +58,7 @@ describe('permanent filesystem reader invalidation', () => {
       const cachedPath = parseRepositoryPath('/cached.bin');
       const changedPath = parseRepositoryPath('/changed.bin');
       const originalCachedBytes = Uint8Array.from([1, 2, 3]);
-      const changedBytes = Uint8Array.from([8, 8, 8]);
+      const changedBytes = Uint8Array.from([8, 8, 8, 8]);
 
       await writeFile(cachedHostPath, originalCachedBytes);
       await writeFile(changedHostPath, Uint8Array.from([4, 5, 6]));
@@ -121,7 +121,7 @@ describe('permanent filesystem reader invalidation', () => {
       const state = await createDirectoryState(temporaryDirectory);
       const filePath = parseRepositoryPath('/file.bin');
 
-      await writeFile(path.join(temporaryDirectory, 'file.bin'), Uint8Array.from([2]));
+      await writeFile(path.join(temporaryDirectory, 'file.bin'), Uint8Array.from([2, 3]));
       await expectToRejectCode(readFilesystemRepositoryFile(state, filePath), 'SNAPSHOT_CHANGED');
 
       const forgedPath = '../private-source' as IRepositoryPath;
@@ -165,7 +165,7 @@ describe('permanent filesystem reader invalidation', () => {
 
       expect(firstEntry.done).toBe(false);
 
-      await writeFile(path.join(temporaryDirectory, 'changed.bin'), Uint8Array.from([4]));
+      await writeFile(path.join(temporaryDirectory, 'changed.bin'), Uint8Array.from([4, 4]));
       await expectToRejectCode(
         readFilesystemRepositoryFile(state, parseRepositoryPath('/changed.bin')),
         'SNAPSHOT_CHANGED',
@@ -218,7 +218,7 @@ describe('permanent filesystem reader invalidation', () => {
       });
 
       await capturePaused;
-      await writeFile(path.join(temporaryDirectory, 'changed.bin'), Uint8Array.from([3, 3, 3]));
+      await writeFile(path.join(temporaryDirectory, 'changed.bin'), Uint8Array.from([3, 3, 3, 3]));
       await expectToRejectCode(
         readFilesystemRepositoryFile(state, changedPath),
         'SNAPSHOT_CHANGED',

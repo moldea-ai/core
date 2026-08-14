@@ -79,11 +79,13 @@ Every regular-file entry retains a private creation-time fingerprint containing 
 
 Exact-path verification rechecks required raw segment spellings, selected entry types, regular-file fingerprints, and required directory-component identities while continuing to ignore unrelated sibling content. Recursive verification rechecks every entry type, file fingerprint, traversed directory identity, and complete eligible child-name set after `.git` exclusion. A detected mismatch fails the complete operation with `SNAPSHOT_CHANGED`; partial verified inventories are never returned.
 
+Windows filesystem metadata does not reliably distinguish every immediate same-size in-place write. The public factory therefore captures and privately caches every selected regular file on Windows before publishing the reader. This fail-closed fallback applies the ordinary file and total-cache limits during construction; insufficient capacity fails creation with `RESOURCE_LIMIT_EXCEEDED` instead of returning a reader that could adopt later bytes. Platforms with sufficient metadata retain lazy first-read capture.
+
 Verified inventories feed private frozen lookup and recursive-listing operations. These operations validate logical paths at runtime, return detached common entries without private filesystem metadata, honor operation cancellation, preserve exact prefix boundaries, and perform no additional host access. Missing lookup paths return `null`; missing and non-directory listing prefixes use the common `ENTRY_NOT_FOUND` and `ENTRY_NOT_DIRECTORY` contracts.
 
 ### Verified file capture and caching
 
-Private file-read operations classify paths from the frozen inventory before host access. Missing paths use `ENTRY_NOT_FOUND`, while the root, directories, and symlinks use `ENTRY_NOT_FILE`. An already captured file is served entirely from the private cache.
+Private file-read operations classify paths from the frozen inventory before host access. Missing paths use `ENTRY_NOT_FOUND`, while the root, directories, and symlinks use `ENTRY_NOT_FILE`. An already captured file, including a file materialized during Windows reader creation, is served entirely from the private cache.
 
 The first read of a regular file revalidates the resolved root and every frozen directory component with no-follow metadata, opens the selected file with the strongest no-follow behavior exposed by the runtime, and compares both the open handle and current path with the creation-time fingerprint. It enforces `maxFileBytes` and the atomically reserved `maxCachedBytes` budget before allocating the exact expected length, reads in bounded chunks, and repeats handle and path-chain verification before committing bytes.
 
@@ -99,7 +101,7 @@ One private reader state now owns the verified inventory, exact-path index, deta
 
 File capture distinguishes a stable host access denial (`ACCESS_DENIED`) or other stable I/O failure (`SOURCE_UNAVAILABLE`) from a coherence loss (`SNAPSHOT_CHANGED`). It revalidates the open handle and complete root-to-file path before exposing an observed read failure. A failure that prevents coherence from being proved is treated as snapshot loss. Cancellation becomes `ABORTED` only while the capture remains coherent, failed captures never enter the cache, and a close-only failure does not invalidate an otherwise coherent state.
 
-The public factory is the only reader-construction boundary. It composes root preparation, verified inventory construction, and private state creation without exposing host paths, inventory metadata, cache state, capture coordination, or lifecycle mutation. Its frozen closures delegate the common reader operations to that private state.
+The public factory is the only reader-construction boundary. It composes root preparation, verified inventory construction, private state creation, and platform-required snapshot materialization without exposing host paths, inventory metadata, cache state, capture coordination, or lifecycle mutation. Its frozen closures delegate the common reader operations to that private state.
 
 ## Runtime support
 

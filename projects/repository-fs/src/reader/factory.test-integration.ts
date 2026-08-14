@@ -1,5 +1,6 @@
 // @vitest-environment node
-import { rename, writeFile } from 'node:fs/promises';
+import { mkdtemp, rename, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 import {
@@ -227,6 +228,34 @@ describe('createFilesystemRepositoryReader', () => {
       type: 'file',
     });
   });
+
+  test.skipIf(process.platform !== 'win32')(
+    'preserves same-size file bytes captured before publishing a Windows reader',
+    async () => {
+      const temporaryDirectory = await mkdtemp(
+        path.join(tmpdir(), 'moldea-repository-fs-windows-materialization-'),
+      );
+
+      try {
+        const filePath = path.join(temporaryDirectory, 'file.bin');
+        const logicalPath = parseRepositoryPath('/file.bin');
+        const originalBytes = Uint8Array.from([1]);
+
+        await writeFile(filePath, originalBytes);
+
+        const reader = await createFilesystemRepositoryReader({
+          rootDirectory: temporaryDirectory,
+          selection: { kind: 'paths', paths: [logicalPath] },
+        });
+
+        await writeFile(filePath, Uint8Array.from([2]));
+
+        await expect(reader.readFile(logicalPath)).resolves.toStrictEqual(originalBytes);
+      } finally {
+        await rm(temporaryDirectory, { force: true, recursive: true });
+      }
+    },
+  );
 
   test('maps missing roots without exposing the selected host path', async () => {
     const missingRoot = path.join(fixtures.primary.rootDirectory, 'private-missing-root');

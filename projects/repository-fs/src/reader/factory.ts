@@ -8,6 +8,7 @@ import {
 } from '../inventory-operations/index.js';
 import { createFilesystemRepositoryReaderState } from '../reader-state/index.js';
 import { prepareFilesystemRepositoryRoot } from '../root/index.js';
+import { materializeFilesystemRepositorySnapshotWhenRequired } from '../snapshot-materialization/index.js';
 import { createVerifiedFilesystemInventory } from '../verified-inventory/index.js';
 
 /**
@@ -31,6 +32,8 @@ export const createFilesystemRepositoryReader = async (
   const preparedRoot = await prepareFilesystemRepositoryRoot(options);
   const inventory = await createVerifiedFilesystemInventory(preparedRoot);
   const state = createFilesystemRepositoryReaderState(preparedRoot, inventory);
+
+  await materializeFilesystemRepositorySnapshotWhenRequired(state, preparedRoot.options.signal);
 
   return Object.freeze({
     getEntry: (path, operationOptions) =>
