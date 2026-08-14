@@ -1,3 +1,5 @@
+![moldea](cover.png)
+
 # `@moldea.ai/repository-fs`
 
 Node.js-specific implementation for exposing one explicitly selected local directory through the source-neutral repository contract.

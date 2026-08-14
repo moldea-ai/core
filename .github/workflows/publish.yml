@@ -1,10 +1,13 @@
-name: Publish npm Package
+name: Publish npm Packages
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       project:
-        description: Public package project to release.
+        description: Public package project to bootstrap or recover.
         required: true
         type: choice
         options:
@@ -23,8 +26,9 @@ on:
 permissions: {}
 
 concurrency:
-  group: npm-release-${{ inputs.project }}
+  group: npm-release
   cancel-in-progress: false
+  queue: max
 
 defaults:
   run:
@@ -33,41 +37,31 @@ defaults:
 env:
   NODE_VERSION: 24.15.0
   PNPM_VERSION: 11.9.0
-  PUBLIC_PACKAGE_ARTIFACT: public-package-tarballs
-  PUBLIC_PACKAGE_ARTIFACT_DIRECTORY: ${{ github.workspace }}/public-package-tarballs
 
 jobs:
-  verify:
-    name: Verify Release Candidate
-    permissions:
-      contents: read
-    uses: ./.github/workflows/ci.yml
-    with:
-      release_build: true
-      release_project: ${{ inputs.project }}
-
-  prepare:
-    name: Prepare npm Release
-    needs: verify
+  plan:
+    name: Plan npm Releases
     runs-on: ubuntu-latest
     permissions:
       contents: read
     outputs:
-      artifact_name: ${{ steps.release.outputs.artifact_name }}
-      checksum: ${{ steps.release.outputs.checksum }}
-      package_name: ${{ steps.release.outputs.package_name }}
-      package_version: ${{ steps.release.outputs.package_version }}
-      project: ${{ steps.release.outputs.project }}
-      release_state: ${{ steps.release.outputs.release_state }}
-      should_create_tag: ${{ steps.release.outputs.should_create_tag }}
-      should_publish: ${{ steps.release.outputs.should_publish }}
-      tag: ${{ steps.release.outputs.tag }}
+      cli: ${{ steps.release.outputs.cli }}
+      core: ${{ steps.release.outputs.core }}
+      has_releases: ${{ steps.release.outputs.has_releases }}
+      mode: ${{ steps.release.outputs.mode }}
+      project_key: ${{ steps.release.outputs.project_key }}
+      projects: ${{ steps.release.outputs.projects }}
+      repository: ${{ steps.release.outputs.repository }}
+      repository_previous_version: ${{ steps.release.outputs.repository_previous_version }}
+      repository_fs: ${{ steps.release.outputs.repository_fs }}
+      repository_fs_previous_version: ${{ steps.release.outputs.repository_fs_previous_version }}
+      cli_previous_version: ${{ steps.release.outputs.cli_previous_version }}
+      core_previous_version: ${{ steps.release.outputs.core_previous_version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
-          fetch-tags: true
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
@@ -78,141 +72,122 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
 
       - name: Install Release Tooling
         run: pnpm install --frozen-lockfile --ignore-scripts
 
-      - name: Download Public Package Artifacts
-        uses: actions/download-artifact@v8
-        with:
-          name: ${{ env.PUBLIC_PACKAGE_ARTIFACT }}
-          path: ${{ env.PUBLIC_PACKAGE_ARTIFACT_DIRECTORY }}
-
-      - name: Prepare Release State
+      - name: Plan Changed Package Releases
         id: release
         env:
-          RELEASE_MODE: ${{ inputs.mode }}
-          RELEASE_PROJECT: ${{ inputs.project }}
+          RELEASE_BASE_COMMIT: ${{ github.event.before || '' }}
+          RELEASE_MODE: ${{ inputs.mode || '' }}
+          RELEASE_PROJECT: ${{ inputs.project || '' }}
         run: >-
-          pnpm release:prepare
+          pnpm release:plan
           "$RELEASE_PROJECT"
           "$RELEASE_MODE"
-          "$PUBLIC_PACKAGE_ARTIFACT_DIRECTORY"
+          "$RELEASE_BASE_COMMIT"
 
-  tag:
-    name: Create Release Tag
-    needs: prepare
-    if: ${{ needs.prepare.outputs.should_create_tag == 'true' }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-          fetch-tags: true
-
-      - name: Create and Push Annotated Tag
-        env:
-          PACKAGE_NAME: ${{ needs.prepare.outputs.package_name }}
-          PACKAGE_VERSION: ${{ needs.prepare.outputs.package_version }}
-          RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag -a "$RELEASE_TAG" "${{ github.sha }}" -m "$PACKAGE_NAME $PACKAGE_VERSION"
-          git push --no-follow-tags origin "refs/tags/$RELEASE_TAG:refs/tags/$RELEASE_TAG"
-
-  publish:
-    name: Publish Trusted npm Release
-    needs:
-      - prepare
-      - tag
-    if: >-
-      ${{
-        always() &&
-        needs.prepare.result == 'success' &&
-        (needs.tag.result == 'success' || needs.tag.result == 'skipped') &&
-        needs.prepare.outputs.should_publish == 'true'
-      }}
-    runs-on: ubuntu-latest
-    environment: npm-release
+  verify:
+    name: Verify Release Candidates
+    needs: plan
+    if: ${{ needs.plan.outputs.has_releases == 'true' }}
     permissions:
       contents: read
-      id-token: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
+    uses: ./.github/workflows/ci.yml
+    with:
+      release_build: true
+      release_project: ${{ needs.plan.outputs.project_key }}
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - name: Setup Node.js for npm
-        uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          registry-url: https://registry.npmjs.org/
-
-      - name: Install Release Tooling
-        run: pnpm install --frozen-lockfile --ignore-scripts
-
-      - name: Download Public Package Artifacts
-        uses: actions/download-artifact@v8
-        with:
-          name: ${{ env.PUBLIC_PACKAGE_ARTIFACT }}
-          path: ${{ env.PUBLIC_PACKAGE_ARTIFACT_DIRECTORY }}
-
-      - name: Verify Release Artifact
-        run: |
-          pnpm release:checksums verify "$PUBLIC_PACKAGE_ARTIFACT_DIRECTORY"
-          pnpm exec semver "$(npm --version)" --range ">=11.5.1 <12.0.0"
-
-      - name: Publish Exact Package Artifact
-        env:
-          ARTIFACT_NAME: ${{ needs.prepare.outputs.artifact_name }}
-        run: >-
-          npm publish
-          "$PUBLIC_PACKAGE_ARTIFACT_DIRECTORY/$ARTIFACT_NAME"
-          --access public
-          --registry https://registry.npmjs.org/
-
-  complete:
-    name: Summarize npm Release
+  release_repository:
+    name: Release Repository
     needs:
-      - prepare
-      - tag
-      - publish
+      - plan
+      - verify
+    if: ${{ needs.plan.outputs.repository == 'true' && needs.verify.result == 'success' }}
+    permissions:
+      contents: write
+      id-token: write
+    uses: ./.github/workflows/publish-package.yml
+    with:
+      mode: ${{ needs.plan.outputs.mode }}
+      previous_version: ${{ needs.plan.outputs.repository_previous_version }}
+      project: repository
+
+  release_repository_fs:
+    name: Release Repository FS
+    needs:
+      - plan
+      - verify
+      - release_repository
     if: >-
       ${{
         always() &&
-        needs.prepare.result == 'success' &&
-        (needs.tag.result == 'success' || needs.tag.result == 'skipped') &&
-        (needs.publish.result == 'success' || needs.publish.result == 'skipped')
+        needs.plan.outputs.repository_fs == 'true' &&
+        needs.verify.result == 'success' &&
+        (needs.release_repository.result == 'success' ||
+          needs.release_repository.result == 'skipped')
       }}
-    runs-on: ubuntu-latest
-    permissions: {}
-    env:
-      ARTIFACT_NAME: ${{ needs.prepare.outputs.artifact_name }}
-      CHECKSUM: ${{ needs.prepare.outputs.checksum }}
-      PACKAGE_NAME: ${{ needs.prepare.outputs.package_name }}
-      PACKAGE_VERSION: ${{ needs.prepare.outputs.package_version }}
-      RELEASE_MODE: ${{ inputs.mode }}
-      RELEASE_STATE: ${{ needs.prepare.outputs.release_state }}
-      RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
-    steps:
-      - name: Write Release Summary
-        run: |
-          {
-            echo "## npm release"
-            echo
-            echo "- Package: \`$PACKAGE_NAME@$PACKAGE_VERSION\`"
-            echo "- Commit: \`${{ github.sha }}\`"
-            echo "- Tag: \`$RELEASE_TAG\`"
-            echo "- Mode: \`$RELEASE_MODE\`"
-            echo "- State: \`$RELEASE_STATE\`"
-            echo "- Artifact: \`$ARTIFACT_NAME\`"
-            echo "- SHA-256: \`$CHECKSUM\`"
-          } >> "$GITHUB_STEP_SUMMARY"
+    permissions:
+      contents: write
+      id-token: write
+    uses: ./.github/workflows/publish-package.yml
+    with:
+      mode: ${{ needs.plan.outputs.mode }}
+      previous_version: ${{ needs.plan.outputs.repository_fs_previous_version }}
+      project: repository-fs
+
+  release_core:
+    name: Release Core
+    needs:
+      - plan
+      - verify
+      - release_repository
+      - release_repository_fs
+    if: >-
+      ${{
+        always() &&
+        needs.plan.outputs.core == 'true' &&
+        needs.verify.result == 'success' &&
+        (needs.release_repository.result == 'success' ||
+          needs.release_repository.result == 'skipped') &&
+        (needs.release_repository_fs.result == 'success' ||
+          needs.release_repository_fs.result == 'skipped')
+      }}
+    permissions:
+      contents: write
+      id-token: write
+    uses: ./.github/workflows/publish-package.yml
+    with:
+      mode: ${{ needs.plan.outputs.mode }}
+      previous_version: ${{ needs.plan.outputs.core_previous_version }}
+      project: core
+
+  release_cli:
+    name: Release CLI
+    needs:
+      - plan
+      - verify
+      - release_repository
+      - release_repository_fs
+      - release_core
+    if: >-
+      ${{
+        always() &&
+        needs.plan.outputs.cli == 'true' &&
+        needs.verify.result == 'success' &&
+        (needs.release_repository.result == 'success' ||
+          needs.release_repository.result == 'skipped') &&
+        (needs.release_repository_fs.result == 'success' ||
+          needs.release_repository_fs.result == 'skipped') &&
+        (needs.release_core.result == 'success' || needs.release_core.result == 'skipped')
+      }}
+    permissions:
+      contents: write
+      id-token: write
+    uses: ./.github/workflows/publish-package.yml
+    with:
+      mode: ${{ needs.plan.outputs.mode }}
+      previous_version: ${{ needs.plan.outputs.cli_previous_version }}
+      project: cli

@@ -1,3 +1,5 @@
+![moldea](cover.png)
+
 # `@moldea.ai/cli`
 
 The canonical read-only local command-line composition for deterministic inspection of `moldea` repositories.

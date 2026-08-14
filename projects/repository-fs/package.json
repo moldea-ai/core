@@ -16,6 +16,7 @@
   "type": "module",
   "sideEffects": false,
   "files": [
+    "cover.png",
     "dist",
     "LICENSE",
     "README.md"

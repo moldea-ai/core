@@ -52,6 +52,7 @@ const createCandidateSources = (
 ): INpmReleaseCandidateSources => ({
   dependencyVersions: {},
   identity,
+  previousVersion: null,
   publishedVersions: [],
   tagCommit: null,
 });
@@ -148,6 +149,46 @@ describe('npm release validation', () => {
       shouldPublish: false,
     });
   });
+
+  test('requires the preceding main version before an automatic release advances', () => {
+    const identity = createNpmReleaseIdentity({
+      ...createIdentitySources(),
+      manifest: { ...createManifest('repository'), version: '1.0.1' },
+    });
+    const sources = {
+      ...createCandidateSources(identity),
+      previousVersion: '1.0.0',
+    };
+
+    expect(() => createNpmReleaseCandidate(sources)).toThrow(
+      '@moldea.ai/repository@1.0.0 must be published first',
+    );
+    expect(createNpmReleaseCandidate({ ...sources, publishedVersions: ['1.0.0'] })).toMatchObject({
+      releaseState: 'new',
+      shouldPublish: true,
+    });
+  });
+
+  test('rejects an unpublished candidate below a registry version', () => {
+    expect(() =>
+      createNpmReleaseCandidate({
+        ...createCandidateSources(),
+        publishedVersions: ['1.0.1'],
+      }),
+    ).toThrow('@moldea.ai/repository@1.0.0 is older than a published version');
+  });
+
+  test.each(['1.0.0', '1.0.1-rc.1', 'v0.9.0'])(
+    'rejects the invalid previous version %s',
+    (previousVersion) => {
+      expect(() =>
+        createNpmReleaseCandidate({
+          ...createCandidateSources(),
+          previousVersion,
+        }),
+      ).toThrow('previous @moldea.ai/repository version is invalid');
+    },
+  );
 
   test('rejects a tag owned by another commit', () => {
     expect(() =>

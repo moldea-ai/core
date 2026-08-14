@@ -1,3 +1,5 @@
+![moldea](cover.png)
+
 # `@moldea.ai/repository`
 
 Source-neutral, read-only repository contracts for the `moldea` ecosystem.

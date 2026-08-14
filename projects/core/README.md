@@ -1,3 +1,5 @@
+![moldea](cover.png)
+
 # `@moldea.ai/core`
 
 Source-neutral, deterministic interpretation of the `moldea` repository format.

@@ -10,6 +10,14 @@ export const NPM_RELEASE_MODES = [
   'trusted',
 ] as const satisfies readonly INpmReleaseMode[];
 
+// dependency-safe order for coordinated public-package releases
+export const NPM_RELEASE_PROJECT_ORDER = [
+  'repository',
+  'repository-fs',
+  'core',
+  'cli',
+] as const satisfies readonly INpmReleaseProject[];
+
 // public package identities currently eligible for release
 export const NPM_RELEASE_PROJECTS = {
   cli: {

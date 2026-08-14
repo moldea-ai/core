@@ -16,6 +16,7 @@
   "type": "module",
   "preferUnplugged": true,
   "files": [
+    "cover.png",
     "dist",
     "LICENSE",
     "README.md"

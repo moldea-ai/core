@@ -12,6 +12,29 @@ export interface INpmReleaseProjectConfiguration {
   tagPrefix: string;
 }
 
+// package state compared across one push to the main branch
+export interface INpmReleaseProjectChange {
+  currentVersion: string;
+  isChanged: boolean;
+  previousVersion: string;
+}
+
+// untrusted workflow trigger and package-change state used to select releases
+export interface INpmReleaseWorkflowPlanSources {
+  eventName: string;
+  mode: string;
+  project: string;
+  projectChanges: Readonly<Record<INpmReleaseProject, INpmReleaseProjectChange>>;
+}
+
+// validated package selection consumed by the publication workflow
+export interface INpmReleaseWorkflowPlan {
+  mode: INpmReleaseMode;
+  previousVersions: Readonly<Record<INpmReleaseProject, string | null>>;
+  projects: readonly INpmReleaseProject[];
+  trigger: 'automatic' | 'manual';
+}
+
 // package manifest fields required at the release boundary
 export interface INpmReleaseManifest {
   dependencies: Record<string, string>;
@@ -48,6 +71,7 @@ export interface INpmReleaseIdentity {
 export interface INpmReleaseCandidateSources {
   dependencyVersions: Readonly<Record<string, readonly string[]>>;
   identity: INpmReleaseIdentity;
+  previousVersion: string | null;
   publishedVersions: readonly string[];
   tagCommit: string | null;
 }

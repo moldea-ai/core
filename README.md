@@ -24,7 +24,7 @@ The specification documents remain the design authority. Compatibility artifacts
 
 ```text
 .github/
-  workflows/                   # Repository verification
+  workflows/                   # Repository verification and npm publication
 compatibility/
   runtimes.yaml                # Canonical runtime support inventory and claims
 configs/
@@ -50,6 +50,7 @@ pnpm-workspace.yaml
 tsconfig.json
 turbo.json
 vitest.config.ts
+vitest-integration.config.ts
 ```
 
 Every immediate child of [`projects/`](projects/) is an independently meaningful first-class package. Every immediate child of [`packages/`](packages/) is a private shared implementation package. Repository-wide fixtures and other non-package assets remain outside both workspace layers.
@@ -120,9 +121,9 @@ Useful focused commands:
 
 | Command                       | Purpose                                                                  |
 | ----------------------------- | ------------------------------------------------------------------------ |
-| `pnpm test:root`              | Run tests for shared repository configuration.                           |
+| `pnpm test:root`              | Run root unit and integration tests.                                     |
 | `pnpm test:unit`              | Run root and package unit-test tasks.                                    |
-| `pnpm test:integration`       | Build and run package integration-test tasks.                            |
+| `pnpm test:integration`       | Run root and package integration-test tasks.                             |
 | `pnpm test:e2e`               | Build and run installed-package end-to-end test tasks.                   |
 | `pnpm format`                 | Format repository-maintained files.                                      |
 | `pnpm compatibility:generate` | Regenerate compatibility documentation and bundled CLI release metadata. |
@@ -146,7 +147,7 @@ Generated files are not edited directly. Runtime compatibility changes begin in 
 
 ## Package releases
 
-Public packages are released independently from `main` through the manually dispatched npm workflow. Each release creates a package-qualified immutable tag and publishes the exact checksummed tarball that passed the complete CI, runtime, and cross-platform boundary. New package names use the documented bootstrap path before npm trusted publishing can be enabled. See [`docs/npm-releases.md`](docs/npm-releases.md).
+A push to `main` automatically selects every changed public project whose manifest declares a strictly greater stable version. The npm workflow verifies the complete release candidate once, then creates package-qualified immutable tags and publishes the exact checksummed tarballs in dependency order through trusted publishing. A changed public project without the required version bump fails before publication. Manual dispatch remains available for new-package bootstrap and release recovery. See [`docs/npm-releases.md`](docs/npm-releases.md).
 
 ## Initial implementation sequence
 

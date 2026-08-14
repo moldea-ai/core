@@ -150,6 +150,7 @@ describe('published Core package artifacts', () => {
     expect(packedPaths).toContain('dist/adapter/index.d.ts');
     expect(packedPaths).toContain('LICENSE');
     expect(packedPaths).toContain('README.md');
+    expect(packedPaths).toContain('cover.png');
     expect(packedPaths).toContain('package.json');
     expect(
       packedPaths.every(
@@ -157,6 +158,7 @@ describe('published Core package artifacts', () => {
           filePath.startsWith('dist/') ||
           filePath === 'LICENSE' ||
           filePath === 'README.md' ||
+          filePath === 'cover.png' ||
           filePath === 'package.json',
       ),
     ).toBe(true);

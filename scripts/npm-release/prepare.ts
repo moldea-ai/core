@@ -12,7 +12,7 @@ import { loadNpmRegistryVersions } from './registry.ts';
 import { createNpmReleaseCandidate, createNpmReleaseIdentity } from './validations.ts';
 
 const repositoryRoot = new URL('../../', import.meta.url);
-const [project, mode, artifactDirectoryValue] = process.argv.slice(2);
+const [project, mode, artifactDirectoryValue, previousVersionValue] = process.argv.slice(2);
 const gitRef = process.env['GITHUB_REF'];
 const commit = process.env['GITHUB_SHA'];
 const githubOutputPath = process.env['GITHUB_OUTPUT'];
@@ -21,13 +21,14 @@ if (
   project === undefined ||
   mode === undefined ||
   artifactDirectoryValue === undefined ||
-  process.argv.length !== 5 ||
+  previousVersionValue === undefined ||
+  process.argv.length !== 6 ||
   gitRef === undefined ||
   commit === undefined ||
   githubOutputPath === undefined
 ) {
   throw new TypeError(
-    'The npm release preparation command requires project, mode, artifact directory, and GitHub workflow context.',
+    'The npm release preparation command requires project, mode, artifact directory, previous version, and GitHub workflow context.',
   );
 }
 
@@ -69,6 +70,7 @@ const [publishedVersions, dependencyVersionEntries] = await Promise.all([
 const candidate = createNpmReleaseCandidate({
   dependencyVersions: Object.fromEntries(dependencyVersionEntries),
   identity,
+  previousVersion: previousVersionValue === '' ? null : previousVersionValue,
   publishedVersions,
   tagCommit: loadGitTagCommit(identity.tag),
 });
