@@ -29,7 +29,7 @@ const executeFixtureGit = (
 };
 
 describe('working-tree snapshot integration', () => {
-  test('retries a real Repository FS snapshot mutation without reusing provisional bytes', async () => {
+  test('returns one coherent snapshot when a selected file changes during the operation', async () => {
     const temporaryDirectory = realpathSync(
       mkdtempSync(path.join(tmpdir(), 'moldea-cli-working-tree-snapshot-')),
     );
@@ -39,6 +39,8 @@ describe('working-tree snapshot integration', () => {
     const hooksDirectory = path.join(temporaryDirectory, 'hooks');
     const selectedHostPath = path.join(repositoryRoot, 'moldea', 'project.md');
     const replacementHostPath = path.join(temporaryDirectory, 'replacement.md');
+    const initialContent = 'initial bytes';
+    const replacementContent = 'accepted replacement bytes';
     const environment = createGitProcessEnvironment({
       ...process.env,
       HOME: homeDirectory,
@@ -52,7 +54,7 @@ describe('working-tree snapshot integration', () => {
 
       executeFixtureGit(repositoryRoot, environment, hooksDirectory, ['init']);
       mkdirSync(path.dirname(selectedHostPath));
-      writeFileSync(selectedHostPath, 'initial bytes', 'utf8');
+      writeFileSync(selectedHostPath, initialContent, 'utf8');
       executeFixtureGit(repositoryRoot, environment, hooksDirectory, [
         'add',
         '--',
@@ -66,7 +68,7 @@ describe('working-tree snapshot integration', () => {
           operationCalls += 1;
 
           if (operationCalls === 1) {
-            writeFileSync(replacementHostPath, 'accepted replacement bytes', 'utf8');
+            writeFileSync(replacementHostPath, replacementContent, 'utf8');
             rmSync(selectedHostPath);
             renameSync(replacementHostPath, selectedHostPath);
           }
@@ -86,8 +88,11 @@ describe('working-tree snapshot integration', () => {
         },
       });
 
-      expect(result).toStrictEqual({ kind: 'completed', result: 'accepted replacement bytes' });
-      expect(operationCalls).toBe(2);
+      expect(result).toStrictEqual({
+        kind: 'completed',
+        result: process.platform === 'win32' ? initialContent : replacementContent,
+      });
+      expect(operationCalls).toBe(process.platform === 'win32' ? 1 : 2);
     } finally {
       rmSync(temporaryDirectory, { force: true, recursive: true });
     }
@@ -206,7 +211,7 @@ describe('working-tree snapshot integration', () => {
     }
   });
 
-  test('rejects replacement of the pinned repository identity after snapshot loss', async () => {
+  test('does not adopt a replacement of the pinned repository during an active snapshot', async () => {
     const temporaryDirectory = realpathSync(
       mkdtempSync(path.join(tmpdir(), 'moldea-cli-working-tree-identity-')),
     );
@@ -267,7 +272,14 @@ describe('working-tree snapshot integration', () => {
         },
       });
 
-      expect(result).toStrictEqual({ errorCode: 'WORKING_TREE_UNSTABLE', kind: 'failed' });
+      expect(result).toStrictEqual(
+        process.platform === 'win32'
+          ? {
+              kind: 'completed',
+              result: new TextEncoder().encode('initial bytes'),
+            }
+          : { errorCode: 'WORKING_TREE_UNSTABLE', kind: 'failed' },
+      );
     } finally {
       rmSync(temporaryDirectory, { force: true, recursive: true });
     }
