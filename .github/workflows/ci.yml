@@ -3,12 +3,24 @@ name: CI
 on:
   pull_request:
   push:
+  workflow_call:
+    inputs:
+      release_project:
+        description: Public project key used to isolate concurrent release verification.
+        required: false
+        type: string
+        default: ''
+      release_build:
+        description: Disable dependency caching and retain release-ready package artifacts.
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.ref }}-${{ inputs.release_project }}
   cancel-in-progress: true
 
 defaults:
@@ -32,11 +44,18 @@ jobs:
         with:
           version: ${{ env.PNPM_VERSION }}
 
-      - name: Setup Node.js
+      - name: Setup Node.js with dependency caching
+        if: ${{ inputs.release_build != true }}
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
+
+      - name: Setup Node.js for a release build
+        if: ${{ inputs.release_build == true }}
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
@@ -59,35 +78,26 @@ jobs:
       - name: Test
         run: pnpm test
 
-      - name: Pack Repository FS Runtime Artifacts
+      - name: Pack Public Package Artifacts
         run: |
-          runtime_packages_directory="${{ runner.temp }}/repository-fs-runtime-packages"
-          mkdir -p "$runtime_packages_directory"
-          pnpm --dir projects/repository pack --pack-destination "$runtime_packages_directory"
-          pnpm --dir projects/repository-fs pack --pack-destination "$runtime_packages_directory"
+          public_packages_directory="${{ runner.temp }}/public-package-tarballs"
+          mkdir -p "$public_packages_directory"
+          pnpm --dir projects/repository pack --pack-destination "$public_packages_directory"
+          pnpm --dir projects/repository-fs pack --pack-destination "$public_packages_directory"
+          pnpm --dir projects/core pack --pack-destination "$public_packages_directory"
+          pnpm --dir projects/cli pack --pack-destination "$public_packages_directory"
+          pnpm release:checksums create "$public_packages_directory"
 
-      - name: Upload Repository FS Runtime Artifacts
+      - name: Upload Public Package Artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: repository-fs-runtime-packages
-          path: ${{ runner.temp }}/repository-fs-runtime-packages/*.tgz
+          name: public-package-tarballs
+          path: |
+            ${{ runner.temp }}/public-package-tarballs/*.tgz
+            ${{ runner.temp }}/public-package-tarballs/SHA256SUMS
           if-no-files-found: error
-
-      - name: Pack CLI Runtime Artifacts
-        run: |
-          runtime_packages_directory="${{ runner.temp }}/cli-runtime-packages"
-          mkdir -p "$runtime_packages_directory"
-          pnpm --dir projects/repository pack --pack-destination "$runtime_packages_directory"
-          pnpm --dir projects/repository-fs pack --pack-destination "$runtime_packages_directory"
-          pnpm --dir projects/core pack --pack-destination "$runtime_packages_directory"
-          pnpm --dir projects/cli pack --pack-destination "$runtime_packages_directory"
-
-      - name: Upload CLI Runtime Artifacts
-        uses: actions/upload-artifact@v7
-        with:
-          name: cli-runtime-packages
-          path: ${{ runner.temp }}/cli-runtime-packages/*.tgz
-          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
 
   repository-fs-runtime-compatibility:
     name: Repository FS Runtime (Node.js ${{ matrix.node-version }})
@@ -113,13 +123,13 @@ jobs:
       - name: Download Repository FS Runtime Artifacts
         uses: actions/download-artifact@v8
         with:
-          name: repository-fs-runtime-packages
-          path: ${{ runner.temp }}/repository-fs-runtime-packages
+          name: public-package-tarballs
+          path: ${{ runner.temp }}/public-package-tarballs
 
       - name: Test Packed Repository FS Runtime
         run: >-
           node projects/repository-fs/scripts/runtime-compatibility/index.mjs
-          "${{ runner.temp }}/repository-fs-runtime-packages"
+          "${{ runner.temp }}/public-package-tarballs"
 
   cli-runtime-compatibility:
     name: CLI Runtime (Node.js ${{ matrix.node-version }})
@@ -145,13 +155,13 @@ jobs:
       - name: Download CLI Runtime Artifacts
         uses: actions/download-artifact@v8
         with:
-          name: cli-runtime-packages
-          path: ${{ runner.temp }}/cli-runtime-packages
+          name: public-package-tarballs
+          path: ${{ runner.temp }}/public-package-tarballs
 
       - name: Test Packed CLI Runtime
         run: >-
           node projects/cli/scripts/runtime-compatibility/index.mjs
-          "${{ runner.temp }}/cli-runtime-packages"
+          "${{ runner.temp }}/public-package-tarballs"
 
   test-cross-platform:
     name: Test (${{ matrix.os }})
@@ -171,11 +181,18 @@ jobs:
         with:
           version: ${{ env.PNPM_VERSION }}
 
-      - name: Setup Node.js
+      - name: Setup Node.js with dependency caching
+        if: ${{ inputs.release_build != true }}
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
+
+      - name: Setup Node.js for a release build
+        if: ${{ inputs.release_build == true }}
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile

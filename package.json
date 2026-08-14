@@ -27,6 +27,8 @@
     "format:check": "prettier --check .",
     "lint": "pnpm lint:root && turbo run lint",
     "lint:root": "eslint eslint.config.js vitest.config.ts configs scripts",
+    "release:checksums": "node scripts/npm-release/checksums.ts",
+    "release:prepare": "node scripts/npm-release/prepare.ts",
     "test": "pnpm test:root && turbo run test",
     "test:e2e": "turbo run test:e2e",
     "test:integration": "turbo run test:integration",

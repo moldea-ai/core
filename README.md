@@ -4,7 +4,7 @@ The `packages` project is the open-source package monorepo for `moldea`. It deve
 
 The repository is intentionally separate from the hosted [`platform`](https://github.com/moldea-ai/platform) monorepo. It contains reusable package products and their shared development infrastructure, not Cloud applications, hosted APIs, runtime infrastructure, or deployment configuration.
 
-`@moldea.ai/repository`, `@moldea.ai/repository-fs`, `@moldea.ai/core`, and `@moldea.ai/cli` now form the unpublished `1.0.0` release candidate. Repository and Core provide the source-neutral reader and universal interpretation foundations, Repository FS supplies the coherent local-filesystem reader, and the CLI composes them into the complete version `1` read-only executable. The built-in `custom` runtime is verified as available through Core's universal repository behavior; every package-backed adapter remains `planned`. Real tarball installation and execution, including cross-repository skill conformance, are the release boundary until a separately authorized npm publication and immutable tag exist.
+`@moldea.ai/repository`, `@moldea.ai/repository-fs`, `@moldea.ai/core`, and `@moldea.ai/cli` form the initial `1.0.0` package set. Repository and Core provide the source-neutral reader and universal interpretation foundations, Repository FS supplies the coherent local-filesystem reader, and the CLI composes them into the complete version `1` read-only executable. The built-in `custom` runtime is verified as available through Core's universal repository behavior; every package-backed adapter remains `planned`. Real tarball installation and execution, including cross-repository skill conformance, remain the release boundary for every package version.
 
 ## Specifications
 
@@ -33,6 +33,7 @@ configs/
   vitest/                      # Shared package test configuration
 fixtures/                      # Repository-wide conformance fixtures
 docs/
+  npm-releases.md             # Trusted npm publication and bootstrap process
   runtime-compatibility.md     # Generated compatibility presentation
 packages/                      # Private shared implementation packages
 projects/
@@ -143,6 +144,10 @@ Turborepo derives build order from declared workspace dependencies. Package depe
 
 Generated files are not edited directly. Runtime compatibility changes begin in [`compatibility/runtimes.yaml`](compatibility/runtimes.yaml), while exact bundled versions come from the first-class project manifests. Run `pnpm compatibility:generate` to update [`docs/runtime-compatibility.md`](docs/runtime-compatibility.md) and the CLI's generated immutable release-metadata module. CI runs `pnpm compatibility:check` and fails when the matrix, package composition, documentation, or bundled metadata is invalid or stale.
 
+## Package releases
+
+Public packages are released independently from `main` through the manually dispatched npm workflow. Each release creates a package-qualified immutable tag and publishes the exact checksummed tarball that passed the complete CI, runtime, and cross-platform boundary. New package names use the documented bootstrap path before npm trusted publishing can be enabled. See [`docs/npm-releases.md`](docs/npm-releases.md).
+
 ## Initial implementation sequence
 
-The first implementation project was `@moldea.ai/repository`, followed by its in-memory reader and shared conformance suite. Core's universal behavior was then completed through that memory-reader boundary, followed by the coherent Repository FS implementation and the CLI's installed-tarball runtime boundary. The `1.0.0` release candidate now includes verified built-in `custom` compatibility and real cross-repository skill conformance over deterministic `compatibility --json` and `inspect --json`. Npm publication and immutable release tags remain a separate release operation; official package-backed adapters remain later slices and stay `planned` until their implementations and fixtures support verified compatibility claims.
+The first implementation project was `@moldea.ai/repository`, followed by its in-memory reader and shared conformance suite. Core's universal behavior was then completed through that memory-reader boundary, followed by the coherent Repository FS implementation and the CLI's installed-tarball runtime boundary. The initial `1.0.0` package set includes verified built-in `custom` compatibility and real cross-repository skill conformance over deterministic `compatibility --json` and `inspect --json`. Package publication remains an explicit independently versioned release operation; official package-backed adapters remain later slices and stay `planned` until their implementations and fixtures support verified compatibility claims.
