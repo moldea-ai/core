@@ -1,0 +1,64 @@
+{
+  "manifest": "version: 1\nagents:\n  zeta:\n    runtime:\n      id: openai\n  custom-agent:\n    runtime:\n      id: custom\n  beta:\n    runtime:\n      id: anthropic\n  alpha:\n    runtime:\n      id: anthropic\n    tools:\n      audit:\n        name: auditRequests\n        description: Audits requests.\n        implementation:\n          path: /src/audit.ts\n",
+  "entries": [
+    {
+      "path": "/moldea/project.md",
+      "text": "# Adapter project\n",
+      "type": "file"
+    },
+    {
+      "path": "/moldea/agents/alpha/description.md",
+      "text": "Alpha agent.\n",
+      "type": "file"
+    },
+    {
+      "path": "/moldea/agents/alpha/instruction.md",
+      "text": "You are the `alpha` agent.\n",
+      "type": "file"
+    },
+    {
+      "path": "/moldea/agents/beta/description.md",
+      "text": "Beta agent.\n",
+      "type": "file"
+    },
+    {
+      "path": "/moldea/agents/beta/instruction.md",
+      "text": "You are the `beta` agent.\n",
+      "type": "file"
+    },
+    {
+      "path": "/moldea/agents/custom-agent/description.md",
+      "text": "Custom agent.\n",
+      "type": "file"
+    },
+    {
+      "path": "/moldea/agents/custom-agent/instruction.md",
+      "text": "You are the `custom-agent` agent.\n",
+      "type": "file"
+    },
+    {
+      "path": "/moldea/agents/zeta/description.md",
+      "text": "Zeta agent.\n",
+      "type": "file"
+    },
+    {
+      "path": "/moldea/agents/zeta/instruction.md",
+      "text": "You are the `zeta` agent.\n",
+      "type": "file"
+    },
+    {
+      "path": "/src/audit.ts",
+      "text": "export const auditRequests = () => undefined;\n",
+      "type": "file"
+    },
+    {
+      "path": "/src/evidence.ts",
+      "text": "export const evidence = true;\n",
+      "type": "file"
+    },
+    {
+      "path": "/src/symlink.ts",
+      "type": "symlink"
+    }
+  ]
+}

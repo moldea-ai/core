@@ -1,30 +1,33 @@
 import js from '@eslint/js';
 import eslintConfigPrettier from 'eslint-config-prettier';
-import { defineConfig } from 'eslint/config';
+import { defineConfig, globalIgnores } from 'eslint/config';
+import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig([
+  globalIgnores(['**/coverage/**', '**/dist/**', '**/node_modules/**', '.turbo/**']),
   {
-    ignores: [
-      '_archive/**',
-      '_backup/**',
-      '_backups/**',
-      'dist/**',
-      'node_modules/**',
-      'samples/**',
-    ],
-  },
-  {
-    files: ['**/*.js'],
+    files: ['**/*.{js,mjs}'],
     extends: [js.configs.recommended],
+    languageOptions: {
+      globals: globals.node,
+      sourceType: 'module',
+    },
   },
   {
-    files: ['src/**/*.ts'],
-    extends: [js.configs.recommended, tseslint.configs.recommended],
+    files: ['**/*.ts'],
+    extends: [js.configs.recommended, ...tseslint.configs.recommendedTypeChecked],
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
     rules: {
-      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/consistent-type-imports': ['error', { fixStyle: 'inline-type-imports' }],
+      '@typescript-eslint/no-floating-promises': 'error',
+      '@typescript-eslint/no-misused-promises': 'error',
       'no-undef': 'off',
-      'no-useless-escape': 'off',
     },
   },
   eslintConfigPrettier,

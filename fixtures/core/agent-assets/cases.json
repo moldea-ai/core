@@ -1,0 +1,317 @@
+{
+  "cases": [
+    {
+      "name": "complete sorted registered agents",
+      "manifest": "version: 1\nagents:\n  zeta:\n    runtime:\n      id: custom\n  alpha:\n    runtime:\n      id: custom\n",
+      "entries": [
+        {
+          "path": "/moldea/agents/zeta/instruction.md",
+          "type": "file",
+          "text": "You are the `zeta` agent.\n"
+        },
+        {
+          "path": "/moldea/agents/alpha/handoff-description.md",
+          "type": "file",
+          "text": "Route requests to alpha. "
+        },
+        {
+          "path": "/moldea/agents/zeta/description.md",
+          "type": "file",
+          "text": "Zeta agent.\n"
+        },
+        {
+          "path": "/moldea/agents/alpha/instruction.md",
+          "type": "file",
+          "text": "# Purpose\n\nYou are the `alpha` agent.\n"
+        },
+        {
+          "path": "/moldea/agents/alpha/description.md",
+          "type": "file",
+          "text": "  Alpha agent 😀.\n"
+        }
+      ],
+      "expectedAgents": [
+        {
+          "id": "alpha",
+          "description": "Alpha agent 😀.",
+          "instruction": "# Purpose\n\nYou are the `alpha` agent.\n",
+          "handoffDescription": "Route requests to alpha."
+        },
+        {
+          "id": "zeta",
+          "description": "Zeta agent.",
+          "instruction": "You are the `zeta` agent.\n",
+          "handoffDescription": null
+        }
+      ],
+      "expectedDiagnostics": []
+    },
+    {
+      "name": "missing and unregistered agent assets",
+      "manifest": "version: 1\nagents:\n  partial:\n    runtime:\n      id: custom\n  description-only:\n    runtime:\n      id: custom\n  absent:\n    runtime:\n      id: custom\n",
+      "entries": [
+        {
+          "path": "/moldea/agents/description-only/description.md",
+          "type": "file",
+          "text": "Description-only agent.\n"
+        },
+        {
+          "path": "/moldea/agents/partial/instruction.md",
+          "type": "file",
+          "text": "You are the `partial` agent.\n"
+        },
+        {
+          "path": "/moldea/agents/rogue",
+          "type": "directory"
+        }
+      ],
+      "expectedAgents": [
+        {
+          "id": "absent",
+          "description": null,
+          "instruction": null,
+          "handoffDescription": null
+        },
+        {
+          "id": "description-only",
+          "description": "Description-only agent.",
+          "instruction": null,
+          "handoffDescription": null
+        },
+        {
+          "id": "partial",
+          "description": null,
+          "instruction": "You are the `partial` agent.\n",
+          "handoffDescription": null
+        }
+      ],
+      "expectedDiagnostics": [
+        {
+          "code": "MOLDEA_AGENT_DIRECTORY_MISSING",
+          "details": {},
+          "entity": {
+            "agentId": "absent"
+          },
+          "message": "The registered agent directory is missing.",
+          "path": "/moldea/agents/absent",
+          "pointer": null,
+          "range": null
+        },
+        {
+          "code": "MOLDEA_AGENT_INSTRUCTION_MISSING",
+          "details": {},
+          "entity": {
+            "agentId": "description-only"
+          },
+          "message": "The agent instruction is missing.",
+          "path": "/moldea/agents/description-only/instruction.md",
+          "pointer": null,
+          "range": null
+        },
+        {
+          "code": "MOLDEA_AGENT_DESCRIPTION_MISSING",
+          "details": {},
+          "entity": {
+            "agentId": "partial"
+          },
+          "message": "The agent description is missing.",
+          "path": "/moldea/agents/partial/description.md",
+          "pointer": null,
+          "range": null
+        },
+        {
+          "code": "MOLDEA_AGENT_DIRECTORY_UNREGISTERED",
+          "details": {},
+          "entity": {
+            "agentId": "rogue"
+          },
+          "message": "The agent directory is not registered.",
+          "path": "/moldea/agents/rogue",
+          "pointer": null,
+          "range": null
+        }
+      ]
+    },
+    {
+      "name": "invalid registered agent content",
+      "manifest": "version: 1\nagents:\n  alpha:\n    runtime:\n      id: custom\n",
+      "entries": [
+        {
+          "path": "/moldea/agents/alpha/description.md",
+          "type": "file",
+          "text": "Uses {{FORBIDDEN}}."
+        },
+        {
+          "path": "/moldea/agents/alpha/instruction.md",
+          "type": "file",
+          "text": "Introduction.\nYou are the `alpha` agent.\n"
+        },
+        {
+          "path": "/moldea/agents/alpha/handoff-description.md",
+          "type": "file",
+          "text": " \n"
+        }
+      ],
+      "expectedAgents": [
+        {
+          "id": "alpha",
+          "description": null,
+          "instruction": "Introduction.\nYou are the `alpha` agent.\n",
+          "handoffDescription": null
+        }
+      ],
+      "expectedDiagnostics": [
+        {
+          "code": "MOLDEA_AGENT_DESCRIPTION_INVALID",
+          "details": {
+            "reason": "runtime-variable-delimiter"
+          },
+          "entity": {
+            "agentId": "alpha"
+          },
+          "message": "The agent description is invalid.",
+          "path": "/moldea/agents/alpha/description.md",
+          "pointer": null,
+          "range": null
+        },
+        {
+          "code": "MOLDEA_AGENT_HANDOFF_DESCRIPTION_INVALID",
+          "details": {
+            "reason": "empty"
+          },
+          "entity": {
+            "agentId": "alpha"
+          },
+          "message": "The agent handoff description is invalid.",
+          "path": "/moldea/agents/alpha/handoff-description.md",
+          "pointer": null,
+          "range": null
+        },
+        {
+          "code": "MOLDEA_AGENT_IDENTITY_INVALID",
+          "details": {
+            "reason": "misplaced"
+          },
+          "entity": {
+            "agentId": "alpha"
+          },
+          "message": "The agent instruction identity is invalid.",
+          "path": "/moldea/agents/alpha/instruction.md",
+          "pointer": null,
+          "range": null
+        }
+      ]
+    },
+    {
+      "name": "runtime placeholder validation",
+      "manifest": "version: 1\nagents:\n  alpha:\n    runtime:\n      id: custom\n    variables:\n      USED:\n        description: Used runtime value.\n      UNUSED:\n        description: Unused runtime value.\n",
+      "entries": [
+        {
+          "path": "/moldea/agents/alpha/description.md",
+          "type": "file",
+          "text": "Alpha agent.\n"
+        },
+        {
+          "path": "/moldea/agents/alpha/instruction.md",
+          "type": "file",
+          "text": "You are the `alpha` agent.\n😀 {{USED}}{{UNKNOWN}} {{bad}} }}\n"
+        }
+      ],
+      "expectedAgents": [
+        {
+          "id": "alpha",
+          "description": "Alpha agent.",
+          "instruction": "You are the `alpha` agent.\n😀 {{USED}}{{UNKNOWN}} {{bad}} }}\n",
+          "handoffDescription": null
+        }
+      ],
+      "expectedDiagnostics": [
+        {
+          "code": "MOLDEA_VARIABLE_UNDECLARED",
+          "details": {
+            "occurrences": 1
+          },
+          "entity": {
+            "agentId": "alpha",
+            "variableId": "UNKNOWN"
+          },
+          "message": "The agent instruction references an undeclared runtime variable.",
+          "path": "/moldea/agents/alpha/instruction.md",
+          "pointer": null,
+          "range": {
+            "end": {
+              "column": 22,
+              "line": 2,
+              "offset": 48
+            },
+            "start": {
+              "column": 11,
+              "line": 2,
+              "offset": 37
+            }
+          }
+        },
+        {
+          "code": "MOLDEA_VARIABLE_PLACEHOLDER_MALFORMED",
+          "details": {
+            "reason": "invalid-variable-id"
+          },
+          "entity": {
+            "agentId": "alpha"
+          },
+          "message": "The agent instruction contains a malformed runtime-variable placeholder.",
+          "path": "/moldea/agents/alpha/instruction.md",
+          "pointer": null,
+          "range": {
+            "end": {
+              "column": 30,
+              "line": 2,
+              "offset": 56
+            },
+            "start": {
+              "column": 23,
+              "line": 2,
+              "offset": 49
+            }
+          }
+        },
+        {
+          "code": "MOLDEA_VARIABLE_PLACEHOLDER_MALFORMED",
+          "details": {
+            "reason": "unmatched-closing"
+          },
+          "entity": {
+            "agentId": "alpha"
+          },
+          "message": "The agent instruction contains a malformed runtime-variable placeholder.",
+          "path": "/moldea/agents/alpha/instruction.md",
+          "pointer": null,
+          "range": {
+            "end": {
+              "column": 33,
+              "line": 2,
+              "offset": 59
+            },
+            "start": {
+              "column": 31,
+              "line": 2,
+              "offset": 57
+            }
+          }
+        },
+        {
+          "code": "MOLDEA_VARIABLE_UNUSED",
+          "details": {},
+          "entity": {
+            "agentId": "alpha",
+            "variableId": "UNUSED"
+          },
+          "message": "The declared runtime variable is unused by the agent instruction.",
+          "path": "/moldea/moldea.yaml",
+          "pointer": "/agents/alpha/variables/UNUSED",
+          "range": null
+        }
+      ]
+    }
+  ]
+}

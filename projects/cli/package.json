@@ -1,0 +1,56 @@
+{
+  "name": "@moldea.ai/cli",
+  "version": "1.0.0",
+  "description": "The canonical read-only local command-line composition for moldea repositories.",
+  "homepage": "https://github.com/moldea-ai/packages/tree/main/projects/cli#readme",
+  "bugs": {
+    "url": "https://github.com/moldea-ai/packages/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/moldea-ai/packages.git",
+    "directory": "projects/cli"
+  },
+  "license": "MIT",
+  "author": "Jesus Graterol",
+  "type": "module",
+  "preferUnplugged": true,
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "exports": {},
+  "bin": {
+    "moldea": "./dist/moldea.js"
+  },
+  "engines": {
+    "node": "^22.11.0 || ^24.11.0"
+  },
+  "scripts": {
+    "build": "pnpm --dir ../.. compatibility:check && vite build --emptyOutDir",
+    "dev": "vite build --watch",
+    "lint": "eslint .",
+    "test": "pnpm run test:unit && pnpm run test:integration && pnpm run test:e2e",
+    "test:e2e": "pnpm run build && vitest run --config vitest/test-e2e.config.ts",
+    "test:integration": "pnpm run build && vitest run --config vitest/test-integration.config.ts",
+    "test:unit": "vitest run --config vitest/test-unit.config.ts",
+    "typecheck": "tsc -p tsconfig.src.json --noEmit && tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@moldea.ai/core": "workspace:1.0.0",
+    "@moldea.ai/repository": "workspace:1.0.0",
+    "@moldea.ai/repository-fs": "workspace:1.0.0",
+    "semver": "7.8.5"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.1",
+    "@types/semver": "7.8.0",
+    "typescript": "6.0.3",
+    "vite": "8.2.1",
+    "vitest": "4.1.10"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

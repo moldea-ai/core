@@ -1,0 +1,242 @@
+{
+  "agents": [
+    {
+      "context": [],
+      "decisions": [],
+      "declaration": {
+        "runtime": {
+          "id": "custom"
+        },
+        "tools": {
+          "inspect": {
+            "name": "inspectRecords",
+            "description": "Inspects records when verification is required.",
+            "implementation": {
+              "path": "/src/inspect.ts"
+            }
+          }
+        },
+        "skills": {
+          "triage": {
+            "name": "triage-records",
+            "description": "Applies record triage when investigation is required.",
+            "implementation": {
+              "path": "/.agents/skills/triage/SKILL.md"
+            }
+          }
+        }
+      },
+      "description": {
+        "asset": {
+          "content": "Uses tools and skills.\n",
+          "digest": "sha256:6bad192570b4485aca742432a2ca6761d5f310588793ebc56d73d0ffbd264357",
+          "path": "/moldea/agents/both/description.md",
+          "scalarLength": 23,
+          "utf8ByteLength": 23
+        },
+        "scalarLength": 22,
+        "value": "Uses tools and skills."
+      },
+      "handoffDescription": null,
+      "id": "both",
+      "instruction": {
+        "content": "You are the `both` agent.\n",
+        "digest": "sha256:528047d1a442be7f1903d7997a0f703ac1667f7375966ee087e211d2cd715e9d",
+        "path": "/moldea/agents/both/instruction.md",
+        "scalarLength": 26,
+        "utf8ByteLength": 26
+      },
+      "mirrors": []
+    },
+    {
+      "context": [],
+      "decisions": [],
+      "declaration": {
+        "runtime": {
+          "id": "custom"
+        }
+      },
+      "description": {
+        "asset": {
+          "content": "Uses no registered capabilities.\n",
+          "digest": "sha256:559f1424fea20cfca4262f2079757816b101e5859b8ae1daa7b2c70c8f79433d",
+          "path": "/moldea/agents/neither/description.md",
+          "scalarLength": 33,
+          "utf8ByteLength": 33
+        },
+        "scalarLength": 32,
+        "value": "Uses no registered capabilities."
+      },
+      "handoffDescription": null,
+      "id": "neither",
+      "instruction": {
+        "content": "You are the `neither` agent.\n",
+        "digest": "sha256:daaf0c7283bd48feb2383727108d4991e0ed41143d67ca7a25ab6dc468ade117",
+        "path": "/moldea/agents/neither/instruction.md",
+        "scalarLength": 29,
+        "utf8ByteLength": 29
+      },
+      "mirrors": []
+    },
+    {
+      "context": [],
+      "decisions": [],
+      "declaration": {
+        "runtime": {
+          "id": "custom"
+        },
+        "skills": {
+          "document": {
+            "name": "document-result",
+            "description": "Documents verified results after work is complete.",
+            "implementation": {
+              "path": "/.agents/skills/document/SKILL.md"
+            }
+          }
+        }
+      },
+      "description": {
+        "asset": {
+          "content": "Uses one registered skill.\n",
+          "digest": "sha256:df167b03082e0bebae644a9bea138388b03f8c975f4d1c5d075e206139cfbc3f",
+          "path": "/moldea/agents/skill-only/description.md",
+          "scalarLength": 27,
+          "utf8ByteLength": 27
+        },
+        "scalarLength": 26,
+        "value": "Uses one registered skill."
+      },
+      "handoffDescription": null,
+      "id": "skill-only",
+      "instruction": {
+        "content": "You are the `skill-only` agent.\n",
+        "digest": "sha256:ac3dad8358ccb82f816f06f3593b1cd95b9587d99cb0eb99d81bd21c801d4e27",
+        "path": "/moldea/agents/skill-only/instruction.md",
+        "scalarLength": 32,
+        "utf8ByteLength": 32
+      },
+      "mirrors": []
+    },
+    {
+      "context": [],
+      "decisions": [],
+      "declaration": {
+        "runtime": {
+          "id": "custom"
+        },
+        "tools": {
+          "lookup": {
+            "name": "lookupRecord",
+            "description": "Retrieves a record when exact state is required.",
+            "implementation": {
+              "path": "/src/lookup.ts"
+            }
+          }
+        }
+      },
+      "description": {
+        "asset": {
+          "content": "Uses one registered tool.\n",
+          "digest": "sha256:1b86bbc339b6ce0dd16c67cd3faf129d89f1ef687e66c707f02779c7491dce70",
+          "path": "/moldea/agents/tool-only/description.md",
+          "scalarLength": 26,
+          "utf8ByteLength": 26
+        },
+        "scalarLength": 25,
+        "value": "Uses one registered tool."
+      },
+      "handoffDescription": null,
+      "id": "tool-only",
+      "instruction": {
+        "content": "You are the `tool-only` agent.\n",
+        "digest": "sha256:66e62145ffb3afd3b64fcf2f6a55be352368d758451faa9470c0ca13a421ebec",
+        "path": "/moldea/agents/tool-only/instruction.md",
+        "scalarLength": 31,
+        "utf8ByteLength": 31
+      },
+      "mirrors": []
+    }
+  ],
+  "context": [],
+  "decisions": [],
+  "formatVersion": 1,
+  "manifest": {
+    "asset": {
+      "content": "version: 1\nagents:\n  both:\n    runtime: { id: custom }\n    tools:\n      inspect:\n        name: inspectRecords\n        description: Inspects records when verification is required.\n        implementation: { path: /src/inspect.ts }\n    skills:\n      triage:\n        name: triage-records\n        description: Applies record triage when investigation is required.\n        implementation: { path: /.agents/skills/triage/SKILL.md }\n  neither:\n    runtime: { id: custom }\n  skill-only:\n    runtime: { id: custom }\n    skills:\n      document:\n        name: document-result\n        description: Documents verified results after work is complete.\n        implementation: { path: /.agents/skills/document/SKILL.md }\n  tool-only:\n    runtime: { id: custom }\n    tools:\n      lookup:\n        name: lookupRecord\n        description: Retrieves a record when exact state is required.\n        implementation: { path: /src/lookup.ts }\n",
+      "digest": "sha256:e2a84ff27adf5f6906659ab52bed5d64de7cdae7e725e2fe03328cd6024b59bf",
+      "path": "/moldea/moldea.yaml",
+      "scalarLength": 916,
+      "utf8ByteLength": 916
+    },
+    "value": {
+      "version": 1,
+      "agents": {
+        "both": {
+          "runtime": {
+            "id": "custom"
+          },
+          "tools": {
+            "inspect": {
+              "name": "inspectRecords",
+              "description": "Inspects records when verification is required.",
+              "implementation": {
+                "path": "/src/inspect.ts"
+              }
+            }
+          },
+          "skills": {
+            "triage": {
+              "name": "triage-records",
+              "description": "Applies record triage when investigation is required.",
+              "implementation": {
+                "path": "/.agents/skills/triage/SKILL.md"
+              }
+            }
+          }
+        },
+        "neither": {
+          "runtime": {
+            "id": "custom"
+          }
+        },
+        "skill-only": {
+          "runtime": {
+            "id": "custom"
+          },
+          "skills": {
+            "document": {
+              "name": "document-result",
+              "description": "Documents verified results after work is complete.",
+              "implementation": {
+                "path": "/.agents/skills/document/SKILL.md"
+              }
+            }
+          }
+        },
+        "tool-only": {
+          "runtime": {
+            "id": "custom"
+          },
+          "tools": {
+            "lookup": {
+              "name": "lookupRecord",
+              "description": "Retrieves a record when exact state is required.",
+              "implementation": {
+                "path": "/src/lookup.ts"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "project": {
+    "content": "# Capability project\n",
+    "digest": "sha256:dd637b885fcb6eebc2705289e2d1c681aee3e6a81f97846fa235fa2314c42576",
+    "path": "/moldea/project.md",
+    "scalarLength": 21,
+    "utf8ByteLength": 21
+  },
+  "runtimes": [],
+  "unresolved": {}
+}

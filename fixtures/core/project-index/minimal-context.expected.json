@@ -1,0 +1,38 @@
+{
+  "agents": [],
+  "context": [
+    {
+      "asset": {
+        "content": "Product context.\n",
+        "digest": "sha256:97e3da7859ea7d8e8bae4c14bb9559578724ecde3de19d92b773e3beb1421894",
+        "path": "/moldea/context/product.md",
+        "scalarLength": 17,
+        "utf8ByteLength": 17
+      },
+      "relationships": null
+    }
+  ],
+  "decisions": [],
+  "formatVersion": 1,
+  "manifest": {
+    "asset": {
+      "content": "version: 1\n",
+      "digest": "sha256:09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847",
+      "path": "/moldea/moldea.yaml",
+      "scalarLength": 11,
+      "utf8ByteLength": 11
+    },
+    "value": {
+      "version": 1
+    }
+  },
+  "project": {
+    "content": "# Context-only project\n",
+    "digest": "sha256:81830813d894bf9e4ad9d842ffe4066ee5d7d317bf2cd99367ad871debf77a06",
+    "path": "/moldea/project.md",
+    "scalarLength": 23,
+    "utf8ByteLength": 23
+  },
+  "runtimes": [],
+  "unresolved": {}
+}

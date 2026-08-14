@@ -1,0 +1,33 @@
+[
+  {
+    "code": "OPENAI_AGENT_DEFINITION_MISSING",
+    "details": {
+      "runtimeName": "ZetaRuntime"
+    },
+    "entity": {
+      "agentId": "zeta",
+      "adapterId": "openai"
+    },
+    "message": "The runtime agent definition is missing.",
+    "path": null,
+    "pointer": null,
+    "range": null,
+    "source": "openai"
+  },
+  {
+    "code": "ANTHROPIC_TOOL_REGISTRATION_MISSING",
+    "details": {
+      "expected": true
+    },
+    "entity": {
+      "agentId": "alpha",
+      "capabilityId": "audit",
+      "capabilityKind": "tool"
+    },
+    "message": "The tool registration is missing.",
+    "path": "/src/audit.ts",
+    "pointer": null,
+    "range": null,
+    "source": "anthropic"
+  }
+]

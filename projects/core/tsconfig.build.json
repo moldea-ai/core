@@ -1,0 +1,9 @@
+{
+  "extends": "../../configs/typescript/environment-neutral-library.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src"
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.test-*.ts", "dist", "node_modules"]
+}

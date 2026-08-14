@@ -1,0 +1,39 @@
+{
+  "cases": [
+    {
+      "name": "explicit root",
+      "expectedPath": "/",
+      "entries": [{ "path": "/", "type": "directory" }]
+    },
+    {
+      "name": "duplicate path",
+      "expectedPath": "/duplicate",
+      "entries": [
+        { "path": "/duplicate", "type": "directory" },
+        { "path": "/duplicate", "type": "symlink" }
+      ]
+    },
+    {
+      "name": "descendant beneath file",
+      "expectedPath": "/file/child.txt",
+      "entries": [
+        { "path": "/file", "type": "file", "text": "parent" },
+        { "path": "/file/child.txt", "type": "file", "text": "child" }
+      ]
+    },
+    {
+      "name": "descendant beneath symlink",
+      "expectedPath": "/link/child.txt",
+      "entries": [
+        { "path": "/link", "type": "symlink" },
+        { "path": "/link/child.txt", "type": "file", "text": "child" }
+      ]
+    },
+    {
+      "name": "unpaired surrogate content",
+      "expectedPath": "/invalid-content.txt",
+      "entries": [{ "path": "/invalid-content.txt", "type": "file", "text": "\ud800" }]
+    }
+  ],
+  "invalidPathEntries": [{ "path": "/invalid-\ud800", "type": "file", "text": "content" }]
+}

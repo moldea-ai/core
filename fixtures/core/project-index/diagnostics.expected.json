@@ -1,0 +1,156 @@
+{
+  "agent capability combinations": [],
+  "complete universal project": [],
+  "independent invalid assets": [
+    {
+      "code": "MOLDEA_CONTEXT_FILE_EMPTY",
+      "details": {},
+      "entity": null,
+      "message": "The focused context file is empty.",
+      "path": "/moldea/context/a-empty.md",
+      "pointer": null,
+      "range": null,
+      "source": "core"
+    },
+    {
+      "code": "MOLDEA_TEXT_INVALID_UTF8",
+      "details": {},
+      "entity": null,
+      "message": "The text document is not valid UTF-8.",
+      "path": "/moldea/context/b-invalid-utf8.md",
+      "pointer": null,
+      "range": null,
+      "source": "core"
+    },
+    {
+      "code": "MOLDEA_TEXT_NUL_FORBIDDEN",
+      "details": {},
+      "entity": null,
+      "message": "The text document contains a forbidden NUL character.",
+      "path": "/moldea/context/c-nul.md",
+      "pointer": null,
+      "range": {
+        "end": {
+          "column": 8,
+          "line": 1,
+          "offset": 7
+        },
+        "start": {
+          "column": 7,
+          "line": 1,
+          "offset": 6
+        }
+      },
+      "source": "core"
+    },
+    {
+      "code": "MOLDEA_DECISION_BODY_EMPTY",
+      "details": {},
+      "entity": {
+        "decisionId": "1767225600000"
+      },
+      "message": "The decision Markdown body is empty.",
+      "path": "/moldea/decisions/1767225600000-empty.md",
+      "pointer": null,
+      "range": {
+        "end": {
+          "column": 1,
+          "line": 6,
+          "offset": 65
+        },
+        "start": {
+          "column": 1,
+          "line": 5,
+          "offset": 63
+        }
+      },
+      "source": "core"
+    },
+    {
+      "code": "MOLDEA_PROJECT_FILE_EMPTY",
+      "details": {},
+      "entity": null,
+      "message": "The project file is empty.",
+      "path": "/moldea/project.md",
+      "pointer": null,
+      "range": null,
+      "source": "core"
+    },
+    {
+      "code": "MOLDEA_RUNTIME_GUIDANCE_EMPTY",
+      "details": {},
+      "entity": null,
+      "message": "The runtime guidance is empty.",
+      "path": "/moldea/runtimes/empty.md",
+      "pointer": null,
+      "range": null,
+      "source": "core"
+    }
+  ],
+  "invalid manifest with independent failures": [
+    {
+      "code": "MOLDEA_CONTEXT_FILE_EMPTY",
+      "details": {},
+      "entity": null,
+      "message": "The focused context file is empty.",
+      "path": "/moldea/context/empty.md",
+      "pointer": null,
+      "range": null,
+      "source": "core"
+    },
+    {
+      "code": "MOLDEA_DECISION_SUPERSEDED_ORPHAN",
+      "details": {},
+      "entity": {
+        "decisionId": "1767225600000"
+      },
+      "message": "The superseded decision has no active supersession relationship.",
+      "path": "/moldea/decisions/1767225600000-orphan.md",
+      "pointer": null,
+      "range": null,
+      "source": "core"
+    },
+    {
+      "code": "MOLDEA_MANIFEST_PROPERTY_UNKNOWN",
+      "details": {},
+      "entity": null,
+      "message": "The manifest contains an unknown property.",
+      "path": "/moldea/moldea.yaml",
+      "pointer": "/unknown",
+      "range": {
+        "end": {
+          "column": 8,
+          "line": 2,
+          "offset": 18
+        },
+        "start": {
+          "column": 1,
+          "line": 2,
+          "offset": 11
+        }
+      },
+      "source": "core"
+    },
+    {
+      "code": "MOLDEA_PROJECT_FILE_EMPTY",
+      "details": {},
+      "entity": null,
+      "message": "The project file is empty.",
+      "path": "/moldea/project.md",
+      "pointer": null,
+      "range": null,
+      "source": "core"
+    },
+    {
+      "code": "MOLDEA_RUNTIME_GUIDANCE_EMPTY",
+      "details": {},
+      "entity": null,
+      "message": "The runtime guidance is empty.",
+      "path": "/moldea/runtimes/empty.md",
+      "pointer": null,
+      "range": null,
+      "source": "core"
+    }
+  ],
+  "minimal context-only project": []
+}

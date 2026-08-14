@@ -1,0 +1,89 @@
+version: 1
+context:
+  /moldea/project.md:
+    bindings:
+      - path: /src/project.ts
+        symbol: project
+    affectedBy:
+      - /src/project/**
+decisions:
+  /moldea/decisions/1786050123456-use-postgresql.md:
+    affectedBy:
+      - /src/database/**
+unresolved:
+  define-policy:
+    category: policy
+    effect: warning
+    description: The final project policy has not been defined.
+    resolution: Record the accepted policy and update affected implementation.
+    related:
+      - path: /src/policy.ts
+    reference: SUPPORT-1
+agents:
+  customer-support:
+    runtime:
+      id: custom
+      guidance: /moldea/runtimes/custom.md
+    context:
+      - /moldea/context/security.md
+    decisions:
+      - /moldea/decisions/1786050123456-use-postgresql.md
+    variables:
+      CURRENT_DATETIME:
+        description: Current UTC date and time.
+    bindings:
+      runtimeAgent:
+        path: /src/agent.ts
+        symbol: agent
+      inputSchema:
+        path: /src/contracts.ts
+        symbol: InputSchema
+      outputSchema:
+        path: /src/contracts.ts
+        symbol: OutputSchema
+      instructionLoader:
+        path: /src/instructions.ts
+        symbol: loadInstruction
+      variableProviders:
+        CURRENT_DATETIME:
+          path: /src/time.ts
+          symbol: now
+    tools:
+      find-order:
+        name: find_order
+        description: Retrieves verified order details when support work requires them.
+        implementation:
+          path: /src/find-order.ts
+          symbol: findOrder
+        registration:
+          path: /src/agent.ts
+          symbol: findOrderTool
+        inputSchema:
+          path: /src/contracts.ts
+          symbol: FindOrderInput
+        outputSchema:
+          path: /src/contracts.ts
+          symbol: FindOrderOutput
+        affectedBy:
+          - /src/orders/**
+    skills:
+      investigate-order:
+        name: investigate-order
+        description: Applies the order investigation process when evidence is required.
+        implementation:
+          path: /.agents/skills/investigate-order/SKILL.md
+        registration:
+          path: /src/agent.ts
+          symbol: investigateOrderSkill
+        affectedBy:
+          - /.agents/skills/investigate-order/**
+    affectedBy:
+      - /src/**
+    mirrors:
+      - /apps/eve/instructions/customer-support.md
+    unresolved:
+      final-policy:
+        category: policy
+        effect: blocking
+        description: The final agent policy has not been defined.
+        resolution: Define the policy and update the agent instruction.

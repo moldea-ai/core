@@ -1,0 +1,462 @@
+[
+  {
+    "name": "invalid filename",
+    "path": "/moldea/decisions/not-valid.md",
+    "content": "---\nstatus: accepted\ncreatedAt: \"2026-08-07T19:42:03.456Z\"\n---\nBody.\n",
+    "expectedDiagnostics": [
+      {
+        "code": "MOLDEA_DECISION_FILENAME_INVALID",
+        "details": {},
+        "entity": null,
+        "message": "The decision path or filename is invalid.",
+        "path": "/moldea/decisions/not-valid.md",
+        "pointer": null,
+        "range": null,
+        "source": "core"
+      }
+    ]
+  },
+  {
+    "name": "content before opening delimiter",
+    "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+    "content": "intro\n---\nstatus: accepted\ncreatedAt: \"2026-08-07T19:42:03.456Z\"\n---\nBody.\n",
+    "expectedDiagnostics": [
+      {
+        "code": "MOLDEA_DECISION_FRONTMATTER_MISSING",
+        "details": {},
+        "entity": {
+          "decisionId": "1786131723456"
+        },
+        "message": "The decision frontmatter or its delimiters are missing.",
+        "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+        "pointer": null,
+        "range": {
+          "end": {
+            "column": 6,
+            "line": 1,
+            "offset": 5
+          },
+          "start": {
+            "column": 1,
+            "line": 1,
+            "offset": 0
+          }
+        },
+        "source": "core"
+      }
+    ]
+  },
+  {
+    "name": "missing closing delimiter",
+    "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+    "content": "---\nstatus: accepted\ncreatedAt: \"2026-08-07T19:42:03.456Z\"\nBody.\n",
+    "expectedDiagnostics": [
+      {
+        "code": "MOLDEA_DECISION_FRONTMATTER_MISSING",
+        "details": {},
+        "entity": {
+          "decisionId": "1786131723456"
+        },
+        "message": "The decision frontmatter or its delimiters are missing.",
+        "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+        "pointer": null,
+        "range": {
+          "end": {
+            "column": 1,
+            "line": 5,
+            "offset": 65
+          },
+          "start": {
+            "column": 1,
+            "line": 5,
+            "offset": 65
+          }
+        },
+        "source": "core"
+      }
+    ]
+  },
+  {
+    "name": "indented closing delimiter",
+    "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+    "content": "---\nstatus: accepted\ncreatedAt: \"2026-08-07T19:42:03.456Z\"\n ---\nBody.\n",
+    "expectedDiagnostics": [
+      {
+        "code": "MOLDEA_DECISION_FRONTMATTER_MISSING",
+        "details": {},
+        "entity": {
+          "decisionId": "1786131723456"
+        },
+        "message": "The decision frontmatter or its delimiters are missing.",
+        "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+        "pointer": null,
+        "range": {
+          "end": {
+            "column": 1,
+            "line": 6,
+            "offset": 70
+          },
+          "start": {
+            "column": 1,
+            "line": 6,
+            "offset": 70
+          }
+        },
+        "source": "core"
+      }
+    ]
+  },
+  {
+    "name": "non-mapping frontmatter",
+    "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+    "content": "---\n- accepted\n- 2026-08-07T19:42:03.456Z\n---\nBody.\n",
+    "expectedDiagnostics": [
+      {
+        "code": "MOLDEA_DECISION_FRONTMATTER_INVALID",
+        "details": {
+          "reason": "mapping-required"
+        },
+        "entity": {
+          "decisionId": "1786131723456"
+        },
+        "message": "The decision frontmatter is invalid.",
+        "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+        "pointer": null,
+        "range": {
+          "end": {
+            "column": 1,
+            "line": 4,
+            "offset": 42
+          },
+          "start": {
+            "column": 1,
+            "line": 2,
+            "offset": 4
+          }
+        },
+        "source": "core"
+      }
+    ]
+  },
+  {
+    "name": "unknown property",
+    "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+    "content": "---\nstatus: accepted\ncreatedAt: \"2026-08-07T19:42:03.456Z\"\nrationale: durable\n---\nBody.\n",
+    "expectedDiagnostics": [
+      {
+        "code": "MOLDEA_DECISION_PROPERTY_UNKNOWN",
+        "details": {},
+        "entity": {
+          "decisionId": "1786131723456"
+        },
+        "message": "The decision frontmatter contains an unknown property.",
+        "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+        "pointer": "/rationale",
+        "range": {
+          "end": {
+            "column": 10,
+            "line": 4,
+            "offset": 68
+          },
+          "start": {
+            "column": 1,
+            "line": 4,
+            "offset": 59
+          }
+        },
+        "source": "core"
+      }
+    ]
+  },
+  {
+    "name": "missing status",
+    "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+    "content": "---\ncreatedAt: \"2026-08-07T19:42:03.456Z\"\n---\nBody.\n",
+    "expectedDiagnostics": [
+      {
+        "code": "MOLDEA_DECISION_STATUS_INVALID",
+        "details": {},
+        "entity": {
+          "decisionId": "1786131723456"
+        },
+        "message": "The decision status is invalid.",
+        "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+        "pointer": "/status",
+        "range": null,
+        "source": "core"
+      }
+    ]
+  },
+  {
+    "name": "invalid status",
+    "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+    "content": "---\nstatus: active\ncreatedAt: \"2026-08-07T19:42:03.456Z\"\n---\nBody.\n",
+    "expectedDiagnostics": [
+      {
+        "code": "MOLDEA_DECISION_STATUS_INVALID",
+        "details": {},
+        "entity": {
+          "decisionId": "1786131723456"
+        },
+        "message": "The decision status is invalid.",
+        "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+        "pointer": "/status",
+        "range": {
+          "end": {
+            "column": 15,
+            "line": 2,
+            "offset": 18
+          },
+          "start": {
+            "column": 9,
+            "line": 2,
+            "offset": 12
+          }
+        },
+        "source": "core"
+      }
+    ]
+  },
+  {
+    "name": "invalid createdAt",
+    "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+    "content": "---\nstatus: accepted\ncreatedAt: \"2026-02-30T00:00:00.000Z\"\n---\nBody.\n",
+    "expectedDiagnostics": [
+      {
+        "code": "MOLDEA_DECISION_CREATED_AT_INVALID",
+        "details": {},
+        "entity": {
+          "decisionId": "1786131723456"
+        },
+        "message": "The decision createdAt value is invalid.",
+        "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+        "pointer": "/createdAt",
+        "range": {
+          "end": {
+            "column": 38,
+            "line": 3,
+            "offset": 58
+          },
+          "start": {
+            "column": 12,
+            "line": 3,
+            "offset": 32
+          }
+        },
+        "source": "core"
+      }
+    ]
+  },
+  {
+    "name": "timestamp mismatch",
+    "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+    "content": "---\nstatus: accepted\ncreatedAt: \"2026-08-07T19:42:03.457Z\"\n---\nBody.\n",
+    "expectedDiagnostics": [
+      {
+        "code": "MOLDEA_DECISION_TIMESTAMP_MISMATCH",
+        "details": {},
+        "entity": {
+          "decisionId": "1786131723456"
+        },
+        "message": "The decision filename timestamp and createdAt value do not match.",
+        "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+        "pointer": "/createdAt",
+        "range": {
+          "end": {
+            "column": 38,
+            "line": 3,
+            "offset": 58
+          },
+          "start": {
+            "column": 12,
+            "line": 3,
+            "offset": 32
+          }
+        },
+        "source": "core"
+      }
+    ]
+  },
+  {
+    "name": "empty supersedes",
+    "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+    "content": "---\nstatus: accepted\ncreatedAt: \"2026-08-07T19:42:03.456Z\"\nsupersedes: []\n---\nBody.\n",
+    "expectedDiagnostics": [
+      {
+        "code": "MOLDEA_DECISION_FRONTMATTER_INVALID",
+        "details": {
+          "reason": "non-empty-supersedes-sequence-required"
+        },
+        "entity": {
+          "decisionId": "1786131723456"
+        },
+        "message": "The decision frontmatter is invalid.",
+        "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+        "pointer": "/supersedes",
+        "range": {
+          "end": {
+            "column": 15,
+            "line": 4,
+            "offset": 73
+          },
+          "start": {
+            "column": 13,
+            "line": 4,
+            "offset": 71
+          }
+        },
+        "source": "core"
+      }
+    ]
+  },
+  {
+    "name": "invalid supersedes ID",
+    "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+    "content": "---\nstatus: accepted\ncreatedAt: \"2026-08-07T19:42:03.456Z\"\nsupersedes: [1784000000000]\n---\nBody.\n",
+    "expectedDiagnostics": [
+      {
+        "code": "MOLDEA_DECISION_FRONTMATTER_INVALID",
+        "details": {
+          "reason": "decision-id-string-required"
+        },
+        "entity": {
+          "decisionId": "1786131723456"
+        },
+        "message": "The decision frontmatter is invalid.",
+        "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+        "pointer": "/supersedes/0",
+        "range": {
+          "end": {
+            "column": 27,
+            "line": 4,
+            "offset": 85
+          },
+          "start": {
+            "column": 14,
+            "line": 4,
+            "offset": 72
+          }
+        },
+        "source": "core"
+      }
+    ]
+  },
+  {
+    "name": "duplicate supersedes ID",
+    "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+    "content": "---\nstatus: accepted\ncreatedAt: \"2026-08-07T19:42:03.456Z\"\nsupersedes: [\"1784000000000\", \"1784000000000\"]\n---\nBody.\n",
+    "expectedDiagnostics": [
+      {
+        "code": "MOLDEA_ID_DUPLICATE",
+        "details": {},
+        "entity": {
+          "decisionId": "1786131723456"
+        },
+        "message": "An ID is duplicated within its required scope.",
+        "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+        "pointer": "/supersedes/1",
+        "range": {
+          "end": {
+            "column": 46,
+            "line": 4,
+            "offset": 104
+          },
+          "start": {
+            "column": 31,
+            "line": 4,
+            "offset": 89
+          }
+        },
+        "source": "core"
+      }
+    ]
+  },
+  {
+    "name": "self supersession",
+    "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+    "content": "---\nstatus: accepted\ncreatedAt: \"2026-08-07T19:42:03.456Z\"\nsupersedes: [\"1786131723456\"]\n---\nBody.\n",
+    "expectedDiagnostics": [
+      {
+        "code": "MOLDEA_DECISION_SELF_SUPERSESSION",
+        "details": {},
+        "entity": {
+          "decisionId": "1786131723456"
+        },
+        "message": "The decision supersedes itself.",
+        "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+        "pointer": "/supersedes/0",
+        "range": {
+          "end": {
+            "column": 29,
+            "line": 4,
+            "offset": 87
+          },
+          "start": {
+            "column": 14,
+            "line": 4,
+            "offset": 72
+          }
+        },
+        "source": "core"
+      }
+    ]
+  },
+  {
+    "name": "empty body",
+    "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+    "content": "---\nstatus: accepted\ncreatedAt: \"2026-08-07T19:42:03.456Z\"\n---\n  \n",
+    "expectedDiagnostics": [
+      {
+        "code": "MOLDEA_DECISION_BODY_EMPTY",
+        "details": {},
+        "entity": {
+          "decisionId": "1786131723456"
+        },
+        "message": "The decision Markdown body is empty.",
+        "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+        "pointer": null,
+        "range": {
+          "end": {
+            "column": 1,
+            "line": 6,
+            "offset": 66
+          },
+          "start": {
+            "column": 1,
+            "line": 5,
+            "offset": 63
+          }
+        },
+        "source": "core"
+      }
+    ]
+  },
+  {
+    "name": "duplicate YAML key",
+    "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+    "content": "---\nstatus: accepted\nstatus: rejected\ncreatedAt: \"2026-08-07T19:42:03.456Z\"\n---\nBody.\n",
+    "expectedDiagnostics": [
+      {
+        "code": "MOLDEA_YAML_DUPLICATE_KEY",
+        "details": {},
+        "entity": null,
+        "message": "The YAML document contains a duplicate mapping key.",
+        "path": "/moldea/decisions/1786131723456-use-postgresql.md",
+        "pointer": null,
+        "range": {
+          "end": {
+            "column": 2,
+            "line": 3,
+            "offset": 22
+          },
+          "start": {
+            "column": 1,
+            "line": 3,
+            "offset": 21
+          }
+        },
+        "source": "core"
+      }
+    ]
+  }
+]

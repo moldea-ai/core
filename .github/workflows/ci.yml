@@ -1,0 +1,204 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+  workflow_call:
+    inputs:
+      release_project:
+        description: Public project key used to isolate concurrent release verification.
+        required: false
+        type: string
+        default: ''
+      release_build:
+        description: Disable dependency caching and retain release-ready package artifacts.
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}-${{ inputs.release_project }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  NODE_VERSION: 24.15.0
+  PNPM_VERSION: 11.9.0
+
+jobs:
+  verify:
+    name: Verify Repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js with dependency caching
+        if: ${{ inputs.release_build != true }}
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Setup Node.js for a release build
+        if: ${{ inputs.release_build == true }}
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check Runtime Compatibility Artifacts
+        run: pnpm compatibility:check
+
+      - name: Check Formatting
+        run: pnpm format:check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Build
+        run: pnpm build
+
+      - name: Test
+        run: pnpm test
+
+      - name: Pack Public Package Artifacts
+        run: |
+          public_packages_directory="${{ runner.temp }}/public-package-tarballs"
+          mkdir -p "$public_packages_directory"
+          pnpm --dir projects/repository pack --pack-destination "$public_packages_directory"
+          pnpm --dir projects/repository-fs pack --pack-destination "$public_packages_directory"
+          pnpm --dir projects/core pack --pack-destination "$public_packages_directory"
+          pnpm --dir projects/cli pack --pack-destination "$public_packages_directory"
+          pnpm release:checksums create "$public_packages_directory"
+
+      - name: Upload Public Package Artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: public-package-tarballs
+          path: |
+            ${{ runner.temp }}/public-package-tarballs/*.tgz
+            ${{ runner.temp }}/public-package-tarballs/SHA256SUMS
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+
+  repository-fs-runtime-compatibility:
+    name: Repository FS Runtime (Node.js ${{ matrix.node-version }})
+    needs: verify
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version:
+          - 22.11.0
+          - 22.x
+          - 24.11.0
+          - 24.x
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Download Repository FS Runtime Artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: public-package-tarballs
+          path: ${{ runner.temp }}/public-package-tarballs
+
+      - name: Test Packed Repository FS Runtime
+        run: >-
+          node projects/repository-fs/scripts/runtime-compatibility/index.mjs
+          "${{ runner.temp }}/public-package-tarballs"
+
+  cli-runtime-compatibility:
+    name: CLI Runtime (Node.js ${{ matrix.node-version }})
+    needs: verify
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version:
+          - 22.11.0
+          - 22.x
+          - 24.11.0
+          - 24.x
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Download CLI Runtime Artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: public-package-tarballs
+          path: ${{ runner.temp }}/public-package-tarballs
+
+      - name: Test Packed CLI Runtime
+        run: >-
+          node projects/cli/scripts/runtime-compatibility/index.mjs
+          "${{ runner.temp }}/public-package-tarballs"
+
+  test-cross-platform:
+    name: Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-latest
+          - windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js with dependency caching
+        if: ${{ inputs.release_build != true }}
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Setup Node.js for a release build
+        if: ${{ inputs.release_build == true }}
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Test
+        run: pnpm test

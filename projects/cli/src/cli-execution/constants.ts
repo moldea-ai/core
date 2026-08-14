@@ -1,0 +1,9 @@
+// handled process exit codes implemented by the current CLI foundation
+export const MOLDEA_CLI_EXIT_CODES = {
+  Interrupted: 130,
+  OperationalError: 3,
+  StructuralInvalid: 1,
+  Success: 0,
+  Terminated: 143,
+  UsageError: 2,
+} as const;
