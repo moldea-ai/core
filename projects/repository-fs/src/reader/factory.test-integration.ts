@@ -130,88 +130,91 @@ describe('createFilesystemRepositoryReader', () => {
     );
   });
 
-  test('invalidates after atomic replacement and allows a fresh reader to recover', async () => {
-    const logicalPath = parseRepositoryPath('/nested/deep/data.bin');
-    const originalHostPath = path.join(
-      fixtures.recovery.rootDirectory,
-      'nested',
-      'deep',
-      'data.bin',
-    );
-    const replacementHostPath = path.join(
-      fixtures.recovery.rootDirectory,
-      'nested',
-      'deep',
-      'data.replacement.bin',
-    );
-    const backupHostPath = path.join(
-      fixtures.recovery.rootDirectory,
-      'nested',
-      'deep',
-      'data.backup.bin',
-    );
-    const replacementBytes = fixtures.recovery.fileBytes.map((byte) => byte ^ 0xff);
-    const reader = await createFilesystemRepositoryReader({
-      rootDirectory: fixtures.recovery.rootDirectory,
-      selection: { kind: 'paths', paths: [logicalPath] },
-    });
+  test.skipIf(process.platform === 'win32')(
+    'invalidates an uncaptured file after atomic replacement and allows a fresh reader to recover',
+    async () => {
+      const logicalPath = parseRepositoryPath('/nested/deep/data.bin');
+      const originalHostPath = path.join(
+        fixtures.recovery.rootDirectory,
+        'nested',
+        'deep',
+        'data.bin',
+      );
+      const replacementHostPath = path.join(
+        fixtures.recovery.rootDirectory,
+        'nested',
+        'deep',
+        'data.replacement.bin',
+      );
+      const backupHostPath = path.join(
+        fixtures.recovery.rootDirectory,
+        'nested',
+        'deep',
+        'data.backup.bin',
+      );
+      const replacementBytes = fixtures.recovery.fileBytes.map((byte) => byte ^ 0xff);
+      const reader = await createFilesystemRepositoryReader({
+        rootDirectory: fixtures.recovery.rootDirectory,
+        selection: { kind: 'paths', paths: [logicalPath] },
+      });
 
-    await writeFile(replacementHostPath, replacementBytes);
-    await rename(originalHostPath, backupHostPath);
-    await rename(replacementHostPath, originalHostPath);
+      await writeFile(replacementHostPath, replacementBytes);
+      await rename(originalHostPath, backupHostPath);
+      await rename(replacementHostPath, originalHostPath);
 
-    const changedRead = reader.readFile(logicalPath);
+      const changedRead = reader.readFile(logicalPath);
 
-    await expectToRejectCode(
-      changedRead,
-      'SNAPSHOT_CHANGED',
-      'The repository snapshot changed during the operation.',
-    );
-    const rejection: unknown = await changedRead.then(
-      () => new Error('The replaced-file read unexpectedly succeeded.'),
-      (cause: unknown) => cause,
-    );
-    const serializedRejection = JSON.stringify(rejection);
-    const serializedRootDirectory = JSON.stringify(fixtures.recovery.rootDirectory).slice(1, -1);
+      await expectToRejectCode(
+        changedRead,
+        'SNAPSHOT_CHANGED',
+        'The repository snapshot changed during the operation.',
+      );
+      const rejection: unknown = await changedRead.then(
+        () => new Error('The replaced-file read unexpectedly succeeded.'),
+        (cause: unknown) => cause,
+      );
+      const serializedRejection = JSON.stringify(rejection);
+      const serializedRootDirectory = JSON.stringify(fixtures.recovery.rootDirectory).slice(1, -1);
 
-    expect(rejection).toBeInstanceOf(RepositorySourceException);
-    expect(rejection).toMatchObject({
-      operation: 'read-file',
-      path: logicalPath,
-      retryable: true,
-    });
-    expect(serializedRejection).not.toContain(serializedRootDirectory);
+      expect(rejection).toBeInstanceOf(RepositorySourceException);
+      expect(rejection).toMatchObject({
+        operation: 'read-file',
+        path: logicalPath,
+        retryable: true,
+      });
+      expect(serializedRejection).not.toContain(serializedRootDirectory);
 
-    const laterEntry = reader.getEntry(logicalPath);
-    const laterRead = reader.readFile(logicalPath);
-    const laterListing = collectEntries(reader.listEntries());
+      const laterEntry = reader.getEntry(logicalPath);
+      const laterRead = reader.readFile(logicalPath);
+      const laterListing = collectEntries(reader.listEntries());
 
-    await expectToRejectCode(laterEntry, 'SNAPSHOT_CHANGED');
-    await expect(laterEntry).rejects.toMatchObject({
-      operation: 'get-entry',
-      path: logicalPath,
-      retryable: true,
-    });
-    await expectToRejectCode(laterRead, 'SNAPSHOT_CHANGED');
-    await expect(laterRead).rejects.toMatchObject({
-      operation: 'read-file',
-      path: logicalPath,
-      retryable: true,
-    });
-    await expectToRejectCode(laterListing, 'SNAPSHOT_CHANGED');
-    await expect(laterListing).rejects.toMatchObject({
-      operation: 'list-entries',
-      path: REPOSITORY_ROOT,
-      retryable: true,
-    });
+      await expectToRejectCode(laterEntry, 'SNAPSHOT_CHANGED');
+      await expect(laterEntry).rejects.toMatchObject({
+        operation: 'get-entry',
+        path: logicalPath,
+        retryable: true,
+      });
+      await expectToRejectCode(laterRead, 'SNAPSHOT_CHANGED');
+      await expect(laterRead).rejects.toMatchObject({
+        operation: 'read-file',
+        path: logicalPath,
+        retryable: true,
+      });
+      await expectToRejectCode(laterListing, 'SNAPSHOT_CHANGED');
+      await expect(laterListing).rejects.toMatchObject({
+        operation: 'list-entries',
+        path: REPOSITORY_ROOT,
+        retryable: true,
+      });
 
-    const freshReader = await createFilesystemRepositoryReader({
-      rootDirectory: fixtures.recovery.rootDirectory,
-      selection: { kind: 'paths', paths: [logicalPath] },
-    });
+      const freshReader = await createFilesystemRepositoryReader({
+        rootDirectory: fixtures.recovery.rootDirectory,
+        selection: { kind: 'paths', paths: [logicalPath] },
+      });
 
-    await expect(freshReader.readFile(logicalPath)).resolves.toStrictEqual(replacementBytes);
-  });
+      await expect(freshReader.readFile(logicalPath)).resolves.toStrictEqual(replacementBytes);
+    },
+  );
 
   test('uses the creation signal only while constructing the reader', async () => {
     const controller = new AbortController();
@@ -230,7 +233,7 @@ describe('createFilesystemRepositoryReader', () => {
   });
 
   test.skipIf(process.platform !== 'win32')(
-    'preserves same-size file bytes captured before publishing a Windows reader',
+    'preserves captured same-size file bytes and lets a fresh Windows reader observe the change',
     async () => {
       const temporaryDirectory = await mkdtemp(
         path.join(tmpdir(), 'moldea-repository-fs-windows-materialization-'),
@@ -240,6 +243,7 @@ describe('createFilesystemRepositoryReader', () => {
         const filePath = path.join(temporaryDirectory, 'file.bin');
         const logicalPath = parseRepositoryPath('/file.bin');
         const originalBytes = Uint8Array.from([1]);
+        const replacementBytes = Uint8Array.from([2]);
 
         await writeFile(filePath, originalBytes);
 
@@ -248,9 +252,16 @@ describe('createFilesystemRepositoryReader', () => {
           selection: { kind: 'paths', paths: [logicalPath] },
         });
 
-        await writeFile(filePath, Uint8Array.from([2]));
+        await writeFile(filePath, replacementBytes);
 
         await expect(reader.readFile(logicalPath)).resolves.toStrictEqual(originalBytes);
+
+        const freshReader = await createFilesystemRepositoryReader({
+          rootDirectory: temporaryDirectory,
+          selection: { kind: 'paths', paths: [logicalPath] },
+        });
+
+        await expect(freshReader.readFile(logicalPath)).resolves.toStrictEqual(replacementBytes);
       } finally {
         await rm(temporaryDirectory, { force: true, recursive: true });
       }
