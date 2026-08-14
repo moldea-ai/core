@@ -570,6 +570,7 @@ describe('real Git inventory probe', () => {
     }
   });
 
+  // real submodule setup and repeated Git probes need a wider Windows process-startup budget
   test('excludes initialized and uninitialized submodule roots without recursion', async () => {
     const repository = createGitRepository();
 
@@ -636,7 +637,7 @@ describe('real Git inventory probe', () => {
     } finally {
       repository.remove();
     }
-  });
+  }, 30_000);
 
   test('excludes a nested linked worktree boundary', async () => {
     const repository = createGitRepository();

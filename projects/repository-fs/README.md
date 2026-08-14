@@ -2,7 +2,7 @@
 
 Node.js-specific implementation for exposing one explicitly selected local directory through the source-neutral repository contract.
 
-The `1.0.0` package surface exposes the complete version 1 option, selection, resource-limit, and immutable reader contracts. Its public factory validates and detaches caller options, canonicalizes an explicit filesystem root, constructs and verifies strict private exact-path or recursive-directory inventories, provides frozen lookup and recursive listing, coordinates verified file capture into a private immutable cache, and permanently invalidates that shared state after snapshot loss. The filesystem implementation passes the same source-neutral reader conformance contract as `@moldea.ai/repository/memory`.
+The package's version 1 surface exposes the complete version 1 option, selection, resource-limit, and immutable reader contracts. Its public factory validates and detaches caller options, canonicalizes an explicit filesystem root, constructs and verifies strict private exact-path or recursive-directory inventories, provides frozen lookup and recursive listing, coordinates verified file capture into a private immutable cache, and permanently invalidates that shared state after snapshot loss. The filesystem implementation passes the same source-neutral reader conformance contract as `@moldea.ai/repository/memory`.
 
 Tarball and consumer-type checks remain the release boundary for every published version.
 

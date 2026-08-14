@@ -272,8 +272,10 @@ describe('filesystem file-capture coordination', () => {
       await Promise.resolve();
       captureRelease.resolve();
 
-      await expectToRejectCode(firstRead, 'SOURCE_UNAVAILABLE');
-      await expectToRejectCode(secondRead, 'SOURCE_UNAVAILABLE');
+      await Promise.all([
+        expectToRejectCode(firstRead, 'SOURCE_UNAVAILABLE'),
+        expectToRejectCode(secondRead, 'SOURCE_UNAVAILABLE'),
+      ]);
       expect(captureCount).toBe(1);
       expect(state.lifecycle.isInvalidated).toBe(false);
       expect(state.cache.cachedByteCount).toBe(0);
@@ -314,8 +316,10 @@ describe('filesystem file-capture coordination', () => {
       await writeFile(hostPath, Uint8Array.from([19, 18, 17]));
       captureRelease.resolve();
 
-      await expectToRejectCode(firstRead, 'SNAPSHOT_CHANGED');
-      await expectToRejectCode(secondRead, 'SNAPSHOT_CHANGED');
+      await Promise.all([
+        expectToRejectCode(firstRead, 'SNAPSHOT_CHANGED'),
+        expectToRejectCode(secondRead, 'SNAPSHOT_CHANGED'),
+      ]);
       expect(state.lifecycle.isInvalidated).toBe(true);
       expect(state.cache.cachedByteCount).toBe(0);
       expect(state.captures.capturesByPath.size).toBe(0);
@@ -473,8 +477,10 @@ describe('filesystem file-capture coordination', () => {
 
       captureRelease.resolve();
 
-      await expectToRejectCode(firstRead, 'SNAPSHOT_CHANGED');
-      await expectToRejectCode(secondRead, 'SNAPSHOT_CHANGED');
+      await Promise.all([
+        expectToRejectCode(firstRead, 'SNAPSHOT_CHANGED'),
+        expectToRejectCode(secondRead, 'SNAPSHOT_CHANGED'),
+      ]);
       expect(state.captures.reservedByteCount).toBe(0);
     } finally {
       await rm(temporaryDirectory, { force: true, recursive: true });

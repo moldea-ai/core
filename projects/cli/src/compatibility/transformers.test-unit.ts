@@ -41,16 +41,16 @@ describe('createMoldeaCliCompatibilityResult', () => {
       minimumGitVersion: '2.30.0',
       outputSchemaVersion: 1,
       packages: [
-        { name: '@moldea.ai/core', version: '1.0.0' },
-        { name: '@moldea.ai/repository', version: '1.0.0' },
-        { name: '@moldea.ai/repository-fs', version: '1.0.0' },
+        { name: '@moldea.ai/core', version: '1.0.1' },
+        { name: '@moldea.ai/repository', version: '1.0.1' },
+        { name: '@moldea.ai/repository-fs', version: '1.0.1' },
       ],
       repositoryFormatVersions: [1],
       supportedNodeRange: '^22.11.0 || ^24.11.0',
     });
     expect(customAdapter).toMatchObject({
       active: true,
-      bundledVersion: '1.0.0',
+      bundledVersion: '1.0.1',
       id: 'custom',
       matrix: {
         compatibleCoreRange: '^1.0.0',

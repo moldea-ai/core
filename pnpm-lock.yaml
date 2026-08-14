@@ -57,13 +57,13 @@ importers:
   projects/cli:
     dependencies:
       '@moldea.ai/core':
-        specifier: workspace:1.0.0
+        specifier: workspace:1.0.1
         version: link:../core
       '@moldea.ai/repository':
-        specifier: workspace:1.0.0
+        specifier: workspace:1.0.1
         version: link:../repository
       '@moldea.ai/repository-fs':
-        specifier: workspace:1.0.0
+        specifier: workspace:1.0.1
         version: link:../repository-fs
       semver:
         specifier: 7.8.5
