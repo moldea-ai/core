@@ -1,4 +1,4 @@
-import { prerelease, satisfies, valid, validRange } from 'semver';
+import { gt, prerelease, satisfies, valid, validRange } from 'semver';
 
 import {
   NPM_RELEASE_GITHUB_REF,
@@ -23,7 +23,8 @@ const WORKSPACE_PROTOCOL_PREFIX = 'workspace:';
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
-const isNpmReleaseMode = (value: string): value is INpmReleaseMode =>
+/** Checks whether a workflow value names one supported release mode. */
+export const isNpmReleaseMode = (value: string): value is INpmReleaseMode =>
   NPM_RELEASE_MODES.some((mode) => mode === value);
 
 /** Checks whether a workflow value names one supported public project. */
@@ -156,12 +157,42 @@ const requirePublishedDependencies = (
   }
 };
 
+const requirePublishableVersionSequence = (sources: INpmReleaseCandidateSources): void => {
+  const candidateVersion = sources.identity.manifest.version;
+
+  if (
+    sources.publishedVersions.some((publishedVersion) => gt(publishedVersion, candidateVersion))
+  ) {
+    throw new TypeError(
+      `${sources.identity.manifest.name}@${candidateVersion} is older than a published version.`,
+    );
+  }
+
+  if (
+    sources.previousVersion !== null &&
+    (valid(sources.previousVersion) !== sources.previousVersion ||
+      prerelease(sources.previousVersion) !== null ||
+      !gt(candidateVersion, sources.previousVersion))
+  ) {
+    throw new TypeError(`The previous ${sources.identity.manifest.name} version is invalid.`);
+  }
+
+  if (
+    sources.previousVersion !== null &&
+    !sources.publishedVersions.includes(sources.previousVersion)
+  ) {
+    throw new TypeError(
+      `${sources.identity.manifest.name}@${sources.previousVersion} must be published first.`,
+    );
+  }
+};
+
 /**
  * Resolves the only safe action for a validated release and its external state.
  * @param sources The validated identity together with npm and Git tag state.
  * @returns The idempotent tag and publication actions for the release.
  * @throws
- * - If dependencies are unavailable or registry and Git state are inconsistent
+ * - If dependencies, release order, registry state, or Git tag state are inconsistent
  */
 export const createNpmReleaseCandidate = (
   sources: INpmReleaseCandidateSources,
@@ -170,6 +201,10 @@ export const createNpmReleaseCandidate = (
   const isPublished = sources.publishedVersions.includes(identity.manifest.version);
 
   requirePublishedDependencies(identity, sources.dependencyVersions);
+
+  if (!isPublished) {
+    requirePublishableVersionSequence(sources);
+  }
 
   if (sources.tagCommit !== null && sources.tagCommit !== identity.commit) {
     throw new TypeError(`The ${identity.tag} tag already targets another commit.`);

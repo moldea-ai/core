@@ -1,6 +1,6 @@
 {
   "name": "@moldea.ai/repository",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Source-neutral, read-only repository contracts and an immutable in-memory reader.",
   "homepage": "https://github.com/moldea-ai/packages/tree/main/projects/repository#readme",
   "bugs": {
@@ -16,6 +16,7 @@
   "type": "module",
   "sideEffects": false,
   "files": [
+    "cover.png",
     "dist",
     "LICENSE",
     "README.md"

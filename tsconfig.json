@@ -3,6 +3,11 @@
   "compilerOptions": {
     "allowImportingTsExtensions": true
   },
-  "include": ["configs/**/*.ts", "scripts/**/*.ts", "vitest.config.ts"],
+  "include": [
+    "configs/**/*.ts",
+    "scripts/**/*.ts",
+    "vitest.config.ts",
+    "vitest-integration.config.ts"
+  ],
   "exclude": ["**/coverage", "**/dist", "**/node_modules"]
 }

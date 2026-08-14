@@ -1,0 +1,165 @@
+// @vitest-environment node
+import { execFileSync } from 'node:child_process';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { dirname, join, sep } from 'node:path';
+import { pathToFileURL } from 'node:url';
+
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+
+import { NPM_RELEASE_PROJECT_ORDER, NPM_RELEASE_PROJECTS } from './constants.ts';
+import { createNpmReleaseWorkflowPlan } from './planning.ts';
+import { loadNpmReleaseProjectChanges } from './project-changes.ts';
+import type { INpmReleaseProject } from './types.ts';
+
+let repositoryDirectory: string;
+
+const runGit = (gitArguments: readonly string[], input?: string): string =>
+  execFileSync('git', gitArguments, {
+    cwd: repositoryDirectory,
+    encoding: 'utf8',
+    input,
+  }).trim();
+
+const writeRepositoryFile = async (filePath: string, content: string): Promise<void> => {
+  const absolutePath = join(repositoryDirectory, filePath);
+
+  await mkdir(dirname(absolutePath), { recursive: true });
+  await writeFile(absolutePath, content, 'utf8');
+};
+
+const writeProjectManifest = async (
+  project: INpmReleaseProject,
+  version: string,
+): Promise<void> => {
+  const configuration = NPM_RELEASE_PROJECTS[project];
+
+  await writeRepositoryFile(
+    `${configuration.projectDirectory}/package.json`,
+    `${JSON.stringify({ name: configuration.packageName, version }, null, 2)}\n`,
+  );
+};
+
+const commitIndex = (message: string): string => {
+  runGit(['commit', '--quiet', '--no-gpg-sign', '--message', message]);
+
+  return runGit(['rev-parse', 'HEAD']);
+};
+
+const commitWorktree = (message: string): string => {
+  runGit(['add', '--all']);
+
+  return commitIndex(message);
+};
+
+/**
+ * Stages a synthetic Git tree entry without materializing an excluded path.
+ * @param filePath The repository-relative tree path.
+ * @param content The blob content associated with the path.
+ */
+const stageGitTreeFile = (filePath: string, content: string): void => {
+  const blob = runGit(['hash-object', '-w', '--stdin'], content);
+
+  runGit(['update-index', '--add', '--cacheinfo', `100644,${blob},${filePath}`]);
+};
+
+const loadChanges = (baseCommit: string, currentCommit: string) =>
+  loadNpmReleaseProjectChanges(
+    pathToFileURL(`${repositoryDirectory}${sep}`),
+    baseCommit,
+    currentCommit,
+  );
+
+beforeEach(async () => {
+  repositoryDirectory = await mkdtemp(join(tmpdir(), 'moldea-npm-release-'));
+  runGit(['init', '--quiet', '--initial-branch', 'main']);
+  runGit(['config', 'user.email', 'npm-release-test@moldea.ai']);
+  runGit(['config', 'user.name', 'npm release test']);
+  runGit(['config', 'commit.gpgSign', 'false']);
+
+  await Promise.all(
+    NPM_RELEASE_PROJECT_ORDER.map((project) => writeProjectManifest(project, '1.0.0')),
+  );
+  commitWorktree('test: initialize package manifests');
+});
+
+afterEach(async () => {
+  await rm(repositoryDirectory, { force: true, recursive: true });
+});
+
+describe('npm release project changes', () => {
+  test('loads committed versions and detects only the changed public project', async () => {
+    const baseCommit = runGit(['rev-parse', 'HEAD']);
+
+    await writeProjectManifest('core', '1.0.1');
+    await writeRepositoryFile('projects/core/src/change.ts', 'export const change = true;\n');
+
+    const currentCommit = commitWorktree('feat(core): change the package');
+    const changes = await loadChanges(baseCommit, currentCommit);
+
+    expect(changes).toStrictEqual({
+      cli: { currentVersion: '1.0.0', isChanged: false, previousVersion: '1.0.0' },
+      core: { currentVersion: '1.0.1', isChanged: true, previousVersion: '1.0.0' },
+      repository: { currentVersion: '1.0.0', isChanged: false, previousVersion: '1.0.0' },
+      'repository-fs': {
+        currentVersion: '1.0.0',
+        isChanged: false,
+        previousVersion: '1.0.0',
+      },
+    });
+  });
+
+  test('ignores archived and backup-only Git tree changes', async () => {
+    const baseCommit = runGit(['rev-parse', 'HEAD']);
+
+    stageGitTreeFile('projects/core/_archive/legacy.ts', 'legacy');
+    stageGitTreeFile('projects/core/nested/_backups/legacy.ts', 'backup');
+
+    const currentCommit = commitIndex('test: add excluded Git tree entries');
+    const changes = await loadChanges(baseCommit, currentCommit);
+
+    expect(Object.values(changes).every((change) => !change.isChanged)).toBe(true);
+  });
+
+  test('feeds a real project change into version-bump validation', async () => {
+    const baseCommit = runGit(['rev-parse', 'HEAD']);
+
+    await writeRepositoryFile('projects/repository/README.md', '# Repository\n');
+
+    const currentCommit = commitWorktree('docs(repository): change package documentation');
+    const projectChanges = await loadChanges(baseCommit, currentCommit);
+
+    expect(() =>
+      createNpmReleaseWorkflowPlan({
+        eventName: 'push',
+        mode: '',
+        project: '',
+        projectChanges,
+      }),
+    ).toThrow('must declare a greater stable package version');
+  });
+
+  test('rejects a missing committed package manifest', async () => {
+    const baseCommit = runGit(['rev-parse', 'HEAD']);
+
+    await rm(join(repositoryDirectory, 'projects/cli/package.json'));
+
+    const currentCommit = commitWorktree('test: remove a package manifest');
+
+    await expect(loadChanges(baseCommit, currentCommit)).rejects.toThrow(
+      'projects/cli/package.json file could not be read',
+    );
+  });
+
+  test('rejects malformed committed package metadata', async () => {
+    const baseCommit = runGit(['rev-parse', 'HEAD']);
+
+    await writeRepositoryFile('projects/repository-fs/package.json', '[]\n');
+
+    const currentCommit = commitWorktree('test: invalidate package metadata');
+
+    await expect(loadChanges(baseCommit, currentCommit)).rejects.toThrow(
+      '@moldea.ai/repository-fs package manifest is invalid',
+    );
+  });
+});

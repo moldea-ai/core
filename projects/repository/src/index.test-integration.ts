@@ -120,13 +120,14 @@ describe('published package artifacts', () => {
     ) as { readonly dependencies?: Readonly<Record<string, string>> };
     const packedPaths = packResult.files.map((file) => file.path);
 
-    expect(packResult).toMatchObject({ name: '@moldea.ai/repository', version: '1.0.0' });
+    expect(packResult).toMatchObject({ name: '@moldea.ai/repository', version: '1.0.1' });
     expect(packedPaths).toContain('dist/index.js');
     expect(packedPaths).toContain('dist/index.d.ts');
     expect(packedPaths).toContain('dist/memory.js');
     expect(packedPaths).toContain('dist/memory.d.ts');
     expect(packedPaths).toContain('LICENSE');
     expect(packedPaths).toContain('README.md');
+    expect(packedPaths).toContain('cover.png');
     expect(packedPaths).toContain('package.json');
     expect(
       packedPaths.every(
@@ -134,6 +135,7 @@ describe('published package artifacts', () => {
           filePath.startsWith('dist/') ||
           filePath === 'LICENSE' ||
           filePath === 'README.md' ||
+          filePath === 'cover.png' ||
           filePath === 'package.json',
       ),
     ).toBe(true);

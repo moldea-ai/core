@@ -1,0 +1,202 @@
+name: Publish npm Package Release
+
+on:
+  workflow_call:
+    inputs:
+      project:
+        description: Validated public package project to release.
+        required: true
+        type: string
+      mode:
+        description: Validated bootstrap or trusted release mode.
+        required: true
+        type: string
+      previous_version:
+        description: Previous main version for automatic release sequencing; empty for manual releases.
+        required: true
+        type: string
+
+permissions: {}
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  NODE_VERSION: 24.15.0
+  PNPM_VERSION: 11.9.0
+  PUBLIC_PACKAGE_ARTIFACT: public-package-tarballs
+  PUBLIC_PACKAGE_ARTIFACT_DIRECTORY: ${{ github.workspace }}/public-package-tarballs
+
+jobs:
+  prepare:
+    name: Prepare npm Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      artifact_name: ${{ steps.release.outputs.artifact_name }}
+      checksum: ${{ steps.release.outputs.checksum }}
+      package_name: ${{ steps.release.outputs.package_name }}
+      package_version: ${{ steps.release.outputs.package_version }}
+      project: ${{ steps.release.outputs.project }}
+      release_state: ${{ steps.release.outputs.release_state }}
+      should_create_tag: ${{ steps.release.outputs.should_create_tag }}
+      should_publish: ${{ steps.release.outputs.should_publish }}
+      tag: ${{ steps.release.outputs.tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Release Tooling
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Download Public Package Artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: ${{ env.PUBLIC_PACKAGE_ARTIFACT }}
+          path: ${{ env.PUBLIC_PACKAGE_ARTIFACT_DIRECTORY }}
+
+      - name: Prepare Release State
+        id: release
+        env:
+          RELEASE_MODE: ${{ inputs.mode }}
+          RELEASE_PREVIOUS_VERSION: ${{ inputs.previous_version }}
+          RELEASE_PROJECT: ${{ inputs.project }}
+        run: >-
+          pnpm release:prepare
+          "$RELEASE_PROJECT"
+          "$RELEASE_MODE"
+          "$PUBLIC_PACKAGE_ARTIFACT_DIRECTORY"
+          "$RELEASE_PREVIOUS_VERSION"
+
+  tag:
+    name: Create Release Tag
+    needs: prepare
+    if: ${{ needs.prepare.outputs.should_create_tag == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Create and Push Annotated Tag
+        env:
+          PACKAGE_NAME: ${{ needs.prepare.outputs.package_name }}
+          PACKAGE_VERSION: ${{ needs.prepare.outputs.package_version }}
+          RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$RELEASE_TAG" "${{ github.sha }}" -m "$PACKAGE_NAME $PACKAGE_VERSION"
+          git push --no-follow-tags origin "refs/tags/$RELEASE_TAG:refs/tags/$RELEASE_TAG"
+
+  publish:
+    name: Publish Trusted npm Release
+    needs:
+      - prepare
+      - tag
+    if: >-
+      ${{
+        always() &&
+        needs.prepare.result == 'success' &&
+        (needs.tag.result == 'success' || needs.tag.result == 'skipped') &&
+        needs.prepare.outputs.should_publish == 'true'
+      }}
+    runs-on: ubuntu-latest
+    environment: npm-release
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js for npm
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: https://registry.npmjs.org/
+
+      - name: Install Release Tooling
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Download Public Package Artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: ${{ env.PUBLIC_PACKAGE_ARTIFACT }}
+          path: ${{ env.PUBLIC_PACKAGE_ARTIFACT_DIRECTORY }}
+
+      - name: Verify Release Artifact
+        run: |
+          pnpm release:checksums verify "$PUBLIC_PACKAGE_ARTIFACT_DIRECTORY"
+          pnpm exec semver "$(npm --version)" --range ">=11.5.1 <12.0.0"
+
+      - name: Publish Exact Package Artifact
+        env:
+          ARTIFACT_NAME: ${{ needs.prepare.outputs.artifact_name }}
+        run: >-
+          npm publish
+          "$PUBLIC_PACKAGE_ARTIFACT_DIRECTORY/$ARTIFACT_NAME"
+          --access public
+          --registry https://registry.npmjs.org/
+
+  complete:
+    name: Summarize npm Release
+    needs:
+      - prepare
+      - tag
+      - publish
+    if: >-
+      ${{
+        always() &&
+        needs.prepare.result == 'success' &&
+        (needs.tag.result == 'success' || needs.tag.result == 'skipped') &&
+        (needs.publish.result == 'success' || needs.publish.result == 'skipped')
+      }}
+    runs-on: ubuntu-latest
+    permissions: {}
+    env:
+      ARTIFACT_NAME: ${{ needs.prepare.outputs.artifact_name }}
+      CHECKSUM: ${{ needs.prepare.outputs.checksum }}
+      PACKAGE_NAME: ${{ needs.prepare.outputs.package_name }}
+      PACKAGE_VERSION: ${{ needs.prepare.outputs.package_version }}
+      RELEASE_MODE: ${{ inputs.mode }}
+      RELEASE_STATE: ${{ needs.prepare.outputs.release_state }}
+      RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
+    steps:
+      - name: Write Release Summary
+        run: |
+          {
+            echo "## npm release"
+            echo
+            echo "- Package: \`$PACKAGE_NAME@$PACKAGE_VERSION\`"
+            echo "- Commit: \`${{ github.sha }}\`"
+            echo "- Tag: \`$RELEASE_TAG\`"
+            echo "- Mode: \`$RELEASE_MODE\`"
+            echo "- State: \`$RELEASE_STATE\`"
+            echo "- Artifact: \`$ARTIFACT_NAME\`"
+            echo "- SHA-256: \`$CHECKSUM\`"
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -134,11 +134,11 @@ export const expectPackageManifest = (
     bin: { moldea: './dist/moldea.js' },
     engines: { node: '^22.11.0 || ^24.11.0' },
     exports: {},
-    files: ['dist', 'LICENSE', 'README.md'],
+    files: ['cover.png', 'dist', 'LICENSE', 'README.md'],
     name: '@moldea.ai/cli',
     preferUnplugged: true,
     type: 'module',
-    version: '1.0.0',
+    version: '1.0.1',
   });
   expect(manifest.dependencies).toStrictEqual({
     '@moldea.ai/core': dependencyVersion,

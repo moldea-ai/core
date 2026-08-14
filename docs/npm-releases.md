@@ -1,6 +1,6 @@
 # npm releases
 
-Public packages are released independently from the `main` branch through the manually dispatched `Publish npm Package` workflow. The workflow creates one immutable package-qualified Git tag and publishes the exact checksummed tarball that passed the complete repository, supported-Node, and cross-platform CI boundary.
+Public packages are released automatically after their changes reach `main`. The `Publish npm Packages` workflow selects changed public project directories, requires each selected manifest to declare a strictly greater stable version, verifies the complete release candidate once, and publishes the exact checksummed tarballs in dependency order. A push without public-package changes is a successful no-op.
 
 ## Release identity
 
@@ -26,15 +26,19 @@ Create a GitHub environment named `npm-release` and restrict deployment to `main
 - environment: `npm-release`
 - allowed action: `npm publish`
 
-The workflow uses npm OIDC and contains no npm publication token. After a trusted publication succeeds, restrict traditional token-based publication for the package and revoke any temporary automation token.
+The workflow uses npm OIDC and contains no npm publication token. The publication steps run in the reusable `publish-package.yml` workflow, but npm validates the calling workflow identity, so the trusted-publisher filename remains `publish.yml`. Both workflow boundaries grant the required OIDC permission while the reusable jobs keep tag-writing and package-publishing permissions separate. After a trusted publication succeeds, restrict traditional token-based publication for the package and revoke any temporary automation token.
 
 ## Preparing a release
 
-1. Update the selected package version and every directly affected first-class dependency range.
-2. Regenerate compatibility artifacts when the CLI composition or compatibility claims change.
-3. Update directly affected package and release documentation.
-4. Complete review and merge the release commit into `main` with all CI checks passing.
-5. Dispatch `Publish npm Package` from `main`, selecting one project and the appropriate release mode.
+1. Update every changed public project's manifest to a stable version strictly greater than the version at the previous `main` commit.
+2. Update every directly affected first-class dependency range. The CLI requires exact versions for all first-class dependencies.
+3. Regenerate compatibility artifacts when the CLI composition or compatibility claims change.
+4. Update directly affected package and release documentation.
+5. Complete review and merge the release commit into `main`.
+
+Pull-request CI compares every public project directory with the target commit and rejects a changed project with an unchanged, lower, prerelease, or noncanonical version. The resulting push to `main` repeats the comparison against the exact pushed commits before selecting releases. Selected projects pass one complete repository, supported-Node, cross-platform, packed-artifact, checksum, and runtime verification boundary before any tag or publication is attempted.
+
+Repository publishes first, followed by Repository FS, Core, and the CLI. An unselected package is skipped without blocking later selected packages. A failed package blocks every dependent downstream release, while a rerun or manual trusted dispatch can resume from a matching tag without republishing completed versions.
 
 The workflow accepts stable semantic versions only. Prerelease versions and alternate npm distribution tags require a separately designed release path.
 
@@ -42,7 +46,7 @@ The workflow accepts stable semantic versions only. Prerelease versions and alte
 
 npm requires a package to exist before it can be connected to a trusted publisher. For a new package name:
 
-1. Dispatch the workflow in `bootstrap` mode. It verifies the complete release candidate, creates the annotated package tag, and retains `public-package-tarballs` without invoking `npm publish`.
+1. Manually dispatch `Publish npm Packages` from `main` for the selected project in `bootstrap` mode. It verifies the complete release candidate, creates the annotated package tag, and retains `public-package-tarballs` without invoking `npm publish`.
 2. Download the workflow artifact and verify its `SHA256SUMS` entries from the repository root:
 
    ```bash
@@ -69,7 +73,9 @@ Repository FS and Core require a compatible Repository version to exist on npm. 
 
 ## Trusted publication
 
-After the selected package has a trusted-publisher connection, dispatch the workflow in `trusted` mode. The workflow verifies the release, creates or confirms the tag, and publishes only the selected tarball through OIDC. npm provenance is generated automatically for the public package.
+After each package has a trusted-publisher connection, ordinary releases require no manual dispatch. Merging a valid version-bumped package change into `main` verifies the release, creates or confirms the tag, and publishes only the selected tarball through OIDC. npm provenance is generated automatically for the public package.
+
+Manual `trusted` mode remains available from `main` for explicit recovery when an automatic run must resume a package whose version is still unpublished.
 
 ## Recovery
 
@@ -83,4 +89,6 @@ The workflow never deletes, overwrites, or moves a release tag.
 | Present     | Absent           | Stop for manual reconciliation.                        |
 | Either      | Different commit | Stop without changing the tag or registry.             |
 
-Package-specific concurrency prevents simultaneous releases of one project. Cancellation is disabled so a newer dispatch cannot interrupt an in-progress publication.
+Repository-wide release concurrency serializes automatic and manual publication workflows and uses GitHub's maximum pending queue. Cancellation is disabled so newer pushes and dispatches neither interrupt an active release sequence nor replace an earlier pending release.
+
+Queue order is not a release-integrity assumption. Before publishing an automatic candidate, the workflow requires the package version from the preceding `main` commit to exist on npm. Every unpublished candidate must also be greater than all versions already present in the registry. An unexpectedly reordered run therefore stops before tagging or publishing; after the earlier release completes, rerun the stopped workflow to resume the newer release safely.

@@ -1,8 +1,10 @@
+![moldea](cover.png)
+
 # `@moldea.ai/repository`
 
 Source-neutral, read-only repository contracts for the `moldea` ecosystem.
 
-The `1.0.0` package surface provides the complete source-neutral reader contract and immutable in-memory reference implementation. Tarball, consumer-type, and conformance checks remain the release boundary for every published version.
+The version 1 package surface provides the complete source-neutral reader contract and immutable in-memory reference implementation. Tarball, consumer-type, and conformance checks remain the release boundary for every published version.
 
 One reader represents one coherent repository snapshot through portable logical paths. The package
 does not access a filesystem or network, interpret the `moldea` format, follow symlinks, decode file

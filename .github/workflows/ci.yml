@@ -38,6 +38,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
@@ -59,6 +61,16 @@ jobs:
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Check Changed Package Versions
+        if: ${{ github.event_name == 'pull_request' }}
+        env:
+          RELEASE_BASE_COMMIT: ${{ github.event.pull_request.base.sha }}
+          RELEASE_CURRENT_COMMIT: ${{ github.event.pull_request.head.sha }}
+        run: >-
+          pnpm release:check-changes
+          "$RELEASE_BASE_COMMIT"
+          "$RELEASE_CURRENT_COMMIT"
 
       - name: Check Runtime Compatibility Artifacts
         run: pnpm compatibility:check
