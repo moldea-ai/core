@@ -8,6 +8,14 @@ import { describe, expect, test } from 'vitest';
 import * as publicApi from './index.js';
 
 const projectDirectory = path.resolve(import.meta.dirname, '..');
+const publicApiFixtureDirectory = path.join(projectDirectory, 'src', 'index.test-fixtures');
+const typescriptEntrypoint = path.join(
+  projectDirectory,
+  'node_modules',
+  'typescript',
+  'bin',
+  'tsc',
+);
 
 interface IPackDryRunResult {
   readonly files: readonly { readonly path: string }[];
@@ -36,7 +44,6 @@ describe('@moldea.ai/adapter-openai public API', () => {
   });
 
   test('emits consumable public declarations without test files', () => {
-    const packageDirectory = new URL('..', import.meta.url);
     const declaration = readFileSync(new URL('../dist/index.d.ts', import.meta.url), 'utf8');
 
     expect(declaration).toContain('openAiAdapter');
@@ -45,12 +52,8 @@ describe('@moldea.ai/adapter-openai public API', () => {
     expect(declaration).not.toContain('.test-');
     execFileSync(
       process.execPath,
-      [
-        new URL('../node_modules/typescript/bin/tsc', import.meta.url).pathname,
-        '--project',
-        new URL('./index.test-fixtures/tsconfig.json', import.meta.url).pathname,
-      ],
-      { cwd: packageDirectory, stdio: 'pipe' },
+      [typescriptEntrypoint, '--project', path.join(publicApiFixtureDirectory, 'tsconfig.json')],
+      { cwd: projectDirectory, stdio: 'pipe' },
     );
   });
 
