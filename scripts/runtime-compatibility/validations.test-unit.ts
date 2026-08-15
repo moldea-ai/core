@@ -80,7 +80,7 @@ beforeAll(async () => {
 });
 
 describe('runtime compatibility matrix validation', () => {
-  test('accepts and normalizes the canonical planned inventory', () => {
+  test('accepts and normalizes the canonical adapter inventory', () => {
     const result = parseRuntimeCompatibilityMatrix(canonicalSource);
 
     expect(result.valid).toBe(true);
@@ -104,10 +104,10 @@ describe('runtime compatibility matrix validation', () => {
     'accepts %s only without support claims',
     (status) => {
       const matrix = cloneCanonicalMatrix();
-      const adapter = matrix.adapters['openai'];
+      const adapter = matrix.adapters['anthropic'];
 
       if (adapter === undefined) {
-        throw new Error('Canonical matrix is missing the openai adapter.');
+        throw new Error('Canonical matrix is missing the anthropic adapter.');
       }
 
       adapter.implementationStatus = status;

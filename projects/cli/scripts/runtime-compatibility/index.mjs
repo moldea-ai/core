@@ -64,6 +64,11 @@ const executeFixtureGit = (consumerDirectory, hooksDirectory, environment, argum
 const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
   const tarballNames = await readdir(artifactDirectory);
   const packageTarballNames = {
+    '@moldea.ai/adapter-openai': selectPackageTarball(
+      tarballNames,
+      /^moldea\.ai-adapter-openai-.+\.tgz$/u,
+      '@moldea.ai/adapter-openai',
+    ),
     '@moldea.ai/cli': selectPackageTarball(
       tarballNames,
       /^moldea\.ai-cli-.+\.tgz$/u,
@@ -150,12 +155,13 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     };
 
     assertRuntimeInvariant(cliManifest?.name === '@moldea.ai/cli', 'The CLI identity is invalid.');
-    assertRuntimeInvariant(cliManifest?.version === '1.0.1', 'The CLI version is invalid.');
+    assertRuntimeInvariant(cliManifest?.version === '1.1.0', 'The CLI version is invalid.');
     assertRuntimeInvariant(
       cliManifest?.engines?.node === '^22.11.0 || ^24.11.0',
       'The CLI runtime range is invalid.',
     );
     for (const packageName of [
+      '@moldea.ai/adapter-openai',
       '@moldea.ai/core',
       '@moldea.ai/repository',
       '@moldea.ai/repository-fs',
@@ -174,7 +180,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
 
     assertRuntimeInvariant(versionResult.status === 0, 'The installed CLI version command failed.');
     assertRuntimeInvariant(versionResult.stderr === '', 'The version command wrote stderr.');
-    assertRuntimeInvariant(versionResult.stdout === '1.0.1\n', 'The version output is invalid.');
+    assertRuntimeInvariant(versionResult.stdout === '1.1.0\n', 'The version output is invalid.');
 
     const compatibilityResult = executeCli(
       executablePath,
@@ -184,6 +190,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     );
     const compatibilityEnvelope = JSON.parse(compatibilityResult.stdout);
     const customAdapter = compatibilityEnvelope.result?.adapters?.find(({ id }) => id === 'custom');
+    const openAiAdapter = compatibilityEnvelope.result?.adapters?.find(({ id }) => id === 'openai');
 
     assertRuntimeInvariant(
       compatibilityResult.status === 0,
@@ -199,7 +206,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
       'The compatibility result is invalid.',
     );
     assertRuntimeInvariant(
-      compatibilityEnvelope.cliVersion === '1.0.1' &&
+      compatibilityEnvelope.cliVersion === '1.1.0' &&
         compatibilityEnvelope.schemaVersion === 1 &&
         compatibilityEnvelope.result?.outputSchemaVersion === 1,
       'The compatibility envelope is invalid.',
@@ -207,6 +214,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     assertRuntimeInvariant(
       JSON.stringify(compatibilityEnvelope.result?.packages) ===
         JSON.stringify([
+          { name: '@moldea.ai/adapter-openai', version: '1.0.0' },
           { name: '@moldea.ai/core', version: '1.0.1' },
           { name: '@moldea.ai/repository', version: '1.0.1' },
           { name: '@moldea.ai/repository-fs', version: '1.0.1' },
@@ -226,11 +234,68 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
         customAdapter.matrix?.targets?.[0]?.patterns?.[0]?.support === 'full',
       'The custom compatibility claim is invalid.',
     );
+    assertRuntimeInvariant(
+      openAiAdapter?.active === true &&
+        openAiAdapter.bundledVersion === '1.0.0' &&
+        openAiAdapter.matrix?.implementationStatus === 'available' &&
+        openAiAdapter.matrix?.compatibleCoreRange === '^1.0.0' &&
+        openAiAdapter.matrix?.runtimeGuidance?.expectation === 'recommended' &&
+        JSON.stringify(openAiAdapter.matrix?.supportedRepositoryFormatVersions) === '[1]' &&
+        openAiAdapter.matrix?.targets?.[0]?.id === 'typescript-responses-api-7' &&
+        openAiAdapter.matrix?.targets?.[0]?.supportLevel === 'experimental',
+      'The OpenAI compatibility claim is invalid.',
+    );
 
     executeFixtureGit(consumerDirectory, hooksDirectory, environment, ['init']);
-    await mkdir(path.join(consumerDirectory, 'moldea'));
-    await writeFile(path.join(consumerDirectory, 'moldea', 'moldea.yaml'), 'version: 1\n', 'utf8');
+    await Promise.all([
+      mkdir(path.join(consumerDirectory, 'moldea', 'agents', 'support'), { recursive: true }),
+      mkdir(path.join(consumerDirectory, 'src'), { recursive: true }),
+    ]);
+    await writeFile(
+      path.join(consumerDirectory, 'moldea', 'moldea.yaml'),
+      [
+        'version: 1',
+        'agents:',
+        '  support:',
+        '    runtime:',
+        '      id: openai',
+        '    bindings:',
+        '      runtimeAgent:',
+        '        path: /src/agent.ts',
+        '        symbol: supportAgent',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
     await writeFile(path.join(consumerDirectory, 'moldea', 'project.md'), '# Project\n', 'utf8');
+    await writeFile(
+      path.join(consumerDirectory, 'moldea', 'agents', 'support', 'description.md'),
+      'Support agent.\n',
+      'utf8',
+    );
+    await writeFile(
+      path.join(consumerDirectory, 'moldea', 'agents', 'support', 'instruction.md'),
+      'You are the `support` agent.\n',
+      'utf8',
+    );
+    await writeFile(
+      path.join(consumerDirectory, 'src', 'agent.ts'),
+      [
+        "import OpenAI from 'openai';",
+        'const client = new OpenAI();',
+        "export const supportAgent = () => client.responses.create({ input: 'hello' });",
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+    const consumerManifest = JSON.parse(
+      await readFile(path.join(consumerDirectory, 'package.json'), 'utf8'),
+    );
+    await writeFile(
+      path.join(consumerDirectory, 'package.json'),
+      `${JSON.stringify({ ...consumerManifest, dependencies: { openai: '^7.4.0' } }, null, 2)}\n`,
+      'utf8',
+    );
     executeFixtureGit(consumerDirectory, hooksDirectory, environment, [
       'add',
       '--',
@@ -277,6 +342,20 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     assertRuntimeInvariant(
       inspectEnvelope.result?.inspection?.project?.project?.content === '# Project\n',
       'Inspection omitted the complete Core result.',
+    );
+    assertRuntimeInvariant(
+      JSON.stringify(
+        inspectEnvelope.result?.inspection?.evidence?.map(({ kind, source }) => ({
+          kind,
+          source,
+        })),
+      ) ===
+        JSON.stringify([
+          { kind: 'language', source: 'openai' },
+          { kind: 'runtime-package', source: 'openai' },
+          { kind: 'runtime-pattern', source: 'openai' },
+        ]),
+      'Inspection omitted the OpenAI adapter evidence.',
     );
     assertRuntimeInvariant(
       !`${compatibilityResult.stdout}${validateResult.stdout}${inspectResult.stdout}`.includes(

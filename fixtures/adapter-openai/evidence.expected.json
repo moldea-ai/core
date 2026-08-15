@@ -1,0 +1,115 @@
+[
+  {
+    "agentId": "support",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "requestProperty": "instructions"
+    },
+    "kind": "instruction-loader",
+    "references": [
+      {
+        "path": "/src/agent.ts"
+      },
+      {
+        "path": "/src/instructions.ts",
+        "symbol": "loadInstruction"
+      }
+    ],
+    "runtimeName": "loadInstruction",
+    "source": "openai"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "language": "typescript"
+    },
+    "kind": "language",
+    "references": [
+      {
+        "path": "/src/agent.ts",
+        "symbol": "supportAgent"
+      }
+    ],
+    "runtimeName": null,
+    "source": "openai"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "compatibility": "supported",
+      "declaredRange": "^7.4.0",
+      "dependencyKind": "dependencies"
+    },
+    "kind": "runtime-package",
+    "references": [
+      {
+        "path": "/package.json"
+      }
+    ],
+    "runtimeName": "openai",
+    "source": "openai"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "api": "responses"
+    },
+    "kind": "runtime-pattern",
+    "references": [
+      {
+        "path": "/src/agent.ts",
+        "symbol": "supportAgent"
+      }
+    ],
+    "runtimeName": "responses.create",
+    "source": "openai"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": "find-order",
+    "capabilityKind": "tool",
+    "details": {
+      "requestProperty": "parameters",
+      "schemaRole": "input"
+    },
+    "kind": "schema",
+    "references": [
+      {
+        "path": "/src/contracts.ts",
+        "symbol": "FindOrderInput"
+      },
+      {
+        "path": "/src/find-order.ts"
+      }
+    ],
+    "runtimeName": "FindOrderInput",
+    "source": "openai"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": "find-order",
+    "capabilityKind": "tool",
+    "details": {
+      "toolType": "function"
+    },
+    "kind": "tool-registration",
+    "references": [
+      {
+        "path": "/src/agent.ts"
+      },
+      {
+        "path": "/src/find-order.ts",
+        "symbol": "findOrderTool"
+      }
+    ],
+    "runtimeName": "find_order",
+    "source": "openai"
+  }
+]

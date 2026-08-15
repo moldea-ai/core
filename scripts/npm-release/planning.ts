@@ -9,22 +9,23 @@ import type {
 import { isNpmReleaseMode, isNpmReleaseProject } from './validations.ts';
 
 const NO_PREVIOUS_VERSIONS = Object.freeze({
+  'adapter-openai': null,
   cli: null,
   core: null,
   repository: null,
   'repository-fs': null,
 }) satisfies Readonly<Record<INpmReleaseProject, null>>;
 
-const requireStableVersionIncrease = (
+const requireStableReleaseVersion = (
   project: INpmReleaseProject,
-  previousVersion: string,
+  previousVersion: string | null,
   currentVersion: string,
 ): void => {
   if (
-    valid(previousVersion) !== previousVersion ||
     valid(currentVersion) !== currentVersion ||
     prerelease(currentVersion) !== null ||
-    !gt(currentVersion, previousVersion)
+    (previousVersion !== null &&
+      (valid(previousVersion) !== previousVersion || !gt(currentVersion, previousVersion)))
   ) {
     throw new TypeError(
       `The changed ${project} project must declare a greater stable package version.`,
@@ -58,6 +59,8 @@ export const createNpmReleaseWorkflowOutputs = (plan: INpmReleaseWorkflowPlan) =
   const selectedProjects = new Set(plan.projects);
 
   return {
+    adapter_openai: String(selectedProjects.has('adapter-openai')),
+    adapter_openai_previous_version: plan.previousVersions['adapter-openai'] ?? '',
     cli: String(selectedProjects.has('cli')),
     cli_previous_version: plan.previousVersions.cli ?? '',
     core: String(selectedProjects.has('core')),
@@ -78,7 +81,7 @@ export const createNpmReleaseWorkflowOutputs = (plan: INpmReleaseWorkflowPlan) =
  * @param sources The untrusted trigger inputs and per-project Git change state.
  * @returns The validated mode, trigger, predecessor versions, and dependency-ordered projects.
  * @throws
- * - If the trigger is unsupported, manual inputs are invalid, or a changed package lacks a version bump
+ * - If the trigger is unsupported, manual inputs are invalid, or a changed package version is invalid for its release state
  */
 export const createNpmReleaseWorkflowPlan = (
   sources: INpmReleaseWorkflowPlanSources,
@@ -111,7 +114,7 @@ export const createNpmReleaseWorkflowPlan = (
       return false;
     }
 
-    requireStableVersionIncrease(project, change.previousVersion, change.currentVersion);
+    requireStableReleaseVersion(project, change.previousVersion, change.currentVersion);
     return true;
   });
 

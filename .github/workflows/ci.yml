@@ -97,6 +97,7 @@ jobs:
           pnpm --dir projects/repository pack --pack-destination "$public_packages_directory"
           pnpm --dir projects/repository-fs pack --pack-destination "$public_packages_directory"
           pnpm --dir projects/core pack --pack-destination "$public_packages_directory"
+          pnpm --dir projects/adapter-openai pack --pack-destination "$public_packages_directory"
           pnpm --dir projects/cli pack --pack-destination "$public_packages_directory"
           pnpm release:checksums create "$public_packages_directory"
 
@@ -173,6 +174,38 @@ jobs:
       - name: Test Packed CLI Runtime
         run: >-
           node projects/cli/scripts/runtime-compatibility/index.mjs
+          "${{ runner.temp }}/public-package-tarballs"
+
+  adapter-openai-runtime-compatibility:
+    name: OpenAI Adapter Runtime (Node.js ${{ matrix.node-version }})
+    needs: verify
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version:
+          - 22.11.0
+          - 22.x
+          - 24.11.0
+          - 24.x
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Download OpenAI Adapter Runtime Artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: public-package-tarballs
+          path: ${{ runner.temp }}/public-package-tarballs
+
+      - name: Test Packed OpenAI Adapter Runtime
+        run: >-
+          node projects/adapter-openai/scripts/runtime-compatibility/index.mjs
           "${{ runner.temp }}/public-package-tarballs"
 
   test-cross-platform:

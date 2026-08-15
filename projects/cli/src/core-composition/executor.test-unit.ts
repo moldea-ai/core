@@ -69,19 +69,24 @@ describe('createMoldeaCliCoreInspectionExecutor', () => {
       }),
     ).resolves.toBe(INSPECTION_RESULT);
     expect(coreFactory).toHaveBeenCalledOnce();
-    expect(coreFactory).toHaveBeenCalledWith({
-      adapters: [],
-      limits: {
-        maxDiagnostics: 32,
-        maxEntries: 128,
-        maxEvidence: 16,
-        maxFileBytes: 4096,
-        maxManifestBytes: 2048,
-        maxTotalBytesRead: 8192,
-      },
+    const coreFactoryInput = coreFactory.mock.calls[0]?.[0];
+
+    if (coreFactoryInput?.adapters === undefined) {
+      throw new TypeError('The Core factory input is required.');
+    }
+
+    expect(coreFactoryInput.adapters.map(({ id }) => id)).toStrictEqual(['openai']);
+    expect(coreFactoryInput.adapters[0]).toBe(ACTIVE_RUNTIME_ADAPTERS[0]);
+    expect(coreFactoryInput.limits).toStrictEqual({
+      maxDiagnostics: 32,
+      maxEntries: 128,
+      maxEvidence: 16,
+      maxFileBytes: 4096,
+      maxManifestBytes: 2048,
+      maxTotalBytesRead: 8192,
     });
-    expect(Object.isFrozen(coreFactory.mock.calls[0]?.[0]?.adapters)).toBe(true);
-    expect(Object.isFrozen(coreFactory.mock.calls[0]?.[0]?.limits)).toBe(true);
+    expect(Object.isFrozen(coreFactoryInput.adapters)).toBe(true);
+    expect(Object.isFrozen(coreFactoryInput.limits)).toBe(true);
     expect(coreDouble.inspectProject).toHaveBeenCalledWith({
       repository: reader,
       signal: controller.signal,
@@ -90,7 +95,7 @@ describe('createMoldeaCliCoreInspectionExecutor', () => {
     await executeInspection({ repository: reader, resourceLimits: RESOURCE_LIMITS });
 
     expect(coreFactory).toHaveBeenCalledTimes(2);
-    expect(ACTIVE_RUNTIME_ADAPTERS).toStrictEqual([]);
+    expect(ACTIVE_RUNTIME_ADAPTERS.map(({ id }) => id)).toStrictEqual(['openai']);
     expect(Object.isFrozen(ACTIVE_RUNTIME_ADAPTERS)).toBe(true);
     expect(ACTIVE_RUNTIME_ADAPTER_RELEASE_DEFINITIONS).toStrictEqual(
       ACTIVE_RUNTIME_ADAPTERS.map(({ id, supportedRepositoryFormatVersions }) => ({

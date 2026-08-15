@@ -30,7 +30,7 @@ const expectDeeplyFrozen = (root: object): void => {
 };
 
 describe('createMoldeaCliCompatibilityResult', () => {
-  test('reports the exact current release without inferring package-backed adapter support', () => {
+  test('reports the exact current release with its active package-backed adapter', () => {
     const state = createTestCompatibilityState();
     const result = createMoldeaCliCompatibilityResult(state);
     const customAdapter = result.adapters.find(({ id }) => id === 'custom');
@@ -41,6 +41,7 @@ describe('createMoldeaCliCompatibilityResult', () => {
       minimumGitVersion: '2.30.0',
       outputSchemaVersion: 1,
       packages: [
+        { name: '@moldea.ai/adapter-openai', version: '1.0.0' },
         { name: '@moldea.ai/core', version: '1.0.1' },
         { name: '@moldea.ai/repository', version: '1.0.1' },
         { name: '@moldea.ai/repository-fs', version: '1.0.1' },
@@ -66,10 +67,13 @@ describe('createMoldeaCliCompatibilityResult', () => {
       },
     });
     expect(openAiAdapter).toMatchObject({
-      active: false,
-      bundledVersion: null,
+      active: true,
+      bundledVersion: '1.0.0',
       id: 'openai',
-      matrix: { implementationStatus: 'planned' },
+      matrix: {
+        implementationStatus: 'available',
+        targets: [{ id: 'typescript-responses-api-7' }],
+      },
     });
     expect(customAdapter?.matrix).not.toBe(state.releaseMetadata.matrix.adapters['custom']);
     expectDeeplyFrozen(result);
@@ -84,7 +88,7 @@ describe('createMoldeaCliCompatibilityResult', () => {
       matrix: {
         implementation: { versionRange: '^1.0.0' },
         implementationStatus: 'available',
-        targets: [{ id: 'typescript', lastVerifiedAt: '2026-08-13' }],
+        targets: [{ id: 'typescript-responses-api-7', lastVerifiedAt: '2026-08-15' }],
       },
     });
     expectDeeplyFrozen(result);

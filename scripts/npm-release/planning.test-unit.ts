@@ -9,6 +9,7 @@ import type {
 import { createNpmReleaseWorkflowOutputs, createNpmReleaseWorkflowPlan } from './planning.ts';
 
 const NO_PREVIOUS_VERSIONS = {
+  'adapter-openai': null,
   cli: null,
   core: null,
   repository: null,
@@ -19,7 +20,7 @@ const createProjectChanges = (
   overrides: Partial<Record<INpmReleaseProject, Partial<INpmReleaseProjectChange>>> = {},
 ): INpmReleaseWorkflowPlanSources['projectChanges'] =>
   Object.fromEntries(
-    (['cli', 'core', 'repository', 'repository-fs'] as const).map((project) => [
+    (['adapter-openai', 'cli', 'core', 'repository', 'repository-fs'] as const).map((project) => [
       project,
       {
         currentVersion: '1.0.0',
@@ -54,6 +55,7 @@ describe('npm release workflow planning', () => {
         mode: '',
         project: '',
         projectChanges: createProjectChanges({
+          'adapter-openai': { currentVersion: '1.0.1', isChanged: true },
           cli: { currentVersion: '1.0.1', isChanged: true },
           repository: { currentVersion: '1.1.0', isChanged: true },
           'repository-fs': { currentVersion: '2.0.0', isChanged: true },
@@ -62,12 +64,35 @@ describe('npm release workflow planning', () => {
     ).toStrictEqual({
       mode: 'trusted',
       previousVersions: {
+        'adapter-openai': '1.0.0',
         cli: '1.0.0',
         core: null,
         repository: '1.0.0',
         'repository-fs': '1.0.0',
       },
-      projects: ['repository', 'repository-fs', 'cli'],
+      projects: ['repository', 'repository-fs', 'adapter-openai', 'cli'],
+      trigger: 'automatic',
+    });
+  });
+
+  test('selects a newly introduced stable package without a predecessor version', () => {
+    expect(
+      createNpmReleaseWorkflowPlan({
+        eventName: 'push',
+        mode: '',
+        project: '',
+        projectChanges: createProjectChanges({
+          'adapter-openai': {
+            currentVersion: '1.0.0',
+            isChanged: true,
+            previousVersion: null,
+          },
+        }),
+      }),
+    ).toStrictEqual({
+      mode: 'trusted',
+      previousVersions: NO_PREVIOUS_VERSIONS,
+      projects: ['adapter-openai'],
       trigger: 'automatic',
     });
   });
@@ -100,6 +125,8 @@ describe('npm release workflow planning', () => {
     });
 
     expect(createNpmReleaseWorkflowOutputs(plan)).toStrictEqual({
+      adapter_openai: 'false',
+      adapter_openai_previous_version: '',
       cli: 'false',
       cli_previous_version: '',
       core: 'true',
@@ -128,6 +155,22 @@ describe('npm release workflow planning', () => {
         project: '',
         projectChanges: createProjectChanges({
           core: { currentVersion, isChanged: true },
+        }),
+      }),
+    ).toThrow('must declare a greater stable package version');
+  });
+
+  test.each([
+    ['prerelease version', '1.0.0-rc.1'],
+    ['noncanonical version', 'v1.0.0'],
+  ])('rejects a newly introduced package with a %s', (_description, currentVersion) => {
+    expect(() =>
+      createNpmReleaseWorkflowPlan({
+        eventName: 'push',
+        mode: '',
+        project: '',
+        projectChanges: createProjectChanges({
+          'adapter-openai': { currentVersion, isChanged: true, previousVersion: null },
         }),
       }),
     ).toThrow('must declare a greater stable package version');

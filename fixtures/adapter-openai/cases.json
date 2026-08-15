@@ -1,0 +1,45 @@
+{
+  "manifest": "version: 1\nagents:\n  support:\n    runtime:\n      id: openai\n    bindings:\n      runtimeAgent:\n        path: /src/agent.ts\n        symbol: supportAgent\n      instructionLoader:\n        path: /src/instructions.ts\n        symbol: loadInstruction\n    tools:\n      find-order:\n        name: find_order\n        description: Retrieves one order by its identifier.\n        implementation:\n          path: /src/find-order.ts\n          symbol: findOrder\n        registration:\n          path: /src/find-order.ts\n          symbol: findOrderTool\n        inputSchema:\n          path: /src/contracts.ts\n          symbol: FindOrderInput\n",
+  "entries": [
+    {
+      "path": "/moldea/project.md",
+      "text": "# OpenAI adapter fixture\n",
+      "type": "file"
+    },
+    {
+      "path": "/moldea/agents/support/description.md",
+      "text": "Support agent.\n",
+      "type": "file"
+    },
+    {
+      "path": "/moldea/agents/support/instruction.md",
+      "text": "You are the `support` agent.\n",
+      "type": "file"
+    },
+    {
+      "path": "/package.json",
+      "text": "{\n  \"dependencies\": {\n    \"openai\": \"^7.4.0\"\n  }\n}\n",
+      "type": "file"
+    },
+    {
+      "path": "/src/agent.ts",
+      "text": "import OpenAIClient from 'openai';\n\nimport { FindOrderInput } from './contracts.js';\nimport { findOrderTool as registeredFindOrder } from './find-order.js';\nimport { loadInstruction as readInstruction } from './instructions.js';\n\nconst client = new OpenAIClient();\n\nexport const supportAgent = async () =>\n  client.responses.create({\n    model: 'gpt-5',\n    instructions: readInstruction(),\n    input: 'Help the customer.',\n    tools: [registeredFindOrder],\n  });\n\nvoid FindOrderInput;\n",
+      "type": "file"
+    },
+    {
+      "path": "/src/contracts.ts",
+      "text": "export const FindOrderInput = {\n  additionalProperties: false,\n  properties: { orderId: { type: 'string' } },\n  required: ['orderId'],\n  type: 'object',\n} as const;\n",
+      "type": "file"
+    },
+    {
+      "path": "/src/find-order.ts",
+      "text": "import { FindOrderInput } from './contracts.js';\n\nexport const findOrder = async (orderId: string) => ({ orderId });\n\nexport const findOrderTool = {\n  type: 'function',\n  name: 'find_order',\n  description: 'Retrieves one order by its identifier.',\n  parameters: FindOrderInput,\n  strict: true,\n} as const;\n",
+      "type": "file"
+    },
+    {
+      "path": "/src/instructions.ts",
+      "text": "export const loadInstruction = (): string => 'Follow the canonical instruction.';\n",
+      "type": "file"
+    }
+  ]
+}

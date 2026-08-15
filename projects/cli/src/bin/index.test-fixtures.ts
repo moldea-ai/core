@@ -12,6 +12,7 @@ import { expect } from 'vitest';
 // package and build paths shared by the installed-executable tests
 export const CLI_PROJECT_DIRECTORY = path.resolve(import.meta.dirname, '..', '..');
 const projectsDirectory = path.dirname(CLI_PROJECT_DIRECTORY);
+export const ADAPTER_OPENAI_PROJECT_DIRECTORY = path.join(projectsDirectory, 'adapter-openai');
 export const CORE_PROJECT_DIRECTORY = path.join(projectsDirectory, 'core');
 export const REPOSITORY_PROJECT_DIRECTORY = path.join(projectsDirectory, 'repository');
 export const REPOSITORY_FILESYSTEM_PROJECT_DIRECTORY = path.join(
@@ -129,6 +130,7 @@ export const readTarEntry = (tarball: Buffer, entryPath: string): Buffer => {
 export const expectPackageManifest = (
   manifest: IMoldeaCliPackageManifest,
   dependencyVersion: string,
+  adapterVersion: string,
 ): void => {
   expect(manifest).toMatchObject({
     bin: { moldea: './dist/moldea.js' },
@@ -138,9 +140,10 @@ export const expectPackageManifest = (
     name: '@moldea.ai/cli',
     preferUnplugged: true,
     type: 'module',
-    version: '1.0.1',
+    version: '1.1.0',
   });
   expect(manifest.dependencies).toStrictEqual({
+    '@moldea.ai/adapter-openai': adapterVersion,
     '@moldea.ai/core': dependencyVersion,
     '@moldea.ai/repository': dependencyVersion,
     '@moldea.ai/repository-fs': dependencyVersion,

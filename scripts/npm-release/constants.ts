@@ -15,11 +15,18 @@ export const NPM_RELEASE_PROJECT_ORDER = [
   'repository',
   'repository-fs',
   'core',
+  'adapter-openai',
   'cli',
 ] as const satisfies readonly INpmReleaseProject[];
 
 // public package identities currently eligible for release
 export const NPM_RELEASE_PROJECTS = {
+  'adapter-openai': {
+    artifactPrefix: 'moldea.ai-adapter-openai',
+    packageName: '@moldea.ai/adapter-openai',
+    projectDirectory: 'projects/adapter-openai',
+    tagPrefix: 'adapter-openai-v',
+  },
   cli: {
     artifactPrefix: 'moldea.ai-cli',
     packageName: '@moldea.ai/cli',

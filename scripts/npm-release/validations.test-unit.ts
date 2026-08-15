@@ -5,14 +5,13 @@ import type {
   INpmReleaseCandidateSources,
   INpmReleaseIdentity,
   INpmReleaseIdentitySources,
+  INpmReleaseProject,
 } from './types.ts';
 import { createNpmReleaseCandidate, createNpmReleaseIdentity } from './validations.ts';
 
 const COMMIT = 'a'.repeat(40);
 
-const createManifest = (
-  project: 'cli' | 'core' | 'repository' | 'repository-fs',
-): Record<string, unknown> => {
+const createManifest = (project: INpmReleaseProject): Record<string, unknown> => {
   const packageName = `@moldea.ai/${project}`;
 
   return {
@@ -21,11 +20,17 @@ const createManifest = (
         ? { 'error-message-utils': '1.2.11' }
         : project === 'cli'
           ? {
+              '@moldea.ai/adapter-openai': 'workspace:1.0.0',
               '@moldea.ai/core': 'workspace:1.0.0',
               '@moldea.ai/repository': 'workspace:1.0.0',
               '@moldea.ai/repository-fs': 'workspace:1.0.0',
             }
-          : { '@moldea.ai/repository': 'workspace:^1.0.0' },
+          : project === 'adapter-openai'
+            ? {
+                '@moldea.ai/core': 'workspace:^1.0.0',
+                '@moldea.ai/repository': 'workspace:^1.0.0',
+              }
+            : { '@moldea.ai/repository': 'workspace:^1.0.0' },
     name: packageName,
     publishConfig: { access: 'public' },
     repository: {
@@ -38,7 +43,7 @@ const createManifest = (
 };
 
 const createIdentitySources = (
-  project: 'cli' | 'core' | 'repository' | 'repository-fs' = 'repository',
+  project: INpmReleaseProject = 'repository',
 ): INpmReleaseIdentitySources => ({
   commit: COMMIT,
   gitRef: 'refs/heads/main',
@@ -62,6 +67,7 @@ describe('npm release validation', () => {
     ['repository', 'moldea.ai-repository-1.0.0.tgz', 'repository-v1.0.0'],
     ['repository-fs', 'moldea.ai-repository-fs-1.0.0.tgz', 'repository-fs-v1.0.0'],
     ['core', 'moldea.ai-core-1.0.0.tgz', 'core-v1.0.0'],
+    ['adapter-openai', 'moldea.ai-adapter-openai-1.0.0.tgz', 'adapter-openai-v1.0.0'],
     ['cli', 'moldea.ai-cli-1.0.0.tgz', 'cli-v1.0.0'],
   ] as const)('createNpmReleaseIdentity(%s) -> %s and %s', (project, artifactName, tag) => {
     const identity = createNpmReleaseIdentity(createIdentitySources(project));
