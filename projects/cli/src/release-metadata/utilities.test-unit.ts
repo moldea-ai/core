@@ -34,7 +34,7 @@ describe('CLI release metadata immutability', () => {
       cliPackage: {
         name: '@moldea.ai/cli',
         supportedNodeRange: '^22.11.0 || ^24.11.0',
-        version: '1.1.0',
+        version: '1.1.1',
       },
       coreRecognizedAdapterIds: [
         'anthropic',
@@ -53,7 +53,7 @@ describe('CLI release metadata immutability', () => {
       minimumGitVersion: '2.30.0',
       outputSchemaVersion: 1,
       packages: [
-        { name: '@moldea.ai/adapter-openai', version: '1.0.0' },
+        { name: '@moldea.ai/adapter-openai', version: '1.0.1' },
         { name: '@moldea.ai/core', version: '1.0.1' },
         { name: '@moldea.ai/repository', version: '1.0.1' },
         { name: '@moldea.ai/repository-fs', version: '1.0.1' },

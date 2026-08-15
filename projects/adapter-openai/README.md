@@ -6,9 +6,11 @@ Deterministic runtime evidence and diagnostics for direct OpenAI SDK integration
 
 The package implements the official `openai` runtime adapter for `@moldea.ai/core`. It statically inspects explicitly bound repository source through Core's source-neutral reader. It never imports or calls the OpenAI SDK, requires no API key, executes no repository code, and makes no network request.
 
+Its behavior is intentionally uneventful: the same repository snapshot and resource limits produce the same normalized result.
+
 ## Supported target
 
-Version `1.0.0` experimentally supports:
+Version `1.0.1` experimentally supports:
 
 - Repository Format version `1`
 - `@moldea.ai/core ^1.0.0`
