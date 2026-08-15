@@ -75,15 +75,41 @@ describe('CLI Core composition with the memory repository reader', () => {
     expect(Object.isFrozen(result)).toBe(true);
   });
 
-  test('returns the universal unavailable-adapter diagnostic through CLI composition', async () => {
+  test('runs the active OpenAI adapter through CLI composition', async () => {
     const reader = createMemoryRepositoryReader([
       {
-        content: 'version: 1\nagents:\n  alpha:\n    runtime:\n      id: openai\n',
+        content: [
+          'version: 1',
+          'agents:',
+          '  alpha:',
+          '    runtime:',
+          '      id: openai',
+          '    bindings:',
+          '      runtimeAgent:',
+          '        path: /src/agent.ts',
+          '        symbol: alphaAgent',
+          '',
+        ].join('\n'),
         path: '/moldea/moldea.yaml',
         type: 'file',
       },
       { content: '# Project\n', path: '/moldea/project.md', type: 'file' },
       ...createAgentEntries('alpha'),
+      {
+        content: '{"dependencies":{"openai":"^7.4.0"}}\n',
+        path: '/package.json',
+        type: 'file',
+      },
+      {
+        content: [
+          "import OpenAI from 'openai';",
+          'const client = new OpenAI();',
+          "export const alphaAgent = () => client.responses.create({ input: 'hello' });",
+          '',
+        ].join('\n'),
+        path: '/src/agent.ts',
+        type: 'file',
+      },
     ]);
 
     const result = await executeMoldeaCliCoreInspection({
@@ -92,15 +118,14 @@ describe('CLI Core composition with the memory repository reader', () => {
     });
 
     expect(result).toMatchObject({
-      diagnostics: [
-        {
-          code: 'MOLDEA_RUNTIME_ADAPTER_UNAVAILABLE',
-          entity: { adapterId: 'openai', agentId: 'alpha' },
-        },
+      diagnostics: [],
+      evidence: [
+        { agentId: 'alpha', kind: 'language', source: 'openai' },
+        { kind: 'runtime-package', runtimeName: 'openai', source: 'openai' },
+        { agentId: 'alpha', kind: 'runtime-pattern', source: 'openai' },
       ],
-      evidence: [],
-      project: null,
-      valid: false,
+      project: { agents: [{ id: 'alpha' }] },
+      valid: true,
     });
   });
 

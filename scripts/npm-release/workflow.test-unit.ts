@@ -48,7 +48,7 @@ describe('npm release workflow', () => {
     expect(ciSource).toContain('pnpm release:check-changes');
     expect(ciSource).toContain('name: public-package-tarballs');
     expect(ciSource).toContain('SHA256SUMS');
-    expect(ciSource.match(/name: public-package-tarballs/gu)).toHaveLength(3);
+    expect(ciSource.match(/name: public-package-tarballs/gu)).toHaveLength(4);
     expect(publishWorkflow.jobs?.['verify']).toMatchObject({
       needs: 'plan',
       permissions: { contents: 'read' },
@@ -74,7 +74,7 @@ describe('npm release workflow', () => {
           },
           project: {
             description: 'Public package project to bootstrap or recover.',
-            options: ['repository', 'repository-fs', 'core', 'cli'],
+            options: ['repository', 'repository-fs', 'core', 'adapter-openai', 'cli'],
             required: true,
             type: 'choice',
           },
@@ -83,6 +83,8 @@ describe('npm release workflow', () => {
     });
     expect(publishWorkflow.jobs?.['plan']).toMatchObject({
       outputs: {
+        adapter_openai_previous_version:
+          '${{ steps.release.outputs.adapter_openai_previous_version }}',
         cli_previous_version: '${{ steps.release.outputs.cli_previous_version }}',
         core_previous_version: '${{ steps.release.outputs.core_previous_version }}',
         repository_previous_version: '${{ steps.release.outputs.repository_previous_version }}',
@@ -123,18 +125,29 @@ describe('npm release workflow', () => {
       'release_repository',
       'release_repository_fs',
     ]);
-    expect(publishWorkflow.jobs?.['release_cli']?.needs).toStrictEqual([
+    expect(publishWorkflow.jobs?.['release_adapter_openai']?.needs).toStrictEqual([
       'plan',
       'verify',
       'release_repository',
       'release_repository_fs',
       'release_core',
     ]);
+    expect(publishWorkflow.jobs?.['release_cli']?.needs).toStrictEqual([
+      'plan',
+      'verify',
+      'release_repository',
+      'release_repository_fs',
+      'release_core',
+      'release_adapter_openai',
+    ]);
     expect(publishWorkflow.jobs?.['release_repository_fs']?.with?.['previous_version']).toBe(
       '${{ needs.plan.outputs.repository_fs_previous_version }}',
     );
     expect(publishWorkflow.jobs?.['release_core']?.with?.['previous_version']).toBe(
       '${{ needs.plan.outputs.core_previous_version }}',
+    );
+    expect(publishWorkflow.jobs?.['release_adapter_openai']?.with?.['previous_version']).toBe(
+      '${{ needs.plan.outputs.adapter_openai_previous_version }}',
     );
     expect(publishWorkflow.jobs?.['release_cli']?.with?.['previous_version']).toBe(
       '${{ needs.plan.outputs.cli_previous_version }}',
@@ -145,8 +158,11 @@ describe('npm release workflow', () => {
     expect(publishWorkflow.jobs?.['release_core']?.if).toContain(
       "needs.release_repository_fs.result == 'success'",
     );
-    expect(publishWorkflow.jobs?.['release_cli']?.if).toContain(
+    expect(publishWorkflow.jobs?.['release_adapter_openai']?.if).toContain(
       "needs.release_core.result == 'success'",
+    );
+    expect(publishWorkflow.jobs?.['release_cli']?.if).toContain(
+      "needs.release_adapter_openai.result == 'success'",
     );
   });
 

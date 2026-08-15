@@ -2,7 +2,7 @@
 export type INpmReleaseMode = 'bootstrap' | 'trusted';
 
 // public projects currently eligible for npm publication
-export type INpmReleaseProject = 'cli' | 'core' | 'repository' | 'repository-fs';
+export type INpmReleaseProject = 'adapter-openai' | 'cli' | 'core' | 'repository' | 'repository-fs';
 
 // immutable package identity and artifact naming owned by one project
 export interface INpmReleaseProjectConfiguration {
@@ -16,7 +16,7 @@ export interface INpmReleaseProjectConfiguration {
 export interface INpmReleaseProjectChange {
   currentVersion: string;
   isChanged: boolean;
-  previousVersion: string;
+  previousVersion: string | null;
 }
 
 // untrusted workflow trigger and package-change state used to select releases

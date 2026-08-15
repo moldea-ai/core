@@ -1,15 +1,16 @@
 # npm releases
 
-Public packages are released automatically after their changes reach `main`. The `Publish npm Packages` workflow selects changed public project directories, requires each selected manifest to declare a strictly greater stable version, verifies the complete release candidate once, and publishes the exact checksummed tarballs in dependency order. A push without public-package changes is a successful no-op.
+Public packages are released automatically after their changes reach `main`. The `Publish npm Packages` workflow selects changed public project directories, requires each selected manifest to declare a stable version that is strictly greater than its base version when one exists, verifies the complete release candidate once, and publishes the exact checksummed tarballs in dependency order. A push without public-package changes is a successful no-op.
 
 ## Release identity
 
-| Project         | Package                    | Tag format                 |
-| --------------- | -------------------------- | -------------------------- |
-| `repository`    | `@moldea.ai/repository`    | `repository-v<version>`    |
-| `repository-fs` | `@moldea.ai/repository-fs` | `repository-fs-v<version>` |
-| `core`          | `@moldea.ai/core`          | `core-v<version>`          |
-| `cli`           | `@moldea.ai/cli`           | `cli-v<version>`           |
+| Project          | Package                     | Tag format                  |
+| ---------------- | --------------------------- | --------------------------- |
+| `repository`     | `@moldea.ai/repository`     | `repository-v<version>`     |
+| `repository-fs`  | `@moldea.ai/repository-fs`  | `repository-fs-v<version>`  |
+| `core`           | `@moldea.ai/core`           | `core-v<version>`           |
+| `adapter-openai` | `@moldea.ai/adapter-openai` | `adapter-openai-v<version>` |
+| `cli`            | `@moldea.ai/cli`            | `cli-v<version>`            |
 
 Package versions follow their focused semantic-versioning contracts independently. A coordinated release may place multiple package tags on one commit, but it does not create a lockstep-versioning requirement.
 
@@ -30,15 +31,15 @@ The workflow uses npm OIDC and contains no npm publication token. The publicatio
 
 ## Preparing a release
 
-1. Update every changed public project's manifest to a stable version strictly greater than the version at the previous `main` commit.
+1. Update every changed existing public project's manifest to a stable version strictly greater than the version at the previous `main` commit. A newly introduced project whose manifest is absent from that commit may start at any canonical stable version.
 2. Update every directly affected first-class dependency range. The CLI requires exact versions for all first-class dependencies.
 3. Regenerate compatibility artifacts when the CLI composition or compatibility claims change.
 4. Update directly affected package and release documentation.
 5. Complete review and merge the release commit into `main`.
 
-Pull-request CI compares every public project directory with the target commit and rejects a changed project with an unchanged, lower, prerelease, or noncanonical version. The resulting push to `main` repeats the comparison against the exact pushed commits before selecting releases. Selected projects pass one complete repository, supported-Node, cross-platform, packed-artifact, checksum, and runtime verification boundary before any tag or publication is attempted.
+Pull-request CI compares every public project directory with the target commit and rejects a changed existing project with an unchanged, lower, prerelease, or noncanonical version. A new project absent from the target commit is selected with no predecessor version and must still declare a canonical stable version. The resulting push to `main` repeats the comparison against the exact pushed commits before selecting releases. Selected projects pass one complete repository, supported-Node, cross-platform, packed-artifact, checksum, and runtime verification boundary before any tag or publication is attempted.
 
-Repository publishes first, followed by Repository FS, Core, and the CLI. An unselected package is skipped without blocking later selected packages. A failed package blocks every dependent downstream release, while a rerun or manual trusted dispatch can resume from a matching tag without republishing completed versions.
+Repository publishes first, followed by Repository FS, Core, the OpenAI adapter, and the CLI. An unselected package is skipped without blocking later selected packages. A failed package blocks every dependent downstream release, while a rerun or manual trusted dispatch can resume from a matching tag without republishing completed versions.
 
 The workflow accepts stable semantic versions only. Prerelease versions and alternate npm distribution tags require a separately designed release path.
 
@@ -67,9 +68,10 @@ npm requires a package to exist before it can be connected to a trusted publishe
    1. `@moldea.ai/repository`
    2. `@moldea.ai/repository-fs`
    3. `@moldea.ai/core`
-   4. `@moldea.ai/cli`
+   4. `@moldea.ai/adapter-openai`
+   5. `@moldea.ai/cli`
 
-Repository FS and Core require a compatible Repository version to exist on npm. The CLI requires the exact Repository, Repository FS, and Core versions declared by its release.
+Repository FS and Core require a compatible Repository version to exist on npm. The OpenAI adapter requires compatible Repository and Core versions. The CLI requires the exact Repository, Repository FS, Core, and active adapter versions declared by its release.
 
 ## Trusted publication
 

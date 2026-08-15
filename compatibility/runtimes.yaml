@@ -71,7 +71,76 @@ adapters:
       kind: package
       package: '@moldea.ai/adapter-openai'
       distribution: public
-    implementationStatus: planned
+      versionRange: '^1.0.0'
+    implementationStatus: available
+    supportedRepositoryFormatVersions:
+      - 1
+    compatibleCoreRange: '^1.0.0'
+    runtimeGuidance:
+      expectation: recommended
+      notes: Document project-specific model selection, tool execution, streaming, retry, and error behavior that static inspection cannot establish.
+    targets:
+      - id: typescript-responses-api-7
+        kind: package
+        supportLevel: experimental
+        language: typescript
+        packages:
+          - ecosystem: npm
+            name: openai
+            role: primary
+            versionRange: '>=7.4.0 <8.0.0'
+        evidenceKinds:
+          - runtime-package
+          - language
+          - runtime-pattern
+          - instruction-loader
+          - tool-registration
+          - schema
+        bindingSupport:
+          runtime-agent:
+            relationship: full
+            symbol: full
+          instruction-loader:
+            relationship: full
+            symbol: full
+          tool-registration:
+            relationship: full
+            symbol: full
+          tool-input-schema:
+            relationship: full
+            symbol: full
+        patterns:
+          - id: direct-responses-runtime-agent
+            kind: runtime
+            support: full
+            description: A bound exported TypeScript function uses a module-local OpenAI client for one or more direct closed Responses API requests.
+          - id: direct-instruction-loader
+            kind: instruction-loader
+            support: full
+            description: A bound loader is called directly, optionally through await, by a Responses request instructions property.
+          - id: static-function-tools
+            kind: tool
+            support: full
+            description: Bound static OpenAI function-tool objects are included in a closed inline or immutable module-local Responses tools array.
+          - id: direct-tool-input-schema
+            kind: schema
+            support: full
+            description: A bound tool input schema is referenced directly by function-tool parameters.
+          - id: dynamic-source-indirection
+            kind: runtime
+            support: ambiguous
+            description: Factories, computed properties, spreads, mutable arrays, and indirect request values are not resolved.
+          - id: chat-completions
+            kind: runtime
+            support: ambiguous
+            description: Chat Completions usage is outside this target and is not rejected merely because Responses is preferred.
+        knownLimitations:
+          - Only TypeScript ESM files with supported direct default and relative named imports are interpreted.
+          - Package versions are classified from nearest package manifests; lockfiles and installed node_modules are not inspected.
+          - JavaScript, CommonJS, Python, Realtime, Assistants, Agents SDK, streaming semantics, and provider-hosted configuration are not interpreted.
+          - Agent input and output schemas, tool implementations and output schemas, skills, variables, and runtime-native routing do not produce evidence.
+        lastVerifiedAt: '2026-08-15'
+    lastVerifiedAt: '2026-08-15'
   openai-agents-sdk:
     implementation:
       kind: package

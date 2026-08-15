@@ -1,0 +1,7 @@
+{
+  "extends": "../../../../configs/typescript/node.json",
+  "compilerOptions": {
+    "skipLibCheck": false
+  },
+  "files": ["public-api.test-fixture.mts"]
+}

@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 
 import { NPM_RELEASE_PROJECT_ORDER, NPM_RELEASE_PROJECTS } from './constants.ts';
-import { hasGitProjectChanges, readGitFile } from './git.ts';
+import { hasGitProjectChanges, readGitFile, readOptionalGitFile } from './git.ts';
 import type { INpmReleaseProjectChange, INpmReleaseWorkflowPlanSources } from './types.ts';
 
 const readManifestVersion = (manifestSource: string, packageName: string): string => {
@@ -53,13 +53,14 @@ export const loadNpmReleaseProjectChanges = async (
           currentManifestSource,
           configuration.packageName,
         );
-        const previousVersion =
+        const previousManifestSource =
           baseCommit === null
-            ? currentVersion
-            : readManifestVersion(
-                readGitFile(repositoryRoot, baseCommit, manifestPath),
-                configuration.packageName,
-              );
+            ? currentManifestSource
+            : readOptionalGitFile(repositoryRoot, baseCommit, manifestPath);
+        const previousVersion =
+          previousManifestSource === null
+            ? null
+            : readManifestVersion(previousManifestSource, configuration.packageName);
         const change: INpmReleaseProjectChange = {
           currentVersion,
           isChanged:

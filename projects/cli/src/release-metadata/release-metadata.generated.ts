@@ -13,11 +13,11 @@ import { freezeMoldeaCliReleaseMetadata } from './utilities.js';
 
 // immutable compatibility and package composition bundled into this CLI release
 export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
-  activeAdapterIds: [],
+  activeAdapterIds: ['openai'],
   cliPackage: {
     name: '@moldea.ai/cli',
     supportedNodeRange: '^22.11.0 || ^24.11.0',
-    version: '1.0.1',
+    version: '1.1.0',
   },
   coreRecognizedAdapterIds: [
     'anthropic',
@@ -125,12 +125,114 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
         implementationStatus: 'planned',
       },
       openai: {
+        compatibleCoreRange: '^1.0.0',
         implementation: {
           distribution: 'public',
           kind: 'package',
           package: '@moldea.ai/adapter-openai',
+          versionRange: '^1.0.0',
         },
-        implementationStatus: 'planned',
+        implementationStatus: 'available',
+        lastVerifiedAt: '2026-08-15',
+        runtimeGuidance: {
+          expectation: 'recommended',
+          notes:
+            'Document project-specific model selection, tool execution, streaming, retry, and error behavior that static inspection cannot establish.',
+        },
+        supportedRepositoryFormatVersions: [1],
+        targets: [
+          {
+            bindingSupport: {
+              'instruction-loader': {
+                relationship: 'full',
+                symbol: 'full',
+              },
+              'runtime-agent': {
+                relationship: 'full',
+                symbol: 'full',
+              },
+              'tool-input-schema': {
+                relationship: 'full',
+                symbol: 'full',
+              },
+              'tool-registration': {
+                relationship: 'full',
+                symbol: 'full',
+              },
+            },
+            evidenceKinds: [
+              'instruction-loader',
+              'language',
+              'runtime-package',
+              'runtime-pattern',
+              'schema',
+              'tool-registration',
+            ],
+            id: 'typescript-responses-api-7',
+            kind: 'package',
+            knownLimitations: [
+              'Agent input and output schemas, tool implementations and output schemas, skills, variables, and runtime-native routing do not produce evidence.',
+              'JavaScript, CommonJS, Python, Realtime, Assistants, Agents SDK, streaming semantics, and provider-hosted configuration are not interpreted.',
+              'Only TypeScript ESM files with supported direct default and relative named imports are interpreted.',
+              'Package versions are classified from nearest package manifests; lockfiles and installed node_modules are not inspected.',
+            ],
+            language: 'typescript',
+            lastVerifiedAt: '2026-08-15',
+            packages: [
+              {
+                ecosystem: 'npm',
+                name: 'openai',
+                role: 'primary',
+                versionRange: '>=7.4.0 <8.0.0',
+              },
+            ],
+            patterns: [
+              {
+                description:
+                  'A bound loader is called directly, optionally through await, by a Responses request instructions property.',
+                id: 'direct-instruction-loader',
+                kind: 'instruction-loader',
+                support: 'full',
+              },
+              {
+                description:
+                  'Chat Completions usage is outside this target and is not rejected merely because Responses is preferred.',
+                id: 'chat-completions',
+                kind: 'runtime',
+                support: 'ambiguous',
+              },
+              {
+                description:
+                  'A bound exported TypeScript function uses a module-local OpenAI client for one or more direct closed Responses API requests.',
+                id: 'direct-responses-runtime-agent',
+                kind: 'runtime',
+                support: 'full',
+              },
+              {
+                description:
+                  'Factories, computed properties, spreads, mutable arrays, and indirect request values are not resolved.',
+                id: 'dynamic-source-indirection',
+                kind: 'runtime',
+                support: 'ambiguous',
+              },
+              {
+                description:
+                  'A bound tool input schema is referenced directly by function-tool parameters.',
+                id: 'direct-tool-input-schema',
+                kind: 'schema',
+                support: 'full',
+              },
+              {
+                description:
+                  'Bound static OpenAI function-tool objects are included in a closed inline or immutable module-local Responses tools array.',
+                id: 'static-function-tools',
+                kind: 'tool',
+                support: 'full',
+              },
+            ],
+            supportLevel: 'experimental',
+          },
+        ],
       },
       'openai-agents-sdk': {
         implementation: {
@@ -162,6 +264,10 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
   minimumGitVersion: '2.30.0',
   outputSchemaVersion: 1,
   packages: [
+    {
+      name: '@moldea.ai/adapter-openai',
+      version: '1.0.0',
+    },
     {
       name: '@moldea.ai/core',
       version: '1.0.1',

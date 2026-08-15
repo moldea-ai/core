@@ -33,6 +33,42 @@ export const readGitFile = (repositoryRoot: URL, commit: string, filePath: strin
 };
 
 /**
+ * Reads one UTF-8 file when it exists in a committed Git tree.
+ * @param repositoryRoot The repository containing the committed tree.
+ * @param commit The exact source commit.
+ * @param filePath The repository-relative file path.
+ * @returns The committed file content, or null when the path is absent.
+ * @throws
+ * - If the commit is invalid or Git cannot inspect the tree safely
+ */
+export const readOptionalGitFile = (
+  repositoryRoot: URL,
+  commit: string,
+  filePath: string,
+): string | null => {
+  requireCommit(commit);
+
+  const result = spawnSync('git', ['ls-tree', '-z', '--name-only', commit, '--', filePath], {
+    cwd: repositoryRoot,
+    encoding: 'utf8',
+  });
+
+  if (result.status !== 0) {
+    throw new Error(`The ${filePath} file state could not be read from ${commit}.`);
+  }
+
+  if (result.stdout === '') {
+    return null;
+  }
+
+  if (result.stdout !== `${filePath}\0`) {
+    throw new Error(`The ${filePath} file state could not be resolved safely from ${commit}.`);
+  }
+
+  return readGitFile(repositoryRoot, commit, filePath);
+};
+
+/**
  * Checks whether one project directory changed between exact Git commits.
  * @param repositoryRoot The repository containing both commits.
  * @param baseCommit The commit before the push.

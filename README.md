@@ -4,7 +4,7 @@ The `packages` project is the open-source package monorepo for `moldea`. It deve
 
 The repository is intentionally separate from the hosted [`platform`](https://github.com/moldea-ai/platform) monorepo. It contains reusable package products and their shared development infrastructure, not Cloud applications, hosted APIs, runtime infrastructure, or deployment configuration.
 
-`@moldea.ai/repository`, `@moldea.ai/repository-fs`, `@moldea.ai/core`, and `@moldea.ai/cli` form the initial `1.0.0` package set. Repository and Core provide the source-neutral reader and universal interpretation foundations, Repository FS supplies the coherent local-filesystem reader, and the CLI composes them into the complete version `1` read-only executable. The built-in `custom` runtime is verified as available through Core's universal repository behavior; every package-backed adapter remains `planned`. Real tarball installation and execution, including cross-repository skill conformance, remain the release boundary for every package version.
+`@moldea.ai/repository`, `@moldea.ai/repository-fs`, `@moldea.ai/core`, `@moldea.ai/adapter-openai`, and `@moldea.ai/cli` form the first available package set. Repository and Core provide the source-neutral reader and universal interpretation foundations, Repository FS supplies the coherent local-filesystem reader, the OpenAI adapter contributes static evidence for its experimental direct Responses API target, and the CLI composes them into the complete version `1` read-only executable. The built-in `custom` runtime and package-backed `openai` runtime are verified as available; the remaining package-backed adapters stay `planned`. Real tarball installation and execution remain the release boundary for every package version.
 
 ## Specifications
 
@@ -15,6 +15,7 @@ The product and package specifications are currently maintained in the `platform
 - [`@moldea.ai/repository-fs`](https://github.com/moldea-ai/platform/blob/main/moldea/context/repository-fs-package.md) — coherent local filesystem reader.
 - [`@moldea.ai/core`](https://github.com/moldea-ai/platform/blob/main/moldea/context/core-package.md) — deterministic repository-format interpretation and indexing.
 - [`@moldea.ai/cli`](https://github.com/moldea-ai/platform/blob/main/moldea/context/cli-package.md) — read-only Git working-tree composition and executable contract.
+- [`@moldea.ai/adapter-openai`](https://github.com/moldea-ai/platform/blob/main/moldea/context/adapter-openai-package.md) — experimental TypeScript OpenAI Responses API inspection target.
 - [Runtime Adapter Contract](https://github.com/moldea-ai/platform/blob/main/moldea/context/runtime-adapter-contract.md) — deterministic extension contract for official adapters.
 - [Runtime Compatibility Matrix](https://github.com/moldea-ai/platform/blob/main/moldea/context/runtime-compatibility-matrix.md) — canonical compatibility-data contract and initial adapter inventory.
 
@@ -37,6 +38,7 @@ docs/
   runtime-compatibility.md     # Generated compatibility presentation
 packages/                      # Private shared implementation packages
 projects/
+  adapter-openai/              # OpenAI Responses API runtime adapter
   cli/                         # Read-only local command-line composition
   core/                        # Deterministic repository-format interpretation
   repository/                  # Source-neutral reader contract and memory reader
@@ -137,7 +139,7 @@ Environment-neutral packages extend `configs/typescript/environment-neutral.json
 
 Package tests use Vitest without global test APIs. Tests are colocated with the source modules they exercise, and Node and non-React tests use the `*.test-unit.ts`, `*.test-integration.ts`, and `*.test-e2e.ts` names for the categories they own. Each package exposes a granular script for every category it contains, and its `test` command runs unit, integration, then end-to-end correctness suites when present. Shared conformance fixtures live at repository level when they represent a contract implemented by multiple packages.
 
-Repository FS and CLI runtime compatibility are tested at packed-consumer boundaries. CI builds the required public tarballs on the pinned development runtime, then installs and executes the artifacts with package scripts disabled and strict engine validation on Node.js `22.11.0`, latest Node.js 22, Node.js `24.11.0`, and latest Node.js 24. The CLI runtime harness verifies the installed package identities and runs real `version`, `compatibility`, `validate`, and `inspect` commands through the packed composition. This keeps consumer runtime guarantees independent from the newer runtime required by repository development tooling.
+Repository FS, the OpenAI adapter, and CLI runtime compatibility are tested at packed-consumer boundaries. CI builds the required public tarballs on the pinned development runtime, then installs and executes the artifacts with package scripts disabled and strict engine validation on Node.js `22.11.0`, latest Node.js 22, Node.js `24.11.0`, and latest Node.js 24. The adapter harness exercises the installed public export and inspection boundary, while the CLI harness verifies installed package identities and real `version`, `compatibility`, `validate`, and `inspect` commands through the packed composition. This keeps consumer runtime guarantees independent from the newer runtime required by repository development tooling.
 
 Turborepo derives build order from declared workspace dependencies. Package dependencies must remain explicit and acyclic, and no task may rely on workspace enumeration order or undeclared cross-project state.
 
@@ -147,8 +149,8 @@ Generated files are not edited directly. Runtime compatibility changes begin in 
 
 ## Package releases
 
-A push to `main` automatically selects every changed public project whose manifest declares a strictly greater stable version. The npm workflow verifies the complete release candidate once, then creates package-qualified immutable tags and publishes the exact checksummed tarballs in dependency order through trusted publishing. A changed public project without the required version bump fails before publication. Manual dispatch remains available for new-package bootstrap and release recovery. See [`docs/npm-releases.md`](docs/npm-releases.md).
+A push to `main` automatically selects every changed public project. An existing project must declare a stable version strictly greater than its version at the preceding commit, while a newly introduced project with no base manifest must declare a canonical stable version. The npm workflow verifies the complete release candidate once, then creates package-qualified immutable tags and publishes the exact checksummed tarballs in dependency order through trusted publishing. A project whose version is invalid for its release state fails before publication. Manual dispatch remains available for new-package bootstrap and release recovery. See [`docs/npm-releases.md`](docs/npm-releases.md).
 
 ## Initial implementation sequence
 
-The first implementation project was `@moldea.ai/repository`, followed by its in-memory reader and shared conformance suite. Core's universal behavior was then completed through that memory-reader boundary, followed by the coherent Repository FS implementation and the CLI's installed-tarball runtime boundary. The initial `1.0.0` package set includes verified built-in `custom` compatibility and real cross-repository skill conformance over deterministic `compatibility --json` and `inspect --json`. Package publication remains an explicit independently versioned release operation; official package-backed adapters remain later slices and stay `planned` until their implementations and fixtures support verified compatibility claims.
+The first implementation project was `@moldea.ai/repository`, followed by its in-memory reader and shared conformance suite. Core's universal behavior was then completed through that memory-reader boundary, followed by Repository FS, the CLI's installed-tarball runtime boundary, and the first official package-backed adapter. The OpenAI adapter now owns an experimental TypeScript Responses API target with deterministic fixtures, diagnostics, evidence, package metadata, and packed-runtime verification. Package publication remains an explicit independently versioned release operation; other official package-backed adapters stay `planned` until their implementations and fixtures support verified compatibility claims.

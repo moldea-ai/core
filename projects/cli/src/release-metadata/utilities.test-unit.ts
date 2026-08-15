@@ -30,11 +30,11 @@ const expectDeeplyFrozen = (root: object): void => {
 describe('CLI release metadata immutability', () => {
   test('deeply freezes generated release metadata with exact current composition', () => {
     expect(MOLDEA_CLI_RELEASE_METADATA).toMatchObject({
-      activeAdapterIds: [],
+      activeAdapterIds: ['openai'],
       cliPackage: {
         name: '@moldea.ai/cli',
         supportedNodeRange: '^22.11.0 || ^24.11.0',
-        version: '1.0.1',
+        version: '1.1.0',
       },
       coreRecognizedAdapterIds: [
         'anthropic',
@@ -53,6 +53,7 @@ describe('CLI release metadata immutability', () => {
       minimumGitVersion: '2.30.0',
       outputSchemaVersion: 1,
       packages: [
+        { name: '@moldea.ai/adapter-openai', version: '1.0.0' },
         { name: '@moldea.ai/core', version: '1.0.1' },
         { name: '@moldea.ai/repository', version: '1.0.1' },
         { name: '@moldea.ai/repository-fs', version: '1.0.1' },
@@ -80,10 +81,18 @@ describe('CLI release metadata immutability', () => {
       supportedRepositoryFormatVersions: [1],
       targets: [{ id: 'custom' }],
     });
+    expect(MOLDEA_CLI_RELEASE_METADATA.matrix.adapters['openai']).toMatchObject({
+      compatibleCoreRange: '^1.0.0',
+      implementation: { package: '@moldea.ai/adapter-openai', versionRange: '^1.0.0' },
+      implementationStatus: 'available',
+      runtimeGuidance: { expectation: 'recommended' },
+      supportedRepositoryFormatVersions: [1],
+      targets: [{ id: 'typescript-responses-api-7', supportLevel: 'experimental' }],
+    });
     expect(
       Object.entries(MOLDEA_CLI_RELEASE_METADATA.matrix.adapters).every(
         ([adapterId, { implementationStatus }]) =>
-          adapterId === 'custom' || implementationStatus === 'planned',
+          adapterId === 'custom' || adapterId === 'openai' || implementationStatus === 'planned',
       ),
     ).toBe(true);
     expectDeeplyFrozen(MOLDEA_CLI_RELEASE_METADATA);

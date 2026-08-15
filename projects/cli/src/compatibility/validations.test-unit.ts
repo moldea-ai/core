@@ -134,6 +134,7 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
         packageMetadata: {
           ...state.packageMetadata,
           dependencies: {
+            '@moldea.ai/adapter-openai': '1.0.0',
             '@moldea.ai/core': '1.0.1',
             '@moldea.ai/repository': '1.0.1',
             '@moldea.ai/repository-fs': '1.0.1',
@@ -198,7 +199,7 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
       [createTestRuntimeAdapter('openai'), createTestRuntimeAdapter('openai')],
     ],
     ['the built-in custom ID', [createTestRuntimeAdapter('custom')]],
-    ['a planned adapter', [createTestRuntimeAdapter('openai')]],
+    ['a planned adapter', [createTestRuntimeAdapter('anthropic')]],
   ])('rejects active registration containing %s', (_description, activeAdapters) => {
     const state = createTestCompatibilityState();
 
@@ -374,10 +375,10 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
     ],
   ])('rejects a planned entry carrying prohibited %s', (_description, mutate) => {
     const state = createTestCompatibilityState();
-    const openAiEntry = state.releaseMetadata.matrix.adapters['openai'];
+    const plannedEntry = state.releaseMetadata.matrix.adapters['anthropic'];
 
-    if (openAiEntry === undefined) {
-      throw new TypeError('The OpenAI matrix entry is required.');
+    if (plannedEntry === undefined) {
+      throw new TypeError('The planned Anthropic matrix entry is required.');
     }
 
     expect(
@@ -389,7 +390,7 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
             ...state.releaseMetadata.matrix,
             adapters: {
               ...state.releaseMetadata.matrix.adapters,
-              openai: mutate(openAiEntry),
+              anthropic: mutate(plannedEntry),
             },
           },
         },
