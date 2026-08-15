@@ -85,7 +85,7 @@ importers:
   projects/cli:
     dependencies:
       '@moldea.ai/adapter-openai':
-        specifier: workspace:1.0.0
+        specifier: workspace:1.0.1
         version: link:../adapter-openai
       '@moldea.ai/core':
         specifier: workspace:1.0.1

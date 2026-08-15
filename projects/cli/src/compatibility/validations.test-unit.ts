@@ -134,7 +134,7 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
         packageMetadata: {
           ...state.packageMetadata,
           dependencies: {
-            '@moldea.ai/adapter-openai': '1.0.0',
+            '@moldea.ai/adapter-openai': '1.0.1',
             '@moldea.ai/core': '1.0.1',
             '@moldea.ai/repository': '1.0.1',
             '@moldea.ai/repository-fs': '1.0.1',
