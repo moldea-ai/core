@@ -22,7 +22,7 @@ Run these from the repository root:
 | `pnpm --filter @moldea.ai/packages-website test:e2e`    | Run focused browser accessibility, theme, navigation, search, and 320px overflow checks. |
 | `pnpm --filter @moldea.ai/packages-website check:links` | Revalidate an existing production artifact.                                              |
 
-The default build inputs are `SITE_URL=https://moldea-ai.github.io` and `BASE_PATH=/packages/`. Set `BASE_PATH=/` with the real `SITE_URL` for a custom-domain build. Internal links, assets, canonical metadata, Open Graph images, sitemap URLs, search results, robots, and `llms.txt` are all derived from these inputs.
+The default build inputs are `SITE_URL=https://packages.moldea.ai` and `BASE_PATH=/`, matching the established custom-domain deployment. Set both values explicitly to build for another mount point, such as `SITE_URL=https://moldea-ai.github.io BASE_PATH=/packages/` for the GitHub project-site URL. Internal links, assets, canonical metadata, Open Graph images, sitemap URLs, search results, robots, and `llms.txt` are all derived from these inputs.
 
 ## Design and rendering
 
@@ -32,6 +32,6 @@ The sibling platform repository is a design and specification reference only. Th
 
 ## Deployment
 
-Pull requests build and verify the site without deploying it. Relevant pushes to `main` rebuild from the exact pushed commit, rerun website verification, upload `apps/website/dist` with GitHub's official Pages artifact action, and deploy through the `github-pages` environment. The workflow is separate from npm publication.
+Pull requests build and verify the site without deploying it. Relevant pushes to `main` rebuild from the exact pushed commit, read the configured origin and base path from GitHub Pages, pass those values to Astro and the artifact checks, upload `apps/website/dist` with GitHub's official Pages artifact action, and deploy through the `github-pages` environment. The workflow is separate from npm publication.
 
 If Pages has never been enabled, a repository owner must once select **GitHub Actions** under **Settings → Pages → Build and deployment → Source**. Normal publication is automatic after that setting; no recurring manual dispatch or artifact promotion is required.

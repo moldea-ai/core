@@ -12,7 +12,7 @@
     "docs:check": "node scripts/check.ts",
     "docs:generate": "node scripts/generate.ts",
     "lint": "eslint astro.config.ts playwright.config.ts scripts src vitest",
-    "preview": "vite preview --base /packages/ --host 127.0.0.1 --port 4321 --strictPort",
+    "preview": "vite preview --base / --host 127.0.0.1 --port 4321 --strictPort",
     "test": "pnpm test:unit && pnpm test:integration && pnpm test:e2e",
     "test:e2e": "playwright test",
     "test:integration": "vitest run --config vitest/test-integration.config.ts",

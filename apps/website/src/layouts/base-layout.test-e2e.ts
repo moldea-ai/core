@@ -2,24 +2,28 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
+import { DEFAULT_BASE_PATH, withBase } from '../lib/site/url.ts';
+
+const basePath = process.env.BASE_PATH ?? DEFAULT_BASE_PATH;
+const toPublicPath = (route: string): string => withBase(route, basePath);
 const REPRESENTATIVE_PATHS = [
+  '/',
   '/packages/',
-  '/packages/packages/',
-  '/packages/packages/core/',
-  '/packages/packages/core/api/',
-  '/packages/packages/core/diagnostics/',
-  '/packages/adapters/',
-  '/packages/adapters/openai/',
-  '/packages/adapters/openai/api/',
-  '/packages/compatibility/',
-  '/packages/search/',
+  '/packages/core/',
+  '/packages/core/api/',
+  '/packages/core/diagnostics/',
+  '/adapters/',
+  '/adapters/openai/',
+  '/adapters/openai/api/',
+  '/compatibility/',
+  '/search/',
 ] as const;
 
 test('persists an explicit theme and exposes mobile navigation from the keyboard', async ({
   page,
 }) => {
   await page.setViewportSize({ height: 740, width: 320 });
-  await page.goto('/packages/');
+  await page.goto(toPublicPath('/'));
 
   const navigationButton = page.getByLabel('Open navigation');
   await navigationButton.focus();
@@ -39,7 +43,7 @@ test('persists an explicit theme and exposes mobile navigation from the keyboard
 test('uses smooth client-side navigation while preserving ordinary static routes', async ({
   page,
 }) => {
-  await page.goto('/packages/');
+  await page.goto(toPublicPath('/'));
   await expect(page.locator('meta[name="astro-view-transitions-enabled"]')).toHaveAttribute(
     'content',
     'true',
@@ -53,10 +57,10 @@ test('uses smooth client-side navigation while preserving ordinary static routes
   });
 
   await page.getByRole('link', { name: 'Packages', exact: true }).first().click();
-  await expect(page).toHaveURL(/\/packages\/packages\/$/);
   await expect(
     page.getByRole('heading', { level: 1, name: 'One foundation. Explicit responsibilities.' }),
   ).toBeVisible();
+  expect(new URL(page.url()).pathname).toBe(toPublicPath('/packages/'));
   expect(
     await page.evaluate(
       () => (window as Window & { __moldeaNavigationMarker?: string }).__moldeaNavigationMarker,
@@ -73,7 +77,7 @@ test('has no page-level horizontal overflow at 320px on representative routes', 
   await page.setViewportSize({ height: 740, width: 320 });
 
   for (const path of REPRESENTATIVE_PATHS) {
-    await page.goto(path);
+    await page.goto(toPublicPath(path));
     const widths = await page.evaluate(() => ({
       client: document.documentElement.clientWidth,
       scroll: document.documentElement.scrollWidth,
@@ -87,7 +91,7 @@ test('keeps primary static routes free of serious automated accessibility violat
   page,
 }) => {
   for (const path of REPRESENTATIVE_PATHS) {
-    await page.goto(path);
+    await page.goto(toPublicPath(path));
     const results = await new AxeBuilder({ page }).analyze();
     const materialViolations = results.violations.filter(
       ({ impact }) => impact === 'critical' || impact === 'serious',
@@ -98,9 +102,10 @@ test('keeps primary static routes free of serious automated accessibility violat
 });
 
 test('searches the generated local index with a keyboard-submitted query', async ({ page }) => {
-  await page.goto('/packages/');
+  await page.goto(toPublicPath('/'));
   await page.getByRole('link', { name: 'Search documentation' }).click();
-  await expect(page).toHaveURL(/\/packages\/search\/$/);
+  await page.waitForURL((url) => url.pathname === toPublicPath('/search/'));
+  expect(new URL(page.url()).pathname).toBe(toPublicPath('/search/'));
   await page.getByRole('searchbox', { name: 'Search documentation' }).fill('snapshot');
   await page.getByRole('searchbox', { name: 'Search documentation' }).press('Enter');
 
@@ -109,8 +114,8 @@ test('searches the generated local index with a keyboard-submitted query', async
 });
 
 test('left-aligns generated API signatures without indentation whitespace', async ({ page }) => {
-  for (const path of ['/packages/packages/core/api/', '/packages/adapters/openai/api/']) {
-    await page.goto(path);
+  for (const path of ['/packages/core/api/', '/adapters/openai/api/']) {
+    await page.goto(toPublicPath(path));
     const signature = page.locator('pre').first();
 
     await expect(signature).toBeVisible();
