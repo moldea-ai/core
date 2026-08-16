@@ -3,7 +3,10 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
-import { afterEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeAll, describe, expect, test } from 'vitest';
+
+import type { IRuntimeCompatibilityMatrix } from '../../../../../scripts/runtime-compatibility/types.ts';
+import type { IWebsiteModel } from '../model/types.ts';
 
 import {
   buildAdapterPages,
@@ -13,9 +16,16 @@ import {
   createWebsiteModel,
   discoverPublicPackages,
 } from './generation.ts';
-import type { IRuntimeCompatibilityMatrix } from '../../../../../scripts/runtime-compatibility/types.ts';
 
 const temporaryDirectories: string[] = [];
+let currentWebsiteModel: IWebsiteModel;
+
+// full TypeScript model generation can exceed the default hook timeout on Windows CI
+beforeAll(() => {
+  currentWebsiteModel = createWebsiteModel();
+}, 60_000);
+
+const getCurrentWebsiteModel = (): IWebsiteModel => structuredClone(currentWebsiteModel);
 
 const createTemporaryRepository = (): string => {
   const directory = mkdtempSync(join(tmpdir(), 'moldea-website-generation-'));
@@ -80,7 +90,7 @@ afterEach(() => {
 
 describe('discoverPublicPackages', () => {
   test('discovers the complete current public implementation set and package families', () => {
-    const model = createWebsiteModel();
+    const model = getCurrentWebsiteModel();
 
     expect(model.packages.map(({ name }) => name)).toStrictEqual([
       '@moldea.ai/adapter-anthropic',
@@ -237,7 +247,7 @@ describe('discoverPublicPackages', () => {
 
 describe('adapter and route generation', () => {
   test('preserves built-in and experimental package-backed availability states', () => {
-    const model = createWebsiteModel();
+    const model = getCurrentWebsiteModel();
     const custom = model.adapters.find(({ id }) => id === 'custom');
     const openAi = model.adapters.find(({ id }) => id === 'openai');
     const anthropic = model.adapters.find(({ id }) => id === 'anthropic');
@@ -283,7 +293,7 @@ describe('adapter and route generation', () => {
   });
 
   test('rejects two package documents resolving to one route', () => {
-    const model = createWebsiteModel();
+    const model = getCurrentWebsiteModel();
     const first = {
       ...model.packages[0],
       api: [],
@@ -303,7 +313,7 @@ describe('adapter and route generation', () => {
 
 describe('createLlmsText', () => {
   test('is deterministic under reversed source enumeration', () => {
-    const model = createWebsiteModel();
+    const model = getCurrentWebsiteModel();
 
     expect(createLlmsText([...model.packages].reverse(), [...model.adapters].reverse())).toBe(
       createLlmsText(model.packages, model.adapters),
@@ -311,7 +321,7 @@ describe('createLlmsText', () => {
   });
 
   test('represents every public package and canonical adapter without exposing the website package', () => {
-    const model = createWebsiteModel();
+    const model = getCurrentWebsiteModel();
     const text = createLlmsText(model.packages, model.adapters);
     const lines = text.split('\n');
 
@@ -345,7 +355,7 @@ describe('createLlmsText', () => {
 
 describe('createSearchRecords', () => {
   test('represents every public package and canonical adapter', () => {
-    const model = createWebsiteModel();
+    const model = getCurrentWebsiteModel();
     const searchRecords = createSearchRecords(model.packages, model.adapters);
 
     for (const packageModel of model.packages) {
@@ -367,7 +377,7 @@ describe('createSearchRecords', () => {
   });
 
   test('is deterministic under reversed source enumeration', () => {
-    const model = createWebsiteModel();
+    const model = getCurrentWebsiteModel();
 
     expect(
       createSearchRecords([...model.packages].reverse(), [...model.adapters].reverse()),
