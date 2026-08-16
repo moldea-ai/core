@@ -27,7 +27,7 @@ export type IEvidenceKind =
   | 'skill-registration'
   | 'tool-registration'
   | 'variable-provider';
-export type IPackageEcosystem = 'npm' | 'other' | 'pypi';
+export type IPackageEcosystem = 'npm';
 export type IPackageRole = 'companion' | 'primary';
 export type IPatternKind =
   | 'agent'

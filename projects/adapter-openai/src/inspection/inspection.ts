@@ -85,7 +85,7 @@ const inspectAgent = async (
 
   const responses = analyzeOpenAiResponses(analysis, runtimeExport.body, session.signal);
 
-  if (responses.closedRequests.length === 0) {
+  if (responses.requests.length === 0) {
     return;
   }
 

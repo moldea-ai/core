@@ -15,6 +15,7 @@ The product and package specifications are currently maintained in the `platform
 - [`@moldea.ai/repository-fs`](https://github.com/moldea-ai/platform/blob/main/moldea/context/repository-fs-package.md) — coherent local filesystem reader.
 - [`@moldea.ai/core`](https://github.com/moldea-ai/platform/blob/main/moldea/context/core-package.md) — deterministic repository-format interpretation and indexing.
 - [`@moldea.ai/cli`](https://github.com/moldea-ai/platform/blob/main/moldea/context/cli-package.md) — read-only Git working-tree composition and executable contract.
+- [`@moldea.ai/adapter-anthropic`](https://github.com/moldea-ai/platform/blob/main/moldea/context/adapter-anthropic-package-specification.md) — planned direct Anthropic Messages API inspection target.
 - [`@moldea.ai/adapter-openai`](https://github.com/moldea-ai/platform/blob/main/moldea/context/adapter-openai-package.md) — experimental TypeScript OpenAI Responses API inspection target.
 - [Runtime Adapter Contract](https://github.com/moldea-ai/platform/blob/main/moldea/context/runtime-adapter-contract.md) — deterministic extension contract for official adapters.
 - [Runtime Compatibility Matrix](https://github.com/moldea-ai/platform/blob/main/moldea/context/runtime-compatibility-matrix.md) — canonical compatibility-data contract and initial adapter inventory.
@@ -89,10 +90,11 @@ Shared internal packages may support first-class projects but never depend on th
 | `adapter-langgraph`         | `@moldea.ai/adapter-langgraph`         | Public            |
 | `adapter-openai`            | `@moldea.ai/adapter-openai`            | Public            |
 | `adapter-openai-agents-sdk` | `@moldea.ai/adapter-openai-agents-sdk` | Public            |
-| `adapter-pydantic-ai`       | `@moldea.ai/adapter-pydantic-ai`       | Public            |
 | `adapter-vercel-ai-sdk`     | `@moldea.ai/adapter-vercel-ai-sdk`     | Public            |
 
 The catalog records approved architecture, not implementation or release status. The `custom` adapter remains built into `@moldea.ai/core` and has no separate package project.
+
+The initial public tooling, instruction-consumption, and package-backed adapter phase is limited to the Node.js ecosystem. Runtime Compatibility Matrix version `1` therefore records npm packages only and interprets every package range with node-semver semantics.
 
 ## Requirements
 

@@ -13,6 +13,7 @@ import {
   getOpenAiStaticString,
   isOpenAiBoundIdentifier,
   isSafeOpenAiModuleArray,
+  isOpenAiStaticLiteralValue,
   resolveOpenAiImportCandidatePaths,
 } from './index.js';
 
@@ -51,13 +52,16 @@ describe('analyzeOpenAiSource', () => {
         '  client.responses.create({ instructions: await readInstruction() });',
       ].join('\n'),
     );
-    const instructions = responses.closedRequests[0]?.properties.get('instructions');
+    const instructions =
+      responses.requests[0]?.instructions.kind === 'present'
+        ? responses.requests[0].instructions.expression
+        : undefined;
 
     expect(analysis.openAiConstructorNames).toStrictEqual(new Set(['OpenAIClient']));
     expect(analysis.clientNames).toStrictEqual(new Set(['client']));
     expect(analysis.exports.has('agent')).toBe(true);
-    expect(responses.closedRequests).toHaveLength(1);
-    expect(responses.closedRequests[0]?.properties.has('instructions')).toBe(true);
+    expect(responses.requests).toHaveLength(1);
+    expect(responses.requests[0]?.instructions.kind).toBe('present');
 
     if (instructions === undefined || !ts.isAwaitExpression(instructions)) {
       throw new TypeError('The instruction fixture must preserve its direct await expression.');
@@ -141,8 +145,79 @@ describe('analyzeOpenAiSource', () => {
       ].join('\n'),
     ).responses;
 
-    expect(multiple.closedRequests).toHaveLength(2);
+    expect(multiple.requests).toHaveLength(2);
     expect(multiple.hasAmbiguousCandidate).toBe(true);
+  });
+
+  test('tracks request relationships independently with ordered object members', () => {
+    const { responses } = findResponses(
+      [
+        "import OpenAI from 'openai';",
+        'const client = new OpenAI();',
+        'export const agent = () => {',
+        '  client.responses.create({',
+        '    [dynamicKey]: dynamicValue,',
+        '    instructions: loadInstruction(),',
+        '    model: getModel(),',
+        '  });',
+        '  client.responses.create({',
+        '    ...dynamicRequest,',
+        '    instructions: loadInstruction(),',
+        '    tools: [registration],',
+        '  });',
+        '  client.responses.create({',
+        '    instructions: loadInstruction(),',
+        '    tools: [registration],',
+        '    ...dynamicRequest,',
+        '  });',
+        '  return client.responses.create({',
+        '    instructions: firstLoader(),',
+        '    instructions: secondLoader(),',
+        '    tools: [registration],',
+        '  });',
+        '};',
+      ].join('\n'),
+    );
+
+    expect(
+      responses.requests.map(({ instructions, tools }) => ({
+        instructions: instructions.kind,
+        tools: tools.kind,
+      })),
+    ).toStrictEqual([
+      { instructions: 'present', tools: 'unresolved' },
+      { instructions: 'present', tools: 'present' },
+      { instructions: 'unresolved', tools: 'unresolved' },
+      { instructions: 'unresolved', tools: 'present' },
+    ]);
+    expect(responses.hasAmbiguousCandidate).toBe(false);
+  });
+
+  test.each([
+    [
+      'nested supported literals',
+      "{ type: 'object', count: -1, positive: +2, items: [true, false, null, `text`, { nested: 0 }] }",
+      true,
+    ],
+    ['array hole', '[true, , false]', false],
+    ['array spread', '[...items]', false],
+    ['object spread', '{ ...schema }', false],
+    ['computed property', '{ [propertyName]: true }', false],
+    ['shorthand property', '{ propertyName }', false],
+    ['method', '{ propertyName() { return true; } }', false],
+    ['interpolated template', '{ name: `value-${suffix}` }', false],
+    ['regular expression', '{ pattern: /value/ }', false],
+    ['BigInt literal', '{ count: 1n }', false],
+    ['undefined', '{ missing: undefined }', false],
+  ])('classifies %s in the static schema grammar', (_description, expression, expected) => {
+    const analysis = analyze(`export const schema = ${expression};`);
+    const schema = getOpenAiConstExport(analysis, 'schema');
+
+    if (schema.kind !== 'present-supported' || schema.expression === undefined) {
+      throw new TypeError('The schema fixture must be a direct exported constant.');
+    }
+
+    expect(isOpenAiStaticLiteralValue(schema.expression)).toBe(expected);
   });
 
   test('tracks an extracted Responses create member as an unresolved dynamic candidate', () => {
@@ -158,7 +233,7 @@ describe('analyzeOpenAiSource', () => {
       ].join('\n'),
     );
 
-    expect(responses.closedRequests).toHaveLength(1);
+    expect(responses.requests).toHaveLength(1);
     expect(responses.hasAmbiguousCandidate).toBe(true);
   });
 
@@ -191,7 +266,7 @@ describe('analyzeOpenAiSource', () => {
       ].join('\n'),
     );
 
-    expect(responses.closedRequests).toHaveLength(1);
+    expect(responses.requests).toHaveLength(1);
     expect(responses.hasAmbiguousCandidate).toBe(true);
   });
 
@@ -208,7 +283,7 @@ describe('analyzeOpenAiSource', () => {
       ].join('\n'),
     );
 
-    expect(responses.closedRequests).toHaveLength(1);
+    expect(responses.requests).toHaveLength(1);
     expect(responses.hasAmbiguousCandidate).toBe(false);
   });
 
@@ -224,7 +299,7 @@ describe('analyzeOpenAiSource', () => {
       ].join('\n'),
     );
 
-    expect(responses.closedRequests).toHaveLength(1);
+    expect(responses.requests).toHaveLength(1);
     expect(responses.hasAmbiguousCandidate).toBe(true);
   });
 
@@ -249,8 +324,8 @@ describe('analyzeOpenAiSource', () => {
       ].join('\n'),
     ).responses;
 
-    expect(responses.closedRequests).toStrictEqual([]);
-    expect(returned.closedRequests).toStrictEqual([]);
+    expect(responses.requests).toStrictEqual([]);
+    expect(returned.requests).toStrictEqual([]);
   });
 
   test.each([
@@ -274,7 +349,7 @@ describe('analyzeOpenAiSource', () => {
       ].join('\n'),
     ],
   ])('does not bind a Responses request through a shadowing %s', (_description, source) => {
-    expect(findResponses(source).responses.closedRequests).toStrictEqual([]);
+    expect(findResponses(source).responses.requests).toStrictEqual([]);
   });
 
   test('does not interpret type-only imports as runtime wiring', () => {
@@ -291,7 +366,7 @@ describe('analyzeOpenAiSource', () => {
     expect(analysis.openAiConstructorNames).toStrictEqual(new Set());
     expect(analysis.clientNames).toStrictEqual(new Set());
     expect(analysis.namedImports).toStrictEqual(new Map());
-    expect(responses.closedRequests).toStrictEqual([]);
+    expect(responses.requests).toStrictEqual([]);
   });
 
   test('classifies default-export and indirect-export runtime symbols as unsupported', () => {

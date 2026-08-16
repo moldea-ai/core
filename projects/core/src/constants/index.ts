@@ -13,7 +13,6 @@ export const RECOGNIZED_RUNTIME_ADAPTER_IDS = Object.freeze([
   'langgraph',
   'openai',
   'openai-agents-sdk',
-  'pydantic-ai',
   'vercel-ai-sdk',
 ] as const);
 

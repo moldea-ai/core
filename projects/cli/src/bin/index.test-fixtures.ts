@@ -129,8 +129,9 @@ export const readTarEntry = (tarball: Buffer, entryPath: string): Buffer => {
 /** Asserts exact source or packed CLI metadata and its deliberate closed import surface. */
 export const expectPackageManifest = (
   manifest: IMoldeaCliPackageManifest,
-  dependencyVersion: string,
+  coreVersion: string,
   adapterVersion: string,
+  repositoryVersion: string,
 ): void => {
   expect(manifest).toMatchObject({
     bin: { moldea: './dist/moldea.js' },
@@ -140,13 +141,13 @@ export const expectPackageManifest = (
     name: '@moldea.ai/cli',
     preferUnplugged: true,
     type: 'module',
-    version: '1.1.1',
+    version: '2.0.0',
   });
   expect(manifest.dependencies).toStrictEqual({
     '@moldea.ai/adapter-openai': adapterVersion,
-    '@moldea.ai/core': dependencyVersion,
-    '@moldea.ai/repository': dependencyVersion,
-    '@moldea.ai/repository-fs': dependencyVersion,
+    '@moldea.ai/core': coreVersion,
+    '@moldea.ai/repository': repositoryVersion,
+    '@moldea.ai/repository-fs': repositoryVersion,
     semver: '7.8.5',
   });
   expect(manifest).not.toHaveProperty('main');

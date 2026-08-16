@@ -41,8 +41,8 @@ describe('createMoldeaCliCompatibilityResult', () => {
       minimumGitVersion: '2.30.0',
       outputSchemaVersion: 1,
       packages: [
-        { name: '@moldea.ai/adapter-openai', version: '1.0.1' },
-        { name: '@moldea.ai/core', version: '1.0.1' },
+        { name: '@moldea.ai/adapter-openai', version: '2.0.0' },
+        { name: '@moldea.ai/core', version: '2.0.0' },
         { name: '@moldea.ai/repository', version: '1.0.1' },
         { name: '@moldea.ai/repository-fs', version: '1.0.1' },
       ],
@@ -51,10 +51,10 @@ describe('createMoldeaCliCompatibilityResult', () => {
     });
     expect(customAdapter).toMatchObject({
       active: true,
-      bundledVersion: '1.0.1',
+      bundledVersion: '2.0.0',
       id: 'custom',
       matrix: {
-        compatibleCoreRange: '^1.0.0',
+        compatibleCoreRange: '^2.0.0',
         implementationStatus: 'available',
         runtimeGuidance: { expectation: 'required' },
         supportedRepositoryFormatVersions: [1],
@@ -68,7 +68,7 @@ describe('createMoldeaCliCompatibilityResult', () => {
     });
     expect(openAiAdapter).toMatchObject({
       active: true,
-      bundledVersion: '1.0.1',
+      bundledVersion: '2.0.0',
       id: 'openai',
       matrix: {
         implementationStatus: 'available',
@@ -84,9 +84,9 @@ describe('createMoldeaCliCompatibilityResult', () => {
 
     expect(result.adapters.find(({ id }) => id === 'openai')).toMatchObject({
       active: true,
-      bundledVersion: '1.0.1',
+      bundledVersion: '2.0.0',
       matrix: {
-        implementation: { versionRange: '^1.0.0' },
+        implementation: { versionRange: '^2.0.0' },
         implementationStatus: 'available',
         targets: [{ id: 'typescript-responses-api-7', lastVerifiedAt: '2026-08-15' }],
       },

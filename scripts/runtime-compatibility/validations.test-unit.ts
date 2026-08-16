@@ -247,7 +247,7 @@ describe('runtime compatibility matrix validation', () => {
     }
   });
 
-  test('validates PEP 440 ranges and positive target capabilities', () => {
+  test('requires npm node-semver ranges and positive target capabilities', () => {
     const matrix = cloneCanonicalMatrix();
     const adapter = publishOpenAi(matrix);
     const target = adapter.targets?.[0];
@@ -257,25 +257,33 @@ describe('runtime compatibility matrix validation', () => {
     }
 
     target.packages[0] = {
+      // @ts-expect-error verifies that runtime validation rejects non-npm matrix input
       ecosystem: 'pypi',
       name: 'openai',
       role: 'primary',
       versionRange: '>=2.0,<3.0',
     };
-    expect(parseRuntimeCompatibilityMatrix(stringify(matrix)).valid).toBe(true);
-
-    target.packages[0].versionRange = 'invalid';
     delete target.evidenceKinds;
     const result = parseRuntimeCompatibilityMatrix(stringify(matrix));
     expect(result.valid).toBe(false);
     if (!result.valid) {
       expect(result.issues.map(({ message }) => message)).toEqual(
         expect.arrayContaining([
-          expect.stringContaining('PEP 440'),
+          expect.stringContaining('Expected one of: npm'),
           expect.stringContaining('positive deterministic capability'),
         ]),
       );
     }
+
+    const invalidName = cloneCanonicalMatrix();
+    const invalidNameTarget = publishOpenAi(invalidName).targets?.[0];
+
+    if (invalidNameTarget?.packages === undefined) {
+      throw new Error('Published test target is missing package requirements.');
+    }
+
+    invalidNameTarget.packages[0]!.name = '@Invalid Scope/openai';
+    expectIssue(stringify(invalidName), 'valid npm package name');
   });
 
   test('validates binding levels, provider-limit values, and date ordering', () => {

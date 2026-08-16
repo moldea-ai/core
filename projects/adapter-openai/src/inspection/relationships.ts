@@ -7,8 +7,8 @@ import { parseRepositoryPath } from '@moldea.ai/repository';
 
 import { OPENAI_ADAPTER_ID } from '../constants/index.js';
 import type {
-  IOpenAiClosedRequest,
   IOpenAiInspectionSession,
+  IOpenAiRequestRelationship,
   IOpenAiResponsesAnalysis,
   IOpenAiSourceAnalysis,
 } from '../contracts/index.js';
@@ -63,30 +63,26 @@ const getExpressionRange = (analysis: IOpenAiSourceAnalysis, expression: ts.Expr
     ? null
     : analysis.text.locator.locateRange(expression.getStart(), expression.end);
 
-const isResolvableModuleIdentifier = (
-  identifier: ts.Identifier,
-  analysis: IOpenAiSourceAnalysis,
-): boolean =>
-  isOpenAiModuleBindingVisible(identifier, analysis) &&
-  (analysis.moduleConstDeclarations.has(identifier.text) ||
-    analysis.namedImports.has(identifier.text));
-
 const isSupportedRegistrationParameters = (
   expression: ts.Expression,
   analysis: IOpenAiSourceAnalysis,
+  inputSchemaReference: IRepositoryReference | undefined,
 ): boolean => {
   const candidate = unwrapOpenAiExpression(expression);
 
   return (
     isOpenAiNullLiteral(candidate) ||
     (ts.isObjectLiteralExpression(candidate) && isOpenAiStaticLiteralValue(candidate)) ||
-    (ts.isIdentifier(candidate) && isResolvableModuleIdentifier(candidate, analysis))
+    (ts.isIdentifier(candidate) &&
+      inputSchemaReference?.symbol !== undefined &&
+      isOpenAiBoundIdentifier(candidate, analysis, inputSchemaReference))
   );
 };
 
 const getRegistrationShape = (
   analysis: IOpenAiSourceAnalysis,
   symbol: string,
+  inputSchemaReference?: IRepositoryReference,
 ): IOpenAiRegistrationShapeResult => {
   const exported = getOpenAiConstExport(analysis, symbol);
 
@@ -103,13 +99,27 @@ const getRegistrationShape = (
   }
 
   const object = exported.expression;
+
+  if (object.properties.some((property) => !ts.isPropertyAssignment(property))) {
+    return { kind: 'present-unsupported' };
+  }
+
   const properties = getOpenAiClosedObjectProperties(object);
 
   if (properties === null) {
     return { kind: 'present-unsupported' };
   }
 
-  const allowedProperties = new Set(['description', 'name', 'parameters', 'strict', 'type']);
+  const allowedProperties = new Set([
+    'allowed_callers',
+    'defer_loading',
+    'description',
+    'name',
+    'output_schema',
+    'parameters',
+    'strict',
+    'type',
+  ]);
 
   if ([...properties.keys()].some((propertyName) => !allowedProperties.has(propertyName))) {
     return { kind: 'present-unsupported' };
@@ -130,7 +140,7 @@ const getRegistrationShape = (
     getOpenAiStaticString(type) !== 'function' ||
     detectedName === null ||
     parameters === undefined ||
-    !isSupportedRegistrationParameters(parameters, analysis) ||
+    !isSupportedRegistrationParameters(parameters, analysis, inputSchemaReference) ||
     strict === undefined ||
     !isOpenAiStrictLiteral(strict) ||
     !isSupportedDescription
@@ -172,7 +182,7 @@ const inspectRegistration = async (
     return null;
   }
 
-  const shape = getRegistrationShape(registrationAnalysis, reference.symbol);
+  const shape = getRegistrationShape(registrationAnalysis, reference.symbol, tool.inputSchema);
 
   if (shape.kind === 'absent') {
     addOpenAiDiagnostic(
@@ -187,6 +197,19 @@ const inspectRegistration = async (
   }
 
   if (shape.kind === 'present-unsupported') {
+    if (tool.inputSchema !== undefined) {
+      await inspectInputSchema(
+        session,
+        agent,
+        capabilityId,
+        tool.inputSchema,
+        registrationAnalysis,
+        null,
+        evidence,
+        diagnostics,
+      );
+    }
+
     return null;
   }
 
@@ -231,7 +254,7 @@ const inspectInputSchema = async (
   capabilityId: string,
   reference: IRepositoryReference,
   registrationAnalysis: IOpenAiSourceAnalysis,
-  parameters: ts.Expression,
+  parameters: ts.Expression | null,
   evidence: IRuntimeAdapterEvidence[],
   diagnostics: IAdapterDiagnostic[],
 ): Promise<void> => {
@@ -253,7 +276,23 @@ const inspectInputSchema = async (
 
   const schema = getOpenAiConstExport(schemaAnalysis, reference.symbol);
 
+  if (schema.kind === 'absent') {
+    addOpenAiDiagnostic(
+      diagnostics,
+      'OPENAI_TOOL_INPUT_SCHEMA_SYMBOL_NOT_FOUND',
+      reference.path,
+      agent.id,
+      null,
+      capabilityId,
+    );
+    return;
+  }
+
   if (schema.kind !== 'present-supported') {
+    return;
+  }
+
+  if (parameters === null) {
     return;
   }
 
@@ -283,8 +322,7 @@ const inspectInputSchema = async (
 
   const isProvablyDifferent =
     isOpenAiNullLiteral(candidate) ||
-    (ts.isObjectLiteralExpression(candidate) && isOpenAiStaticLiteralValue(candidate)) ||
-    (ts.isIdentifier(candidate) && isResolvableModuleIdentifier(candidate, registrationAnalysis));
+    (ts.isObjectLiteralExpression(candidate) && isOpenAiStaticLiteralValue(candidate));
 
   if (isProvablyDifferent) {
     addOpenAiDiagnostic(
@@ -342,12 +380,17 @@ const inspectInstructionLoader = async (
   let absentExpression: ts.Expression | null = null;
   let hasAmbiguousRelationship = responses.hasAmbiguousCandidate;
 
-  for (const request of responses.closedRequests) {
-    const instructions = request.properties.get('instructions');
-
-    if (instructions === undefined) {
+  for (const request of responses.requests) {
+    if (request.instructions.kind === 'unresolved') {
+      hasAmbiguousRelationship = true;
       continue;
     }
+
+    if (request.instructions.kind === 'absent') {
+      continue;
+    }
+
+    const instructions = request.instructions.expression;
 
     const call = getOpenAiDirectCall(instructions);
 
@@ -398,16 +441,18 @@ const inspectInstructionLoader = async (
 };
 
 const resolveClosedToolIdentifiers = (
-  request: IOpenAiClosedRequest,
+  relationship: IOpenAiRequestRelationship,
   runtimeAnalysis: IOpenAiSourceAnalysis,
 ): readonly ts.Identifier[] | null | undefined => {
-  const tools = request.properties.get('tools');
-
-  if (tools === undefined) {
+  if (relationship.kind === 'absent') {
     return [];
   }
 
-  const candidate = unwrapOpenAiExpression(tools);
+  if (relationship.kind === 'unresolved') {
+    return undefined;
+  }
+
+  const candidate = unwrapOpenAiExpression(relationship.expression);
 
   if (ts.isArrayLiteralExpression(candidate)) {
     return getOpenAiClosedArrayIdentifiers(candidate);
@@ -493,8 +538,8 @@ const collectAdditionalRegistrations = async (
 ): Promise<ReadonlySet<ts.Identifier>> => {
   const supportedIdentifiers = new Set<ts.Identifier>();
 
-  for (const request of responses.closedRequests) {
-    const identifiers = resolveClosedToolIdentifiers(request, runtimeAnalysis);
+  for (const request of responses.requests) {
+    const identifiers = resolveClosedToolIdentifiers(request.tools, runtimeAnalysis);
 
     if (identifiers === null || identifiers === undefined) {
       continue;
@@ -524,8 +569,8 @@ const classifyToolRelationship = (
   let absentExpression: ts.Expression | null = null;
   let hasAmbiguousRelationship = responses.hasAmbiguousCandidate;
 
-  for (const request of responses.closedRequests) {
-    const identifiers = resolveClosedToolIdentifiers(request, runtimeAnalysis);
+  for (const request of responses.requests) {
+    const identifiers = resolveClosedToolIdentifiers(request.tools, runtimeAnalysis);
 
     if (identifiers === null || identifiers === undefined) {
       hasAmbiguousRelationship = true;
@@ -555,7 +600,7 @@ const classifyToolRelationship = (
       return { kind: 'present' };
     }
 
-    absentExpression ??= request.properties.get('tools') ?? null;
+    absentExpression ??= request.tools.kind === 'present' ? request.tools.expression : null;
   }
 
   return hasAmbiguousRelationship
@@ -649,7 +694,7 @@ const inspectToolRelationships = async (
  * @param session The operation-local inspection session.
  * @param agent The indexed agent declaration.
  * @param runtimeAnalysis The indexed runtime-agent source.
- * @param responses The closed Responses request analysis.
+ * @param responses The relationship-specific Responses request analysis.
  * @param evidence The operation evidence collection.
  * @param diagnostics The operation diagnostic collection.
  */

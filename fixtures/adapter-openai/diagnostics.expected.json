@@ -32,6 +32,10 @@
     "message": "The declared tool input schema is not wired to the detected OpenAI function-tool parameters."
   },
   {
+    "code": "OPENAI_TOOL_INPUT_SCHEMA_SYMBOL_NOT_FOUND",
+    "message": "The declared tool input-schema symbol was not found."
+  },
+  {
     "code": "OPENAI_TOOL_NAME_MISMATCH",
     "message": "The declared tool name does not match the detected OpenAI function-tool name."
   },

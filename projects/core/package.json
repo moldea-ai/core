@@ -1,6 +1,6 @@
 {
   "name": "@moldea.ai/core",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "Source-neutral, deterministic interpretation and indexing of moldea repositories.",
   "homepage": "https://github.com/moldea-ai/packages/tree/main/projects/core#readme",
   "bugs": {

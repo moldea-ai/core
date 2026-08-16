@@ -155,7 +155,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     };
 
     assertRuntimeInvariant(cliManifest?.name === '@moldea.ai/cli', 'The CLI identity is invalid.');
-    assertRuntimeInvariant(cliManifest?.version === '1.1.1', 'The CLI version is invalid.');
+    assertRuntimeInvariant(cliManifest?.version === '2.0.0', 'The CLI version is invalid.');
     assertRuntimeInvariant(
       cliManifest?.engines?.node === '^22.11.0 || ^24.11.0',
       'The CLI runtime range is invalid.',
@@ -180,7 +180,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
 
     assertRuntimeInvariant(versionResult.status === 0, 'The installed CLI version command failed.');
     assertRuntimeInvariant(versionResult.stderr === '', 'The version command wrote stderr.');
-    assertRuntimeInvariant(versionResult.stdout === '1.1.1\n', 'The version output is invalid.');
+    assertRuntimeInvariant(versionResult.stdout === '2.0.0\n', 'The version output is invalid.');
 
     const compatibilityResult = executeCli(
       executablePath,
@@ -206,7 +206,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
       'The compatibility result is invalid.',
     );
     assertRuntimeInvariant(
-      compatibilityEnvelope.cliVersion === '1.1.1' &&
+      compatibilityEnvelope.cliVersion === '2.0.0' &&
         compatibilityEnvelope.schemaVersion === 1 &&
         compatibilityEnvelope.result?.outputSchemaVersion === 1,
       'The compatibility envelope is invalid.',
@@ -214,8 +214,8 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     assertRuntimeInvariant(
       JSON.stringify(compatibilityEnvelope.result?.packages) ===
         JSON.stringify([
-          { name: '@moldea.ai/adapter-openai', version: '1.0.1' },
-          { name: '@moldea.ai/core', version: '1.0.1' },
+          { name: '@moldea.ai/adapter-openai', version: '2.0.0' },
+          { name: '@moldea.ai/core', version: '2.0.0' },
           { name: '@moldea.ai/repository', version: '1.0.1' },
           { name: '@moldea.ai/repository-fs', version: '1.0.1' },
         ]),
@@ -223,9 +223,9 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     );
     assertRuntimeInvariant(
       customAdapter?.active === true &&
-        customAdapter.bundledVersion === '1.0.1' &&
+        customAdapter.bundledVersion === '2.0.0' &&
         customAdapter.matrix?.implementationStatus === 'available' &&
-        customAdapter.matrix?.compatibleCoreRange === '^1.0.0' &&
+        customAdapter.matrix?.compatibleCoreRange === '^2.0.0' &&
         customAdapter.matrix?.runtimeGuidance?.expectation === 'required' &&
         JSON.stringify(customAdapter.matrix?.supportedRepositoryFormatVersions) === '[1]' &&
         customAdapter.matrix?.targets?.[0]?.id === 'custom' &&
@@ -236,9 +236,9 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     );
     assertRuntimeInvariant(
       openAiAdapter?.active === true &&
-        openAiAdapter.bundledVersion === '1.0.1' &&
+        openAiAdapter.bundledVersion === '2.0.0' &&
         openAiAdapter.matrix?.implementationStatus === 'available' &&
-        openAiAdapter.matrix?.compatibleCoreRange === '^1.0.0' &&
+        openAiAdapter.matrix?.compatibleCoreRange === '^2.0.0' &&
         openAiAdapter.matrix?.runtimeGuidance?.expectation === 'recommended' &&
         JSON.stringify(openAiAdapter.matrix?.supportedRepositoryFormatVersions) === '[1]' &&
         openAiAdapter.matrix?.targets?.[0]?.id === 'typescript-responses-api-7' &&

@@ -19,6 +19,7 @@ export const OPENAI_ADAPTER_DIAGNOSTICS = Object.freeze({
   OPENAI_SOURCE_TEXT_INVALID: 'The referenced OpenAI source file is not valid normalized text.',
   OPENAI_TOOL_INPUT_SCHEMA_NOT_WIRED:
     'The declared tool input schema is not wired to the detected OpenAI function-tool parameters.',
+  OPENAI_TOOL_INPUT_SCHEMA_SYMBOL_NOT_FOUND: 'The declared tool input-schema symbol was not found.',
   OPENAI_TOOL_NAME_MISMATCH:
     'The declared tool name does not match the detected OpenAI function-tool name.',
   OPENAI_TOOL_REGISTRATION_NOT_WIRED:

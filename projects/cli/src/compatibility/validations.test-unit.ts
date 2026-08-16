@@ -134,8 +134,8 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
         packageMetadata: {
           ...state.packageMetadata,
           dependencies: {
-            '@moldea.ai/adapter-openai': '1.0.1',
-            '@moldea.ai/core': '1.0.1',
+            '@moldea.ai/adapter-openai': '2.0.0',
+            '@moldea.ai/core': '2.0.0',
             '@moldea.ai/repository': '1.0.1',
             '@moldea.ai/repository-fs': '1.0.1',
             semver: '7.8.5',
@@ -161,11 +161,11 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
           ...state.packageMetadata,
           dependencies: {
             ...state.packageMetadata.dependencies,
-            '@moldea.ai/adapter-anthropic': 'workspace:1.0.0',
+            '@moldea.ai/adapter-anthropic': 'workspace:2.0.0',
           },
           installedPackageVersions: {
             ...state.packageMetadata.installedPackageVersions,
-            '@moldea.ai/adapter-anthropic': '1.0.0',
+            '@moldea.ai/adapter-anthropic': '2.0.0',
           },
         },
         releaseMetadata: {
@@ -185,7 +185,7 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
             },
           },
           packages: [
-            { name: '@moldea.ai/adapter-anthropic', version: '1.0.0' },
+            { name: '@moldea.ai/adapter-anthropic', version: '2.0.0' },
             ...state.releaseMetadata.packages,
           ],
         },
@@ -262,7 +262,7 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
                 ...state.releaseMetadata.matrix.adapters,
                 openai: {
                   ...openAiEntry,
-                  implementation: { ...openAiEntry.implementation, versionRange: '^2.0.0' },
+                  implementation: { ...openAiEntry.implementation, versionRange: '^3.0.0' },
                 },
               },
             },
@@ -287,7 +287,7 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
               ...state.releaseMetadata.matrix,
               adapters: {
                 ...state.releaseMetadata.matrix.adapters,
-                openai: { ...openAiEntry, compatibleCoreRange: '^2.0.0' },
+                openai: { ...openAiEntry, compatibleCoreRange: '^3.0.0' },
               },
             },
           },
@@ -324,7 +324,7 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
               ...state.releaseMetadata.matrix.adapters,
               custom: {
                 ...customEntry,
-                compatibleCoreRange: '^2.0.0',
+                compatibleCoreRange: '^3.0.0',
                 implementationStatus: 'available',
                 supportedRepositoryFormatVersions: [1],
               },
@@ -477,7 +477,7 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
     } as const;
     const availableCustomEntry: IMoldeaCliRuntimeAdapterEntry = {
       ...customEntry,
-      compatibleCoreRange: '^1.0.0',
+      compatibleCoreRange: '^2.0.0',
       implementationStatus: 'available',
       lastVerifiedAt: '2026-08-13',
       runtimeGuidance: { expectation: 'optional' },
