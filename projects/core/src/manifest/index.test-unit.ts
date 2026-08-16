@@ -387,20 +387,23 @@ describe('Core manifest parsing', () => {
     expect(inspectionCount).toBe(0);
   });
 
-  test('rejects a syntactically valid unrecognized runtime ID', async () => {
-    const result = await createCore().parseManifest({
-      content: 'version: 1\nagents:\n  assistant:\n    runtime: { id: external }\n',
-      path: manifestPath,
-    });
+  test.each(['external', 'pydantic-ai'])(
+    'rejects the unrecognized runtime ID %s',
+    async (runtimeId) => {
+      const result = await createCore().parseManifest({
+        content: `version: 1\nagents:\n  assistant:\n    runtime: { id: ${runtimeId} }\n`,
+        path: manifestPath,
+      });
 
-    expect(result.diagnostics).toMatchObject([
-      {
-        code: 'MOLDEA_RUNTIME_ID_INVALID',
-        entity: { agentId: 'assistant' },
-        pointer: '/agents/assistant/runtime/id',
-      },
-    ]);
-  });
+      expect(result.diagnostics).toMatchObject([
+        {
+          code: 'MOLDEA_RUNTIME_ID_INVALID',
+          entity: { agentId: 'assistant' },
+          pointer: '/agents/assistant/runtime/id',
+        },
+      ]);
+    },
+  );
 
   test('uses the manifest byte limit and operation in resource failures', async () => {
     const core = createCore({ limits: { maxFileBytes: 1, maxManifestBytes: 4 } });

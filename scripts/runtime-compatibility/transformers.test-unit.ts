@@ -37,6 +37,12 @@ describe('runtime compatibility normalization', () => {
                 },
                 {
                   ecosystem: 'npm',
+                  name: 'a-companion',
+                  role: 'companion',
+                  versionRange: '^1.0.0',
+                },
+                {
+                  ecosystem: 'npm',
                   name: 'openai',
                   role: 'primary',
                   versionRange: '^4.0.0',
@@ -82,7 +88,7 @@ describe('runtime compatibility normalization', () => {
     ]);
     expect(
       normalized.adapters['openai']?.targets?.[0]?.packages?.map(({ name }) => name),
-    ).toStrictEqual(['z-companion', 'openai']);
+    ).toStrictEqual(['a-companion', 'z-companion', 'openai']);
     expect(
       normalized.adapters['openai']?.targets?.[0]?.patterns?.map(({ id }) => id),
     ).toStrictEqual(['alpha', 'zeta']);

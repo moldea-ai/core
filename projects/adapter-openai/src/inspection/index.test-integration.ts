@@ -220,6 +220,13 @@ describe('openAiAdapter Core integration', () => {
       },
       'find-order',
     ],
+    [
+      'OPENAI_TOOL_INPUT_SCHEMA_SYMBOL_NOT_FOUND',
+      '/src/contracts.ts',
+      'export const AnotherInput = {};\n',
+      null,
+      'find-order',
+    ],
   ] as const)(
     'emits only %s with its exact normalized location and entity',
     async (expectedCode, path, replacement, range, capabilityId) => {
@@ -231,6 +238,35 @@ describe('openAiAdapter Core integration', () => {
       expect(result.valid).toBe(false);
     },
   );
+
+  test('reports an absent same-file input-schema symbol independently from registration shape', async () => {
+    const registration = fixture.entries
+      .find(({ path }) => path === '/src/find-order.ts')
+      ?.text.replace("import { FindOrderInput } from './contracts.js';\n\n", '')
+      .replace('parameters: FindOrderInput', 'parameters: MissingInput');
+
+    if (registration === undefined) {
+      throw new TypeError('The registration fixture is required.');
+    }
+
+    const result = await inspect({
+      '/moldea/moldea.yaml': fixture.manifest.replace(
+        'path: /src/contracts.ts\n          symbol: FindOrderInput',
+        'path: /src/find-order.ts\n          symbol: MissingInput',
+      ),
+      '/src/find-order.ts': registration,
+    });
+
+    expect(result.diagnostics).toStrictEqual([
+      createExpectedDiagnostic(
+        'OPENAI_TOOL_INPUT_SCHEMA_SYMBOL_NOT_FOUND',
+        '/src/find-order.ts',
+        null,
+        'find-order',
+      ),
+    ]);
+    expect(result.valid).toBe(false);
+  });
 
   test('preserves package diagnostics independently from source-analysis failures', async () => {
     const result = await inspect({
@@ -326,6 +362,154 @@ describe('openAiAdapter Core integration', () => {
     expect(result.evidence.map(({ kind }) => kind)).toContain('tool-registration');
   });
 
+  test('tolerates additional FunctionTool fields without interpreting their values', async () => {
+    const registration = fixture.entries
+      .find(({ path }) => path === '/src/find-order.ts')
+      ?.text.replace(
+        '  strict: true,\n',
+        [
+          '  strict: true,',
+          '  allowed_callers: resolveAllowedCallers(),',
+          '  defer_loading: shouldDeferLoading(),',
+          '  output_schema: buildOutputSchema(),',
+          '',
+        ].join('\n'),
+      );
+
+    if (registration === undefined) {
+      throw new TypeError('The registration fixture is required.');
+    }
+
+    const result = await inspect({ '/src/find-order.ts': registration });
+
+    expect(result.valid).toBe(true);
+    expect(result.diagnostics).toStrictEqual([]);
+    expect(result.evidence.map(({ kind }) => kind)).toEqual(
+      expect.arrayContaining(['schema', 'tool-registration']),
+    );
+  });
+
+  test.each([
+    ['an unknown property', '  unsupported_property: true,\n'],
+    ['a shorthand property', '  allowed_callers,\n'],
+    ['a computed property', "  ['allowed_callers']: [],\n"],
+    ['a spread property', '  ...additionalProperties,\n'],
+    ['a method', '  allowed_callers() { return []; },\n'],
+    ['a getter', '  get allowed_callers() { return []; },\n'],
+    ['a setter', '  set allowed_callers(value) {},\n'],
+  ])('silently leaves a FunctionTool with %s unsupported', async (_description, property) => {
+    const registration = fixture.entries
+      .find(({ path }) => path === '/src/find-order.ts')
+      ?.text.replace('  strict: true,\n', `  strict: true,\n${property}`);
+
+    if (registration === undefined) {
+      throw new TypeError('The registration fixture is required.');
+    }
+
+    const result = await inspect({ '/src/find-order.ts': registration });
+
+    expect(result.valid).toBe(true);
+    expect(result.diagnostics).toStrictEqual([]);
+    expect(
+      result.evidence.some(({ kind }) => kind === 'schema' || kind === 'tool-registration'),
+    ).toBe(false);
+  });
+
+  test('silently leaves a present but unsupported input-schema symbol unestablished', async () => {
+    const result = await inspect({
+      '/src/contracts.ts': 'export function FindOrderInput() { return {}; }\n',
+    });
+
+    expect(result.valid).toBe(true);
+    expect(result.diagnostics).toStrictEqual([]);
+    expect(result.evidence.map(({ kind }) => kind)).not.toContain('schema');
+    expect(result.evidence.map(({ kind }) => kind)).toContain('tool-registration');
+  });
+
+  test('leaves dynamically constructed registration parameters unestablished', async () => {
+    const registration = fixture.entries
+      .find(({ path }) => path === '/src/find-order.ts')
+      ?.text.replace(
+        'export const findOrder = async',
+        'const DynamicInput = buildSchema();\n\nexport const findOrder = async',
+      )
+      .replace('parameters: FindOrderInput', 'parameters: DynamicInput');
+
+    if (registration === undefined) {
+      throw new TypeError('The registration fixture is required.');
+    }
+
+    const result = await inspect({ '/src/find-order.ts': registration });
+
+    expect(result.valid).toBe(true);
+    expect(result.diagnostics).toStrictEqual([]);
+    expect(
+      result.evidence.some(({ kind }) => kind === 'schema' || kind === 'tool-registration'),
+    ).toBe(false);
+  });
+
+  test('ignores unrelated dynamic request properties for both relationships', async () => {
+    const agent = fixture.entries
+      .find(({ path }) => path === '/src/agent.ts')
+      ?.text.replace("model: 'gpt-5'", 'model: selectModel()');
+
+    if (agent === undefined) {
+      throw new TypeError('The runtime-agent fixture is required.');
+    }
+
+    const result = await inspect({ '/src/agent.ts': agent });
+
+    expect(result.valid).toBe(true);
+    expect(result.diagnostics).toStrictEqual([]);
+    expect(result.evidence.map(({ kind }) => kind)).toEqual(
+      expect.arrayContaining(['instruction-loader', 'tool-registration']),
+    );
+  });
+
+  test('keeps ambiguity local to the affected request relationship', async () => {
+    const result = await inspect({
+      '/src/agent.ts': [
+        "import OpenAI from 'openai';",
+        "import { findOrderTool as registeredFindOrder } from './find-order.js';",
+        "import { loadInstruction as readInstruction } from './instructions.js';",
+        'const client = new OpenAI();',
+        'export const supportAgent = () =>',
+        '  client.responses.create({',
+        '    instructions: readInstruction(),',
+        '    [dynamicKey]: dynamicValue,',
+        '    tools: [registeredFindOrder],',
+        '  });',
+      ].join('\n'),
+    });
+
+    expect(result.valid).toBe(true);
+    expect(result.diagnostics).toStrictEqual([]);
+    expect(result.evidence.map(({ kind }) => kind)).not.toContain('instruction-loader');
+    expect(result.evidence.map(({ kind }) => kind)).toContain('tool-registration');
+  });
+
+  test('emits a negative diagnostic despite an unrelated dynamic request property', async () => {
+    const result = await inspect({
+      '/src/agent.ts': [
+        "import OpenAI from 'openai';",
+        "import { findOrderTool as registeredFindOrder } from './find-order.js';",
+        "import { loadInstruction as readInstruction } from './instructions.js';",
+        'const client = new OpenAI();',
+        'export const supportAgent = () =>',
+        '  client.responses.create({',
+        "    instructions: 'static',",
+        '    model: selectModel(),',
+        '    tools: [registeredFindOrder],',
+        '  });',
+      ].join('\n'),
+    });
+
+    expect(result.diagnostics.map(({ code }) => code)).toStrictEqual([
+      'OPENAI_INSTRUCTION_LOADER_NOT_WIRED',
+    ]);
+    expect(result.evidence.map(({ kind }) => kind)).toContain('tool-registration');
+  });
+
   test('uses positive existential matching across multiple calls and a reusable tool array', async () => {
     const result = await inspect({
       '/src/agent.ts': [
@@ -336,7 +520,7 @@ describe('openAiAdapter Core integration', () => {
         'const tools = [registeredFindOrder];',
         'export const supportAgent = async () => {',
         "  await client.responses.create({ instructions: 'static', tools: [] });",
-        '  await client.responses.create({ instructions: await readInstruction(), tools });',
+        '  await client.responses.create({ instructions: await readInstruction(), tools: tools });',
         '  return client.responses.create({ ...dynamicRequest });',
         '};',
       ].join('\n'),

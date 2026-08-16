@@ -33,7 +33,6 @@ export const OFFICIAL_RUNTIME_ADAPTER_PACKAGES = {
   langgraph: '@moldea.ai/adapter-langgraph',
   openai: '@moldea.ai/adapter-openai',
   'openai-agents-sdk': '@moldea.ai/adapter-openai-agents-sdk',
-  'pydantic-ai': '@moldea.ai/adapter-pydantic-ai',
   'vercel-ai-sdk': '@moldea.ai/adapter-vercel-ai-sdk',
 } as const;
 
@@ -77,11 +76,7 @@ export const EVIDENCE_KINDS = [
   'variable-provider',
   'runtime-pattern',
 ] as const satisfies readonly IEvidenceKind[];
-export const PACKAGE_ECOSYSTEMS = [
-  'npm',
-  'pypi',
-  'other',
-] as const satisfies readonly IPackageEcosystem[];
+export const PACKAGE_ECOSYSTEMS = ['npm'] as const satisfies readonly IPackageEcosystem[];
 export const PACKAGE_ROLES = ['primary', 'companion'] as const satisfies readonly IPackageRole[];
 export const PATTERN_KINDS = [
   'agent',

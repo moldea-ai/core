@@ -34,7 +34,7 @@ describe('CLI release metadata immutability', () => {
       cliPackage: {
         name: '@moldea.ai/cli',
         supportedNodeRange: '^22.11.0 || ^24.11.0',
-        version: '1.1.1',
+        version: '2.0.0',
       },
       coreRecognizedAdapterIds: [
         'anthropic',
@@ -47,14 +47,13 @@ describe('CLI release metadata immutability', () => {
         'langgraph',
         'openai',
         'openai-agents-sdk',
-        'pydantic-ai',
         'vercel-ai-sdk',
       ],
       minimumGitVersion: '2.30.0',
       outputSchemaVersion: 1,
       packages: [
-        { name: '@moldea.ai/adapter-openai', version: '1.0.1' },
-        { name: '@moldea.ai/core', version: '1.0.1' },
+        { name: '@moldea.ai/adapter-openai', version: '2.0.0' },
+        { name: '@moldea.ai/core', version: '2.0.0' },
         { name: '@moldea.ai/repository', version: '1.0.1' },
         { name: '@moldea.ai/repository-fs', version: '1.0.1' },
       ],
@@ -71,19 +70,18 @@ describe('CLI release metadata immutability', () => {
       'langgraph',
       'openai',
       'openai-agents-sdk',
-      'pydantic-ai',
       'vercel-ai-sdk',
     ]);
     expect(MOLDEA_CLI_RELEASE_METADATA.matrix.adapters['custom']).toMatchObject({
-      compatibleCoreRange: '^1.0.0',
+      compatibleCoreRange: '^2.0.0',
       implementationStatus: 'available',
       runtimeGuidance: { expectation: 'required' },
       supportedRepositoryFormatVersions: [1],
       targets: [{ id: 'custom' }],
     });
     expect(MOLDEA_CLI_RELEASE_METADATA.matrix.adapters['openai']).toMatchObject({
-      compatibleCoreRange: '^1.0.0',
-      implementation: { package: '@moldea.ai/adapter-openai', versionRange: '^1.0.0' },
+      compatibleCoreRange: '^2.0.0',
+      implementation: { package: '@moldea.ai/adapter-openai', versionRange: '^2.0.0' },
       implementationStatus: 'available',
       runtimeGuidance: { expectation: 'recommended' },
       supportedRepositoryFormatVersions: [1],

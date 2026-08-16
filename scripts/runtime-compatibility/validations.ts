@@ -1,4 +1,3 @@
-import { validRange as isValidPep440Range } from '@renovatebot/pep440';
 import { validRange as isValidSemverRange } from 'semver';
 import {
   isAlias,
@@ -231,6 +230,40 @@ const requireSemverRange = (
   return true;
 };
 
+const isValidNpmPackageSegment = (segment: string): boolean =>
+  segment.length > 0 &&
+  segment === segment.toLowerCase() &&
+  segment[0] !== '.' &&
+  segment[0] !== '_' &&
+  !/[~'!()*]/u.test(segment) &&
+  encodeURIComponent(segment) === segment;
+
+const requireNpmPackageName = (
+  value: unknown,
+  path: string,
+  issues: IRuntimeCompatibilityValidationIssue[],
+): value is string => {
+  if (!requireStrictSingleLine(value, path, issues)) {
+    return false;
+  }
+
+  const segments = value.startsWith('@') ? value.slice(1).split('/') : [value];
+  const isScopedName = value.startsWith('@');
+  const isValid =
+    value.length <= 214 &&
+    value !== 'node_modules' &&
+    value !== 'favicon.ico' &&
+    segments.length === (isScopedName ? 2 : 1) &&
+    segments.every(isValidNpmPackageSegment);
+
+  if (!isValid) {
+    addIssue(issues, path, 'Expected a valid npm package name.');
+    return false;
+  }
+
+  return true;
+};
+
 const rejectDuplicateStrings = (
   values: readonly string[],
   path: string,
@@ -389,29 +422,20 @@ const validatePackageRequirements = (
       `${requirementPath}.ecosystem`,
       issues,
     );
-    const hasName = requireStrictSingleLine(name, `${requirementPath}.name`, issues);
+    const hasName = requireNpmPackageName(name, `${requirementPath}.name`, issues);
     const hasRole = requireEnum(role, PACKAGE_ROLES, `${requirementPath}.role`, issues);
     const rangePath = `${requirementPath}.versionRange`;
 
-    if (hasEcosystem && ecosystem === 'npm') {
+    if (hasEcosystem) {
       requireSemverRange(versionRange, rangePath, issues);
-    } else if (hasEcosystem && ecosystem === 'pypi') {
-      if (
-        !requireStrictSingleLine(versionRange, rangePath, issues) ||
-        isValidPep440Range(versionRange) !== true
-      ) {
-        addIssue(issues, rangePath, 'Expected a valid PEP 440 specifier range.');
-      }
-    } else {
-      requireStrictSingleLine(versionRange, rangePath, issues);
     }
 
     if (hasRole && role === 'primary') {
       primaryCount += 1;
     }
 
-    if (hasEcosystem && hasName) {
-      packageIdentities.push(`${ecosystem}\0${name}`);
+    if (hasName) {
+      packageIdentities.push(name);
     }
   });
 

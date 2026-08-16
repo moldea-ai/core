@@ -42,7 +42,6 @@ describe('Core constants and construction', () => {
       'langgraph',
       'openai',
       'openai-agents-sdk',
-      'pydantic-ai',
       'vercel-ai-sdk',
     ]);
     expect(SUPPORTED_REPOSITORY_FORMAT_VERSIONS).toStrictEqual([1]);

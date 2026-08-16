@@ -14,9 +14,8 @@ The matrix publishes only the verified targets and support boundaries shown belo
 | `google-genai`      | `@moldea.ai/adapter-google-genai`      | `package`      | `public`     | —                    | `planned`   | —                |              `0` |
 | `langchain`         | `@moldea.ai/adapter-langchain`         | `package`      | `public`     | —                    | `planned`   | —                |              `0` |
 | `langgraph`         | `@moldea.ai/adapter-langgraph`         | `package`      | `public`     | —                    | `planned`   | —                |              `0` |
-| `openai`            | `@moldea.ai/adapter-openai`            | `package`      | `public`     | `^1.0.0`             | `available` | `recommended`    |              `1` |
+| `openai`            | `@moldea.ai/adapter-openai`            | `package`      | `public`     | `^2.0.0`             | `available` | `recommended`    |              `1` |
 | `openai-agents-sdk` | `@moldea.ai/adapter-openai-agents-sdk` | `package`      | `public`     | —                    | `planned`   | —                |              `0` |
-| `pydantic-ai`       | `@moldea.ai/adapter-pydantic-ai`       | `package`      | `public`     | —                    | `planned`   | —                |              `0` |
 | `vercel-ai-sdk`     | `@moldea.ai/adapter-vercel-ai-sdk`     | `package`      | `public`     | —                    | `planned`   | —                |              `0` |
 
 ## Adapter: `custom`
@@ -24,9 +23,9 @@ The matrix publishes only the verified targets and support boundaries shown belo
 - Owning package: `@moldea.ai/core`
 - Implementation range: —
 - Supported repository-format versions: `1`
-- Compatible Core range: `^1.0.0`
+- Compatible Core range: `^2.0.0`
 - Runtime guidance: `required`
-- Last verified: `2026-08-13`
+- Last verified: `2026-08-15`
 
 Runtime guidance notes: Project-local guidance defines the custom runtime integration.
 
@@ -36,7 +35,7 @@ Runtime guidance notes: Project-local guidance defines the custom runtime integr
 - Support level: `supported`
 - Language: `any`
 - Evidence kinds: —
-- Last verified: `2026-08-13`
+- Last verified: `2026-08-15`
 
 #### Patterns
 
@@ -47,9 +46,9 @@ Runtime guidance notes: Project-local guidance defines the custom runtime integr
 ## Adapter: `openai`
 
 - Owning package: `@moldea.ai/adapter-openai`
-- Implementation range: `^1.0.0`
+- Implementation range: `^2.0.0`
 - Supported repository-format versions: `1`
-- Compatible Core range: `^1.0.0`
+- Compatible Core range: `^2.0.0`
 - Runtime guidance: `recommended`
 - Last verified: `2026-08-15`
 
@@ -78,18 +77,18 @@ Runtime guidance notes: Document project-specific model selection, tool executio
 
 #### Patterns
 
-| Kind                 | Pattern                          | Support     | Description                                                                                                                  | Notes |
-| -------------------- | -------------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------- | ----- |
-| `instruction-loader` | `direct-instruction-loader`      | `full`      | A bound loader is called directly, optionally through await, by a Responses request instructions property.                   | —     |
-| `runtime`            | `chat-completions`               | `ambiguous` | Chat Completions usage is outside this target and is not rejected merely because Responses is preferred.                     | —     |
-| `runtime`            | `direct-responses-runtime-agent` | `full`      | A bound exported TypeScript function uses a module-local OpenAI client for one or more direct closed Responses API requests. | —     |
-| `runtime`            | `dynamic-source-indirection`     | `ambiguous` | Factories, computed properties, spreads, mutable arrays, and indirect request values are not resolved.                       | —     |
-| `schema`             | `direct-tool-input-schema`       | `full`      | A bound tool input schema is referenced directly by function-tool parameters.                                                | —     |
-| `tool`               | `static-function-tools`          | `full`      | Bound static OpenAI function-tool objects are included in a closed inline or immutable module-local Responses tools array.   | —     |
+| Kind                 | Pattern                          | Support     | Description                                                                                                                                                             | Notes |
+| -------------------- | -------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
+| `instruction-loader` | `direct-instruction-loader`      | `full`      | A bound loader is called directly, optionally through await, by a Responses request instructions property.                                                              | —     |
+| `runtime`            | `chat-completions`               | `ambiguous` | Chat Completions usage is outside this target and is not rejected merely because Responses is preferred.                                                                | —     |
+| `runtime`            | `direct-responses-runtime-agent` | `full`      | A bound exported TypeScript function uses a module-local OpenAI client for one or more direct Responses API object-literal requests with relationship-specific closure. | —     |
+| `runtime`            | `dynamic-source-indirection`     | `ambiguous` | Factories, relationship-affecting computed properties and spreads, mutable arrays, and indirect request values remain unresolved.                                       | —     |
+| `schema`             | `direct-tool-input-schema`       | `full`      | A bound tool input schema is referenced directly by function-tool parameters.                                                                                           | —     |
+| `tool`               | `static-function-tools`          | `full`      | Bound static OpenAI function-tool objects with the supported exact fields are included in a closed inline or immutable module-local Responses tools array.              | —     |
 
 #### Known limitations
 
 - Agent input and output schemas, tool implementations and output schemas, skills, variables, and runtime-native routing do not produce evidence.
-- JavaScript, CommonJS, Python, Realtime, Assistants, Agents SDK, streaming semantics, and provider-hosted configuration are not interpreted.
 - Only TypeScript ESM files with supported direct default and relative named imports are interpreted.
 - Package versions are classified from nearest package manifests; lockfiles and installed node_modules are not inspected.
+- Source forms outside the verified TypeScript ESM target, Realtime, Assistants, Agents SDK, streaming semantics, and provider-hosted configuration are not interpreted.

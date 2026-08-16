@@ -13,6 +13,7 @@ export type IOpenAiAdapterDiagnosticCode =
   | 'OPENAI_RUNTIME_AGENT_SYMBOL_NOT_FOUND'
   | 'OPENAI_INSTRUCTION_LOADER_SYMBOL_NOT_FOUND'
   | 'OPENAI_TOOL_REGISTRATION_SYMBOL_NOT_FOUND'
+  | 'OPENAI_TOOL_INPUT_SCHEMA_SYMBOL_NOT_FOUND'
   | 'OPENAI_INSTRUCTION_LOADER_NOT_WIRED'
   | 'OPENAI_TOOL_REGISTRATION_NOT_WIRED'
   | 'OPENAI_TOOL_NAME_MISMATCH'
@@ -89,14 +90,20 @@ export type IOpenAiSourceAnalysisResult =
   | { readonly kind: 'invalid-text' }
   | { readonly analysis: IOpenAiSourceAnalysis; readonly kind: 'valid' };
 
-export interface IOpenAiClosedRequest {
+export type IOpenAiRequestRelationship =
+  | { readonly kind: 'absent' }
+  | { readonly expression: ts.Expression; readonly kind: 'present' }
+  | { readonly kind: 'unresolved' };
+
+export interface IOpenAiResponsesRequest {
+  readonly instructions: IOpenAiRequestRelationship;
   readonly object: ts.ObjectLiteralExpression;
-  readonly properties: ReadonlyMap<string, ts.Expression>;
+  readonly tools: IOpenAiRequestRelationship;
 }
 
 export interface IOpenAiResponsesAnalysis {
-  readonly closedRequests: readonly IOpenAiClosedRequest[];
   readonly hasAmbiguousCandidate: boolean;
+  readonly requests: readonly IOpenAiResponsesRequest[];
 }
 
 // operation-local repository access isolates bytes and parse results per inspection

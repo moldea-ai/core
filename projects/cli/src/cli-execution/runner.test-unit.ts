@@ -10,20 +10,20 @@ import type { IMoldeaCliCommandExecutor } from './types.js';
 const INVOCATION_DIRECTORY = '/workspace';
 const INSTALLED_PACKAGE_METADATA = Object.freeze({
   dependencies: Object.freeze({
-    '@moldea.ai/adapter-openai': 'workspace:1.0.1',
-    '@moldea.ai/core': 'workspace:1.0.1',
+    '@moldea.ai/adapter-openai': 'workspace:2.0.0',
+    '@moldea.ai/core': 'workspace:2.0.0',
     '@moldea.ai/repository': 'workspace:1.0.1',
     '@moldea.ai/repository-fs': 'workspace:1.0.1',
     semver: '7.8.5',
   }),
   installedPackageVersions: Object.freeze({
-    '@moldea.ai/adapter-openai': '1.0.1',
-    '@moldea.ai/core': '1.0.1',
+    '@moldea.ai/adapter-openai': '2.0.0',
+    '@moldea.ai/core': '2.0.0',
     '@moldea.ai/repository': '1.0.1',
     '@moldea.ai/repository-fs': '1.0.1',
   }),
   supportedNodeRange: '^22.11.0 || ^24.11.0',
-  version: '1.1.1',
+  version: '2.0.0',
 });
 
 describe('runMoldeaCli', () => {
@@ -123,7 +123,7 @@ Options:
         packageMetadata: INSTALLED_PACKAGE_METADATA,
         releaseMetadata: MOLDEA_CLI_RELEASE_METADATA,
       }),
-    ).resolves.toStrictEqual({ exitCode: 0, stderr: '', stdout: '1.1.1\n' });
+    ).resolves.toStrictEqual({ exitCode: 0, stderr: '', stdout: '2.0.0\n' });
     expect(executeCommand).not.toHaveBeenCalled();
   });
 
@@ -154,7 +154,7 @@ Options:
       exitCode: 2,
       stderr: '',
       stdout:
-        '{"cliVersion":"1.1.1","command":null,"error":{"code":"INVALID_ARGUMENT","details":{},"message":"The command invocation is invalid.","path":null,"retryable":false,"source":"cli"},"result":null,"schemaVersion":1,"status":"error"}\n',
+        '{"cliVersion":"2.0.0","command":null,"error":{"code":"INVALID_ARGUMENT","details":{},"message":"The command invocation is invalid.","path":null,"retryable":false,"source":"cli"},"result":null,"schemaVersion":1,"status":"error"}\n',
     });
   });
 
@@ -209,7 +209,7 @@ Options:
     expect(compatibilityResult.exitCode).toBe(0);
     expect(compatibilityResult.stderr).toBe('');
     expect(JSON.parse(compatibilityResult.stdout)).toMatchObject({
-      cliVersion: '1.1.1',
+      cliVersion: '2.0.0',
       command: 'compatibility',
       result: { matrixVersion: 1 },
       status: 'valid',
@@ -231,7 +231,7 @@ Options:
       exitCode: 3,
       stderr: '',
       stdout:
-        '{"cliVersion":"1.1.1","command":"inspect","error":{"code":"INTERNAL_ERROR","details":{},"message":"The command could not be completed.","path":null,"retryable":false,"source":"cli"},"result":null,"schemaVersion":1,"status":"error"}\n',
+        '{"cliVersion":"2.0.0","command":"inspect","error":{"code":"INTERNAL_ERROR","details":{},"message":"The command could not be completed.","path":null,"retryable":false,"source":"cli"},"result":null,"schemaVersion":1,"status":"error"}\n',
     });
   });
 });

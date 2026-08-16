@@ -27,7 +27,7 @@ export type IMoldeaCliEvidenceKind =
   | 'skill-registration'
   | 'tool-registration'
   | 'variable-provider';
-export type IMoldeaCliPackageEcosystem = 'npm' | 'other' | 'pypi';
+export type IMoldeaCliPackageEcosystem = 'npm';
 export type IMoldeaCliPackageRole = 'companion' | 'primary';
 export type IMoldeaCliPatternKind =
   | 'agent'

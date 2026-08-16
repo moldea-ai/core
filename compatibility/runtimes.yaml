@@ -26,7 +26,7 @@ adapters:
     implementationStatus: available
     supportedRepositoryFormatVersions:
       - 1
-    compatibleCoreRange: '^1.0.0'
+    compatibleCoreRange: '^2.0.0'
     runtimeGuidance:
       expectation: required
       notes: Project-local guidance defines the custom runtime integration.
@@ -40,8 +40,8 @@ adapters:
             kind: runtime
             support: full
             description: Universal Core validation of explicit repository relationships without runtime-specific inference.
-        lastVerifiedAt: '2026-08-13'
-    lastVerifiedAt: '2026-08-13'
+        lastVerifiedAt: '2026-08-15'
+    lastVerifiedAt: '2026-08-15'
   eve:
     implementation:
       kind: package
@@ -71,11 +71,11 @@ adapters:
       kind: package
       package: '@moldea.ai/adapter-openai'
       distribution: public
-      versionRange: '^1.0.0'
+      versionRange: '^2.0.0'
     implementationStatus: available
     supportedRepositoryFormatVersions:
       - 1
-    compatibleCoreRange: '^1.0.0'
+    compatibleCoreRange: '^2.0.0'
     runtimeGuidance:
       expectation: recommended
       notes: Document project-specific model selection, tool execution, streaming, retry, and error behavior that static inspection cannot establish.
@@ -113,7 +113,7 @@ adapters:
           - id: direct-responses-runtime-agent
             kind: runtime
             support: full
-            description: A bound exported TypeScript function uses a module-local OpenAI client for one or more direct closed Responses API requests.
+            description: A bound exported TypeScript function uses a module-local OpenAI client for one or more direct Responses API object-literal requests with relationship-specific closure.
           - id: direct-instruction-loader
             kind: instruction-loader
             support: full
@@ -121,7 +121,7 @@ adapters:
           - id: static-function-tools
             kind: tool
             support: full
-            description: Bound static OpenAI function-tool objects are included in a closed inline or immutable module-local Responses tools array.
+            description: Bound static OpenAI function-tool objects with the supported exact fields are included in a closed inline or immutable module-local Responses tools array.
           - id: direct-tool-input-schema
             kind: schema
             support: full
@@ -129,7 +129,7 @@ adapters:
           - id: dynamic-source-indirection
             kind: runtime
             support: ambiguous
-            description: Factories, computed properties, spreads, mutable arrays, and indirect request values are not resolved.
+            description: Factories, relationship-affecting computed properties and spreads, mutable arrays, and indirect request values remain unresolved.
           - id: chat-completions
             kind: runtime
             support: ambiguous
@@ -137,7 +137,7 @@ adapters:
         knownLimitations:
           - Only TypeScript ESM files with supported direct default and relative named imports are interpreted.
           - Package versions are classified from nearest package manifests; lockfiles and installed node_modules are not inspected.
-          - JavaScript, CommonJS, Python, Realtime, Assistants, Agents SDK, streaming semantics, and provider-hosted configuration are not interpreted.
+          - Source forms outside the verified TypeScript ESM target, Realtime, Assistants, Agents SDK, streaming semantics, and provider-hosted configuration are not interpreted.
           - Agent input and output schemas, tool implementations and output schemas, skills, variables, and runtime-native routing do not produce evidence.
         lastVerifiedAt: '2026-08-15'
     lastVerifiedAt: '2026-08-15'
@@ -145,12 +145,6 @@ adapters:
     implementation:
       kind: package
       package: '@moldea.ai/adapter-openai-agents-sdk'
-      distribution: public
-    implementationStatus: planned
-  pydantic-ai:
-    implementation:
-      kind: package
-      package: '@moldea.ai/adapter-pydantic-ai'
       distribution: public
     implementationStatus: planned
   vercel-ai-sdk:

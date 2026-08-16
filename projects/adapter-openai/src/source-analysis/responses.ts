@@ -1,8 +1,13 @@
 import ts from 'typescript';
 
-import type { IOpenAiResponsesAnalysis, IOpenAiSourceAnalysis } from '../contracts/index.js';
+import type {
+  IOpenAiRequestRelationship,
+  IOpenAiResponsesAnalysis,
+  IOpenAiResponsesRequest,
+  IOpenAiSourceAnalysis,
+} from '../contracts/index.js';
 import { isOpenAiModuleBindingVisible } from './bindings.js';
-import { getOpenAiClosedObjectProperties, unwrapOpenAiExpression } from './expressions.js';
+import { unwrapOpenAiExpression } from './expressions.js';
 
 interface IOpenAiAccessSegment {
   readonly isDirect: boolean;
@@ -92,7 +97,7 @@ const classifyResponsesCreateAccess = (
 const classifyResponsesCall = (
   call: ts.CallExpression,
   analysis: IOpenAiSourceAnalysis,
-): 'ambiguous' | 'closed' | 'unrelated' => {
+): 'ambiguous' | 'recognized' | 'unrelated' => {
   const access = classifyResponsesCreateAccess(call.expression, analysis);
 
   if (access === null) {
@@ -113,11 +118,114 @@ const classifyResponsesCall = (
     return 'ambiguous';
   }
 
-  return getOpenAiClosedObjectProperties(
-    unwrapOpenAiExpression(request) as ts.ObjectLiteralExpression,
-  ) === null
-    ? 'ambiguous'
-    : 'closed';
+  return 'recognized';
+};
+
+const RELATIONSHIP_NAMES = ['instructions', 'tools'] as const;
+type IOpenAiRelationshipName = (typeof RELATIONSHIP_NAMES)[number];
+
+interface IMutableRelationshipState {
+  directPropertyCount: number;
+  relationship: IOpenAiRequestRelationship;
+}
+
+const isRelationshipName = (name: string): name is IOpenAiRelationshipName =>
+  name === 'instructions' || name === 'tools';
+
+const getDirectPropertyName = (name: ts.PropertyName): string | null => {
+  if (ts.isIdentifier(name) || ts.isStringLiteral(name)) {
+    return name.text;
+  }
+
+  return null;
+};
+
+const getPotentialRelationshipNames = (
+  name: ts.PropertyName,
+): readonly IOpenAiRelationshipName[] => {
+  const directName = getDirectPropertyName(name);
+
+  if (directName !== null) {
+    return isRelationshipName(directName) ? [directName] : [];
+  }
+
+  if (!ts.isComputedPropertyName(name)) {
+    return [];
+  }
+
+  const expression = unwrapOpenAiExpression(name.expression);
+
+  if (ts.isStringLiteral(expression) || ts.isNoSubstitutionTemplateLiteral(expression)) {
+    return isRelationshipName(expression.text) ? [expression.text] : [];
+  }
+
+  if (
+    ts.isNumericLiteral(expression) ||
+    expression.kind === ts.SyntaxKind.TrueKeyword ||
+    expression.kind === ts.SyntaxKind.FalseKeyword ||
+    expression.kind === ts.SyntaxKind.NullKeyword
+  ) {
+    return [];
+  }
+
+  return RELATIONSHIP_NAMES;
+};
+
+const createRelationshipStates = (): Record<
+  IOpenAiRelationshipName,
+  IMutableRelationshipState
+> => ({
+  instructions: { directPropertyCount: 0, relationship: { kind: 'absent' } },
+  tools: { directPropertyCount: 0, relationship: { kind: 'absent' } },
+});
+
+const markRelationshipsUnresolved = (
+  states: Record<IOpenAiRelationshipName, IMutableRelationshipState>,
+  names: readonly IOpenAiRelationshipName[],
+): void => {
+  for (const name of names) {
+    states[name].relationship = { kind: 'unresolved' };
+  }
+};
+
+const analyzeRequestRelationships = (
+  object: ts.ObjectLiteralExpression,
+): IOpenAiResponsesRequest => {
+  const states = createRelationshipStates();
+
+  for (const property of object.properties) {
+    if (ts.isSpreadAssignment(property)) {
+      markRelationshipsUnresolved(states, RELATIONSHIP_NAMES);
+      continue;
+    }
+
+    const potentialNames = getPotentialRelationshipNames(property.name);
+
+    if (!ts.isPropertyAssignment(property)) {
+      markRelationshipsUnresolved(states, potentialNames);
+      continue;
+    }
+
+    const directName = getDirectPropertyName(property.name);
+
+    if (directName === null || !isRelationshipName(directName)) {
+      markRelationshipsUnresolved(states, potentialNames);
+      continue;
+    }
+
+    const state = states[directName];
+    state.directPropertyCount += 1;
+    state.relationship =
+      state.directPropertyCount === 1
+        ? { expression: unwrapOpenAiExpression(property.initializer), kind: 'present' }
+        : { kind: 'unresolved' };
+  }
+
+  return Object.freeze({
+    instructions: Object.freeze(states.instructions.relationship),
+    object,
+    tools: Object.freeze(states.tools.relationship),
+  });
 };
 
 const isNestedLexicalBoundary = (node: ts.Node): boolean =>
@@ -239,11 +347,11 @@ const isOpenAiClientEscape = (identifier: ts.Identifier): boolean => {
 };
 
 /**
- * Finds every closed direct Responses request owned by one runtime-agent body.
+ * Finds every direct Responses request owned by one runtime-agent body.
  * @param analysis The indexed runtime source.
  * @param body The supported runtime-agent lexical body.
  * @param signal The active inspection signal.
- * @returns Closed requests and whether an unsupported candidate suppresses negative inference.
+ * @returns Recognized requests and whether an unsupported candidate suppresses negative inference.
  * @throws
  * - If response analysis is aborted
  */
@@ -252,13 +360,13 @@ export const analyzeOpenAiResponses = (
   body: ts.ConciseBody,
   signal?: AbortSignal,
 ): IOpenAiResponsesAnalysis => {
-  const closedRequests: IOpenAiResponsesAnalysis['closedRequests'][number][] = [];
+  const requests: IOpenAiResponsesRequest[] = [];
   let hasAmbiguousCandidate = false;
 
   if (isNestedLexicalBoundary(body)) {
     return Object.freeze({
-      closedRequests: Object.freeze([]),
       hasAmbiguousCandidate: false,
+      requests: Object.freeze([]),
     });
   }
 
@@ -274,15 +382,9 @@ export const analyzeOpenAiResponses = (
 
       if (classification === 'ambiguous') {
         hasAmbiguousCandidate = true;
-      } else if (classification === 'closed') {
+      } else if (classification === 'recognized') {
         const request = unwrapOpenAiExpression(node.arguments[0] as ts.Expression);
-        const properties = getOpenAiClosedObjectProperties(request as ts.ObjectLiteralExpression);
-
-        if (properties !== null) {
-          closedRequests.push(
-            Object.freeze({ object: request as ts.ObjectLiteralExpression, properties }),
-          );
-        }
+        requests.push(analyzeRequestRelationships(request as ts.ObjectLiteralExpression));
       }
     }
 
@@ -332,8 +434,8 @@ export const analyzeOpenAiResponses = (
   signal?.throwIfAborted();
 
   return Object.freeze({
-    closedRequests: Object.freeze(closedRequests),
     hasAmbiguousCandidate,
+    requests: Object.freeze(requests),
   });
 };
 

@@ -23,9 +23,7 @@ const normalizeTarget = (target: IRuntimeTarget): IRuntimeTarget => {
   if (target.packages !== undefined) {
     normalized.packages = [...target.packages].sort((left, right) => {
       return (
-        compareExactStrings(left.ecosystem, right.ecosystem) ||
-        compareExactStrings(left.role, right.role) ||
-        compareExactStrings(left.name, right.name)
+        compareExactStrings(left.role, right.role) || compareExactStrings(left.name, right.name)
       );
     });
   }
