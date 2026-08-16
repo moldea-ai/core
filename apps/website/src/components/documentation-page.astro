@@ -1,0 +1,277 @@
+---
+import { BookOpen, ExternalLink, Menu, Package } from '@lucide/astro';
+
+import type { IPackageDocument, IPublicPackage } from '../lib/model/types.ts';
+import type { IRenderedMarkdownHeading } from '../lib/content/markdown.ts';
+import { withBase } from '../lib/site/url.ts';
+import Breadcrumbs from './breadcrumbs.astro';
+
+interface Props {
+  allPackages: IPublicPackage[];
+  currentRoute: string;
+  document?: IPackageDocument | null;
+  headings?: IRenderedMarkdownHeading[];
+  packageModel: IPublicPackage;
+  pageDescription: string;
+  pageTitle: string;
+}
+
+const {
+  allPackages,
+  currentRoute,
+  document,
+  headings = [],
+  packageModel,
+  pageDescription,
+  pageTitle,
+} = Astro.props;
+const familyRoute = packageModel.family === 'runtime-adapters' ? '/adapters/' : '/packages/';
+const familyLabel = packageModel.family === 'runtime-adapters' ? 'Runtime Adapters' : 'Packages';
+const packageByName = new Map(allPackages.map((candidate) => [candidate.name, candidate]));
+const isApiReference = currentRoute.endsWith('/api/');
+const breadcrumbs = [
+  { href: '/', label: 'Home' },
+  { href: familyRoute, label: familyLabel },
+  ...(document?.slug || isApiReference
+    ? [{ href: packageModel.route, label: packageModel.name }]
+    : []),
+  { label: isApiReference ? 'API reference' : document?.slug ? pageTitle : packageModel.name },
+];
+---
+
+<div class="docs-shell pt-7">
+  <Breadcrumbs items={breadcrumbs} />
+
+  <details class="surface-card mt-6 lg:hidden">
+    <summary
+      class="flex min-h-12 list-none items-center gap-2 px-4 font-semibold [&::-webkit-details-marker]:hidden"
+    >
+      <Menu
+        class="size-4"
+        aria-hidden="true"
+      />
+      Documentation navigation
+    </summary>
+    <nav
+      class="grid gap-1 border-t border-border p-3"
+      aria-label={`${packageModel.name} documentation`}
+    >
+      {
+        packageModel.documents.map((item) => (
+          <a
+            class:list={[
+              'rounded-lg px-3 py-2.5 text-sm font-medium',
+              item.route === currentRoute ? 'bg-accent text-accent-foreground' : 'hover:bg-muted',
+            ]}
+            href={withBase(item.route)}
+            aria-current={item.route === currentRoute ? 'page' : undefined}
+          >
+            {item.navigationTitle}
+          </a>
+        ))
+      }
+      {
+        packageModel.api.length > 0 && (
+          <a
+            class:list={[
+              'rounded-lg px-3 py-2.5 text-sm font-medium',
+              isApiReference ? 'bg-accent text-accent-foreground' : 'hover:bg-muted',
+            ]}
+            href={withBase(`${packageModel.route}api/`)}
+            aria-current={isApiReference ? 'page' : undefined}
+          >
+            API reference
+          </a>
+        )
+      }
+    </nav>
+  </details>
+
+  <div
+    class="mt-7 grid min-w-0 gap-10 lg:grid-cols-[15rem_minmax(0,1fr)] xl:grid-cols-[15rem_minmax(0,1fr)_13rem]"
+  >
+    <aside class="hidden lg:block">
+      <div class="sticky top-24">
+        <p class="eyebrow mb-4">Documentation</p>
+        <nav
+          class="grid gap-1"
+          aria-label={`${packageModel.name} documentation`}
+        >
+          {
+            packageModel.documents.map((item) => (
+              <a
+                class:list={[
+                  'rounded-lg px-3 py-2.5 text-sm font-medium',
+                  item.route === currentRoute
+                    ? 'bg-accent text-accent-foreground'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                ]}
+                href={withBase(item.route)}
+                aria-current={item.route === currentRoute ? 'page' : undefined}
+              >
+                {item.navigationTitle}
+              </a>
+            ))
+          }
+          {
+            packageModel.api.length > 0 && (
+              <a
+                class:list={[
+                  'rounded-lg px-3 py-2.5 text-sm font-medium',
+                  isApiReference
+                    ? 'bg-accent text-accent-foreground'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                ]}
+                href={withBase(`${packageModel.route}api/`)}
+                aria-current={isApiReference ? 'page' : undefined}
+              >
+                API reference
+              </a>
+            )
+          }
+        </nav>
+      </div>
+    </aside>
+
+    <article class="min-w-0">
+      <header class="mb-10 border-b border-border pb-8">
+        <div class="mb-4 flex flex-wrap items-center gap-2 text-sm">
+          <span
+            class="inline-flex items-center gap-1.5 rounded-full border bg-muted px-3 py-1.5 font-semibold"
+          >
+            <Package
+              class="size-3.5"
+              aria-hidden="true"
+            />
+            v{packageModel.version}
+          </span>
+          <span class="text-muted-foreground">Public package</span>
+        </div>
+        <h1 class="text-4xl leading-tight font-semibold tracking-[-0.04em] break-words sm:text-5xl">
+          {pageTitle}
+        </h1>
+        <p class="mt-5 max-w-3xl text-lg leading-8 text-muted-foreground">{pageDescription}</p>
+        <div class="mt-6 flex flex-wrap gap-3">
+          <a
+            class="inline-flex min-h-10 items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
+            href={packageModel.sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Source <ExternalLink
+              class="size-3.5"
+              aria-hidden="true"
+            />
+          </a>
+          <a
+            class="inline-flex min-h-10 items-center gap-2 rounded-lg border border-input px-4 py-2 text-sm font-bold hover:bg-muted"
+            href={packageModel.npmUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            npm <ExternalLink
+              class="size-3.5"
+              aria-hidden="true"
+            />
+          </a>
+        </div>
+      </header>
+
+      <slot />
+
+      {
+        (packageModel.dependencies.length > 0 || packageModel.dependents.length > 0) && (
+          <section
+            class="surface-card mt-14 grid gap-6 p-6 sm:grid-cols-2"
+            aria-labelledby="relationships-title"
+          >
+            <div>
+              <h2
+                id="relationships-title"
+                class="mb-3 flex items-center gap-2 font-semibold"
+              >
+                <BookOpen
+                  class="size-4"
+                  aria-hidden="true"
+                />{' '}
+                Package relationships
+              </h2>
+              <p class="text-sm leading-6 text-muted-foreground">
+                Dependencies come directly from this package manifest; dependents are derived from
+                the same public inventory.
+              </p>
+            </div>
+            <div class="grid gap-4 text-sm">
+              {packageModel.dependencies.length > 0 && (
+                <div>
+                  <p class="mb-2 font-semibold text-muted-foreground">Depends on</p>
+                  <div class="flex flex-wrap gap-2">
+                    {packageModel.dependencies.map((name) => {
+                      const dependency = packageByName.get(name);
+                      return dependency ? (
+                        <a
+                          class="rounded-md bg-muted px-2.5 py-1.5 font-mono hover:underline"
+                          href={withBase(dependency.route)}
+                        >
+                          {name}
+                        </a>
+                      ) : (
+                        <span class="rounded-md bg-muted px-2.5 py-1.5 font-mono">{name}</span>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              {packageModel.dependents.length > 0 && (
+                <div>
+                  <p class="mb-2 font-semibold text-muted-foreground">Used by</p>
+                  <div class="flex flex-wrap gap-2">
+                    {packageModel.dependents.map((name) => {
+                      const dependent = packageByName.get(name);
+                      return dependent ? (
+                        <a
+                          class="rounded-md bg-muted px-2.5 py-1.5 font-mono hover:underline"
+                          href={withBase(dependent.route)}
+                        >
+                          {name}
+                        </a>
+                      ) : null;
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+        )
+      }
+    </article>
+
+    <aside class="hidden xl:block">
+      <div class="sticky top-24">
+        <p class="eyebrow mb-4">On this page</p>
+        {
+          headings.length > 0 ? (
+            <nav
+              class="grid gap-2 border-s ps-4"
+              aria-label="On this page"
+            >
+              {headings.map((heading) => (
+                <a
+                  class:list={[
+                    'text-sm leading-5 text-muted-foreground hover:text-foreground',
+                    heading.depth === 3 && 'ps-3',
+                  ]}
+                  href={`#${heading.id}`}
+                >
+                  {heading.text}
+                </a>
+              ))}
+            </nav>
+          ) : (
+            <p class="text-sm text-muted-foreground">Generated from public exports.</p>
+          )
+        }
+      </div>
+    </aside>
+  </div>
+</div>

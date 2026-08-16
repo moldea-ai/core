@@ -5,6 +5,11 @@ node_modules/
 # Generated package output and caches
 **/coverage/
 **/dist/
+**/.astro/
+**/.generated/
+**/.pagefind/
+**/playwright-report/
+**/test-results/
 .turbo/
 .vite/
 *.tsbuildinfo

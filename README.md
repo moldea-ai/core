@@ -1,6 +1,6 @@
 # packages
 
-The `packages` project is the open-source package monorepo for `moldea`. It develops the first-class public and private packages, shared internal packages, compatibility data, conformance fixtures, and generation tooling that implement the deterministic repository-reading and repository-format ecosystem.
+The `packages` project is the open-source package monorepo for `moldea`. It develops the first-class public and private packages, shared internal packages, private applications, compatibility data, conformance fixtures, documentation, and generation tooling that implement and present the deterministic repository-reading and repository-format ecosystem.
 
 The repository is intentionally separate from the hosted [`platform`](https://github.com/moldea-ai/platform) monorepo. It contains reusable package products and their shared development infrastructure, not Cloud applications, hosted APIs, runtime infrastructure, or deployment configuration.
 
@@ -26,7 +26,9 @@ The specification documents remain the design authority. Compatibility artifacts
 
 ```text
 .github/
-  workflows/                   # Repository verification and npm publication
+  workflows/                   # Verification, npm publication, and GitHub Pages deployment
+apps/
+  website/                     # Private Astro packages-documentation application
 compatibility/
   runtimes.yaml                # Canonical runtime support inventory and claims
 configs/
@@ -56,7 +58,7 @@ vitest.config.ts
 vitest-integration.config.ts
 ```
 
-Every immediate child of [`projects/`](projects/) is an independently meaningful first-class package. Every immediate child of [`packages/`](packages/) is a private shared implementation package. Repository-wide fixtures and other non-package assets remain outside both workspace layers.
+Every immediate child of [`projects/`](projects/) is an independently meaningful first-class package. Every immediate child of [`packages/`](packages/) is a private shared implementation package. Every immediate child of [`apps/`](apps/) is a private application built from or around the ecosystem. Applications do not appear in the package catalog, carry no independent public package compatibility promise, and may depend on projects or internal packages; projects and internal packages never depend on applications.
 
 ## Dependency architecture
 
@@ -132,6 +134,11 @@ Useful focused commands:
 | `pnpm format`                 | Format repository-maintained files.                                      |
 | `pnpm compatibility:generate` | Regenerate compatibility documentation and bundled CLI release metadata. |
 | `pnpm compatibility:check`    | Verify matrix, package, and generated-artifact synchronization.          |
+| `pnpm docs:generate`          | Generate the ignored deterministic website content model.                |
+| `pnpm docs:check`             | Validate package discovery, docs, exports, routes, and compatibility.    |
+| `pnpm website:dev`            | Generate content and run the local Astro development server.             |
+| `pnpm website:build`          | Build, index, and validate the complete static production website.       |
+| `pnpm website:check`          | Run website docs, tests, types, lint, build, and artifact checks.        |
 
 ## Build and test conventions
 
@@ -145,13 +152,31 @@ Repository FS, the OpenAI adapter, and CLI runtime compatibility are tested at p
 
 Turborepo derives build order from declared workspace dependencies. Package dependencies must remain explicit and acyclic, and no task may rely on workspace enumeration order or undeclared cross-project state.
 
-## Generated artifacts
+## Package documentation and generated artifacts
 
-Generated files are not edited directly. Runtime compatibility changes begin in [`compatibility/runtimes.yaml`](compatibility/runtimes.yaml), while exact bundled versions come from the first-class project manifests. Run `pnpm compatibility:generate` to update [`docs/runtime-compatibility.md`](docs/runtime-compatibility.md) and the CLI's generated immutable release-metadata module. CI runs `pnpm compatibility:check` and fails when the matrix, package composition, documentation, or bundled metadata is invalid or stale.
+Every implemented public project owns its full documentation under `projects/<project>/docs/**`. Package specifications, implementation, tests, public exports, manifests, compatibility source, and package-owned documentation are authoritative; the website only discovers, validates, renders, searches, and presents them. Concise package READMEs remain the GitHub and npm entry points.
+
+Generated files are not edited directly. Runtime compatibility changes begin in [`compatibility/runtimes.yaml`](compatibility/runtimes.yaml), while exact bundled versions come from the first-class project manifests. Run `pnpm compatibility:generate` to update [`docs/runtime-compatibility.md`](docs/runtime-compatibility.md) and the CLI's generated immutable release-metadata module. The website model, API reference, route manifest, search input, and `llms.txt` are generated during documentation checks and builds from their canonical repository sources; `llms.txt` is never maintained independently. CI reruns the applicable generators and fails when canonical inputs are invalid, routes contradict one another, public exports are omitted, links break, or the static artifact is incomplete.
+
+## Coding-agent maintenance rule
+
+The coding agent that changes a package or compatibility claim is responsible for reconsidering every affected representation and synchronizing only those that actually changed. Depending on the change, this includes implementation, public exports, package manifest, package specification, README, package-owned documentation, generated API reference, examples, tests and fixtures, compatibility source, generated compatibility documentation, CLI release metadata, website pages and navigation, compatibility pages, and `llms.txt`.
+
+> **Reconsider and synchronize when affected. Do not edit unrelated surfaces merely because they exist.**
+
+Generated output changes through its canonical source and generator. Compatibility claims come only from `compatibility/runtimes.yaml`. Package documentation is part of package maintenance. A website-only change does not create an npm release. Full documentation under `projects/<project>/docs/**` is repository-owned website source, is absent from the package tarball by default, and does not select that project for npm release unless the package deliberately publishes those files. `README.md`, `package.json`, `LICENSE`, declared package files, public exports, and source remain release-relevant; combining docs with a release-relevant change still selects the project.
+
+## Packages website and deployment
+
+[`apps/website`](apps/website/) is the private Astro static application for the public packages ecosystem. It uses `SITE_URL` and `BASE_PATH`; the safe defaults build for `https://moldea-ai.github.io/packages/`, while `BASE_PATH=/` supports a future custom domain without component changes. See its [application README](apps/website/README.md) for focused commands and source boundaries.
+
+Pull requests run non-deploying repository verification, including documentation discovery, generated API, route, and local search-index checks, website unit and browser tests, type checking, linting, the complete static build, internal-link validation, and final artifact inspection. Relevant pushes to `main` trigger [the Pages workflow](.github/workflows/pages.yml), rebuild from that exact merged commit, and deploy with GitHub's official Pages artifact flow. npm publication remains a separate workflow and is never triggered merely by website or full-documentation changes.
+
+Repository owners must perform one initial GitHub setting if Pages is not already enabled: open **Settings → Pages → Build and deployment**, set **Source** to **GitHub Actions**, and save. This is one-time enablement, not a publication step. After it is enabled, relevant merges and direct pushes publish automatically; a failed build never uploads or deploys a partial replacement.
 
 ## Package releases
 
-A push to `main` automatically selects every changed public project. An existing project must declare a stable version strictly greater than its version at the preceding commit, while a newly introduced project with no base manifest must declare a canonical stable version. The npm workflow verifies the complete release candidate once, then creates package-qualified immutable tags and publishes the exact checksummed tarballs in dependency order through trusted publishing. A project whose version is invalid for its release state fails before publication. Manual dispatch remains available for new-package bootstrap and release recovery. See [`docs/npm-releases.md`](docs/npm-releases.md).
+A push to `main` automatically selects every release-relevant changed public project. Full documentation-only changes under `projects/<project>/docs/**` are excluded; README, manifest, source, license, and declared package-artifact changes remain included. An existing selected project must declare a stable version strictly greater than its version at the preceding commit, while a newly introduced project with no base manifest must declare a canonical stable version. The npm workflow verifies the complete release candidate once, then creates package-qualified immutable tags and publishes the exact checksummed tarballs in dependency order through trusted publishing. A project whose version is invalid for its release state fails before publication. Manual dispatch remains available for new-package bootstrap and release recovery. See [`docs/npm-releases.md`](docs/npm-releases.md).
 
 ## Initial implementation sequence
 

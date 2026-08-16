@@ -1,7 +1,7 @@
 {
   "name": "moldea.ai",
   "version": "0.0.0",
-  "description": "The monorepo for the first-class and shared internal packages that implement the open moldea ecosystem.",
+  "description": "The monorepo for the first-class packages, shared internals, and private applications that implement and present the open moldea ecosystem.",
   "private": true,
   "homepage": "https://github.com/moldea-ai/packages#readme",
   "bugs": {
@@ -23,6 +23,8 @@
     "build": "turbo run build",
     "compatibility:check": "node scripts/runtime-compatibility/check.ts",
     "compatibility:generate": "node scripts/runtime-compatibility/generate.ts",
+    "docs:check": "pnpm --filter @moldea.ai/packages-website docs:check",
+    "docs:generate": "pnpm --filter @moldea.ai/packages-website docs:generate",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "pnpm lint:root && turbo run lint",
@@ -39,7 +41,10 @@
     "test:root:unit": "vitest run --config vitest.config.ts",
     "test:unit": "pnpm test:root:unit && turbo run test:unit",
     "typecheck": "pnpm typecheck:root && turbo run typecheck",
-    "typecheck:root": "tsc -p tsconfig.json --noEmit"
+    "typecheck:root": "tsc -p tsconfig.json --noEmit",
+    "website:build": "pnpm --filter @moldea.ai/packages-website build",
+    "website:check": "pnpm --filter @moldea.ai/packages-website check",
+    "website:dev": "pnpm --filter @moldea.ai/packages-website dev"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
@@ -49,6 +54,8 @@
     "eslint-config-prettier": "10.1.8",
     "globals": "17.9.0",
     "prettier": "3.9.6",
+    "prettier-plugin-astro": "0.14.1",
+    "prettier-plugin-tailwindcss": "0.7.2",
     "semver": "7.8.5",
     "turbo": "2.10.9",
     "typescript": "6.0.3",

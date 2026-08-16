@@ -1,0 +1,185 @@
+---
+import AdapterDetails from '../../../components/adapter-details.astro';
+import Breadcrumbs from '../../../components/breadcrumbs.astro';
+import DocumentationPage from '../../../components/documentation-page.astro';
+import StatusBadge from '../../../components/status-badge.astro';
+import BaseLayout from '../../../layouts/base-layout.astro';
+import { renderMarkdown } from '../../../lib/content/markdown.ts';
+import {
+  createApiEntrypointAnchorId,
+  createApiSymbolAnchorId,
+} from '../../../lib/generation/api-reference.ts';
+import { loadWebsiteModel } from '../../../lib/generation/generation.ts';
+import type { IAdapterPage, IPackageDocument, IPublicPackage } from '../../../lib/model/types.ts';
+
+interface Props {
+  adapter: IAdapterPage;
+  document: IPackageDocument | null;
+  kind: 'api' | 'document' | 'status';
+  packageModel: IPublicPackage | null;
+}
+
+export const getStaticPaths = () => {
+  const model = loadWebsiteModel();
+  const packageBySlug = new Map(
+    model.packages.map((packageModel) => [packageModel.slug, packageModel]),
+  );
+  const paths: Array<{
+    params: { adapter: string; path: string | undefined };
+    props: Props;
+  }> = [];
+
+  for (const adapter of model.adapters) {
+    const packageModel = adapter.implementedPackageSlug
+      ? (packageBySlug.get(adapter.implementedPackageSlug) ?? null)
+      : null;
+
+    if (!packageModel) {
+      paths.push({
+        params: { adapter: adapter.id, path: undefined },
+        props: { adapter, document: null, kind: 'status', packageModel: null },
+      });
+      continue;
+    }
+
+    for (const document of packageModel.documents) {
+      paths.push({
+        params: { adapter: adapter.id, path: document.slug || undefined },
+        props: { adapter, document, kind: 'document', packageModel },
+      });
+    }
+
+    if (packageModel.api.length) {
+      paths.push({
+        params: { adapter: adapter.id, path: 'api' },
+        props: { adapter, document: null, kind: 'api', packageModel },
+      });
+    }
+  }
+
+  return paths;
+};
+
+const { adapter, document, kind, packageModel } = Astro.props;
+const model = loadWebsiteModel();
+const isApi = kind === 'api';
+const rendered = document ? await renderMarkdown(document.markdown) : null;
+const pageTitle = isApi
+  ? `${packageModel?.name} API`
+  : document?.slug
+    ? document.title
+    : `${adapter.id} runtime adapter`;
+const pageDescription = isApi
+  ? `Generated public API reference for ${packageModel?.name}, derived from its package exports.`
+  : (document?.description ??
+    `Official ${adapter.id} runtime adapter status: ${adapter.entry.implementationStatus}, derived from the canonical moldea compatibility matrix.`);
+const breadcrumbs = [
+  { href: '/', label: 'Home' },
+  { href: '/adapters/', label: 'Runtime Adapters' },
+  ...(document?.slug || isApi ? [{ href: adapter.route, label: adapter.id }] : []),
+  { label: document?.slug ? document.title : isApi ? 'API reference' : adapter.id },
+];
+---
+
+<BaseLayout
+  title={pageTitle}
+  description={pageDescription}
+  {breadcrumbs}
+>
+  {
+    packageModel ? (
+      <DocumentationPage
+        allPackages={model.packages}
+        currentRoute={isApi ? `${packageModel.route}api/` : (document?.route ?? packageModel.route)}
+        {document}
+        headings={rendered?.headings}
+        {packageModel}
+        {pageDescription}
+        pageTitle={isApi ? pageTitle : document?.slug ? document.title : packageModel.name}
+      >
+        {document?.slug === '' && (
+          <div class="mb-10">
+            <AdapterDetails
+              {adapter}
+              compact
+            />
+          </div>
+        )}
+        {rendered ? (
+          <div
+            class="prose-moldea"
+            set:html={rendered.html}
+          />
+        ) : (
+          <div class="space-y-10">
+            <div class="rounded-xl border bg-accent p-5 text-sm leading-6 text-accent-foreground">
+              This reference is generated from the package manifest and actual TypeScript exports.
+              The compatibility matrix—not the exported singleton—defines target maturity.
+            </div>
+            {packageModel.api.map((entrypoint) => (
+              <section aria-labelledby={createApiEntrypointAnchorId(entrypoint.name)}>
+                <p class="eyebrow mb-3">Public entry point</p>
+                <h2
+                  id={createApiEntrypointAnchorId(entrypoint.name)}
+                  class="text-3xl font-semibold tracking-tight"
+                >
+                  {entrypoint.name === '.'
+                    ? packageModel.name
+                    : `${packageModel.name}${entrypoint.name.slice(1)}`}
+                </h2>
+                <div class="mt-6 grid gap-4">
+                  {entrypoint.symbols.map((symbol) => (
+                    <article
+                      class="surface-card min-w-0 p-5"
+                      id={createApiSymbolAnchorId(entrypoint.name, symbol.name)}
+                    >
+                      <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+                        <h3 class="font-mono text-lg font-semibold break-all">{symbol.name}</h3>
+                        <span class="rounded-full border bg-muted px-2.5 py-1 text-xs font-bold text-muted-foreground uppercase">
+                          {symbol.kind}
+                        </span>
+                      </div>
+                      {symbol.description && (
+                        <p class="mb-4 leading-6 text-muted-foreground">{symbol.description}</p>
+                      )}
+                      <pre
+                        class="max-w-full overflow-x-auto rounded-lg border bg-code p-4 text-start text-sm leading-6 text-code-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                        aria-label={`${symbol.name} signature`}
+                        tabindex="0"
+                        set:text={symbol.signature}
+                      />
+                    </article>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+        )}
+      </DocumentationPage>
+    ) : (
+      <section class="page-shell pt-8 pb-section-gap">
+        <Breadcrumbs items={breadcrumbs} />
+        <div class="grid gap-10 pt-16 lg:grid-cols-[minmax(0,1fr)_30rem] lg:items-start">
+          <div>
+            <div class="mb-5 flex flex-wrap gap-2">
+              <StatusBadge kind={adapter.entry.implementationStatus} />
+              {adapter.entry.targets?.map((target) => (
+                <StatusBadge kind={target.supportLevel} />
+              ))}
+            </div>
+            <p class="eyebrow mb-5">Official runtime adapter</p>
+            <h1 class="section-title font-semibold">{adapter.id}</h1>
+            <p class="mt-7 max-w-2xl text-xl leading-9 text-muted-foreground">
+              {adapter.entry.implementationStatus === 'planned'
+                ? `The ${adapter.id} adapter is approved in the official catalog but remains planned. No implementation package, installation command, verified target, or support claim is available yet.`
+                : adapter.entry.implementation.kind === 'built-in'
+                  ? 'The custom runtime behavior is available inside Core. Project-local guidance defines the integration; there is no separate adapter package.'
+                  : `Current implementation status: ${adapter.entry.implementationStatus}.`}
+            </p>
+          </div>
+          <AdapterDetails {adapter} />
+        </div>
+      </section>
+    )
+  }
+</BaseLayout>

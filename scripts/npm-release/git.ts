@@ -69,12 +69,12 @@ export const readOptionalGitFile = (
 };
 
 /**
- * Checks whether one project directory changed between exact Git commits.
+ * Checks whether one project has an npm release-relevant change between exact Git commits.
  * @param repositoryRoot The repository containing both commits.
  * @param baseCommit The commit before the push.
  * @param currentCommit The pushed commit.
  * @param projectDirectory The repository-relative public project directory.
- * @returns Whether the project contains a non-archived change.
+ * @returns Whether the project contains a package-artifact or implementation change.
  * @throws
  * - If either commit is invalid or Git cannot compare the project safely
  */
@@ -104,6 +104,8 @@ export const hasGitProjectChanges = (
       `:(exclude)${projectDirectory}/**/_archives/**`,
       `:(exclude)${projectDirectory}/**/_backup/**`,
       `:(exclude)${projectDirectory}/**/_backups/**`,
+      `:(exclude)${projectDirectory}/docs`,
+      `:(exclude)${projectDirectory}/docs/**`,
     ],
     { cwd: repositoryRoot, encoding: 'utf8' },
   );

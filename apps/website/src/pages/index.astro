@@ -1,0 +1,214 @@
+---
+import { ArrowRight, GitFork, Layers, ShieldCheck, Workflow } from '@lucide/astro';
+
+import PackageCard from '../components/package-card.astro';
+import BaseLayout from '../layouts/base-layout.astro';
+import { loadWebsiteModel } from '../lib/generation/generation.ts';
+import { withBase } from '../lib/site/url.ts';
+
+const model = loadWebsiteModel();
+const toolingPackages = model.packages.filter(({ family }) => family === 'skill-core-tooling');
+const adapterPackages = model.packages.filter(({ family }) => family === 'runtime-adapters');
+const cliPackage = model.packages.find(({ slug }) => slug === 'cli');
+---
+
+<BaseLayout
+  title="moldea packages"
+  description="The open-source deterministic package foundation that powers moldea, the behavioral integrity layer for AI agents."
+>
+  <section class="page-shell pt-16 pb-12 sm:pt-24 lg:pt-32">
+    <p class="eyebrow mb-7">Open-source technical foundation</p>
+    <h1 class="display-title max-w-6xl font-semibold">
+      Behavioral integrity,<br />built in the open.
+    </h1>
+    <div class="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-end">
+      <p class="max-w-3xl text-xl leading-9 text-muted-foreground sm:text-2xl">
+        moldea is the behavioral integrity layer for AI agents. This repository provides the
+        deterministic readers, repository interpretation, local CLI, and runtime adapters that make
+        its behavior inspectable.
+      </p>
+      <div class="flex flex-wrap gap-3 lg:justify-end">
+        <a
+          class="inline-flex min-h-12 items-center gap-2 rounded-lg bg-primary px-5 py-3 font-bold text-primary-foreground"
+          href={withBase('/packages/')}
+        >
+          Explore packages <ArrowRight
+            class="size-4"
+            aria-hidden="true"
+          />
+        </a>
+        <a
+          class="inline-flex min-h-12 items-center gap-2 rounded-lg border border-input px-5 py-3 font-bold hover:bg-muted"
+          href="https://github.com/moldea-ai/packages"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <GitFork
+            class="size-4"
+            aria-hidden="true"
+          /> Source
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section
+    class="page-shell py-section-gap"
+    aria-labelledby="architecture-title"
+  >
+    <div class="mb-10 grid gap-5 lg:grid-cols-2 lg:items-end">
+      <div>
+        <p class="eyebrow mb-4">One directional architecture</p>
+        <h2
+          id="architecture-title"
+          class="section-title max-w-3xl font-semibold"
+        >
+          Source bytes become trustworthy structure.
+        </h2>
+      </div>
+      <p class="max-w-xl leading-7 text-muted-foreground lg:justify-self-end">
+        The Agent Skill is the semantic local operating layer. It consumes this package foundation;
+        package contracts never depend back on the skill or on this website.
+      </p>
+    </div>
+
+    <div class="surface-card overflow-hidden p-4 sm:p-6 lg:p-8">
+      <div class="grid gap-3 lg:grid-cols-[1fr_auto_1fr] lg:items-center">
+        <div class="rounded-xl bg-primary p-6 text-primary-foreground">
+          <Workflow
+            class="mb-8 size-6"
+            aria-hidden="true"
+          />
+          <p class="eyebrow mb-2 text-current/65">Semantic operating layer</p>
+          <h3 class="text-2xl font-semibold">Agent Skill</h3>
+          <p class="mt-2 text-sm leading-6 text-current/70">
+            Adoption, workflows, tutorials, and agent interaction live separately.
+          </p>
+        </div>
+        <ArrowRight
+          class="mx-auto hidden size-5 lg:block"
+          aria-hidden="true"
+        />
+        <div class="rounded-xl border bg-accent p-6 text-accent-foreground">
+          <Layers
+            class="mb-8 size-6"
+            aria-hidden="true"
+          />
+          <p class="eyebrow mb-2">Local composition</p>
+          <h3 class="text-2xl font-semibold">{cliPackage?.name}</h3>
+          <p class="mt-2 text-sm leading-6">
+            Git-aware inventory composes Repository FS, Core, and active runtime adapters.
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="my-4 flex justify-center"
+        aria-hidden="true"
+      >
+        <span class="h-7 w-px bg-border"></span>
+      </div>
+
+      <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {
+          toolingPackages
+            .filter(({ slug }) => slug !== 'cli')
+            .map((packageModel) => (
+              <a
+                class="rounded-xl border bg-muted/60 p-5 hover:bg-muted"
+                href={withBase(packageModel.route)}
+              >
+                <p class="mb-5 font-mono text-xs text-muted-foreground">{packageModel.name}</p>
+                <p class="text-sm leading-6">{packageModel.description}</p>
+              </a>
+            ))
+        }
+        {
+          adapterPackages.map((packageModel) => (
+            <a
+              class="rounded-xl border bg-muted/60 p-5 hover:bg-muted"
+              href={withBase(packageModel.route)}
+            >
+              <p class="mb-5 font-mono text-xs text-muted-foreground">{packageModel.name}</p>
+              <p class="text-sm leading-6">Runtime-specific evidence flows into Core.</p>
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="border-y bg-sidebar py-section-gap">
+    <div class="page-shell">
+      <div class="mb-10 flex flex-wrap items-end justify-between gap-6">
+        <div>
+          <p class="eyebrow mb-4">Skill & Core Tooling</p>
+          <h2 class="section-title font-semibold">Deterministic by design.</h2>
+        </div>
+        <a
+          class="inline-flex items-center gap-2 font-bold"
+          href={withBase('/packages/')}
+        >
+          View all packages <ArrowRight
+            class="size-4"
+            aria-hidden="true"
+          />
+        </a>
+      </div>
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {toolingPackages.map((packageModel) => <PackageCard packageModel={packageModel} />)}
+      </div>
+    </div>
+  </section>
+
+  <section class="page-shell py-section-gap">
+    <div class="grid gap-8 lg:grid-cols-[minmax(0,1fr)_25rem] lg:items-center">
+      <div>
+        <ShieldCheck
+          class="mb-7 size-9 text-foreground"
+          aria-hidden="true"
+        />
+        <p class="eyebrow mb-4">Compatibility without guesswork</p>
+        <h2 class="section-title max-w-4xl font-semibold">
+          Every runtime claim comes from one matrix.
+        </h2>
+        <p class="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">
+          Available, planned, experimental, supported, ambiguous, and unsupported remain distinct. A
+          specification does not become a compatibility claim until the canonical matrix says so.
+        </p>
+      </div>
+      <div class="surface-card grid gap-3 p-5">
+        <a
+          class="rounded-lg border p-4 font-semibold hover:bg-muted"
+          href={withBase('/adapters/')}
+        >
+          Runtime adapter inventory <span
+            class="float-end"
+            aria-hidden="true"
+            >→</span
+          >
+        </a>
+        <a
+          class="rounded-lg border p-4 font-semibold hover:bg-muted"
+          href={withBase('/compatibility/')}
+        >
+          Complete compatibility matrix <span
+            class="float-end"
+            aria-hidden="true"
+            >→</span
+          >
+        </a>
+        <a
+          class="rounded-lg border p-4 font-semibold hover:bg-muted"
+          href={withBase('/llms.txt')}
+        >
+          Machine-oriented ecosystem map <span
+            class="float-end"
+            aria-hidden="true"
+            >→</span
+          >
+        </a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

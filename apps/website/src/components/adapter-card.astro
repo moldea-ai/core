@@ -1,0 +1,47 @@
+---
+import { ArrowUpRight, Blocks } from '@lucide/astro';
+
+import type { IAdapterPage } from '../lib/model/types.ts';
+import { withBase } from '../lib/site/url.ts';
+import StatusBadge from './status-badge.astro';
+
+interface Props {
+  adapter: IAdapterPage;
+}
+
+const { adapter } = Astro.props;
+const target = adapter.entry.targets?.[0];
+---
+
+<a
+  class="surface-card interactive-card group flex min-h-60 flex-col p-6"
+  href={withBase(adapter.route)}
+>
+  <div class="mb-7 flex items-start justify-between gap-3">
+    <span class="inline-flex size-11 items-center justify-center rounded-lg border bg-muted">
+      <Blocks
+        class="size-5"
+        aria-hidden="true"
+      />
+    </span>
+    <ArrowUpRight
+      class="size-5 text-muted-foreground transition-colors group-hover:text-foreground"
+      aria-hidden="true"
+    />
+  </div>
+  <div class="mb-3 flex flex-wrap items-center gap-2">
+    <StatusBadge kind={adapter.entry.implementationStatus} />
+    {target && <StatusBadge kind={target.supportLevel} />}
+  </div>
+  <h3 class="mb-2 text-xl font-semibold tracking-tight">{adapter.id}</h3>
+  <p class="text-sm leading-6 text-muted-foreground">
+    {
+      adapter.entry.implementation.kind === 'built-in'
+        ? `Built into ${adapter.entry.implementation.package}`
+        : adapter.entry.implementation.package
+    }
+  </p>
+  <span class="mt-auto pt-6 text-sm font-bold"
+    >View compatibility <span aria-hidden="true">→</span></span
+  >
+</a>

@@ -163,6 +163,52 @@ describe('npm release project changes', () => {
     expect(Object.values(changes).every((change) => !change.isChanged)).toBe(true);
   });
 
+  test.each(NPM_RELEASE_PROJECT_ORDER)(
+    'ignores package-owned full documentation for %s',
+    async (project) => {
+      const baseCommit = runGit(['rev-parse', 'HEAD']);
+      const projectDirectory = NPM_RELEASE_PROJECTS[project].projectDirectory;
+
+      await writeRepositoryFile(`${projectDirectory}/docs/concepts.md`, '# Package concepts\n');
+
+      const currentCommit = commitWorktree(`docs(${project}): add full documentation`);
+      const changes = await loadChanges(baseCommit, currentCommit);
+
+      expect(changes[project].isChanged).toBe(false);
+    },
+  );
+
+  test.each([
+    ['README.md', '# Repository\n'],
+    ['package.json', null],
+    ['src/change.ts', 'export const change = true;\n'],
+  ] as const)('keeps repository %s changes release-relevant', async (filePath, content) => {
+    const baseCommit = runGit(['rev-parse', 'HEAD']);
+
+    if (filePath === 'package.json') {
+      await writeProjectManifest('repository', '1.0.1');
+    } else {
+      await writeRepositoryFile(`projects/repository/${filePath}`, content ?? '');
+    }
+
+    const currentCommit = commitWorktree(`test: change repository ${filePath}`);
+    const changes = await loadChanges(baseCommit, currentCommit);
+
+    expect(changes.repository.isChanged).toBe(true);
+  });
+
+  test('keeps a project release-relevant when documentation and source change together', async () => {
+    const baseCommit = runGit(['rev-parse', 'HEAD']);
+
+    await writeRepositoryFile('projects/repository/docs/concepts.md', '# Concepts\n');
+    await writeRepositoryFile('projects/repository/src/change.ts', 'export const change = true;\n');
+
+    const currentCommit = commitWorktree('feat(repository): change source with documentation');
+    const changes = await loadChanges(baseCommit, currentCommit);
+
+    expect(changes.repository.isChanged).toBe(true);
+  });
+
   test('feeds a real project change into version-bump validation', async () => {
     const baseCommit = runGit(['rev-parse', 'HEAD']);
 

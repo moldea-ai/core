@@ -1,0 +1,25 @@
+---
+interface Props {
+  kind: 'available' | 'deprecated' | 'experimental' | 'in-development' | 'planned' | 'supported';
+  label?: string;
+}
+
+const { kind, label = kind } = Astro.props;
+const styles = {
+  available: 'border-foreground/25 bg-secondary text-foreground',
+  deprecated: 'border-destructive/40 bg-destructive/10 text-foreground',
+  experimental: 'border-warning/60 bg-warning/15 text-warning-foreground dark:text-foreground',
+  'in-development': 'border-info/40 bg-info/10 text-foreground',
+  planned: 'border-border bg-muted text-muted-foreground',
+  supported: 'border-foreground/25 bg-secondary text-foreground',
+};
+---
+
+<span
+  class:list={[
+    'inline-flex min-h-6 items-center rounded-full border px-2.5 py-1 text-[0.68rem] font-bold tracking-[0.08em] uppercase',
+    styles[kind],
+  ]}
+>
+  {label}
+</span>

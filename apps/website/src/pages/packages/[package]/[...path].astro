@@ -1,0 +1,131 @@
+---
+import DocumentationPage from '../../../components/documentation-page.astro';
+import BaseLayout from '../../../layouts/base-layout.astro';
+import { renderMarkdown } from '../../../lib/content/markdown.ts';
+import {
+  createApiEntrypointAnchorId,
+  createApiSymbolAnchorId,
+} from '../../../lib/generation/api-reference.ts';
+import { loadWebsiteModel } from '../../../lib/generation/generation.ts';
+import type { IPackageDocument, IPublicPackage } from '../../../lib/model/types.ts';
+
+interface Props {
+  document: IPackageDocument | null;
+  kind: 'api' | 'document';
+  packageModel: IPublicPackage;
+}
+
+export const getStaticPaths = () => {
+  const model = loadWebsiteModel();
+
+  return model.packages
+    .filter(({ family }) => family === 'skill-core-tooling')
+    .flatMap((packageModel) => {
+      const documentPaths = packageModel.documents.map((document) => ({
+        params: { package: packageModel.slug, path: document.slug || undefined },
+        props: { document, kind: 'document' as const, packageModel },
+      }));
+      const apiPath =
+        packageModel.api.length > 0
+          ? [
+              {
+                params: { package: packageModel.slug, path: 'api' },
+                props: { document: null, kind: 'api' as const, packageModel },
+              },
+            ]
+          : [];
+
+      return [...documentPaths, ...apiPath];
+    });
+};
+
+const { document, kind, packageModel } = Astro.props;
+const model = loadWebsiteModel();
+const isApi = kind === 'api';
+const rendered = document ? await renderMarkdown(document.markdown) : null;
+const pageTitle = isApi
+  ? `${packageModel.name} API`
+  : document?.slug
+    ? document.title
+    : packageModel.name;
+const pageDescription = isApi
+  ? `Generated public API reference for ${packageModel.name}, derived from its package exports.`
+  : (document?.description ?? packageModel.description);
+const currentRoute = isApi ? `${packageModel.route}api/` : (document?.route ?? packageModel.route);
+const breadcrumbs = [
+  { href: '/', label: 'Home' },
+  { href: '/packages/', label: 'Packages' },
+  ...(document?.slug || isApi ? [{ href: packageModel.route, label: packageModel.name }] : []),
+  { label: isApi ? 'API reference' : document?.slug ? document.title : packageModel.name },
+];
+---
+
+<BaseLayout
+  title={pageTitle}
+  description={pageDescription}
+  {breadcrumbs}
+>
+  <DocumentationPage
+    allPackages={model.packages}
+    {currentRoute}
+    {document}
+    headings={rendered?.headings}
+    {packageModel}
+    {pageDescription}
+    {pageTitle}
+  >
+    {
+      rendered ? (
+        <div
+          class="prose-moldea"
+          set:html={rendered.html}
+        />
+      ) : (
+        <div class="space-y-10">
+          <div class="rounded-xl border bg-accent p-5 text-sm leading-6 text-accent-foreground">
+            This reference is generated from manifest-declared public entry points and actual
+            TypeScript exports. Private modules, tests, fixtures, and unexported declarations are
+            excluded.
+          </div>
+          {packageModel.api.map((entrypoint) => (
+            <section aria-labelledby={createApiEntrypointAnchorId(entrypoint.name)}>
+              <p class="eyebrow mb-3">Public entry point</p>
+              <h2
+                id={createApiEntrypointAnchorId(entrypoint.name)}
+                class="text-3xl font-semibold tracking-tight"
+              >
+                {entrypoint.name === '.'
+                  ? packageModel.name
+                  : `${packageModel.name}${entrypoint.name.slice(1)}`}
+              </h2>
+              <div class="mt-6 grid gap-4">
+                {entrypoint.symbols.map((symbol) => (
+                  <article
+                    class="surface-card min-w-0 p-5"
+                    id={createApiSymbolAnchorId(entrypoint.name, symbol.name)}
+                  >
+                    <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+                      <h3 class="font-mono text-lg font-semibold break-all">{symbol.name}</h3>
+                      <span class="rounded-full border bg-muted px-2.5 py-1 text-xs font-bold text-muted-foreground uppercase">
+                        {symbol.kind}
+                      </span>
+                    </div>
+                    {symbol.description && (
+                      <p class="mb-4 leading-6 text-muted-foreground">{symbol.description}</p>
+                    )}
+                    <pre
+                      class="max-w-full overflow-x-auto rounded-lg border bg-code p-4 text-start text-sm leading-6 text-code-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                      aria-label={`${symbol.name} signature`}
+                      tabindex="0"
+                      set:text={symbol.signature}
+                    />
+                  </article>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      )
+    }
+  </DocumentationPage>
+</BaseLayout>

@@ -1,0 +1,102 @@
+---
+import AdapterDetails from '../../components/adapter-details.astro';
+import Breadcrumbs from '../../components/breadcrumbs.astro';
+import StatusBadge from '../../components/status-badge.astro';
+import BaseLayout from '../../layouts/base-layout.astro';
+import { loadWebsiteModel } from '../../lib/generation/generation.ts';
+import { withBase } from '../../lib/site/url.ts';
+
+const model = loadWebsiteModel();
+const breadcrumbs = [{ href: '/', label: 'Home' }, { label: 'Runtime Compatibility' }];
+---
+
+<BaseLayout
+  title="Runtime compatibility"
+  description="The complete canonical-matrix-driven view of moldea runtime adapter implementation status, target maturity, binding support, patterns, and limitations."
+  {breadcrumbs}
+>
+  <section class="page-shell pt-8 pb-section-gap">
+    <Breadcrumbs items={breadcrumbs} />
+    <div class="max-w-4xl pt-16 pb-12">
+      <p class="eyebrow mb-5">Canonical compatibility</p>
+      <h1 class="section-title font-semibold">Claims backed by verified repository data.</h1>
+      <p class="mt-7 max-w-3xl text-xl leading-9 text-muted-foreground">
+        This page is generated from <code
+          class="rounded bg-code px-1.5 py-1 font-mono text-sm text-code-foreground"
+          >compatibility/runtimes.yaml</code
+        > through the repository's strict parser. Omitted fields stay omitted; planned adapters do not
+        inherit target details.
+      </p>
+    </div>
+
+    <div class="table-scroll mb-section-gap">
+      <table class="w-full min-w-[54rem] text-sm">
+        <caption class="sr-only">Official moldea runtime adapter compatibility summary</caption>
+        <thead class="bg-muted">
+          <tr>
+            <th class="px-4 py-3 text-start">Adapter</th>
+            <th class="px-4 py-3 text-start">Implementation status</th>
+            <th class="px-4 py-3 text-start">Kind</th>
+            <th class="px-4 py-3 text-start">Target maturity</th>
+            <th class="px-4 py-3 text-start">Verified</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            model.adapters.map((adapter) => (
+              <tr class="border-t">
+                <th class="px-4 py-3 text-start font-mono">
+                  <a
+                    class="hover:underline"
+                    href={withBase(adapter.route)}
+                  >
+                    {adapter.id}
+                  </a>
+                </th>
+                <td class="px-4 py-3">
+                  <StatusBadge kind={adapter.entry.implementationStatus} />
+                </td>
+                <td class="px-4 py-3">{adapter.entry.implementation.kind}</td>
+                <td class="px-4 py-3">
+                  {adapter.entry.targets?.length
+                    ? adapter.entry.targets.map((target) => (
+                        <span class="me-2 inline-flex">
+                          <StatusBadge kind={target.supportLevel} />
+                        </span>
+                      ))
+                    : '—'}
+                </td>
+                <td class="px-4 py-3">{adapter.entry.lastVerifiedAt ?? '—'}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="space-y-5">
+      {
+        model.adapters.map((adapter) => (
+          <details
+            class="surface-card group"
+            open={adapter.entry.implementationStatus === 'available'}
+          >
+            <summary class="flex min-h-16 list-none items-center justify-between gap-4 px-5 font-semibold [&::-webkit-details-marker]:hidden">
+              <span class="font-mono">{adapter.id}</span>
+              <span class="text-sm text-muted-foreground group-open:hidden">Show details</span>
+              <span class="hidden text-sm text-muted-foreground group-open:inline">
+                Hide details
+              </span>
+            </summary>
+            <div class="border-t border-border p-5 sm:p-7">
+              <AdapterDetails
+                {adapter}
+                compact
+              />
+            </div>
+          </details>
+        ))
+      }
+    </div>
+  </section>
+</BaseLayout>

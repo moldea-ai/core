@@ -1,0 +1,112 @@
+name: Deploy Packages Website
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/pages.yml
+      - apps/website/**
+      - compatibility/**
+      - configs/**
+      - docs/**
+      - projects/**
+      - scripts/runtime-compatibility/**
+      - scripts/website/**
+      - .prettierignore
+      - .prettierrc
+      - eslint.config.js
+      - package.json
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
+      - tsconfig.json
+      - turbo.json
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+  pages: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  BASE_PATH: ${{ vars.PACKAGES_WEBSITE_BASE_PATH || '/packages/' }}
+  NODE_VERSION: 24.15.0
+  PNPM_VERSION: 11.9.0
+  SITE_URL: ${{ vars.PACKAGES_WEBSITE_SITE_URL || 'https://moldea-ai.github.io' }}
+
+jobs:
+  build:
+    name: Build Pages Artifact
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact main commit
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install website browser
+        run: pnpm --filter @moldea.ai/packages-website exec playwright install --with-deps chromium
+
+      - name: Check runtime compatibility
+        run: pnpm compatibility:check
+
+      - name: Check documentation sources
+        run: pnpm docs:check
+
+      - name: Test website generators
+        run: pnpm --filter @moldea.ai/packages-website test:unit
+
+      - name: Typecheck website
+        run: pnpm --filter @moldea.ai/packages-website typecheck
+
+      - name: Lint website
+        run: pnpm --filter @moldea.ai/packages-website lint
+
+      - name: Build and validate static website
+        run: pnpm website:build
+
+      - name: Test static artifact integration
+        run: pnpm --filter @moldea.ai/packages-website test:integration
+
+      - name: Test browser behavior
+        run: pnpm --filter @moldea.ai/packages-website test:e2e
+
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: apps/website/dist
+
+  deploy:
+    name: Deploy GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
