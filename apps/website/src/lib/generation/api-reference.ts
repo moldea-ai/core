@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 
 import ts from 'typescript';
 
@@ -12,6 +12,17 @@ interface IPackageExports {
 }
 
 const EXCLUDED_DIRECTORY_NAMES = new Set(['_archive', '_archives', '_backup', '_backups']);
+
+/** Checks whether a resolved path remains inside an owning directory on the current platform. */
+const isPathWithinDirectory = (directory: string, candidatePath: string): boolean => {
+  const relativeCandidatePath = relative(directory, candidatePath);
+
+  return (
+    relativeCandidatePath !== '..' &&
+    !relativeCandidatePath.startsWith(`..${sep}`) &&
+    !isAbsolute(relativeCandidatePath)
+  );
+};
 
 const isRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -267,7 +278,7 @@ const getEntrypointSymbols = (
       const declaration = symbol.declarations?.find((candidate) => {
         const declarationPath = resolve(candidate.getSourceFile().fileName);
 
-        return declarationPath.startsWith(`${projectSourceDirectory}/`);
+        return isPathWithinDirectory(projectSourceDirectory, declarationPath);
       });
 
       if (!declaration) {
