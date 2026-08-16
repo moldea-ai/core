@@ -69,7 +69,7 @@ const parseDocument = (
   packageRoute: string,
   repositoryRoot: string,
 ): IPackageDocument => {
-  const source = readFileSync(path, 'utf8');
+  const source = readFileSync(path, 'utf8').replaceAll('\r\n', '\n');
   const match = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/u.exec(source);
 
   if (!match) {

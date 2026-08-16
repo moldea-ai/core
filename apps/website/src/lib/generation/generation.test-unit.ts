@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
@@ -111,6 +111,21 @@ describe('discoverPublicPackages', () => {
     expect(discoverPublicPackages(repositoryRoot).map(({ slug }) => slug)).toStrictEqual([
       'public-package',
     ]);
+  });
+
+  test('normalizes Windows line endings in package documentation', () => {
+    const repositoryRoot = createTemporaryRepository();
+    writeProject(repositoryRoot, 'windows-docs', { documents: { 'index.md': 'Windows docs' } });
+    const documentPath = join(repositoryRoot, 'projects', 'windows-docs', 'docs', 'index.md');
+    const documentSource = readFileSync(documentPath, 'utf8');
+    writeFileSync(documentPath, documentSource.replaceAll('\n', '\r\n'));
+
+    const packageModel = discoverPublicPackages(repositoryRoot)[0];
+
+    expect(packageModel?.documents[0]).toMatchObject({
+      markdown: '# Windows docs',
+      title: 'Windows docs',
+    });
   });
 
   test('fails when an implemented public project has no package-owned documentation', () => {
