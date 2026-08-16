@@ -17,38 +17,45 @@ const cliPackage = model.packages.find(({ slug }) => slug === 'cli');
   title="moldea packages"
   description="The open-source deterministic package foundation that powers moldea, the behavioral integrity layer for AI agents."
 >
-  <section class="page-shell pt-16 pb-12 sm:pt-24 lg:pt-32">
-    <p class="eyebrow mb-7">Open-source technical foundation</p>
-    <h1 class="display-title max-w-6xl font-semibold">
-      Behavioral integrity,<br />built in the open.
-    </h1>
-    <div class="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-end">
-      <p class="max-w-3xl text-xl leading-9 text-muted-foreground sm:text-2xl">
-        <InlineBrandText
-          text="moldea is the behavioral integrity layer for AI agents. This repository provides the deterministic readers, repository interpretation, local CLI, and runtime adapters that make its behavior inspectable."
-        />
-      </p>
-      <div class="flex flex-wrap gap-3 lg:justify-end">
-        <a
-          class="inline-flex min-h-12 items-center gap-2 rounded-lg bg-primary px-5 py-3 font-bold text-primary-foreground"
-          href={withBase('/packages/')}
-        >
-          Explore packages <ArrowRight
-            class="size-4"
-            aria-hidden="true"
+  <section class="relative overflow-hidden border-b border-border">
+    <div
+      class="pointer-events-none absolute inset-0 [background-image:radial-gradient(circle_at_70%_18%,color-mix(in_oklch,var(--accent)_60%,transparent),transparent_30%),linear-gradient(to_right,color-mix(in_oklch,var(--border)_35%,transparent)_1px,transparent_1px),linear-gradient(to_bottom,color-mix(in_oklch,var(--border)_35%,transparent)_1px,transparent_1px)] [mask-image:linear-gradient(to_bottom,black,transparent_92%)] [background-size:auto,3rem_3rem,3rem_3rem] opacity-60"
+      aria-hidden="true"
+    >
+    </div>
+    <div class="page-shell relative pt-16 pb-20 sm:pt-24 sm:pb-24 lg:pt-32 lg:pb-32">
+      <p class="eyebrow mb-8">Open-source technical foundation</p>
+      <h1 class="display-title max-w-6xl font-semibold">
+        Behavioral integrity,<br />built in the open.
+      </h1>
+      <div class="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-end">
+        <p class="max-w-3xl text-xl leading-9 text-muted-foreground sm:text-2xl">
+          <InlineBrandText
+            text="moldea is the behavioral integrity layer for AI agents. This repository provides the deterministic readers, repository interpretation, local CLI, and runtime adapters that make its behavior inspectable."
           />
-        </a>
-        <a
-          class="inline-flex min-h-12 items-center gap-2 rounded-lg border border-input px-5 py-3 font-bold hover:bg-muted"
-          href="https://github.com/moldea-ai/packages"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <GitFork
-            class="size-4"
-            aria-hidden="true"
-          /> Source
-        </a>
+        </p>
+        <div class="flex flex-wrap gap-3 lg:justify-end">
+          <a
+            class="inline-flex min-h-12 items-center gap-2 rounded-lg bg-primary px-5 py-3 font-bold text-primary-foreground"
+            href={withBase('/packages/')}
+          >
+            Explore packages <ArrowRight
+              class="size-4"
+              aria-hidden="true"
+            />
+          </a>
+          <a
+            class="inline-flex min-h-12 items-center gap-2 rounded-lg border border-input px-5 py-3 font-bold hover:bg-muted"
+            href="https://github.com/moldea-ai/packages"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <GitFork
+              class="size-4"
+              aria-hidden="true"
+            /> Source
+          </a>
+        </div>
       </div>
     </div>
   </section>
