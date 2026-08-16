@@ -38,7 +38,7 @@ Mirror path validity, presence, type, and digest coherence use `MOLDEA_MIRROR_*`
 
 Core normalizes diagnostics into deterministic order using their source location and identity fields rather than discovery or adapter completion timing. `maxDiagnostics` bounds raw diagnostic production; exceeding it raises `RESOURCE_LIMIT_EXCEEDED` instead of silently truncating the invalid state.
 
-Adapter diagnostics use the same normalized shape but retain the adapter ID as `source` and adapter-owned string codes. Their exact catalogs belong to the adapter packages, such as the [OpenAI adapter diagnostics](/adapters/openai/evidence-and-diagnostics/).
+Adapter diagnostics use the same normalized shape but retain the adapter ID as `source` and adapter-owned string codes. Their exact catalogs belong to the adapter packages, such as the [Anthropic adapter diagnostics](/adapters/anthropic/evidence-and-diagnostics/) and [OpenAI adapter diagnostics](/adapters/openai/evidence-and-diagnostics/).
 
 ## Operational exceptions
 

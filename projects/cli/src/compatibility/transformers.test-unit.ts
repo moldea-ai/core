@@ -2,7 +2,7 @@
 import { describe, expect, test } from 'vitest';
 
 import {
-  createTestActiveOpenAiState,
+  createTestActivePackageAdaptersState,
   createTestCompatibilityState,
 } from './compatibility.test-fixtures.js';
 import { createMoldeaCliCompatibilityResult } from './transformers.js';
@@ -41,7 +41,8 @@ describe('createMoldeaCliCompatibilityResult', () => {
       minimumGitVersion: '2.30.0',
       outputSchemaVersion: 1,
       packages: [
-        { name: '@moldea.ai/adapter-openai', version: '2.0.0' },
+        { name: '@moldea.ai/adapter-anthropic', version: '1.0.0' },
+        { name: '@moldea.ai/adapter-openai', version: '2.0.1' },
         { name: '@moldea.ai/core', version: '2.0.0' },
         { name: '@moldea.ai/repository', version: '1.0.1' },
         { name: '@moldea.ai/repository-fs', version: '1.0.1' },
@@ -68,7 +69,7 @@ describe('createMoldeaCliCompatibilityResult', () => {
     });
     expect(openAiAdapter).toMatchObject({
       active: true,
-      bundledVersion: '2.0.0',
+      bundledVersion: '2.0.1',
       id: 'openai',
       matrix: {
         implementationStatus: 'available',
@@ -79,12 +80,22 @@ describe('createMoldeaCliCompatibilityResult', () => {
     expectDeeplyFrozen(result);
   });
 
-  test('reports an active package-backed adapter with its bundled version and matrix claim', () => {
-    const result = createMoldeaCliCompatibilityResult(createTestActiveOpenAiState());
+  test('reports active package-backed adapters with their bundled versions and matrix claims', () => {
+    const result = createMoldeaCliCompatibilityResult(createTestActivePackageAdaptersState());
+
+    expect(result.adapters.find(({ id }) => id === 'anthropic')).toMatchObject({
+      active: true,
+      bundledVersion: '1.0.0',
+      matrix: {
+        implementation: { versionRange: '^1.0.0' },
+        implementationStatus: 'available',
+        targets: [{ id: 'typescript-messages-api-0-117', lastVerifiedAt: '2026-08-16' }],
+      },
+    });
 
     expect(result.adapters.find(({ id }) => id === 'openai')).toMatchObject({
       active: true,
-      bundledVersion: '2.0.0',
+      bundledVersion: '2.0.1',
       matrix: {
         implementation: { versionRange: '^2.0.0' },
         implementationStatus: 'available',

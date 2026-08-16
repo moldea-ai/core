@@ -12,6 +12,7 @@ interface IPackageExports {
 }
 
 const EXCLUDED_DIRECTORY_NAMES = new Set(['_archive', '_archives', '_backup', '_backups']);
+const WORKSPACE_PACKAGE_DIRECTORIES = ['packages', 'projects'] as const;
 
 /** Checks whether a resolved path remains inside an owning directory on the current platform. */
 const isPathWithinDirectory = (directory: string, candidatePath: string): boolean => {
@@ -53,29 +54,37 @@ const getSourceEntrypoint = (projectDirectory: string, declarationPath: string):
 
 const getWorkspaceSourcePaths = (projectDirectory: string): Record<string, string[]> => {
   const repositoryRoot = resolve(projectDirectory, '../..');
-  const projectsDirectory = join(repositoryRoot, 'projects');
   const sourcePaths: Record<string, string[]> = {};
-  const projectEntries = readdirSync(projectsDirectory, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory() && !EXCLUDED_DIRECTORY_NAMES.has(entry.name))
-    .sort((left, right) => left.name.localeCompare(right.name));
 
-  for (const entry of projectEntries) {
-    const workspaceProjectDirectory = join(projectsDirectory, entry.name);
-    const manifestPath = join(workspaceProjectDirectory, 'package.json');
+  for (const directoryName of WORKSPACE_PACKAGE_DIRECTORIES) {
+    const workspaceDirectory = join(repositoryRoot, directoryName);
 
-    if (!existsSync(manifestPath)) continue;
+    if (!existsSync(workspaceDirectory)) continue;
 
-    const manifest: unknown = JSON.parse(readFileSync(manifestPath, 'utf8'));
+    const packageEntries = readdirSync(workspaceDirectory, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory() && !EXCLUDED_DIRECTORY_NAMES.has(entry.name))
+      .sort((left, right) => left.name.localeCompare(right.name));
 
-    if (!isRecord(manifest) || typeof manifest.name !== 'string' || !isRecord(manifest.exports)) {
-      continue;
-    }
+    for (const entry of packageEntries) {
+      const workspacePackageDirectory = join(workspaceDirectory, entry.name);
+      const manifestPath = join(workspacePackageDirectory, 'package.json');
 
-    for (const [subpath, conditions] of Object.entries(manifest.exports)) {
-      if (!isRecord(conditions) || typeof conditions.types !== 'string') continue;
+      if (!existsSync(manifestPath)) continue;
 
-      const moduleName = subpath === '.' ? manifest.name : `${manifest.name}${subpath.slice(1)}`;
-      sourcePaths[moduleName] = [getSourceEntrypoint(workspaceProjectDirectory, conditions.types)];
+      const manifest: unknown = JSON.parse(readFileSync(manifestPath, 'utf8'));
+
+      if (!isRecord(manifest) || typeof manifest.name !== 'string' || !isRecord(manifest.exports)) {
+        continue;
+      }
+
+      for (const [subpath, conditions] of Object.entries(manifest.exports)) {
+        if (!isRecord(conditions) || typeof conditions.types !== 'string') continue;
+
+        const moduleName = subpath === '.' ? manifest.name : `${manifest.name}${subpath.slice(1)}`;
+        sourcePaths[moduleName] = [
+          getSourceEntrypoint(workspacePackageDirectory, conditions.types),
+        ];
+      }
     }
   }
 

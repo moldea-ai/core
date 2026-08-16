@@ -1,0 +1,115 @@
+[
+  {
+    "agentId": "support",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "requestProperty": "system"
+    },
+    "kind": "instruction-loader",
+    "references": [
+      {
+        "path": "/src/agent.ts"
+      },
+      {
+        "path": "/src/instructions.ts",
+        "symbol": "loadInstruction"
+      }
+    ],
+    "runtimeName": "loadInstruction",
+    "source": "anthropic"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "language": "typescript"
+    },
+    "kind": "language",
+    "references": [
+      {
+        "path": "/src/agent.ts",
+        "symbol": "supportAgent"
+      }
+    ],
+    "runtimeName": null,
+    "source": "anthropic"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "compatibility": "supported",
+      "declaredRange": "^0.117.1",
+      "dependencyKind": "dependencies"
+    },
+    "kind": "runtime-package",
+    "references": [
+      {
+        "path": "/package.json"
+      }
+    ],
+    "runtimeName": "@anthropic-ai/sdk",
+    "source": "anthropic"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "api": "messages"
+    },
+    "kind": "runtime-pattern",
+    "references": [
+      {
+        "path": "/src/agent.ts",
+        "symbol": "supportAgent"
+      }
+    ],
+    "runtimeName": "messages.create",
+    "source": "anthropic"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": "find-order",
+    "capabilityKind": "tool",
+    "details": {
+      "requestProperty": "input_schema",
+      "schemaRole": "input"
+    },
+    "kind": "schema",
+    "references": [
+      {
+        "path": "/src/contracts.ts",
+        "symbol": "FindOrderInput"
+      },
+      {
+        "path": "/src/find-order.ts"
+      }
+    ],
+    "runtimeName": "FindOrderInput",
+    "source": "anthropic"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": "find-order",
+    "capabilityKind": "tool",
+    "details": {
+      "toolType": "client"
+    },
+    "kind": "tool-registration",
+    "references": [
+      {
+        "path": "/src/agent.ts"
+      },
+      {
+        "path": "/src/find-order.ts",
+        "symbol": "findOrderTool"
+      }
+    ],
+    "runtimeName": "find_order",
+    "source": "anthropic"
+  }
+]

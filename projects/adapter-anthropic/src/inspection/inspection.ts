@@ -1,0 +1,149 @@
+import type { IIndexedAgent, IRuntimeAdapterEvidence } from '@moldea.ai/core';
+import type {
+  IAdapterDiagnostic,
+  IRuntimeAdapterContext,
+  IRuntimeAdapterResult,
+} from '@moldea.ai/core/adapter';
+
+import { ANTHROPIC_ADAPTER_ID, ANTHROPIC_MESSAGES_RUNTIME_NAME } from '../constants/index.js';
+import type { IAnthropicInspectionSession } from '../contracts/index.js';
+import {
+  analyzeAnthropicMessages,
+  getAnthropicRuntimeExport,
+  isSupportedAnthropicSourcePath,
+} from '../source-analysis/index.js';
+import {
+  addAnthropicDiagnostic,
+  analyzeAnthropicBoundReference,
+  compareAnthropicStrings,
+  createAnthropicEvidence,
+} from './common.js';
+import { inspectAnthropicPackage } from './package-inspection.js';
+import { inspectAnthropicRelationships } from './relationships.js';
+import { createAnthropicInspectionSession } from './session.js';
+
+const inspectAgent = async (
+  session: IAnthropicInspectionSession,
+  agent: IIndexedAgent,
+  evidence: IRuntimeAdapterEvidence[],
+  diagnostics: IAdapterDiagnostic[],
+): Promise<void> => {
+  const runtimeAgent = agent.declaration.bindings?.runtimeAgent;
+
+  if (runtimeAgent === undefined) {
+    return;
+  }
+
+  await inspectAnthropicPackage(session, runtimeAgent.path, evidence, diagnostics, agent.id);
+
+  if (!isSupportedAnthropicSourcePath(runtimeAgent.path)) {
+    return;
+  }
+
+  evidence.push(
+    createAnthropicEvidence({
+      agentId: agent.id,
+      capabilityId: null,
+      capabilityKind: null,
+      details: { language: 'typescript' },
+      kind: 'language',
+      references: [
+        runtimeAgent.symbol === undefined
+          ? { path: runtimeAgent.path }
+          : { path: runtimeAgent.path, symbol: runtimeAgent.symbol },
+      ],
+      runtimeName: null,
+      source: ANTHROPIC_ADAPTER_ID,
+    }),
+  );
+
+  if (runtimeAgent.symbol === undefined) {
+    return;
+  }
+
+  const analysis = await analyzeAnthropicBoundReference(
+    session,
+    runtimeAgent,
+    diagnostics,
+    agent.id,
+  );
+
+  if (analysis === null) {
+    return;
+  }
+
+  const runtimeExport = getAnthropicRuntimeExport(analysis, runtimeAgent.symbol);
+
+  if (runtimeExport.kind === 'absent') {
+    addAnthropicDiagnostic(
+      diagnostics,
+      'ANTHROPIC_RUNTIME_AGENT_SYMBOL_NOT_FOUND',
+      runtimeAgent.path,
+      agent.id,
+    );
+    return;
+  }
+
+  if (runtimeExport.kind === 'present-unsupported' || runtimeExport.body === undefined) {
+    return;
+  }
+
+  const messages = analyzeAnthropicMessages(analysis, runtimeExport.body, session.signal);
+
+  if (messages.requests.length === 0) {
+    return;
+  }
+
+  evidence.push(
+    createAnthropicEvidence({
+      agentId: agent.id,
+      capabilityId: null,
+      capabilityKind: null,
+      details: { api: 'messages' },
+      kind: 'runtime-pattern',
+      references: [{ path: runtimeAgent.path, symbol: runtimeAgent.symbol }],
+      runtimeName: ANTHROPIC_MESSAGES_RUNTIME_NAME,
+      source: ANTHROPIC_ADAPTER_ID,
+    }),
+  );
+
+  await inspectAnthropicRelationships(session, agent, analysis, messages, evidence, diagnostics);
+};
+
+/**
+ * Inspects all scoped Anthropic agents through one operation-local deterministic session.
+ * @param context The Core-provided immutable adapter context.
+ * @returns A promise resolving to source-grounded evidence and diagnostics.
+ * @throws
+ * - INVALID_REPOSITORY_PATH: The repository path is invalid.
+ * - ENTRY_NOT_FOUND: The requested repository entry was not found.
+ * - ENTRY_NOT_FILE: The requested repository entry is not a file.
+ * - ACCESS_DENIED: Access to the repository source was denied.
+ * - SOURCE_UNAVAILABLE: The repository source is unavailable.
+ * - SNAPSHOT_CHANGED: The repository snapshot changed during the operation.
+ * - INVALID_SOURCE_DATA: The repository source returned invalid data.
+ * - RESOURCE_LIMIT_EXCEEDED: A repository reading resource limit was exceeded.
+ * - ABORTED: The repository operation was aborted.
+ */
+export const inspectAnthropic = async (
+  context: IRuntimeAdapterContext,
+): Promise<IRuntimeAdapterResult> => {
+  context.signal?.throwIfAborted();
+  const session = createAnthropicInspectionSession(context);
+  const evidence: IRuntimeAdapterEvidence[] = [];
+  const diagnostics: IAdapterDiagnostic[] = [];
+  const agents = [...context.agents].sort((left, right) =>
+    compareAnthropicStrings(left.id, right.id),
+  );
+
+  for (const agent of agents) {
+    context.signal?.throwIfAborted();
+    await inspectAgent(session, agent, evidence, diagnostics);
+  }
+
+  context.signal?.throwIfAborted();
+  return Object.freeze({
+    diagnostics: Object.freeze(diagnostics),
+    evidence: Object.freeze(evidence),
+  });
+};

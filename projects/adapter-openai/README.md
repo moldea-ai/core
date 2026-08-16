@@ -10,7 +10,7 @@ Its behavior is intentionally uneventful: the same repository snapshot and resou
 
 ## Supported target
 
-Version `2.0.0` experimentally supports:
+Version `2.0.1` experimentally supports:
 
 - Repository Format version `1`
 - `@moldea.ai/core ^2.0.0`
@@ -24,7 +24,7 @@ Version `2.0.0` experimentally supports:
 
 Module bindings must remain lexically visible at each matched use. Parameters and local declarations that shadow an OpenAI client, instruction loader, tool registration, or input schema do not establish evidence.
 
-Request closure is evaluated independently for `instructions` and `tools`. Unrelated statically named properties are ignored even when their values are dynamic. Relationship-affecting computed members, spreads, duplicate effective properties, shorthand properties, methods, getters, and setters leave only the affected relationship unresolved. Positive evidence is existential across supported calls; a negative wiring diagnostic requires every relevant supported call to prove the relationship absent with no unresolved candidate.
+Request closure is evaluated independently for `instructions` and `tools`. Unrelated statically named properties are ignored even when their values are dynamic, while exact shorthand relationship properties are treated as direct identifier values. Relationship-affecting computed members, spreads, duplicate effective properties, methods, getters, and setters leave only the affected relationship unresolved. Positive evidence is existential across supported calls; a negative wiring diagnostic requires every relevant supported call to prove the relationship absent with no unresolved candidate.
 
 Supported function-tool objects require exact `type`, `name`, `parameters`, and `strict` properties and may include a supported static or `null` `description`. Statically named `allowed_callers`, `defer_loading`, and `output_schema` properties are tolerated without interpreting their values. Unknown properties and unsupported object-member forms leave the registration unestablished. Inline schema values support recursive static strings, no-substitution templates, signed numbers, booleans, `null`, arrays without holes or spreads, and objects with exact identifier or string-literal property assignments; the adapter proves wiring, not OpenAI schema validity.
 

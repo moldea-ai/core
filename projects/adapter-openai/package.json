@@ -1,6 +1,6 @@
 {
   "name": "@moldea.ai/adapter-openai",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Deterministic runtime evidence and diagnostics for direct OpenAI SDK integrations.",
   "homepage": "https://github.com/moldea-ai/packages/tree/main/projects/adapter-openai#readme",
   "bugs": {
@@ -48,6 +48,7 @@
     "typescript": "6.0.3"
   },
   "devDependencies": {
+    "@moldea.ai/adapter-static-analysis": "workspace:*",
     "@types/node": "22.20.1",
     "@types/semver": "7.8.0",
     "vite": "8.2.1",

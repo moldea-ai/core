@@ -78,6 +78,7 @@ export interface IOpenAiSourceAnalysis {
   readonly moduleArrays: ReadonlyMap<string, IOpenAiModuleArray>;
   readonly moduleConstDeclarations: ReadonlyMap<string, ts.VariableDeclaration>;
   readonly namedImports: ReadonlyMap<string, IOpenAiNamedImport>;
+  readonly constructorNames: ReadonlySet<string>;
   readonly openAiConstructorNames: ReadonlySet<string>;
   readonly path: IRepositoryPath;
   readonly safeModuleArrayNames: ReadonlySet<string>;

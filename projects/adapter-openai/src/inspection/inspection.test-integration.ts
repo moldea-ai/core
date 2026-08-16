@@ -510,7 +510,7 @@ describe('openAiAdapter Core integration', () => {
     expect(result.evidence.map(({ kind }) => kind)).toContain('tool-registration');
   });
 
-  test('uses positive existential matching across multiple calls and a reusable tool array', async () => {
+  test('uses positive existential matching across multiple calls and a shorthand tool array', async () => {
     const result = await inspect({
       '/src/agent.ts': [
         "import OpenAI from 'openai';",
@@ -520,7 +520,7 @@ describe('openAiAdapter Core integration', () => {
         'const tools = [registeredFindOrder];',
         'export const supportAgent = async () => {',
         "  await client.responses.create({ instructions: 'static', tools: [] });",
-        '  await client.responses.create({ instructions: await readInstruction(), tools: tools });',
+        '  await client.responses.create({ instructions: await readInstruction(), tools });',
         '  return client.responses.create({ ...dynamicRequest });',
         '};',
       ].join('\n'),

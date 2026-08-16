@@ -5,7 +5,83 @@ adapters:
       kind: package
       package: '@moldea.ai/adapter-anthropic'
       distribution: public
-    implementationStatus: planned
+      versionRange: '^1.0.0'
+    implementationStatus: available
+    supportedRepositoryFormatVersions:
+      - 1
+    compatibleCoreRange: '^2.0.0'
+    runtimeGuidance:
+      expectation: optional
+      notes: Project-local guidance is needed only for repository-specific wrappers or unsupported indirect integration patterns.
+    targets:
+      - id: typescript-messages-api-0-117
+        kind: package
+        supportLevel: experimental
+        language: typescript
+        packages:
+          - ecosystem: npm
+            name: '@anthropic-ai/sdk'
+            role: primary
+            versionRange: '>=0.117.1 <0.118.0'
+        evidenceKinds:
+          - instruction-loader
+          - language
+          - runtime-package
+          - runtime-pattern
+          - schema
+          - tool-registration
+        bindingSupport:
+          runtime-agent:
+            relationship: full
+            symbol: full
+          instruction-loader:
+            relationship: full
+            symbol: full
+          tool-registration:
+            relationship: full
+            symbol: full
+          tool-input-schema:
+            relationship: full
+            symbol: full
+        patterns:
+          - id: direct-messages-create
+            kind: runtime
+            support: full
+            description: Direct Anthropic Messages API invocation through a module-local client in a directly exported TypeScript function.
+          - id: direct-system-loader
+            kind: instruction-loader
+            support: full
+            description: A directly bound instruction loader supplies the top-level system request property.
+          - id: closed-client-tool-array
+            kind: tool
+            support: full
+            description: Closed inline or immutable module-local arrays contain statically declared Anthropic client tools.
+          - id: direct-tool-input-schema
+            kind: schema
+            support: full
+            description: A bound tool input schema is referenced directly through the client tool input_schema property.
+          - id: dynamic-request-construction
+            kind: runtime
+            support: ambiguous
+            description: Dynamically assembled Messages requests cannot be mapped reliably without semantic analysis.
+          - id: provider-server-tools
+            kind: tool
+            support: unsupported
+            description: Anthropic provider or server tools are outside the initial client-tool target.
+        providerLimits:
+          - id: client-tool-name
+            subject: tool-name
+            kind: max-unicode-scalars
+            value: 128
+            description: Anthropic client-tool names contain at most 128 Unicode scalar values.
+            reference: Anthropic Messages API reference for client tools.
+        knownLimitations:
+          - Arbitrary compiler resolution, path aliases, directory indexes, package exports, and re-export graphs are not resolved.
+          - Beta resources, client.messages.stream, parse helpers, and tool-runner abstractions are not interpreted; an exact stream property on direct messages.create requests is tolerated, but its semantics are not validated.
+          - Client-tool input-schema contents, including the provider-required top-level type object, are not validated; the target establishes only direct schema wiring.
+          - Source forms outside the verified TypeScript ESM target, dynamic factories, mutable requests, provider tools, output schemas, runtime variables, and handoffs are outside the initial target.
+        lastVerifiedAt: '2026-08-16'
+    lastVerifiedAt: '2026-08-16'
   claude-agent-sdk:
     implementation:
       kind: package

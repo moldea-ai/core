@@ -83,6 +83,7 @@ describe('discoverPublicPackages', () => {
     const model = createWebsiteModel();
 
     expect(model.packages.map(({ name }) => name)).toStrictEqual([
+      '@moldea.ai/adapter-anthropic',
       '@moldea.ai/adapter-openai',
       '@moldea.ai/cli',
       '@moldea.ai/core',
@@ -90,6 +91,9 @@ describe('discoverPublicPackages', () => {
       '@moldea.ai/repository-fs',
     ]);
     expect(model.packages.find(({ slug }) => slug === 'adapter-openai')?.family).toBe(
+      'runtime-adapters',
+    );
+    expect(model.packages.find(({ slug }) => slug === 'adapter-anthropic')?.family).toBe(
       'runtime-adapters',
     );
     expect(
@@ -110,6 +114,66 @@ describe('discoverPublicPackages', () => {
 
     expect(discoverPublicPackages(repositoryRoot).map(({ slug }) => slug)).toStrictEqual([
       'public-package',
+    ]);
+  });
+
+  test('resolves public API types from private workspace packages without built declarations', () => {
+    const repositoryRoot = createTemporaryRepository();
+    const sharedPackageDirectory = join(repositoryRoot, 'packages', 'shared-contracts');
+    mkdirSync(join(sharedPackageDirectory, 'src'), { recursive: true });
+    writeFileSync(
+      join(sharedPackageDirectory, 'package.json'),
+      JSON.stringify({
+        name: '@moldea.ai/shared-contracts',
+        private: true,
+        exports: {
+          '.': {
+            types: './dist/index.d.ts',
+            import: './dist/index.js',
+          },
+        },
+      }),
+    );
+    writeFileSync(
+      join(sharedPackageDirectory, 'src', 'index.ts'),
+      'export interface ISharedContract { name: string; }\n',
+    );
+
+    writeProject(repositoryRoot, 'public-package', {
+      documents: { 'index.md': 'Public' },
+    });
+    const publicPackageDirectory = join(repositoryRoot, 'projects', 'public-package');
+    const publicPackageManifest = JSON.parse(
+      readFileSync(join(publicPackageDirectory, 'package.json'), 'utf8'),
+    ) as Record<string, unknown>;
+    publicPackageManifest.exports = {
+      '.': {
+        types: './dist/index.d.ts',
+        import: './dist/index.js',
+      },
+    };
+    writeFileSync(
+      join(publicPackageDirectory, 'package.json'),
+      JSON.stringify(publicPackageManifest),
+    );
+    writeFileSync(
+      join(publicPackageDirectory, 'src', 'index.ts'),
+      "import type { ISharedContract } from '@moldea.ai/shared-contracts';\n\nexport type IPublicContract = ISharedContract;\n",
+    );
+
+    expect(discoverPublicPackages(repositoryRoot)[0]?.api).toStrictEqual([
+      {
+        name: '.',
+        route: 'api',
+        symbols: [
+          {
+            description: '',
+            kind: 'type',
+            name: 'IPublicContract',
+            signature: 'export type IPublicContract = ISharedContract;',
+          },
+        ],
+      },
     ]);
   });
 
@@ -172,7 +236,7 @@ describe('discoverPublicPackages', () => {
 });
 
 describe('adapter and route generation', () => {
-  test('preserves planned, built-in available, and experimental package-backed states', () => {
+  test('preserves built-in and experimental package-backed availability states', () => {
     const model = createWebsiteModel();
     const custom = model.adapters.find(({ id }) => id === 'custom');
     const openAi = model.adapters.find(({ id }) => id === 'openai');
@@ -190,10 +254,12 @@ describe('adapter and route generation', () => {
       },
     });
     expect(anthropic).toMatchObject({
-      implementedPackageSlug: null,
-      entry: { implementationStatus: 'planned' },
+      implementedPackageSlug: 'adapter-anthropic',
+      entry: {
+        implementationStatus: 'available',
+        targets: [{ supportLevel: 'experimental' }],
+      },
     });
-    expect(anthropic && 'targets' in anthropic.entry).toBe(false);
   });
 
   test('rejects an available package-backed adapter without an implemented package', () => {
@@ -272,6 +338,7 @@ describe('createLlmsText', () => {
     for (const route of internalLinks) expect(model.routes).toContain(route);
     expect(text).not.toContain('@moldea.ai/packages-website');
     expect(text).toContain('available; built into @moldea.ai/core; custom: supported');
+    expect(text).toContain('typescript-messages-api-0-117: experimental');
     expect(text).toContain('typescript-responses-api-7: experimental');
   });
 });
