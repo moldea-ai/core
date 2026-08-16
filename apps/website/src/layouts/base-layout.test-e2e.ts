@@ -71,6 +71,70 @@ test('uses smooth client-side navigation while preserving ordinary static routes
   await expect(page.locator('html')).toHaveClass(/dark/);
 });
 
+test('marks the current desktop and mobile navigation destinations', async ({ page }) => {
+  await page.goto(toPublicPath('/packages/core/api/'));
+
+  const primaryNavigation = page.getByRole('navigation', { name: 'Primary navigation' });
+  const activeDesktopLink = primaryNavigation.locator('a[aria-current="page"]');
+  const inactiveDesktopLink = primaryNavigation.getByRole('link', { name: 'Adapters' });
+
+  await expect(activeDesktopLink).toHaveText('Packages');
+  expect(
+    await activeDesktopLink.evaluate((element) => getComputedStyle(element).backgroundColor),
+  ).not.toBe(
+    await inactiveDesktopLink.evaluate((element) => getComputedStyle(element).backgroundColor),
+  );
+
+  await page.getByRole('button', { name: 'Use dark theme' }).click();
+  await expect(page.locator('html')).toHaveClass(/dark/);
+  expect(
+    await activeDesktopLink.evaluate((element) => getComputedStyle(element).backgroundColor),
+  ).not.toBe(
+    await inactiveDesktopLink.evaluate((element) => getComputedStyle(element).backgroundColor),
+  );
+
+  await page.goto(toPublicPath('/search/'));
+  await expect(page.getByRole('link', { name: 'Search documentation' })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
+
+  await page.setViewportSize({ height: 740, width: 320 });
+  await page.goto(toPublicPath('/adapters/openai/api/'));
+  await page.getByLabel('Open navigation').click();
+
+  const mobileNavigation = page.getByRole('navigation', { name: 'Mobile navigation' });
+  const activeMobileLink = mobileNavigation.locator('a[aria-current="page"]');
+  const inactiveMobileLink = mobileNavigation.getByRole('link', { name: 'Packages' });
+
+  await expect(activeMobileLink).toHaveText('Adapters');
+  expect(
+    await activeMobileLink.evaluate((element) => getComputedStyle(element).backgroundColor),
+  ).not.toBe(
+    await inactiveMobileLink.evaluate((element) => getComputedStyle(element).backgroundColor),
+  );
+});
+
+test('presents available runtime adapters without promoting planned inventory', async ({
+  page,
+}) => {
+  await page.goto(toPublicPath('/'));
+
+  const adapterSection = page.locator('section[aria-labelledby="available-adapters-title"]');
+
+  await expect(
+    adapterSection.getByRole('heading', { level: 2, name: 'Runtime-specific evidence, built in.' }),
+  ).toBeVisible();
+  await expect(adapterSection.getByRole('link', { name: /anthropic/ })).toBeVisible();
+  await expect(adapterSection.getByRole('link', { name: /custom/ })).toBeVisible();
+  await expect(adapterSection.getByRole('link', { name: /openai/ })).toBeVisible();
+  await expect(adapterSection.getByRole('link', { name: /claude-agent-sdk/ })).toHaveCount(0);
+  await expect(adapterSection.getByRole('link', { name: 'View all adapters' })).toHaveAttribute(
+    'href',
+    toPublicPath('/adapters/'),
+  );
+});
+
 test('has no page-level horizontal overflow at 320px on representative routes', async ({
   page,
 }) => {

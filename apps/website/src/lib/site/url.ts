@@ -26,6 +26,13 @@ export const withBase = (route: string, basePath = import.meta.env.BASE_URL): st
   return `${base}${routeWithoutRoot}`.replaceAll(/\/{2,}/g, '/');
 };
 
+/** Checks whether a public pathname identifies a route or one of its descendants. */
+export const isPublicRouteActive = (
+  pathname: string,
+  route: string,
+  basePath = import.meta.env.BASE_URL,
+): boolean => pathname.startsWith(withBase(route, basePath));
+
 /** Builds a canonical absolute URL from an origin, base path, and public route. */
 export const createCanonicalUrl = (route: string, siteUrl: string, basePath: string): string =>
   new URL(withBase(route, basePath), siteUrl).href;

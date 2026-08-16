@@ -5,6 +5,7 @@ import {
   createCanonicalUrl,
   DEFAULT_BASE_PATH,
   DEFAULT_SITE_URL,
+  isPublicRouteActive,
   normalizeBasePath,
   withBase,
 } from './url.ts';
@@ -38,6 +39,16 @@ describe('website URLs', () => {
     expect(createCanonicalUrl('/packages/core/', 'https://docs.example.com', '/')).toBe(
       'https://docs.example.com/packages/core/',
     );
+  });
+
+  test.each([
+    ['/packages/', '/packages/', '/', true],
+    ['/packages/core/api/', '/packages/', '/', true],
+    ['/adapters/openai/', '/packages/', '/', false],
+    ['/packages/adapters/openai/api/', '/adapters/', '/packages/', true],
+    ['/packages/packages/core/', '/packages/', '/packages/', true],
+  ])('isPublicRouteActive(%s, %s, %s) -> %s', (pathname, route, basePath, expectedResult) => {
+    expect(isPublicRouteActive(pathname, route, basePath)).toBe(expectedResult);
   });
 
   test('creates the established custom-domain canonical URL by default', () => {
