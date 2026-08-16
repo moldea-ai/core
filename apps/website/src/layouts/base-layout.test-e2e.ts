@@ -128,11 +128,97 @@ test('presents available runtime adapters without promoting planned inventory', 
   await expect(adapterSection.getByRole('link', { name: /anthropic/ })).toBeVisible();
   await expect(adapterSection.getByRole('link', { name: /custom/ })).toBeVisible();
   await expect(adapterSection.getByRole('link', { name: /openai/ })).toBeVisible();
+  await expect(adapterSection.getByAltText('Anthropic company logo')).toBeVisible();
+  await expect(adapterSection.getByRole('img', { name: 'Custom adapter icon' })).toBeVisible();
+  await expect(adapterSection.getByAltText('OpenAI company logo')).toBeVisible();
   await expect(adapterSection.getByRole('link', { name: /claude-agent-sdk/ })).toHaveCount(0);
   await expect(adapterSection.getByRole('link', { name: 'View all adapters' })).toHaveAttribute(
     'href',
     toPublicPath('/adapters/'),
   );
+});
+
+test('shows company marks for provider adapters and keeps the custom adapter icon', async ({
+  page,
+}) => {
+  await page.goto(toPublicPath('/adapters/'));
+
+  for (const [companyName, expectedCount] of [
+    ['Anthropic', 2],
+    ['Cloudflare', 1],
+    ['Google', 1],
+    ['LangChain', 2],
+    ['OpenAI', 2],
+    ['Vercel', 2],
+  ] as const) {
+    await expect(page.getByAltText(`${companyName} company logo`)).toHaveCount(expectedCount);
+  }
+
+  const companyMarks = page.locator('img[alt$=" company logo"]');
+
+  await expect(companyMarks).toHaveCount(10);
+  await companyMarks.last().scrollIntoViewIfNeeded();
+  await expect
+    .poll(() =>
+      companyMarks.evaluateAll((images) =>
+        images.every(
+          (image) => image instanceof HTMLImageElement && image.complete && image.naturalWidth > 0,
+        ),
+      ),
+    )
+    .toBe(true);
+
+  const customAdapterCard = page.getByRole('link', { name: /Custom adapter icon/ });
+
+  await expect(customAdapterCard.getByRole('img', { name: 'Custom adapter icon' })).toBeVisible();
+  await expect(customAdapterCard.locator('img')).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Use dark theme' }).click();
+  await expect(page.locator('html')).toHaveClass(/dark/);
+  expect(
+    await page
+      .getByAltText('OpenAI company logo')
+      .first()
+      .evaluate((element) => getComputedStyle(element).filter),
+  ).not.toBe('none');
+});
+
+test('shows the same company marks in the compatibility summary table', async ({ page }) => {
+  await page.goto(toPublicPath('/compatibility/'));
+
+  const compatibilityTable = page.getByRole('table', {
+    name: 'Official moldea runtime adapter compatibility summary',
+  });
+
+  for (const [companyName, expectedCount] of [
+    ['Anthropic', 2],
+    ['Cloudflare', 1],
+    ['Google', 1],
+    ['LangChain', 2],
+    ['OpenAI', 2],
+    ['Vercel', 2],
+  ] as const) {
+    await expect(compatibilityTable.getByAltText(`${companyName} company logo`)).toHaveCount(
+      expectedCount,
+    );
+  }
+
+  const customAdapterLink = compatibilityTable.getByRole('link', {
+    name: /Custom adapter icon/,
+  });
+
+  await expect(customAdapterLink.getByRole('img', { name: 'Custom adapter icon' })).toBeVisible();
+  await expect(customAdapterLink.locator('img')).toHaveCount(0);
+});
+
+test('shows company marks for runtime adapters on the packages page', async ({ page }) => {
+  await page.goto(toPublicPath('/packages/'));
+
+  const runtimeAdapters = page.locator('section[aria-labelledby="adapter-packages-title"]');
+
+  await expect(runtimeAdapters.getByAltText('Anthropic company logo')).toBeVisible();
+  await expect(runtimeAdapters.getByAltText('OpenAI company logo')).toBeVisible();
+  await expect(runtimeAdapters.getByRole('img', { name: 'Custom adapter icon' })).toHaveCount(0);
 });
 
 test('has no page-level horizontal overflow at 320px on representative routes', async ({

@@ -1,0 +1,133 @@
+---
+import { Blocks } from '@lucide/astro';
+
+import { withBase } from '../lib/site/url.ts';
+
+interface Props {
+  adapterId: string;
+  compact?: boolean;
+}
+
+interface IAdapterCompany {
+  height: number;
+  isInvertedInDark: boolean;
+  logoPath: string;
+  name: string;
+  width: number;
+}
+
+// company marks associated with the canonical runtime adapter inventory
+const adapterCompanies: Record<string, IAdapterCompany> = {
+  anthropic: {
+    height: 248,
+    isInvertedInDark: false,
+    logoPath: '/adapter-companies/anthropic.svg',
+    name: 'Anthropic',
+    width: 248,
+  },
+  'claude-agent-sdk': {
+    height: 248,
+    isInvertedInDark: false,
+    logoPath: '/adapter-companies/anthropic.svg',
+    name: 'Anthropic',
+    width: 248,
+  },
+  'cloudflare-agents': {
+    height: 24,
+    isInvertedInDark: false,
+    logoPath: '/adapter-companies/cloudflare.svg',
+    name: 'Cloudflare',
+    width: 24,
+  },
+  eve: {
+    height: 24,
+    isInvertedInDark: true,
+    logoPath: '/adapter-companies/vercel.svg',
+    name: 'Vercel',
+    width: 24,
+  },
+  'google-genai': {
+    height: 24,
+    isInvertedInDark: false,
+    logoPath: '/adapter-companies/google.svg',
+    name: 'Google',
+    width: 24,
+  },
+  langchain: {
+    height: 24,
+    isInvertedInDark: true,
+    logoPath: '/adapter-companies/langchain.svg',
+    name: 'LangChain',
+    width: 24,
+  },
+  langgraph: {
+    height: 24,
+    isInvertedInDark: true,
+    logoPath: '/adapter-companies/langchain.svg',
+    name: 'LangChain',
+    width: 24,
+  },
+  openai: {
+    height: 300,
+    isInvertedInDark: true,
+    logoPath: '/adapter-companies/openai.svg',
+    name: 'OpenAI',
+    width: 300,
+  },
+  'openai-agents-sdk': {
+    height: 300,
+    isInvertedInDark: true,
+    logoPath: '/adapter-companies/openai.svg',
+    name: 'OpenAI',
+    width: 300,
+  },
+  'vercel-ai-sdk': {
+    height: 24,
+    isInvertedInDark: true,
+    logoPath: '/adapter-companies/vercel.svg',
+    name: 'Vercel',
+    width: 24,
+  },
+};
+
+const { adapterId, compact = false } = Astro.props;
+const isCustomAdapter = adapterId === 'custom';
+const company = adapterCompanies[adapterId];
+
+if (!isCustomAdapter && company === undefined) {
+  throw new Error(`Adapter ${adapterId} has no configured company logo.`);
+}
+---
+
+<span
+  class:list={[
+    'inline-flex items-center justify-center rounded-lg border bg-muted',
+    compact ? 'size-8' : 'size-11',
+  ]}
+>
+  {
+    isCustomAdapter ? (
+      <Blocks
+        class:list={[compact ? 'size-4' : 'size-5']}
+        role="img"
+        aria-label="Custom adapter icon"
+      />
+    ) : (
+      company && (
+        <img
+          class:list={[
+            compact ? 'size-5' : 'size-6',
+            'object-contain',
+            company.isInvertedInDark && 'dark:invert',
+          ]}
+          src={withBase(company.logoPath)}
+          width={company.width}
+          height={company.height}
+          alt={`${company.name} company logo`}
+          loading="lazy"
+          decoding="async"
+        />
+      )
+    )
+  }
+</span>

@@ -7,6 +7,11 @@ import { loadWebsiteModel } from '../../lib/generation/generation.ts';
 const model = loadWebsiteModel();
 const toolingPackages = model.packages.filter(({ family }) => family === 'skill-core-tooling');
 const adapterPackages = model.packages.filter(({ family }) => family === 'runtime-adapters');
+const adapterIdByPackageSlug = new Map(
+  model.adapters.flatMap(({ id, implementedPackageSlug }) =>
+    implementedPackageSlug ? ([[implementedPackageSlug, id]] as const) : [],
+  ),
+);
 const breadcrumbs = [{ href: '/', label: 'Home' }, { label: 'Packages' }];
 ---
 
@@ -68,8 +73,19 @@ const breadcrumbs = [{ href: '/', label: 'Home' }, { label: 'Packages' }];
         </p>
       </div>
       <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {adapterPackages.map((packageModel) => <PackageCard packageModel={packageModel} />)}
+        {
+          adapterPackages.map((packageModel) => (
+            <PackageCard
+              adapterId={adapterIdByPackageSlug.get(packageModel.slug)}
+              packageModel={packageModel}
+            />
+          ))
+        }
       </div>
+      <p class="mt-5 text-xs leading-5 text-muted-foreground">
+        Company names and marks belong to their respective owners. Compatibility does not imply
+        endorsement.
+      </p>
     </section>
   </section>
 </BaseLayout>

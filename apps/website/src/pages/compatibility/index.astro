@@ -1,5 +1,6 @@
 ---
 import AdapterDetails from '../../components/adapter-details.astro';
+import AdapterCompanyLogo from '../../components/adapter-company-logo.astro';
 import Breadcrumbs from '../../components/breadcrumbs.astro';
 import StatusBadge from '../../components/status-badge.astro';
 import BaseLayout from '../../layouts/base-layout.astro';
@@ -29,7 +30,7 @@ const breadcrumbs = [{ href: '/', label: 'Home' }, { label: 'Runtime Compatibili
       </p>
     </div>
 
-    <div class="table-scroll mb-section-gap">
+    <div class="table-scroll">
       <table class="w-full min-w-[54rem] text-sm">
         <caption class="sr-only">Official moldea runtime adapter compatibility summary</caption>
         <thead class="bg-muted">
@@ -47,10 +48,14 @@ const breadcrumbs = [{ href: '/', label: 'Home' }, { label: 'Runtime Compatibili
               <tr class="border-t">
                 <th class="px-4 py-3 text-start font-mono">
                   <a
-                    class="hover:underline"
+                    class="inline-flex items-center gap-3 hover:underline"
                     href={withBase(adapter.route)}
                   >
-                    {adapter.id}
+                    <AdapterCompanyLogo
+                      adapterId={adapter.id}
+                      compact
+                    />
+                    <span>{adapter.id}</span>
                   </a>
                 </th>
                 <td class="px-4 py-3">
@@ -73,6 +78,10 @@ const breadcrumbs = [{ href: '/', label: 'Home' }, { label: 'Runtime Compatibili
         </tbody>
       </table>
     </div>
+    <p class="mt-3 mb-section-gap text-xs leading-5 text-muted-foreground">
+      Company names and marks belong to their respective owners. Compatibility does not imply
+      endorsement.
+    </p>
 
     <div class="space-y-5">
       {

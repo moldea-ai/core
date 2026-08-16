@@ -1,18 +1,18 @@
 ---
-import { ArrowUpRight, Box, Braces, Database, FolderTree, Terminal } from '@lucide/astro';
+import { ArrowUpRight, Box, Database, FolderTree, Terminal } from '@lucide/astro';
 
 import type { IPublicPackage } from '../lib/model/types.ts';
 import { withBase } from '../lib/site/url.ts';
+import AdapterCompanyLogo from './adapter-company-logo.astro';
 import InlineBrandText from './inline-brand-text.astro';
 
 interface Props {
+  adapterId?: string;
   packageModel: IPublicPackage;
 }
 
-const { packageModel } = Astro.props;
+const { adapterId, packageModel } = Astro.props;
 const icons = {
-  'adapter-anthropic': Braces,
-  'adapter-openai': Braces,
   cli: Terminal,
   core: Box,
   repository: Database,
@@ -26,12 +26,18 @@ const Icon = icons[packageModel.slug as keyof typeof icons] ?? Box;
   href={withBase(packageModel.route)}
 >
   <div class="mb-8 flex items-start justify-between gap-4">
-    <span class="inline-flex size-11 items-center justify-center rounded-lg border bg-muted">
-      <Icon
-        class="size-5"
-        aria-hidden="true"
-      />
-    </span>
+    {
+      adapterId ? (
+        <AdapterCompanyLogo {adapterId} />
+      ) : (
+        <span class="inline-flex size-11 items-center justify-center rounded-lg border bg-muted">
+          <Icon
+            class="size-5"
+            aria-hidden="true"
+          />
+        </span>
+      )
+    }
     <ArrowUpRight
       class="size-5 text-muted-foreground transition-colors group-hover:text-foreground"
       aria-hidden="true"

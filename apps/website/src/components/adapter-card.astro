@@ -1,8 +1,9 @@
 ---
-import { ArrowUpRight, Blocks } from '@lucide/astro';
+import { ArrowUpRight } from '@lucide/astro';
 
 import type { IAdapterPage } from '../lib/model/types.ts';
 import { withBase } from '../lib/site/url.ts';
+import AdapterCompanyLogo from './adapter-company-logo.astro';
 import StatusBadge from './status-badge.astro';
 
 interface Props {
@@ -18,12 +19,7 @@ const target = adapter.entry.targets?.[0];
   href={withBase(adapter.route)}
 >
   <div class="mb-7 flex items-start justify-between gap-3">
-    <span class="inline-flex size-11 items-center justify-center rounded-lg border bg-muted">
-      <Blocks
-        class="size-5"
-        aria-hidden="true"
-      />
-    </span>
+    <AdapterCompanyLogo adapterId={adapter.id} />
     <ArrowUpRight
       class="size-5 text-muted-foreground transition-colors group-hover:text-foreground"
       aria-hidden="true"
