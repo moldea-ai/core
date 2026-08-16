@@ -1,0 +1,13 @@
+{
+  "extends": "astro/tsconfigs/strict",
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "types": ["node", "vite/client"]
+  },
+  "include": [".astro/types.d.ts", "**/*"],
+  "exclude": ["dist", "playwright-report", "test-results"]
+}

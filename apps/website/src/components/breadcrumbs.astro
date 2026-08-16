@@ -1,0 +1,46 @@
+---
+import { ChevronRight } from '@lucide/astro';
+
+import { withBase } from '../lib/site/url.ts';
+
+export interface IBreadcrumb {
+  href?: string;
+  label: string;
+}
+
+interface Props {
+  items: IBreadcrumb[];
+}
+
+const { items } = Astro.props;
+---
+
+<nav
+  aria-label="Breadcrumb"
+  class="overflow-x-auto text-sm text-muted-foreground"
+>
+  <ol class="flex min-w-max items-center gap-1.5">
+    {
+      items.map((item, index) => (
+        <li class="flex items-center gap-1.5">
+          {index > 0 && (
+            <ChevronRight
+              class="size-3.5"
+              aria-hidden="true"
+            />
+          )}
+          {item.href ? (
+            <a
+              class="rounded-sm hover:text-foreground"
+              href={withBase(item.href)}
+            >
+              {item.label}
+            </a>
+          ) : (
+            <span aria-current="page">{item.label}</span>
+          )}
+        </li>
+      ))
+    }
+  </ol>
+</nav>

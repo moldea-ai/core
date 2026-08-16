@@ -2,6 +2,8 @@
 
 Public packages are released automatically after their changes reach `main`. The `Publish npm Packages` workflow selects changed public project directories, requires each selected manifest to declare a stable version that is strictly greater than its base version when one exists, verifies the complete release candidate once, and publishes the exact checksummed tarballs in dependency order. A push without public-package changes is a successful no-op.
 
+Package-owned full documentation under `projects/<project>/docs/**` is repository-owned website source and is not part of the npm package artifact by default. A docs-only change under that exact path does not select the project for release. `README.md`, `LICENSE`, `package.json`, declared package assets, public exports, and source changes remain release-relevant. A change containing both full documentation and release-relevant project files selects the project because of the release-relevant files.
+
 ## Release identity
 
 | Project          | Package                     | Tag format                  |

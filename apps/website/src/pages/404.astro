@@ -1,0 +1,39 @@
+---
+import { ArrowLeft } from '@lucide/astro';
+
+import BaseLayout from '../layouts/base-layout.astro';
+import { withBase } from '../lib/site/url.ts';
+---
+
+<BaseLayout
+  title="Page not found"
+  description="The requested moldea packages documentation page could not be found."
+  noIndex
+>
+  <section class="page-shell flex min-h-[65vh] items-center py-section-gap">
+    <div class="max-w-3xl">
+      <p class="eyebrow mb-5">404 · Page not found</p>
+      <h1 class="section-title font-semibold">This route is outside the snapshot.</h1>
+      <p class="mt-7 max-w-2xl text-xl leading-9 text-muted-foreground">
+        The documentation may have moved, or the address may not identify a generated public route.
+      </p>
+      <div class="mt-8 flex flex-wrap gap-3">
+        <a
+          class="inline-flex min-h-12 items-center gap-2 rounded-lg bg-primary px-5 py-3 font-bold text-primary-foreground"
+          href={withBase('/')}
+        >
+          <ArrowLeft
+            class="size-4"
+            aria-hidden="true"
+          /> Back to packages
+        </a>
+        <a
+          class="inline-flex min-h-12 items-center rounded-lg border border-input px-5 py-3 font-bold hover:bg-muted"
+          href={withBase('/search/')}
+        >
+          Search documentation
+        </a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

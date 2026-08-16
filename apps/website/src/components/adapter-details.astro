@@ -1,0 +1,227 @@
+---
+import type { IAdapterPage } from '../lib/model/types.ts';
+import StatusBadge from './status-badge.astro';
+
+interface Props {
+  adapter: IAdapterPage;
+  compact?: boolean;
+}
+
+const { adapter, compact = false } = Astro.props;
+const { entry } = adapter;
+---
+
+<section class:list={['space-y-8', !compact && 'surface-card p-5 sm:p-7']}>
+  <div class="flex flex-wrap items-center gap-2">
+    <StatusBadge kind={entry.implementationStatus} />
+    {
+      entry.targets?.map((target) => (
+        <StatusBadge
+          kind={target.supportLevel}
+          label={`${target.id} · ${target.supportLevel}`}
+        />
+      ))
+    }
+  </div>
+
+  <dl class="grid gap-4 text-sm sm:grid-cols-2">
+    <div>
+      <dt class="mb-1 font-semibold text-muted-foreground">Implementation</dt>
+      <dd>{entry.implementation.kind === 'built-in' ? 'Built into Core' : 'Package-backed'}</dd>
+    </div>
+    <div>
+      <dt class="mb-1 font-semibold text-muted-foreground">Package</dt>
+      <dd class="font-mono break-all">{entry.implementation.package}</dd>
+    </div>
+    <div>
+      <dt class="mb-1 font-semibold text-muted-foreground">Distribution</dt>
+      <dd>{entry.implementation.distribution}</dd>
+    </div>
+    {
+      entry.implementation.versionRange && (
+        <div>
+          <dt class="mb-1 font-semibold text-muted-foreground">Implementation range</dt>
+          <dd class="font-mono">{entry.implementation.versionRange}</dd>
+        </div>
+      )
+    }
+    {
+      entry.compatibleCoreRange && (
+        <div>
+          <dt class="mb-1 font-semibold text-muted-foreground">Compatible Core</dt>
+          <dd class="font-mono">{entry.compatibleCoreRange}</dd>
+        </div>
+      )
+    }
+    {
+      entry.supportedRepositoryFormatVersions && (
+        <div>
+          <dt class="mb-1 font-semibold text-muted-foreground">Repository Format</dt>
+          <dd>{entry.supportedRepositoryFormatVersions.join(', ')}</dd>
+        </div>
+      )
+    }
+    {
+      entry.lastVerifiedAt && (
+        <div>
+          <dt class="mb-1 font-semibold text-muted-foreground">Last verified</dt>
+          <dd>{entry.lastVerifiedAt}</dd>
+        </div>
+      )
+    }
+    {
+      entry.replacement && (
+        <div>
+          <dt class="mb-1 font-semibold text-muted-foreground">Replacement</dt>
+          <dd>{entry.replacement}</dd>
+        </div>
+      )
+    }
+  </dl>
+
+  {
+    entry.runtimeGuidance && (
+      <div class="rounded-lg border bg-accent p-4 text-accent-foreground">
+        <p class="font-semibold">Runtime guidance: {entry.runtimeGuidance.expectation}</p>
+        {entry.runtimeGuidance.notes && (
+          <p class="mt-1 text-sm leading-6">{entry.runtimeGuidance.notes}</p>
+        )}
+      </div>
+    )
+  }
+
+  {
+    entry.targets?.map((target) => (
+      <section
+        class="space-y-6 border-t border-border pt-7"
+        aria-labelledby={`${adapter.id}-${target.id}`}
+      >
+        <div>
+          <p class="eyebrow mb-2">Compatibility target</p>
+          <h2
+            id={`${adapter.id}-${target.id}`}
+            class="text-2xl font-semibold tracking-tight break-words"
+          >
+            {target.id}
+          </h2>
+          <p class="mt-2 text-muted-foreground">Language: {target.language}</p>
+        </div>
+
+        {target.packages && (
+          <div>
+            <h3 class="mb-3 font-semibold">Runtime packages</h3>
+            <div class="table-scroll">
+              <table class="w-full min-w-[34rem] text-sm">
+                <thead class="bg-muted text-start">
+                  <tr>
+                    <th class="px-3 py-2 text-start">Package</th>
+                    <th class="px-3 py-2 text-start">Range</th>
+                    <th class="px-3 py-2 text-start">Role</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {target.packages.map((requirement) => (
+                    <tr class="border-t">
+                      <td class="px-3 py-2 font-mono">{requirement.name}</td>
+                      <td class="px-3 py-2 font-mono">{requirement.versionRange}</td>
+                      <td class="px-3 py-2">{requirement.role}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {target.evidenceKinds && (
+          <div>
+            <h3 class="mb-3 font-semibold">Evidence kinds</h3>
+            <div class="flex flex-wrap gap-2">
+              {target.evidenceKinds.map((kind) => (
+                <span class="rounded-md border bg-muted px-2.5 py-1.5 font-mono text-xs">
+                  {kind}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {target.bindingSupport && (
+          <div>
+            <h3 class="mb-3 font-semibold">Binding support</h3>
+            <div class="table-scroll">
+              <table class="w-full min-w-[34rem] text-sm">
+                <thead class="bg-muted">
+                  <tr>
+                    <th class="px-3 py-2 text-start">Binding</th>
+                    <th class="px-3 py-2 text-start">Relationship</th>
+                    <th class="px-3 py-2 text-start">Symbol</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(target.bindingSupport).map(([subject, support]) => (
+                    <tr class="border-t">
+                      <td class="px-3 py-2 font-mono">{subject}</td>
+                      <td class="px-3 py-2">{support.relationship}</td>
+                      <td class="px-3 py-2">{support.symbol}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {target.patterns && (
+          <div>
+            <h3 class="mb-3 font-semibold">Patterns</h3>
+            <div class="grid gap-3">
+              {target.patterns.map((pattern) => (
+                <div class="rounded-lg border bg-muted/60 p-4">
+                  <div class="mb-2 flex flex-wrap items-center gap-2">
+                    <span class="font-mono text-sm font-semibold">{pattern.id}</span>
+                    <span class="text-xs font-bold text-muted-foreground uppercase">
+                      {pattern.support}
+                    </span>
+                  </div>
+                  <p class="text-sm leading-6">{pattern.description}</p>
+                  {pattern.notes && (
+                    <p class="mt-2 text-sm text-muted-foreground">{pattern.notes}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {target.providerLimits && (
+          <div>
+            <h3 class="mb-3 font-semibold">Provider limits</h3>
+            <div class="grid gap-3">
+              {target.providerLimits.map((limit) => (
+                <div class="rounded-lg border bg-muted/60 p-4 text-sm">
+                  <p class="font-mono font-semibold">{limit.id}</p>
+                  <p class="mt-1 leading-6">{limit.description}</p>
+                  <p class="mt-1 font-mono text-muted-foreground">{JSON.stringify(limit.value)}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {target.knownLimitations && (
+          <div>
+            <h3 class="mb-3 font-semibold">Known limitations</h3>
+            <ul class="list-disc space-y-2 ps-5 text-sm leading-6 text-muted-foreground">
+              {target.knownLimitations.map((limitation) => (
+                <li>{limitation}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </section>
+    ))
+  }
+
+  {entry.notes && <p class="text-sm leading-6 text-muted-foreground">{entry.notes}</p>}
+</section>

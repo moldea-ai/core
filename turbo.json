@@ -9,6 +9,13 @@
       "cache": false,
       "persistent": true
     },
+    "docs:check": {
+      "cache": false
+    },
+    "docs:generate": {
+      "cache": false,
+      "outputs": [".generated/**"]
+    },
     "lint": {
       "dependsOn": ["^build", "^lint"]
     },
@@ -16,10 +23,10 @@
       "dependsOn": ["^test"]
     },
     "test:e2e": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["build", "^build"]
     },
     "test:integration": {
-      "dependsOn": ["^test:integration"]
+      "dependsOn": ["build", "^test:integration"]
     },
     "test:unit": {
       "dependsOn": ["^build"]

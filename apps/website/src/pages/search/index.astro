@@ -1,0 +1,177 @@
+---
+import { Search } from '@lucide/astro';
+
+import Breadcrumbs from '../../components/breadcrumbs.astro';
+import BaseLayout from '../../layouts/base-layout.astro';
+import { withBase } from '../../lib/site/url.ts';
+
+const breadcrumbs = [{ href: '/', label: 'Home' }, { label: 'Search' }];
+const searchIndexUrl = withBase('/search-index.json');
+---
+
+<BaseLayout
+  title="Search documentation"
+  description="Search public moldea package documentation and official runtime adapter status pages locally with no hosted service."
+  {breadcrumbs}
+>
+  <section class="page-shell pt-8 pb-section-gap">
+    <Breadcrumbs items={breadcrumbs} />
+    <div class="mx-auto max-w-4xl pt-16">
+      <p class="eyebrow mb-5">Local static search</p>
+      <h1 class="section-title font-semibold">Find the contract, not a copy.</h1>
+      <p class="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">
+        Search package-owned documentation and matrix-derived adapter pages. The index is generated
+        from repository sources and sends no query to a hosted service.
+      </p>
+
+      <form
+        class="surface-card mt-10 p-3"
+        data-search-form
+        data-search-index-url={searchIndexUrl}
+        action={withBase('/search/')}
+        method="get"
+        role="search"
+      >
+        <label
+          class="sr-only"
+          for="documentation-search"
+          >Search documentation</label
+        >
+        <div class="flex items-center gap-3">
+          <Search
+            class="ms-2 size-5 shrink-0 text-muted-foreground"
+            aria-hidden="true"
+          />
+          <input
+            id="documentation-search"
+            class="min-h-12 min-w-0 flex-1 bg-transparent px-1 text-lg"
+            type="search"
+            name="query"
+            placeholder="e.g. repository snapshots"
+            autocomplete="off"
+            data-search-input
+          />
+          <button
+            class="min-h-11 rounded-lg bg-primary px-5 font-bold text-primary-foreground"
+            type="submit"
+          >
+            Search
+          </button>
+        </div>
+      </form>
+
+      <p
+        class="mt-4 text-sm text-muted-foreground"
+        aria-live="polite"
+        data-search-status
+      >
+        Enter a package, concept, API symbol, or adapter ID.
+      </p>
+      <ol
+        class="mt-8 grid gap-4"
+        data-search-results
+      >
+      </ol>
+
+      <noscript>
+        <div class="mt-8 rounded-xl border bg-accent p-5 leading-7 text-accent-foreground">
+          Interactive search requires JavaScript. All documentation remains available through the <a
+            class="font-bold underline"
+            href={withBase('/packages/')}
+            >package</a
+          >
+          and <a
+            class="font-bold underline"
+            href={withBase('/adapters/')}
+            >adapter</a
+          > navigation.
+        </div>
+      </noscript>
+    </div>
+  </section>
+
+  <script>
+    import {
+      parseSearchDocuments,
+      searchDocuments,
+      type ISearchDocument,
+    } from '../../lib/search/search.ts';
+
+    const createResult = (searchDocument: ISearchDocument): HTMLLIElement => {
+      const item = document.createElement('li');
+      const link = document.createElement('a');
+      const title = document.createElement('h2');
+      const excerpt = document.createElement('p');
+
+      item.className = 'surface-card interactive-card p-5';
+      link.className = 'block rounded-md';
+      link.href = searchDocument.url;
+      title.className = 'text-xl font-semibold tracking-tight';
+      title.textContent = searchDocument.title;
+      excerpt.className = 'text-muted-foreground mt-2 leading-6';
+      excerpt.textContent = searchDocument.description;
+      link.append(title, excerpt);
+      item.append(link);
+
+      return item;
+    };
+
+    const initializeSearch = (): void => {
+      const form = document.querySelector<HTMLFormElement>('[data-search-form]');
+      const input = document.querySelector<HTMLInputElement>('[data-search-input]');
+      const status = document.querySelector<HTMLElement>('[data-search-status]');
+      const results = document.querySelector<HTMLOListElement>('[data-search-results]');
+
+      if (!form || !input || !status || !results || form.dataset.searchInitialized === 'true') {
+        return;
+      }
+
+      const searchIndexUrl = form.dataset.searchIndexUrl;
+
+      if (!searchIndexUrl) return;
+
+      form.dataset.searchInitialized = 'true';
+      const documentsPromise = fetch(searchIndexUrl).then(async (response) => {
+        if (!response.ok) throw new Error('The documentation search index could not be loaded.');
+
+        return parseSearchDocuments(await response.json());
+      });
+
+      const runSearch = async (query: string): Promise<void> => {
+        results.replaceChildren();
+
+        if (!query.trim()) {
+          status.textContent = 'Enter a package, concept, API symbol, or adapter ID.';
+          return;
+        }
+
+        status.textContent = 'Searching the local documentation index…';
+
+        try {
+          const matches = searchDocuments(query, await documentsPromise);
+
+          for (const match of matches) results.append(createResult(match));
+          status.textContent = `${matches.length} result${matches.length === 1 ? '' : 's'} for “${query}”.`;
+        } catch {
+          status.textContent =
+            'The local search index could not be loaded. Use package navigation instead.';
+        }
+      };
+
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        void runSearch(input.value);
+      });
+
+      const query = new URLSearchParams(window.location.search).get('query');
+
+      if (query) {
+        input.value = query;
+        void runSearch(query);
+      }
+    };
+
+    document.addEventListener('astro:page-load', initializeSearch);
+    initializeSearch();
+  </script>
+</BaseLayout>

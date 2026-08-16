@@ -1,0 +1,66 @@
+---
+import { withBase } from '../lib/site/url.ts';
+import Logo from './logo.astro';
+---
+
+<footer class="mt-section-gap border-t border-border">
+  <div class="page-shell grid gap-10 py-12 md:grid-cols-[1fr_auto_auto]">
+    <div class="max-w-md space-y-4">
+      <Logo />
+      <p class="text-sm leading-6 text-muted-foreground">
+        The open-source technical foundation that powers moldea—the behavioral integrity layer for
+        AI agents.
+      </p>
+    </div>
+    <nav
+      class="grid content-start gap-3 text-sm"
+      aria-label="Documentation"
+    >
+      <p class="font-bold">Documentation</p>
+      <a
+        class="text-muted-foreground hover:text-foreground"
+        href={withBase('/packages/')}
+        >Packages</a
+      >
+      <a
+        class="text-muted-foreground hover:text-foreground"
+        href={withBase('/adapters/')}
+        >Adapters</a
+      >
+      <a
+        class="text-muted-foreground hover:text-foreground"
+        href={withBase('/compatibility/')}
+      >
+        Compatibility
+      </a>
+      <a
+        class="text-muted-foreground hover:text-foreground"
+        href={withBase('/llms.txt')}
+        >llms.txt</a
+      >
+    </nav>
+    <nav
+      class="grid content-start gap-3 text-sm"
+      aria-label="Project links"
+    >
+      <p class="font-bold">Project</p>
+      <a
+        class="text-muted-foreground hover:text-foreground"
+        href="https://github.com/moldea-ai/packages"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        GitHub
+      </a>
+      <a
+        class="text-muted-foreground hover:text-foreground"
+        href="https://github.com/moldea-ai/packages/issues"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Issues
+      </a>
+      <span class="text-muted-foreground">MIT licensed</span>
+    </nav>
+  </div>
+</footer>

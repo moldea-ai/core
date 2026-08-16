@@ -1,0 +1,109 @@
+---
+import { GitFork, Menu, Search } from '@lucide/astro';
+
+import { withBase } from '../lib/site/url.ts';
+import Logo from './logo.astro';
+import ThemeControl from './theme-control.astro';
+
+const navigation = [
+  { href: '/packages/', label: 'Packages' },
+  { href: '/adapters/', label: 'Adapters' },
+  { href: '/compatibility/', label: 'Compatibility' },
+] as const;
+---
+
+<header class="sticky top-0 z-50 border-b border-border bg-background/92 backdrop-blur-lg">
+  <div class="page-shell flex min-h-16 items-center justify-between gap-4">
+    <Logo />
+
+    <nav
+      class="hidden items-center gap-1 md:flex"
+      aria-label="Primary navigation"
+    >
+      {
+        navigation.map(({ href, label }) => (
+          <a
+            class="rounded-lg px-3 py-2 text-sm font-semibold transition-colors hover:bg-muted"
+            href={withBase(href)}
+          >
+            {label}
+          </a>
+        ))
+      }
+    </nav>
+
+    <div class="hidden items-center gap-2 md:flex">
+      <a
+        class="inline-flex size-10 items-center justify-center rounded-lg hover:bg-muted"
+        href={withBase('/search/')}
+        aria-label="Search documentation"
+      >
+        <Search
+          class="size-4"
+          aria-hidden="true"
+        />
+      </a>
+      <a
+        class="inline-flex size-10 items-center justify-center rounded-lg hover:bg-muted"
+        href="https://github.com/moldea-ai/packages"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="moldea packages on GitHub"
+      >
+        <GitFork
+          class="size-4"
+          aria-hidden="true"
+        />
+      </a>
+      <ThemeControl />
+    </div>
+
+    <details class="group relative md:hidden">
+      <summary
+        class="flex size-10 list-none items-center justify-center rounded-lg border border-input bg-background hover:bg-muted [&::-webkit-details-marker]:hidden"
+        aria-label="Open navigation"
+      >
+        <Menu
+          class="size-5"
+          aria-hidden="true"
+        />
+      </summary>
+      <div
+        class="surface-card absolute end-0 top-12 w-[min(19rem,calc(100vw-2rem))] space-y-1 p-3 shadow-raised"
+      >
+        <nav
+          class="grid gap-1"
+          aria-label="Mobile navigation"
+        >
+          {
+            navigation.map(({ href, label }) => (
+              <a
+                class="rounded-lg px-3 py-3 font-semibold hover:bg-muted"
+                href={withBase(href)}
+              >
+                {label}
+              </a>
+            ))
+          }
+          <a
+            class="rounded-lg px-3 py-3 font-semibold hover:bg-muted"
+            href={withBase('/search/')}
+          >
+            Search
+          </a>
+          <a
+            class="rounded-lg px-3 py-3 font-semibold hover:bg-muted"
+            href="https://github.com/moldea-ai/packages"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Source on GitHub
+          </a>
+        </nav>
+        <div class="mt-3 border-t border-border pt-3">
+          <ThemeControl />
+        </div>
+      </div>
+    </details>
+  </div>
+</header>
