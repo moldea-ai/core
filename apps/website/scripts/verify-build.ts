@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 import { loadWebsiteModel } from '../src/lib/generation/generation.ts';
 import { parseSearchDocuments } from '../src/lib/search/search.ts';
-import { normalizeBasePath } from '../src/lib/site/url.ts';
+import { DEFAULT_BASE_PATH, DEFAULT_SITE_URL, normalizeBasePath } from '../src/lib/site/url.ts';
 
 const EXCLUDED_DIRECTORY_NAMES = new Set(['_archive', '_archives', '_backup', '_backups']);
 
@@ -174,8 +174,8 @@ const verifyLlmsLinks = (
 export const verifyProductionBuild = (): void => {
   const websiteDirectory = getWebsiteDirectory();
   const distDirectory = join(websiteDirectory, 'dist');
-  const basePath = normalizeBasePath(process.env.BASE_PATH ?? '/packages/');
-  const siteUrl = process.env.SITE_URL ?? 'https://moldea-ai.github.io';
+  const basePath = normalizeBasePath(process.env.BASE_PATH ?? DEFAULT_BASE_PATH);
+  const siteUrl = process.env.SITE_URL ?? DEFAULT_SITE_URL;
   const model = loadWebsiteModel();
 
   if (!existsSync(distDirectory)) throw new Error('Production artifact is missing.');

@@ -1,26 +1,31 @@
 import { expect, test } from '@playwright/test';
 
+import { DEFAULT_BASE_PATH, withBase } from '../lib/site/url.ts';
+
+const basePath = process.env.BASE_PATH ?? DEFAULT_BASE_PATH;
+const toPublicPath = (route: string): string => withBase(route, basePath);
+
 test('identifies API reference pages in breadcrumbs and documentation navigation', async ({
   page,
 }) => {
   for (const { packageName, packageRoute, path } of [
     {
       packageName: '@moldea.ai/core',
-      packageRoute: '/packages/packages/core/',
-      path: '/packages/packages/core/api/',
+      packageRoute: '/packages/core/',
+      path: '/packages/core/api/',
     },
     {
       packageName: '@moldea.ai/adapter-openai',
-      packageRoute: '/packages/adapters/openai/',
-      path: '/packages/adapters/openai/api/',
+      packageRoute: '/adapters/openai/',
+      path: '/adapters/openai/api/',
     },
   ]) {
-    await page.goto(path);
+    await page.goto(toPublicPath(path));
 
     const breadcrumbs = page.getByRole('navigation', { name: 'Breadcrumb' });
     await expect(breadcrumbs.getByRole('link', { name: packageName, exact: true })).toHaveAttribute(
       'href',
-      packageRoute,
+      toPublicPath(packageRoute),
     );
     await expect(breadcrumbs.locator('[aria-current="page"]')).toHaveText('API reference');
 

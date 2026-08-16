@@ -37,10 +37,8 @@ defaults:
     shell: bash
 
 env:
-  BASE_PATH: ${{ vars.PACKAGES_WEBSITE_BASE_PATH || '/packages/' }}
   NODE_VERSION: 24.15.0
   PNPM_VERSION: 11.9.0
-  SITE_URL: ${{ vars.PACKAGES_WEBSITE_SITE_URL || 'https://moldea-ai.github.io' }}
 
 jobs:
   build:
@@ -62,6 +60,7 @@ jobs:
           cache: pnpm
 
       - name: Configure GitHub Pages
+        id: pages
         uses: actions/configure-pages@v5
 
       - name: Install dependencies
@@ -86,12 +85,21 @@ jobs:
         run: pnpm --filter @moldea.ai/packages-website lint
 
       - name: Build and validate static website
+        env:
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}
+          SITE_URL: ${{ steps.pages.outputs.origin }}
         run: pnpm website:build
 
       - name: Test static artifact integration
+        env:
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}
+          SITE_URL: ${{ steps.pages.outputs.origin }}
         run: pnpm --filter @moldea.ai/packages-website test:integration
 
       - name: Test browser behavior
+        env:
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}
+          SITE_URL: ${{ steps.pages.outputs.origin }}
         run: pnpm --filter @moldea.ai/packages-website test:e2e
 
       - name: Upload GitHub Pages artifact

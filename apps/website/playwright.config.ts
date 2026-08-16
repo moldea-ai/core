@@ -1,5 +1,10 @@
 import { defineConfig, devices } from '@playwright/test';
 
+import { DEFAULT_BASE_PATH, normalizeBasePath } from './src/lib/site/url.ts';
+
+const basePath = normalizeBasePath(process.env.BASE_PATH ?? DEFAULT_BASE_PATH);
+const previewOrigin = 'http://127.0.0.1:4322';
+
 export default defineConfig({
   testDir: './src',
   testMatch: '**/*.test-e2e.ts',
@@ -19,10 +24,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command:
-      'pnpm build && pnpm exec vite preview --base /packages/ --host 127.0.0.1 --port 4322 --strictPort',
+    command: `pnpm build && pnpm exec vite preview --base ${basePath} --host 127.0.0.1 --port 4322 --strictPort`,
     reuseExistingServer: false,
     timeout: 120_000,
-    url: 'http://127.0.0.1:4322/packages/',
+    url: new URL(basePath, previewOrigin).href,
   },
 });
