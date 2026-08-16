@@ -1,10 +1,6 @@
 import type ts from 'typescript';
 
-import {
-  analyzeClientRequests,
-  getClosedArrayIdentifiers,
-  indexSafeModuleArrayNames,
-} from '@moldea.ai/adapter-static-analysis';
+import { analyzeClientRequests } from '@moldea.ai/adapter-static-analysis';
 
 import type {
   IAnthropicMessagesAnalysis,
@@ -45,20 +41,3 @@ export const analyzeAnthropicMessages = (
     requests: Object.freeze(requests),
   });
 };
-
-/** Resolves a closed array whose values are direct identifiers. */
-export const getAnthropicClosedArrayIdentifiers: (
-  expression: ts.ArrayLiteralExpression,
-) => readonly ts.Identifier[] | null = getClosedArrayIdentifiers;
-
-/** Determines whether a module-local tool array remains immutable. */
-export const isSafeAnthropicModuleArray = (
-  analysis: IAnthropicSourceAnalysis,
-  name: string,
-): boolean => analysis.safeModuleArrayNames.has(name);
-
-/** Indexes immutable module-local tool arrays through one AST traversal. */
-export const indexSafeAnthropicModuleArrayNames = (
-  analysis: IAnthropicSourceAnalysis,
-): ReadonlySet<string> =>
-  indexSafeModuleArrayNames(analysis, ANTHROPIC_SOURCE_CONFIG.requestConfig);

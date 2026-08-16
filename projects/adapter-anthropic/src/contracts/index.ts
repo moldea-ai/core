@@ -2,7 +2,7 @@ import type ts from 'typescript';
 
 import type { ISourceRange } from '@moldea.ai/core';
 import type { IAdapterDiagnostic } from '@moldea.ai/core/adapter';
-import type { IRepositoryEntry, IRepositoryPath, IRepositoryReader } from '@moldea.ai/repository';
+import type { IRepositoryEntry, IRepositoryPath } from '@moldea.ai/repository';
 
 // stable package-owned diagnostic codes
 export type IAnthropicAdapterDiagnosticCode =
@@ -110,7 +110,6 @@ export interface IAnthropicMessagesAnalysis {
 
 // operation-local repository access isolates bytes and parse results per inspection
 export interface IAnthropicInspectionSession {
-  readonly repository: IRepositoryReader;
   readonly signal?: AbortSignal;
   analyzeSource(path: IRepositoryPath): Promise<IAnthropicSourceAnalysisResult>;
   discoverPackage(path: IRepositoryPath): Promise<IAnthropicPackageDiscoveryResult>;

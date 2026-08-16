@@ -1,20 +1,8 @@
-import type ts from 'typescript';
-
-import {
-  analyzeSource,
-  getCallableExportState,
-  getConstExport,
-  getRuntimeExport,
-  isSupportedTypeScriptSourcePath,
-} from '@moldea.ai/adapter-static-analysis';
+import { analyzeSource } from '@moldea.ai/adapter-static-analysis';
 
 import type { IRepositoryPath } from '@moldea.ai/repository';
 
-import type {
-  IAnthropicExportState,
-  IAnthropicSourceAnalysis,
-  IAnthropicSourceAnalysisResult,
-} from '../contracts/index.js';
+import type { IAnthropicSourceAnalysisResult } from '../contracts/index.js';
 
 export const ANTHROPIC_SOURCE_CONFIG = Object.freeze({
   importConfig: Object.freeze({
@@ -59,26 +47,3 @@ export const analyzeAnthropicSource = (
     kind: 'valid',
   });
 };
-
-/** Determines whether a bound path uses a supported TypeScript source extension. */
-export const isSupportedAnthropicSourcePath = (path: IRepositoryPath): boolean =>
-  isSupportedTypeScriptSourcePath(path);
-
-/** Classifies a direct exported runtime-agent function and exposes its body. */
-export const getAnthropicRuntimeExport = (
-  analysis: IAnthropicSourceAnalysis,
-  symbol: string,
-): IAnthropicExportState & { readonly body?: ts.ConciseBody } => getRuntimeExport(analysis, symbol);
-
-/** Classifies a directly exported callable value such as an instruction loader. */
-export const getAnthropicCallableExportState = (
-  analysis: IAnthropicSourceAnalysis,
-  symbol: string,
-): IAnthropicExportState => getCallableExportState(analysis, symbol);
-
-/** Classifies a directly exported constant and returns its static initializer. */
-export const getAnthropicConstExport = (
-  analysis: IAnthropicSourceAnalysis,
-  symbol: string,
-): IAnthropicExportState & { readonly expression?: ts.Expression } =>
-  getConstExport(analysis, symbol);

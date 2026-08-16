@@ -1,3 +1,7 @@
+import {
+  getRuntimeExport,
+  isSupportedTypeScriptSourcePath,
+} from '@moldea.ai/adapter-static-analysis';
 import type { IIndexedAgent, IRuntimeAdapterEvidence } from '@moldea.ai/core';
 import type {
   IAdapterDiagnostic,
@@ -7,11 +11,7 @@ import type {
 
 import { ANTHROPIC_ADAPTER_ID, ANTHROPIC_MESSAGES_RUNTIME_NAME } from '../constants/index.js';
 import type { IAnthropicInspectionSession } from '../contracts/index.js';
-import {
-  analyzeAnthropicMessages,
-  getAnthropicRuntimeExport,
-  isSupportedAnthropicSourcePath,
-} from '../source-analysis/index.js';
+import { analyzeAnthropicMessages } from '../source-analysis/index.js';
 import {
   addAnthropicDiagnostic,
   analyzeAnthropicBoundReference,
@@ -36,7 +36,7 @@ const inspectAgent = async (
 
   await inspectAnthropicPackage(session, runtimeAgent.path, evidence, diagnostics, agent.id);
 
-  if (!isSupportedAnthropicSourcePath(runtimeAgent.path)) {
+  if (!isSupportedTypeScriptSourcePath(runtimeAgent.path)) {
     return;
   }
 
@@ -72,7 +72,7 @@ const inspectAgent = async (
     return;
   }
 
-  const runtimeExport = getAnthropicRuntimeExport(analysis, runtimeAgent.symbol);
+  const runtimeExport = getRuntimeExport(analysis, runtimeAgent.symbol);
 
   if (runtimeExport.kind === 'absent') {
     addAnthropicDiagnostic(

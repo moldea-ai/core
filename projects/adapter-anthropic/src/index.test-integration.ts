@@ -76,10 +76,13 @@ describe('@moldea.ai/adapter-anthropic public API', () => {
       readFileSync(path.join(projectDirectory, 'package.json'), 'utf8'),
     ) as { readonly dependencies?: Readonly<Record<string, string>> };
     const packedPaths = packResult.files.map((file) => file.path);
+    const packedCodePaths = packedPaths.filter(
+      (filePath) => filePath.startsWith('dist/') && /\.(?:d\.ts|js)$/u.test(filePath),
+    );
 
     expect(packResult).toMatchObject({
       name: '@moldea.ai/adapter-anthropic',
-      version: '1.0.0',
+      version: '1.0.1',
     });
     expect(packedPaths).toContain('dist/index.js');
     expect(packedPaths).toContain('dist/index.d.ts');
@@ -99,6 +102,14 @@ describe('@moldea.ai/adapter-anthropic public API', () => {
       ),
     ).toBe(true);
     expect(packedPaths.every((filePath) => !filePath.includes('.test-'))).toBe(true);
+    expect(
+      packedCodePaths.every(
+        (filePath) =>
+          !readFileSync(path.join(projectDirectory, filePath), 'utf8').includes(
+            '@moldea.ai/adapter-static-analysis',
+          ),
+      ),
+    ).toBe(true);
     expect(manifest.dependencies).toStrictEqual({
       '@moldea.ai/core': 'workspace:^2.0.0',
       '@moldea.ai/repository': 'workspace:^1.0.0',

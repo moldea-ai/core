@@ -2,20 +2,18 @@
 import ts from 'typescript';
 import { describe, expect, test } from 'vitest';
 
+import {
+  getClosedObjectProperties,
+  getConstExport,
+  getRuntimeExport,
+  getStaticString,
+  isBoundIdentifier,
+  isStaticLiteralValue,
+  resolveImportCandidatePaths,
+} from '@moldea.ai/adapter-static-analysis';
 import { parseRepositoryPath } from '@moldea.ai/repository';
 
-import {
-  analyzeAnthropicMessages,
-  analyzeAnthropicSource,
-  getAnthropicClosedObjectProperties,
-  getAnthropicConstExport,
-  getAnthropicRuntimeExport,
-  getAnthropicStaticString,
-  isAnthropicBoundIdentifier,
-  isSafeAnthropicModuleArray,
-  isAnthropicStaticLiteralValue,
-  resolveAnthropicImportCandidatePaths,
-} from './index.js';
+import { analyzeAnthropicMessages, analyzeAnthropicSource } from './index.js';
 
 const analyze = (source: string) => {
   const result = analyzeAnthropicSource(
@@ -32,7 +30,7 @@ const analyze = (source: string) => {
 
 const findMessages = (source: string, symbol = 'agent') => {
   const analysis = analyze(source);
-  const runtime = getAnthropicRuntimeExport(analysis, symbol);
+  const runtime = getRuntimeExport(analysis, symbol);
 
   if (runtime.kind !== 'present-supported' || runtime.body === undefined) {
     throw new TypeError('The runtime fixture must use a supported export.');
@@ -47,7 +45,7 @@ describe('analyzeAnthropicSource', () => {
       [
         "import AnthropicClient from '@anthropic-ai/sdk';",
         "import { loadInstruction as readInstruction } from './instructions.js';",
-        'const client = new AnthropicClient();',
+        'const client = new (AnthropicClient)();',
         'export const agent = async () =>',
         '  client.messages.create({ system: await readInstruction() });',
       ].join('\n'),
@@ -74,7 +72,7 @@ describe('analyzeAnthropicSource', () => {
     }
 
     expect(
-      isAnthropicBoundIdentifier(call.expression, analysis, {
+      isBoundIdentifier(call.expression, analysis, {
         path: parseRepositoryPath('/src/instructions.ts'),
         symbol: 'loadInstruction',
       }),
@@ -85,7 +83,7 @@ describe('analyzeAnthropicSource', () => {
     const analysis = analyze(
       "export const tool = ({ type: 'custom', name: 'find_order' } as const) satisfies object;",
     );
-    const exported = getAnthropicConstExport(analysis, 'tool');
+    const exported = getConstExport(analysis, 'tool');
 
     if (
       exported.kind !== 'present-supported' ||
@@ -95,11 +93,11 @@ describe('analyzeAnthropicSource', () => {
       throw new TypeError('The registration fixture must be a supported object literal.');
     }
 
-    const properties = getAnthropicClosedObjectProperties(exported.expression);
+    const properties = getClosedObjectProperties(exported.expression);
 
     expect(properties).not.toBeNull();
-    expect(getAnthropicStaticString(properties?.get('type'))).toBe('custom');
-    expect(getAnthropicStaticString(properties?.get('name'))).toBe('find_order');
+    expect(getStaticString(properties?.get('type'))).toBe('custom');
+    expect(getStaticString(properties?.get('name'))).toBe('find_order');
   });
 
   test.each([
@@ -107,7 +105,7 @@ describe('analyzeAnthropicSource', () => {
     ["export const tool = { ['name']: 'first' };", 'computed property'],
     ["export const tool = { ...other, name: 'first' };", 'spread property'],
   ])('rejects a %s from closed object analysis', (source) => {
-    const exported = getAnthropicConstExport(analyze(source), 'tool');
+    const exported = getConstExport(analyze(source), 'tool');
 
     if (
       exported.kind !== 'present-supported' ||
@@ -117,7 +115,7 @@ describe('analyzeAnthropicSource', () => {
       throw new TypeError('The object fixture must be a direct exported constant.');
     }
 
-    expect(getAnthropicClosedObjectProperties(exported.expression)).toBeNull();
+    expect(getClosedObjectProperties(exported.expression)).toBeNull();
   });
 
   test('rejects invalid source text and syntax', () => {
@@ -196,7 +194,7 @@ describe('analyzeAnthropicSource', () => {
         `export const agent = () => ${expression};`,
       ].join('\n'),
     );
-    const runtime = getAnthropicRuntimeExport(analysis, 'agent');
+    const runtime = getRuntimeExport(analysis, 'agent');
 
     if (runtime.kind !== 'present-supported' || runtime.body === undefined) {
       throw new TypeError('The runtime fixture must be supported.');
@@ -267,13 +265,13 @@ describe('analyzeAnthropicSource', () => {
     ['undefined', '{ missing: undefined }', false],
   ])('classifies %s in the static schema grammar', (_description, expression, expected) => {
     const analysis = analyze(`export const schema = ${expression};`);
-    const schema = getAnthropicConstExport(analysis, 'schema');
+    const schema = getConstExport(analysis, 'schema');
 
     if (schema.kind !== 'present-supported' || schema.expression === undefined) {
       throw new TypeError('The schema fixture must be a direct exported constant.');
     }
 
-    expect(isAnthropicStaticLiteralValue(schema.expression)).toBe(expected);
+    expect(isStaticLiteralValue(schema.expression)).toBe(expected);
   });
 
   test('tracks an extracted Messages create member as an unresolved dynamic candidate', () => {
@@ -429,24 +427,24 @@ describe('analyzeAnthropicSource', () => {
     const defaultExport = analyze('export default function agent() {}');
     const indirectExport = analyze('const agent = () => undefined; export { agent };');
 
-    expect(getAnthropicRuntimeExport(defaultExport, 'agent').kind).toBe('present-unsupported');
-    expect(getAnthropicRuntimeExport(indirectExport, 'agent').kind).toBe('present-unsupported');
+    expect(getRuntimeExport(defaultExport, 'agent').kind).toBe('present-unsupported');
+    expect(getRuntimeExport(indirectExport, 'agent').kind).toBe('present-unsupported');
   });
 
   test('resolves only exact TypeScript and explicit JavaScript ESM source specifiers', () => {
     const containingPath = parseRepositoryPath('/src/agent.ts');
 
-    expect(resolveAnthropicImportCandidatePaths(containingPath, './tool.js')).toStrictEqual([
+    expect(resolveImportCandidatePaths(containingPath, './tool.js')).toStrictEqual([
       '/src/tool.ts',
       '/src/tool.tsx',
     ]);
-    expect(resolveAnthropicImportCandidatePaths(containingPath, './tool.mjs')).toStrictEqual([
+    expect(resolveImportCandidatePaths(containingPath, './tool.mjs')).toStrictEqual([
       '/src/tool.mts',
     ]);
-    expect(resolveAnthropicImportCandidatePaths(containingPath, './tool.ts')).toStrictEqual([
+    expect(resolveImportCandidatePaths(containingPath, './tool.ts')).toStrictEqual([
       '/src/tool.ts',
     ]);
-    expect(resolveAnthropicImportCandidatePaths(containingPath, './tool')).toStrictEqual([]);
+    expect(resolveImportCandidatePaths(containingPath, './tool')).toStrictEqual([]);
   });
 
   test('accepts reusable module tool arrays and rejects mutation or aliasing', () => {
@@ -538,17 +536,17 @@ describe('analyzeAnthropicSource', () => {
       ].join('\n'),
     );
 
-    expect(isSafeAnthropicModuleArray(safe, 'tools')).toBe(true);
-    expect(isSafeAnthropicModuleArray(safelyObserved, 'tools')).toBe(true);
-    expect(isSafeAnthropicModuleArray(mutated, 'tools')).toBe(false);
-    expect(isSafeAnthropicModuleArray(aliased, 'tools')).toBe(false);
-    expect(isSafeAnthropicModuleArray(computedMutation, 'tools')).toBe(false);
-    expect(isSafeAnthropicModuleArray(dynamicMutation, 'tools')).toBe(false);
-    expect(isSafeAnthropicModuleArray(deletedMember, 'tools')).toBe(false);
-    expect(isSafeAnthropicModuleArray(returnedFromConciseArrow, 'tools')).toBe(false);
-    expect(isSafeAnthropicModuleArray(destructuredMemberMutation, 'tools')).toBe(false);
-    expect(isSafeAnthropicModuleArray(contained, 'tools')).toBe(false);
-    expect(isSafeAnthropicModuleArray(callbackExposed, 'tools')).toBe(false);
-    expect(isSafeAnthropicModuleArray(forOfMemberMutation, 'tools')).toBe(false);
+    expect(safe.safeModuleArrayNames.has('tools')).toBe(true);
+    expect(safelyObserved.safeModuleArrayNames.has('tools')).toBe(true);
+    expect(mutated.safeModuleArrayNames.has('tools')).toBe(false);
+    expect(aliased.safeModuleArrayNames.has('tools')).toBe(false);
+    expect(computedMutation.safeModuleArrayNames.has('tools')).toBe(false);
+    expect(dynamicMutation.safeModuleArrayNames.has('tools')).toBe(false);
+    expect(deletedMember.safeModuleArrayNames.has('tools')).toBe(false);
+    expect(returnedFromConciseArrow.safeModuleArrayNames.has('tools')).toBe(false);
+    expect(destructuredMemberMutation.safeModuleArrayNames.has('tools')).toBe(false);
+    expect(contained.safeModuleArrayNames.has('tools')).toBe(false);
+    expect(callbackExposed.safeModuleArrayNames.has('tools')).toBe(false);
+    expect(forOfMemberMutation.safeModuleArrayNames.has('tools')).toBe(false);
   });
 });

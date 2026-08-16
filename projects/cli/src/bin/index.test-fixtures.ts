@@ -146,7 +146,7 @@ export const expectPackageManifest = (
     name: '@moldea.ai/cli',
     preferUnplugged: true,
     type: 'module',
-    version: '2.1.0',
+    version: '2.1.1',
   });
   expect(manifest.dependencies).toStrictEqual({
     '@moldea.ai/adapter-anthropic': anthropicAdapterVersion,

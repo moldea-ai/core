@@ -53,6 +53,7 @@ export type IStaticAnalysisPackageDiscoveryResult =
 
 // minimal entry contract supplied by a provider adapter's repository session
 export interface IStaticAnalysisEntry {
+  readonly path?: string;
   readonly type: string;
 }
 
@@ -154,4 +155,68 @@ export interface IStaticAnalysisRequests {
 export interface IStaticAnalysisReference {
   readonly path: string;
   readonly symbol?: string;
+}
+
+// operation-local analysis functions cached by a provider inspection
+export interface IStaticAnalysisInspectionSession<
+  TPath extends string,
+  TSourceResult,
+  TPackageResult,
+  TEntry,
+> {
+  readonly signal?: AbortSignal;
+  analyzeSource(path: TPath): Promise<TSourceResult>;
+  discoverPackage(path: TPath): Promise<TPackageResult>;
+  getEntry(path: TPath): Promise<TEntry>;
+}
+
+// provider callbacks used to construct an operation-local inspection session
+export interface IStaticAnalysisInspectionSessionOptions<
+  TPath extends string,
+  TSourceResult,
+  TPackageResult,
+  TEntry,
+> {
+  readonly analyzeSource: (
+    path: TPath,
+    bytes: Uint8Array,
+    signal?: AbortSignal,
+  ) => TSourceResult | Promise<TSourceResult>;
+  readonly discoverPackage: (path: TPath, signal?: AbortSignal) => Promise<TPackageResult>;
+  readonly getEntry: (path: TPath, signal?: AbortSignal) => Promise<TEntry>;
+  readonly readFile: (path: TPath, signal?: AbortSignal) => Promise<Uint8Array>;
+  readonly signal?: AbortSignal;
+}
+
+// provider-neutral result for a statically inspected relationship
+export type IStaticAnalysisRelationshipResult =
+  | { readonly expression: ts.Expression | null; readonly kind: 'absent' }
+  | { readonly kind: 'ambiguous' }
+  | { readonly kind: 'present' };
+
+// declared registration and provider-owned metadata used by relationship classification
+export interface IStaticAnalysisToolRegistration<TRegistration> {
+  readonly reference: IStaticAnalysisReference & { readonly symbol: string };
+  readonly registration: TRegistration;
+}
+
+// one declared registration paired with its classified request relationship
+export interface IStaticAnalysisToolRelationship<TRegistration> {
+  readonly registration: TRegistration;
+  readonly relationship: IStaticAnalysisRelationshipResult;
+}
+
+// provider callbacks and indexed source needed for tool relationship classification
+export interface IStaticAnalysisToolRelationshipOptions<TRegistration> {
+  readonly analysis: IStaticAnalysisSource;
+  readonly analyzeSource: (path: string) => Promise<IStaticAnalysisSourceResult>;
+  readonly getEntry: (path: string) => Promise<IStaticAnalysisEntry | null>;
+  readonly hasAmbiguousCandidate: boolean;
+  readonly isSupportedAdditionalRegistration: (
+    analysis: IStaticAnalysisSource,
+    symbol: string,
+  ) => boolean;
+  readonly registrations: readonly IStaticAnalysisToolRegistration<TRegistration>[];
+  readonly relationships: readonly IStaticAnalysisRequestRelationship[];
+  readonly signal?: AbortSignal;
 }

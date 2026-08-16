@@ -200,12 +200,12 @@ export const indexModuleDeclarations = (
       moduleConstDeclarations.set(declaration.name.text, declaration);
       const initializer = unwrapExpression(declaration.initializer);
 
-      if (
-        ts.isNewExpression(initializer) &&
-        ts.isIdentifier(initializer.expression) &&
-        constructorNames.has(initializer.expression.text)
-      ) {
-        clientNames.add(declaration.name.text);
+      if (ts.isNewExpression(initializer)) {
+        const constructor = unwrapExpression(initializer.expression);
+
+        if (ts.isIdentifier(constructor) && constructorNames.has(constructor.text)) {
+          clientNames.add(declaration.name.text);
+        }
       }
 
       if (ts.isArrayLiteralExpression(initializer)) {
@@ -397,6 +397,39 @@ export const resolveImportCandidatePaths = (
 };
 
 /**
+ * Resolves the explicit module references an identifier can denote.
+ * @param identifier The local source identifier.
+ * @param analysis The source containing that identifier.
+ * @returns Same-file or relative-import candidates in deterministic order.
+ */
+export const resolveBindingReferences = (
+  identifier: ts.Identifier,
+  analysis: IStaticAnalysisSource,
+): readonly (IStaticAnalysisReference & { readonly symbol: string })[] => {
+  if (!isModuleBindingVisible(identifier, analysis)) {
+    return [];
+  }
+
+  const references: (IStaticAnalysisReference & { readonly symbol: string })[] = [];
+
+  if (analysis.exports.has(identifier.text)) {
+    references.push(Object.freeze({ path: analysis.path, symbol: identifier.text }));
+  }
+
+  const namedImport = analysis.namedImports.get(identifier.text);
+
+  if (namedImport !== undefined) {
+    references.push(
+      ...resolveImportCandidatePaths(analysis.path, namedImport.moduleSpecifier).map((path) =>
+        Object.freeze({ path, symbol: namedImport.importedName }),
+      ),
+    );
+  }
+
+  return references;
+};
+
+/**
  * Checks whether an identifier resolves directly to an explicit bound reference.
  * @param identifier The local source identifier.
  * @param analysis The source containing that identifier.
@@ -408,19 +441,11 @@ export const isBoundIdentifier = (
   analysis: IStaticAnalysisSource,
   reference: IStaticAnalysisReference,
 ): boolean => {
-  if (reference.symbol === undefined || !isModuleBindingVisible(identifier, analysis)) {
+  if (reference.symbol === undefined) {
     return false;
   }
 
-  if (analysis.path === reference.path) {
-    return identifier.text === reference.symbol && analysis.exports.has(reference.symbol);
-  }
-
-  const namedImport = analysis.namedImports.get(identifier.text);
-
-  return (
-    namedImport !== undefined &&
-    namedImport.importedName === reference.symbol &&
-    resolveImportCandidatePaths(analysis.path, namedImport.moduleSpecifier).includes(reference.path)
+  return resolveBindingReferences(identifier, analysis).some(
+    (candidate) => candidate.path === reference.path && candidate.symbol === reference.symbol,
   );
 };

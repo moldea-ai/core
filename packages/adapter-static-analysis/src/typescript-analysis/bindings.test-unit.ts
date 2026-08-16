@@ -6,9 +6,11 @@ import {
   indexImports,
   indexLocalBindingNames,
   indexModuleDeclarations,
+  isBoundIdentifier,
   isModuleBindingVisible,
   resolveImportCandidatePaths,
 } from './bindings.js';
+import { analyzeSource } from './source-analysis.js';
 
 /** Parses one TypeScript module fixture with parent links. */
 const parseSource = (source: string): ts.SourceFile =>
@@ -19,7 +21,7 @@ describe('static TypeScript bindings', () => {
     const sourceFile = parseSource(
       [
         "import Client, { Client as NamedClient, type Other } from 'provider';",
-        'const client = new NamedClient();',
+        'const client = new (NamedClient)();',
         'const tools = [firstTool, secondTool];',
         'export const agent = () => client.messages.create({ tools });',
       ].join('\n'),
@@ -83,6 +85,60 @@ describe('static TypeScript bindings', () => {
         },
       }),
     ).toBe(false);
+  });
+
+  test('preserves named-import identity when the binding is also re-exported', () => {
+    const result = analyzeSource(
+      '/src/agent.ts',
+      new TextEncoder().encode(
+        [
+          "import Client from 'provider';",
+          "import { tool } from './tool.js';",
+          'export { tool };',
+          'const client = new Client();',
+          'export const agent = () => client.messages.create({ tools: [tool] });',
+        ].join('\n'),
+      ),
+      {
+        importConfig: {
+          namedConstructorImports: [],
+          packageName: 'provider',
+          supportsDefaultConstructorImport: true,
+        },
+        requestConfig: {
+          acceptedArgumentCounts: [1],
+          methodName: 'create',
+          relationshipNames: ['tools'],
+          resourceName: 'messages',
+          toolRelationshipName: 'tools',
+        },
+      },
+    );
+
+    if (result.kind !== 'valid') {
+      throw new TypeError('The re-export fixture must be valid.');
+    }
+
+    let toolUsage: ts.Identifier | undefined;
+    const visit = (node: ts.Node): void => {
+      if (ts.isIdentifier(node) && node.text === 'tool') {
+        toolUsage = node;
+      }
+
+      ts.forEachChild(node, visit);
+    };
+    visit(result.analysis.sourceFile);
+
+    if (toolUsage === undefined) {
+      throw new TypeError('The re-export fixture must contain a tool use.');
+    }
+
+    expect(
+      isBoundIdentifier(toolUsage, result.analysis, {
+        path: '/src/tool.ts',
+        symbol: 'tool',
+      }),
+    ).toBe(true);
   });
 
   test.each([

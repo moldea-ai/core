@@ -2,6 +2,8 @@
 export type {
   IStaticAnalysisEntry,
   IStaticAnalysisExportState,
+  IStaticAnalysisInspectionSession,
+  IStaticAnalysisInspectionSessionOptions,
   IStaticAnalysisImportConfig,
   IStaticAnalysisModuleArray,
   IStaticAnalysisNamedImport,
@@ -13,6 +15,7 @@ export type {
   IStaticAnalysisPackageObservation,
   IStaticAnalysisPackageReader,
   IStaticAnalysisReference,
+  IStaticAnalysisRelationshipResult,
   IStaticAnalysisRequest,
   IStaticAnalysisRequestConfig,
   IStaticAnalysisRequestRelationship,
@@ -24,13 +27,26 @@ export type {
   IStaticAnalysisSourceRange,
   IStaticAnalysisSourceResult,
   IStaticAnalysisTextResult,
+  IStaticAnalysisToolRegistration,
+  IStaticAnalysisToolRelationship,
+  IStaticAnalysisToolRelationshipOptions,
 } from './types.js';
+
+// inspection session
+export { createInspectionSession } from './inspection-session/index.js';
 
 // package discovery
 export { createPackageManifestCandidatePaths, discoverPackage } from './package-discovery/index.js';
 
 // text
-export { createSourceLocator, normalizeText } from './text/index.js';
+export { createSourceLocator, getUnicodeScalarLength, normalizeText } from './text/index.js';
+
+// relationship analysis
+export {
+  classifyDirectCallRelationship,
+  classifySchemaRelationship,
+  classifyToolRelationships,
+} from './relationship-analysis/index.js';
 
 // TypeScript analysis
 export {
@@ -53,6 +69,7 @@ export {
   isStaticLiteralValue,
   isStrictLiteral,
   isSupportedTypeScriptSourcePath,
+  resolveBindingReferences,
   resolveImportCandidatePaths,
   unwrapExpression,
 } from './typescript-analysis/index.js';

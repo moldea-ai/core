@@ -41,8 +41,8 @@ describe('createMoldeaCliCompatibilityResult', () => {
       minimumGitVersion: '2.30.0',
       outputSchemaVersion: 1,
       packages: [
-        { name: '@moldea.ai/adapter-anthropic', version: '1.0.0' },
-        { name: '@moldea.ai/adapter-openai', version: '2.0.1' },
+        { name: '@moldea.ai/adapter-anthropic', version: '1.0.1' },
+        { name: '@moldea.ai/adapter-openai', version: '2.0.2' },
         { name: '@moldea.ai/core', version: '2.0.0' },
         { name: '@moldea.ai/repository', version: '1.0.1' },
         { name: '@moldea.ai/repository-fs', version: '1.0.1' },
@@ -69,7 +69,7 @@ describe('createMoldeaCliCompatibilityResult', () => {
     });
     expect(openAiAdapter).toMatchObject({
       active: true,
-      bundledVersion: '2.0.1',
+      bundledVersion: '2.0.2',
       id: 'openai',
       matrix: {
         implementationStatus: 'available',
@@ -85,7 +85,7 @@ describe('createMoldeaCliCompatibilityResult', () => {
 
     expect(result.adapters.find(({ id }) => id === 'anthropic')).toMatchObject({
       active: true,
-      bundledVersion: '1.0.0',
+      bundledVersion: '1.0.1',
       matrix: {
         implementation: { versionRange: '^1.0.0' },
         implementationStatus: 'available',
@@ -95,7 +95,7 @@ describe('createMoldeaCliCompatibilityResult', () => {
 
     expect(result.adapters.find(({ id }) => id === 'openai')).toMatchObject({
       active: true,
-      bundledVersion: '2.0.1',
+      bundledVersion: '2.0.2',
       matrix: {
         implementation: { versionRange: '^2.0.0' },
         implementationStatus: 'available',

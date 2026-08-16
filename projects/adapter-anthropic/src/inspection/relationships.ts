@@ -1,5 +1,20 @@
 import ts from 'typescript';
 
+import {
+  classifyDirectCallRelationship,
+  classifySchemaRelationship,
+  classifyToolRelationships,
+  getCallableExportState,
+  getClosedObjectProperties,
+  getConstExport,
+  getStaticString,
+  getUnicodeScalarLength,
+  isBoundIdentifier,
+  isNullLiteral,
+  isStaticLiteralValue,
+  unwrapExpression,
+  type IStaticAnalysisSource,
+} from '@moldea.ai/adapter-static-analysis';
 import type { IIndexedAgent, IRuntimeAdapterEvidence } from '@moldea.ai/core';
 import type { IAdapterDiagnostic } from '@moldea.ai/core/adapter';
 import type { IRepositoryReference, IToolManifestEntry } from '@moldea.ai/core/format';
@@ -8,25 +23,9 @@ import { parseRepositoryPath } from '@moldea.ai/repository';
 import { ANTHROPIC_ADAPTER_ID, ANTHROPIC_TOOL_NAME_MAX_SCALAR_LENGTH } from '../constants/index.js';
 import type {
   IAnthropicInspectionSession,
-  IAnthropicRequestRelationship,
   IAnthropicMessagesAnalysis,
   IAnthropicSourceAnalysis,
 } from '../contracts/index.js';
-import {
-  getAnthropicCallableExportState,
-  getAnthropicClosedArrayIdentifiers,
-  getAnthropicClosedObjectProperties,
-  getAnthropicConstExport,
-  getAnthropicDirectCall,
-  getAnthropicStaticString,
-  isAnthropicBoundIdentifier,
-  isAnthropicModuleBindingVisible,
-  isAnthropicNullLiteral,
-  isAnthropicStaticLiteralValue,
-  isSafeAnthropicModuleArray,
-  resolveAnthropicImportCandidatePaths,
-  unwrapAnthropicExpression,
-} from '../source-analysis/index.js';
 import {
   addAnthropicDiagnostic,
   analyzeAnthropicBoundReference,
@@ -53,11 +52,6 @@ type IAnthropicRegistrationShapeResult =
   | { readonly kind: 'present-unsupported' }
   | ({ readonly kind: 'present-supported' } & IAnthropicRegistrationShape);
 
-type IAnthropicRelationshipResult =
-  | { readonly expression: ts.Expression | null; readonly kind: 'absent' }
-  | { readonly kind: 'ambiguous' }
-  | { readonly kind: 'present' };
-
 const getExpressionRange = (
   analysis: IAnthropicSourceAnalysis,
   expression: ts.Expression | null,
@@ -68,25 +62,25 @@ const getExpressionRange = (
 
 const isSupportedRegistrationInputSchema = (
   expression: ts.Expression,
-  analysis: IAnthropicSourceAnalysis,
+  analysis: IStaticAnalysisSource,
   inputSchemaReference: IRepositoryReference | undefined,
 ): boolean => {
-  const candidate = unwrapAnthropicExpression(expression);
+  const candidate = unwrapExpression(expression);
 
   return (
-    (ts.isObjectLiteralExpression(candidate) && isAnthropicStaticLiteralValue(candidate)) ||
+    (ts.isObjectLiteralExpression(candidate) && isStaticLiteralValue(candidate)) ||
     (ts.isIdentifier(candidate) &&
       inputSchemaReference?.symbol !== undefined &&
-      isAnthropicBoundIdentifier(candidate, analysis, inputSchemaReference))
+      isBoundIdentifier(candidate, analysis, inputSchemaReference))
   );
 };
 
 const getRegistrationShape = (
-  analysis: IAnthropicSourceAnalysis,
+  analysis: IStaticAnalysisSource,
   symbol: string,
   inputSchemaReference?: IRepositoryReference,
 ): IAnthropicRegistrationShapeResult => {
-  const exported = getAnthropicConstExport(analysis, symbol);
+  const exported = getConstExport(analysis, symbol);
 
   if (exported.kind === 'absent') {
     return { kind: 'absent' };
@@ -106,7 +100,7 @@ const getRegistrationShape = (
     return { kind: 'present-unsupported' };
   }
 
-  const properties = getAnthropicClosedObjectProperties(object);
+  const properties = getClosedObjectProperties(object);
 
   if (properties === null) {
     return { kind: 'present-unsupported' };
@@ -134,17 +128,14 @@ const getRegistrationShape = (
   const inputSchema = properties.get('input_schema');
   const strict = properties.get('strict');
   const description = properties.get('description');
-  const detectedName = getAnthropicStaticString(name);
-  const isSupportedDescription =
-    description === undefined || getAnthropicStaticString(description) !== null;
+  const detectedName = getStaticString(name);
+  const isSupportedDescription = description === undefined || getStaticString(description) !== null;
   const isSupportedStrict =
     strict === undefined ||
-    unwrapAnthropicExpression(strict).kind === ts.SyntaxKind.TrueKeyword ||
-    unwrapAnthropicExpression(strict).kind === ts.SyntaxKind.FalseKeyword;
+    unwrapExpression(strict).kind === ts.SyntaxKind.TrueKeyword ||
+    unwrapExpression(strict).kind === ts.SyntaxKind.FalseKeyword;
   const isSupportedType =
-    type === undefined ||
-    isAnthropicNullLiteral(type) ||
-    getAnthropicStaticString(type) === 'custom';
+    type === undefined || isNullLiteral(type) || getStaticString(type) === 'custom';
 
   if (
     !isSupportedType ||
@@ -163,6 +154,16 @@ const getRegistrationShape = (
     kind: 'present-supported',
     properties,
   };
+};
+
+const isValidAnthropicToolName = (name: string): boolean => {
+  const scalarLength = getUnicodeScalarLength(name);
+
+  return (
+    scalarLength !== null &&
+    scalarLength > 0 &&
+    scalarLength <= ANTHROPIC_TOOL_NAME_MAX_SCALAR_LENGTH
+  );
 };
 
 const inspectRegistration = async (
@@ -224,9 +225,7 @@ const inspectRegistration = async (
 
   const name = shape.properties.get('name');
   const isNameMatch = shape.detectedName === tool.name;
-  const detectedNameLength = [...shape.detectedName].length;
-  const isNameValid =
-    detectedNameLength > 0 && detectedNameLength <= ANTHROPIC_TOOL_NAME_MAX_SCALAR_LENGTH;
+  const isNameValid = isValidAnthropicToolName(shape.detectedName);
 
   if (!isNameValid) {
     addAnthropicDiagnostic(
@@ -298,7 +297,7 @@ const inspectInputSchema = async (
     return;
   }
 
-  const schema = getAnthropicConstExport(schemaAnalysis, reference.symbol);
+  const schema = getConstExport(schemaAnalysis, reference.symbol);
 
   if (schema.kind === 'absent') {
     addAnthropicDiagnostic(
@@ -320,12 +319,9 @@ const inspectInputSchema = async (
     return;
   }
 
-  const candidate = unwrapAnthropicExpression(inputSchema);
+  const relationship = classifySchemaRelationship(registrationAnalysis, inputSchema, reference);
 
-  if (
-    ts.isIdentifier(candidate) &&
-    isAnthropicBoundIdentifier(candidate, registrationAnalysis, reference)
-  ) {
+  if (relationship.kind === 'present') {
     evidence.push(
       createAnthropicEvidence({
         agentId: agent.id,
@@ -344,17 +340,13 @@ const inspectInputSchema = async (
     return;
   }
 
-  const isProvablyDifferent =
-    isAnthropicNullLiteral(candidate) ||
-    (ts.isObjectLiteralExpression(candidate) && isAnthropicStaticLiteralValue(candidate));
-
-  if (isProvablyDifferent) {
+  if (relationship.kind === 'absent') {
     addAnthropicDiagnostic(
       diagnostics,
       'ANTHROPIC_TOOL_INPUT_SCHEMA_NOT_WIRED',
       registrationAnalysis.path,
       agent.id,
-      getExpressionRange(registrationAnalysis, candidate),
+      getExpressionRange(registrationAnalysis, relationship.expression),
       capabilityId,
     );
   }
@@ -385,7 +377,7 @@ const inspectInstructionLoader = async (
     return;
   }
 
-  const loader = getAnthropicCallableExportState(loaderAnalysis, reference.symbol);
+  const loader = getCallableExportState(loaderAnalysis, reference.symbol);
 
   if (loader.kind === 'absent') {
     addAnthropicDiagnostic(
@@ -401,238 +393,38 @@ const inspectInstructionLoader = async (
     return;
   }
 
-  let absentExpression: ts.Expression | null = null;
-  let hasAmbiguousRelationship = messages.hasAmbiguousCandidate;
+  const relationship = classifyDirectCallRelationship(
+    runtimeAnalysis,
+    messages.requests.map((request) => request.system),
+    messages.hasAmbiguousCandidate,
+    reference,
+  );
 
-  for (const request of messages.requests) {
-    if (request.system.kind === 'unresolved') {
-      hasAmbiguousRelationship = true;
-      continue;
-    }
-
-    if (request.system.kind === 'absent') {
-      continue;
-    }
-
-    const system = request.system.expression;
-
-    const call = getAnthropicDirectCall(system);
-
-    if (call !== null) {
-      const callee = unwrapAnthropicExpression(call.expression);
-
-      if (
-        ts.isIdentifier(callee) &&
-        isAnthropicBoundIdentifier(callee, runtimeAnalysis, reference)
-      ) {
-        evidence.push(
-          createAnthropicEvidence({
-            agentId: agent.id,
-            capabilityId: null,
-            capabilityKind: null,
-            details: { requestProperty: 'system' },
-            kind: 'instruction-loader',
-            references: [
-              { path: runtimeAnalysis.path },
-              { path: reference.path, symbol: reference.symbol },
-            ],
-            runtimeName: reference.symbol,
-            source: ANTHROPIC_ADAPTER_ID,
-          }),
-        );
-        return;
-      }
-
-      if (ts.isIdentifier(callee)) {
-        absentExpression ??= system;
-        continue;
-      }
-    }
-
-    if (isAnthropicStaticLiteralValue(system)) {
-      absentExpression ??= system;
-    } else {
-      hasAmbiguousRelationship = true;
-    }
-  }
-
-  if (!hasAmbiguousRelationship) {
+  if (relationship.kind === 'present') {
+    evidence.push(
+      createAnthropicEvidence({
+        agentId: agent.id,
+        capabilityId: null,
+        capabilityKind: null,
+        details: { requestProperty: 'system' },
+        kind: 'instruction-loader',
+        references: [
+          { path: runtimeAnalysis.path },
+          { path: reference.path, symbol: reference.symbol },
+        ],
+        runtimeName: reference.symbol,
+        source: ANTHROPIC_ADAPTER_ID,
+      }),
+    );
+  } else if (relationship.kind === 'absent') {
     addAnthropicDiagnostic(
       diagnostics,
       'ANTHROPIC_INSTRUCTION_LOADER_NOT_WIRED',
       runtimeAnalysis.path,
       agent.id,
-      getExpressionRange(runtimeAnalysis, absentExpression),
+      getExpressionRange(runtimeAnalysis, relationship.expression),
     );
   }
-};
-
-const resolveClosedToolIdentifiers = (
-  relationship: IAnthropicRequestRelationship,
-  runtimeAnalysis: IAnthropicSourceAnalysis,
-): readonly ts.Identifier[] | null | undefined => {
-  if (relationship.kind === 'absent') {
-    return [];
-  }
-
-  if (relationship.kind === 'unresolved') {
-    return undefined;
-  }
-
-  const candidate = unwrapAnthropicExpression(relationship.expression);
-
-  if (ts.isArrayLiteralExpression(candidate)) {
-    return getAnthropicClosedArrayIdentifiers(candidate);
-  }
-
-  if (ts.isIdentifier(candidate) && isAnthropicModuleBindingVisible(candidate, runtimeAnalysis)) {
-    const moduleArray = runtimeAnalysis.moduleArrays.get(candidate.text);
-
-    if (moduleArray === undefined || !isSafeAnthropicModuleArray(runtimeAnalysis, candidate.text)) {
-      return null;
-    }
-
-    return getAnthropicClosedArrayIdentifiers(moduleArray.expression);
-  }
-
-  return isAnthropicStaticLiteralValue(candidate) ? [] : undefined;
-};
-
-const findMatchingRegistrations = (
-  identifier: ts.Identifier,
-  runtimeAnalysis: IAnthropicSourceAnalysis,
-  registrations: readonly IAnthropicRegistrationInspection[],
-): readonly IAnthropicRegistrationInspection[] =>
-  registrations.filter((registration) =>
-    isAnthropicBoundIdentifier(identifier, runtimeAnalysis, registration.reference),
-  );
-
-const resolveAdditionalRegistration = async (
-  session: IAnthropicInspectionSession,
-  identifier: ts.Identifier,
-  runtimeAnalysis: IAnthropicSourceAnalysis,
-): Promise<boolean> => {
-  if (!isAnthropicModuleBindingVisible(identifier, runtimeAnalysis)) {
-    return false;
-  }
-
-  let reference: IRepositoryReference & { readonly symbol: string };
-
-  if (runtimeAnalysis.exports.has(identifier.text)) {
-    reference = { path: runtimeAnalysis.path, symbol: identifier.text };
-  } else {
-    const namedImport = runtimeAnalysis.namedImports.get(identifier.text);
-
-    if (namedImport === undefined) {
-      return false;
-    }
-
-    const candidates = resolveAnthropicImportCandidatePaths(
-      runtimeAnalysis.path,
-      namedImport.moduleSpecifier,
-    ).map(parseRepositoryPath);
-    const entries = await Promise.all(candidates.map((path) => session.getEntry(path)));
-    session.signal?.throwIfAborted();
-    const filePaths = entries
-      .filter((entry) => entry?.type === 'file')
-      .map((entry) => entry?.path)
-      .filter((path) => path !== undefined);
-
-    if (filePaths.length !== 1 || filePaths[0] === undefined) {
-      return false;
-    }
-
-    reference = { path: filePaths[0], symbol: namedImport.importedName };
-  }
-
-  const result =
-    reference.path === runtimeAnalysis.path
-      ? { analysis: runtimeAnalysis, kind: 'valid' as const }
-      : await session.analyzeSource(reference.path);
-  session.signal?.throwIfAborted();
-
-  return (
-    result.kind === 'valid' &&
-    getRegistrationShape(result.analysis, reference.symbol).kind === 'present-supported'
-  );
-};
-
-const collectAdditionalRegistrations = async (
-  session: IAnthropicInspectionSession,
-  runtimeAnalysis: IAnthropicSourceAnalysis,
-  messages: IAnthropicMessagesAnalysis,
-  registrations: readonly IAnthropicRegistrationInspection[],
-): Promise<ReadonlySet<ts.Identifier>> => {
-  const supportedIdentifiers = new Set<ts.Identifier>();
-
-  for (const request of messages.requests) {
-    const identifiers = resolveClosedToolIdentifiers(request.tools, runtimeAnalysis);
-
-    if (identifiers === null || identifiers === undefined) {
-      continue;
-    }
-
-    for (const identifier of identifiers) {
-      if (findMatchingRegistrations(identifier, runtimeAnalysis, registrations).length !== 0) {
-        continue;
-      }
-
-      if (await resolveAdditionalRegistration(session, identifier, runtimeAnalysis)) {
-        supportedIdentifiers.add(identifier);
-      }
-    }
-  }
-
-  return supportedIdentifiers;
-};
-
-const classifyToolRelationship = (
-  runtimeAnalysis: IAnthropicSourceAnalysis,
-  messages: IAnthropicMessagesAnalysis,
-  target: IAnthropicRegistrationInspection,
-  registrations: readonly IAnthropicRegistrationInspection[],
-  additionalRegistrations: ReadonlySet<ts.Identifier>,
-): IAnthropicRelationshipResult => {
-  let absentExpression: ts.Expression | null = null;
-  let hasAmbiguousRelationship = messages.hasAmbiguousCandidate;
-
-  for (const request of messages.requests) {
-    const identifiers = resolveClosedToolIdentifiers(request.tools, runtimeAnalysis);
-
-    if (identifiers === null || identifiers === undefined) {
-      hasAmbiguousRelationship = true;
-      continue;
-    }
-
-    let isClosedRegistrationArray = true;
-    let containsTarget = false;
-
-    for (const identifier of identifiers) {
-      const matches = findMatchingRegistrations(identifier, runtimeAnalysis, registrations);
-
-      if (matches.length === 1) {
-        containsTarget ||= matches[0] === target;
-      } else if (matches.length !== 0 || !additionalRegistrations.has(identifier)) {
-        isClosedRegistrationArray = false;
-        break;
-      }
-    }
-
-    if (!isClosedRegistrationArray) {
-      hasAmbiguousRelationship = true;
-      continue;
-    }
-
-    if (containsTarget) {
-      return { kind: 'present' };
-    }
-
-    absentExpression ??= request.tools.kind === 'present' ? request.tools.expression : null;
-  }
-
-  return hasAmbiguousRelationship
-    ? { kind: 'ambiguous' }
-    : { expression: absentExpression, kind: 'absent' };
 };
 
 const inspectToolRelationships = async (
@@ -668,22 +460,25 @@ const inspectToolRelationships = async (
     }
   }
 
-  const additionalRegistrations = await collectAdditionalRegistrations(
-    session,
-    runtimeAnalysis,
-    messages,
-    registrations,
-  );
+  const relationships = await classifyToolRelationships({
+    analysis: runtimeAnalysis,
+    analyzeSource: (path) => session.analyzeSource(parseRepositoryPath(path)),
+    getEntry: (path) => session.getEntry(parseRepositoryPath(path)),
+    hasAmbiguousCandidate: messages.hasAmbiguousCandidate,
+    isSupportedAdditionalRegistration: (analysis, symbol) => {
+      const shape = getRegistrationShape(analysis, symbol);
 
-  for (const registration of registrations) {
-    const relationship = classifyToolRelationship(
-      runtimeAnalysis,
-      messages,
+      return shape.kind === 'present-supported' && isValidAnthropicToolName(shape.detectedName);
+    },
+    registrations: registrations.map((registration) => ({
+      reference: registration.reference,
       registration,
-      registrations,
-      additionalRegistrations,
-    );
+    })),
+    relationships: messages.requests.map((request) => request.tools),
+    ...(session.signal === undefined ? {} : { signal: session.signal }),
+  });
 
+  for (const { registration, relationship } of relationships) {
     if (relationship.kind === 'absent') {
       addAnthropicDiagnostic(
         diagnostics,

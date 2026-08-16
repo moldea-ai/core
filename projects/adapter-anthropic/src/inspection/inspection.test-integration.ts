@@ -425,6 +425,24 @@ describe('anthropicAdapter Core integration', () => {
     expect(result.evidence.map(({ kind }) => kind)).not.toContain('tool-registration');
   });
 
+  test('diagnoses a client-tool name containing an unpaired surrogate escape', async () => {
+    const registration = fixture.entries
+      .find(({ path }) => path === '/src/find-order.ts')
+      ?.text.replace("name: 'find_order'", String.raw`name: '\uD800'`);
+
+    if (registration === undefined) {
+      throw new TypeError('The registration fixture is required.');
+    }
+
+    const result = await inspect({ '/src/find-order.ts': registration });
+
+    expect(result.diagnostics.map(({ code }) => code)).toStrictEqual([
+      'ANTHROPIC_TOOL_NAME_INVALID',
+      'ANTHROPIC_TOOL_NAME_MISMATCH',
+    ]);
+    expect(result.evidence.map(({ kind }) => kind)).not.toContain('tool-registration');
+  });
+
   test.each([
     ['omitted optional fields', ["  type: 'custom',\n", '  strict: true,\n'].join('')],
     ['a null type', "  type: 'custom',", '  type: null,'],
@@ -669,6 +687,43 @@ describe('anthropicAdapter Core integration', () => {
     expect(result.valid).toBe(true);
     expect(result.diagnostics).toStrictEqual([]);
     expect(result.evidence.map(({ kind }) => kind)).toContain('tool-registration');
+  });
+
+  test('keeps a closed tool array ambiguous when an additional registration name is invalid', async () => {
+    const entries = createEntries({
+      '/src/agent.ts': [
+        "import Anthropic from '@anthropic-ai/sdk';",
+        "import { extraTool } from './extra-tool.js';",
+        "import { findOrderTool as registeredFindOrder } from './find-order.js';",
+        "import { loadInstruction as readInstruction } from './instructions.js';",
+        'const client = new Anthropic();',
+        'export const supportAgent = () =>',
+        '  client.messages.create({',
+        '    system: readInstruction(),',
+        '    tools: [extraTool],',
+        '  });',
+        'void registeredFindOrder;',
+      ].join('\n'),
+    });
+    const result = await inspectEntries([
+      ...entries,
+      {
+        content: [
+          'export const extraTool = {',
+          "  type: 'custom',",
+          `  name: '${'a'.repeat(129)}',`,
+          '  input_schema: {},',
+          '  strict: false,',
+          '} as const;',
+        ].join('\n'),
+        path: '/src/extra-tool.ts',
+        type: 'file',
+      },
+    ]);
+
+    expect(result.valid).toBe(true);
+    expect(result.diagnostics).toStrictEqual([]);
+    expect(result.evidence.map(({ kind }) => kind)).not.toContain('tool-registration');
   });
 
   test('emits negative relationship diagnostics only when every candidate is closed', async () => {

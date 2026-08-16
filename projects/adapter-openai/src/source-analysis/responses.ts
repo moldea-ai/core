@@ -1,10 +1,6 @@
 import type ts from 'typescript';
 
-import {
-  analyzeClientRequests,
-  getClosedArrayIdentifiers,
-  indexSafeModuleArrayNames,
-} from '@moldea.ai/adapter-static-analysis';
+import { analyzeClientRequests } from '@moldea.ai/adapter-static-analysis';
 
 import type {
   IOpenAiResponsesAnalysis,
@@ -40,17 +36,3 @@ export const analyzeOpenAiResponses = (
     requests: Object.freeze(requests),
   });
 };
-
-/** Resolves a closed array whose values are direct identifiers. */
-export const getOpenAiClosedArrayIdentifiers: (
-  expression: ts.ArrayLiteralExpression,
-) => readonly ts.Identifier[] | null = getClosedArrayIdentifiers;
-
-/** Determines whether a module-local tool array remains immutable. */
-export const isSafeOpenAiModuleArray = (analysis: IOpenAiSourceAnalysis, name: string): boolean =>
-  analysis.safeModuleArrayNames.has(name);
-
-/** Indexes immutable module-local tool arrays through one AST traversal. */
-export const indexSafeOpenAiModuleArrayNames = (
-  analysis: IOpenAiSourceAnalysis,
-): ReadonlySet<string> => indexSafeModuleArrayNames(analysis, OPENAI_SOURCE_CONFIG.requestConfig);

@@ -1,3 +1,4 @@
+import { isSupportedTypeScriptSourcePath } from '@moldea.ai/adapter-static-analysis';
 import type { IRuntimeAdapterEvidence, ISourceRange } from '@moldea.ai/core';
 import type { IAdapterDiagnostic } from '@moldea.ai/core/adapter';
 import type { IRepositoryReference } from '@moldea.ai/core/format';
@@ -10,7 +11,6 @@ import type {
   IAnthropicSourceAnalysis,
 } from '../contracts/index.js';
 import { createAnthropicDiagnostic } from '../diagnostics/index.js';
-import { isSupportedAnthropicSourcePath } from '../source-analysis/index.js';
 
 /** Compares exact strings without locale-dependent behavior. */
 export const compareAnthropicStrings = (left: string, right: string): number =>
@@ -88,7 +88,7 @@ export const analyzeAnthropicBoundReference = async (
   agentId: string,
   capabilityId?: string,
 ): Promise<IAnthropicSourceAnalysis | null> => {
-  if (!isSupportedAnthropicSourcePath(reference.path)) {
+  if (!isSupportedTypeScriptSourcePath(reference.path)) {
     return null;
   }
 
