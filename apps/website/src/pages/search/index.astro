@@ -25,7 +25,7 @@ const searchIndexUrl = withBase('/search-index.json');
       </p>
 
       <form
-        class="surface-card mt-10 p-3"
+        class="mt-10"
         data-search-form
         data-search-index-url={searchIndexUrl}
         action={withBase('/search/')}
@@ -37,22 +37,24 @@ const searchIndexUrl = withBase('/search-index.json');
           for="documentation-search"
           >Search documentation</label
         >
-        <div class="flex items-center gap-3">
-          <Search
-            class="ms-2 size-5 shrink-0 text-muted-foreground"
-            aria-hidden="true"
-          />
-          <input
-            id="documentation-search"
-            class="min-h-12 min-w-0 flex-1 bg-transparent px-1 text-lg"
-            type="search"
-            name="query"
-            placeholder="e.g. repository snapshots"
-            autocomplete="off"
-            data-search-input
-          />
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div class="relative min-w-0 flex-1">
+            <Search
+              class="pointer-events-none absolute start-3 top-1/2 size-5 -translate-y-1/2 text-secondary-foreground"
+              aria-hidden="true"
+            />
+            <input
+              id="documentation-search"
+              class="min-h-12 w-full min-w-0 rounded-lg border border-border bg-background py-2 ps-10 pe-3 text-lg shadow-inset transition-colors outline-none placeholder:text-secondary-foreground focus-visible:border-transparent! focus-visible:shadow-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:bg-border/30"
+              type="search"
+              name="query"
+              placeholder="e.g. repository snapshots"
+              autocomplete="off"
+              data-search-input
+            />
+          </div>
           <button
-            class="min-h-11 rounded-lg bg-primary px-5 font-bold text-primary-foreground"
+            class="action-control action-primary min-h-12 px-5 py-3 font-bold"
             type="submit"
           >
             Search

@@ -234,6 +234,24 @@
     @apply transition duration-200 ease-out hover:-translate-y-0.5 hover:border-foreground/25 hover:shadow-raised motion-reduce:transform-none motion-reduce:transition-none;
   }
 
+  .action-control {
+    @apply inline-flex shrink-0 items-center justify-center rounded-lg border bg-clip-padding whitespace-nowrap transition-all outline-none select-none focus-visible:border-transparent! focus-visible:shadow-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background not-disabled:not-aria-disabled:active:not-aria-[haspopup]:translate-y-px disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 motion-reduce:transition-none;
+  }
+
+  .action-primary {
+    @apply border-transparent bg-primary text-primary-foreground not-disabled:not-aria-disabled:hover:bg-primary/80 dark:not-disabled:not-aria-disabled:hover:bg-primary/30;
+  }
+
+  .action-outline {
+    @apply border-border bg-background text-foreground not-disabled:not-aria-disabled:hover:bg-secondary not-disabled:not-aria-disabled:hover:text-foreground dark:bg-border/30 dark:not-disabled:not-aria-disabled:hover:bg-border/50;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .action-control:not(:disabled):not([aria-disabled='true']):active:not([aria-haspopup]) {
+      translate: none;
+    }
+  }
+
   .prose-moldea {
     @apply min-w-0 text-[1.05rem] leading-8 text-foreground;
   }

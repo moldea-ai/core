@@ -101,6 +101,96 @@ test('keeps primary static routes free of serious automated accessibility violat
   }
 });
 
+test('uses branded action states in both themes and respects reduced motion', async ({ page }) => {
+  await page.goto(toPublicPath('/'));
+
+  const primaryAction = page.getByRole('link', { name: 'Explore packages' });
+  const outlineAction = page.getByRole('link', { name: 'Source', exact: true });
+  const lightPrimaryBackground = await primaryAction.evaluate(
+    (element) => getComputedStyle(element).backgroundColor,
+  );
+  const lightOutlineBackground = await outlineAction.evaluate(
+    (element) => getComputedStyle(element).backgroundColor,
+  );
+
+  await primaryAction.hover();
+  await expect
+    .poll(() => primaryAction.evaluate((element) => getComputedStyle(element).backgroundColor))
+    .not.toBe(lightPrimaryBackground);
+
+  await outlineAction.hover();
+  await expect
+    .poll(() => outlineAction.evaluate((element) => getComputedStyle(element).backgroundColor))
+    .not.toBe(lightOutlineBackground);
+
+  const primaryActionBounds = await primaryAction.boundingBox();
+
+  if (primaryActionBounds === null) {
+    throw new Error('The primary action bounds could not be resolved.');
+  }
+
+  await page.mouse.move(
+    primaryActionBounds.x + primaryActionBounds.width / 2,
+    primaryActionBounds.y + primaryActionBounds.height / 2,
+  );
+  await page.mouse.down();
+  await expect
+    .poll(() => primaryAction.evaluate((element) => getComputedStyle(element).translate))
+    .not.toBe('none');
+  await page.mouse.move(0, 0);
+  await page.mouse.up();
+
+  await page.getByRole('button', { name: 'Use dark theme' }).click();
+  await expect(page.locator('html')).toHaveClass(/dark/);
+  const darkPrimaryBackground = await primaryAction.evaluate(
+    (element) => getComputedStyle(element).backgroundColor,
+  );
+
+  await primaryAction.hover();
+  await expect
+    .poll(() => primaryAction.evaluate((element) => getComputedStyle(element).backgroundColor))
+    .not.toBe(darkPrimaryBackground);
+
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await primaryAction.hover();
+  await page.mouse.down();
+  await expect(primaryAction).toHaveCSS('translate', 'none');
+  await expect(primaryAction).toHaveCSS('transition-property', 'none');
+  await page.mouse.move(0, 0);
+  await page.mouse.up();
+});
+
+test('uses the branded input surface in light and dark themes', async ({ page }) => {
+  await page.goto(toPublicPath('/search/'));
+
+  const searchInput = page.getByRole('searchbox', { name: 'Search documentation' });
+  const lightInputStyles = await searchInput.evaluate((element) => {
+    const styles = getComputedStyle(element);
+
+    return {
+      backgroundColor: styles.backgroundColor,
+      borderTopWidth: styles.borderTopWidth,
+      boxShadow: styles.boxShadow,
+    };
+  });
+
+  expect(lightInputStyles.backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
+  expect(lightInputStyles.borderTopWidth).toBe('1px');
+  expect(lightInputStyles.boxShadow).not.toBe('none');
+
+  await searchInput.focus();
+  await expect(searchInput).toBeFocused();
+  expect(await searchInput.evaluate((element) => getComputedStyle(element).boxShadow)).not.toBe(
+    lightInputStyles.boxShadow,
+  );
+
+  await page.getByRole('button', { name: 'Use dark theme' }).click();
+  await expect(page.locator('html')).toHaveClass(/dark/);
+  expect(
+    await searchInput.evaluate((element) => getComputedStyle(element).backgroundColor),
+  ).not.toBe('rgba(0, 0, 0, 0)');
+});
+
 test('searches the generated local index with a keyboard-submitted query', async ({ page }) => {
   await page.goto(toPublicPath('/'));
   await page.getByRole('link', { name: 'Search documentation' }).click();

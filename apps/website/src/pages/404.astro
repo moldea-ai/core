@@ -19,7 +19,7 @@ import { withBase } from '../lib/site/url.ts';
       </p>
       <div class="mt-8 flex flex-wrap gap-3">
         <a
-          class="inline-flex min-h-12 items-center gap-2 rounded-lg bg-primary px-5 py-3 font-bold text-primary-foreground"
+          class="action-control action-primary min-h-12 gap-2 px-5 py-3 font-bold"
           href={withBase('/')}
         >
           <ArrowLeft
@@ -28,7 +28,7 @@ import { withBase } from '../lib/site/url.ts';
           /> Back to packages
         </a>
         <a
-          class="inline-flex min-h-12 items-center rounded-lg border border-input px-5 py-3 font-bold hover:bg-muted"
+          class="action-control action-outline min-h-12 px-5 py-3 font-bold"
           href={withBase('/search/')}
         >
           Search documentation
