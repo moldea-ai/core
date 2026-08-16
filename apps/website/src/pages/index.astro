@@ -1,6 +1,7 @@
 ---
 import { ArrowRight, GitFork, Layers, ShieldCheck, Workflow } from '@lucide/astro';
 
+import InlineBrandText from '../components/inline-brand-text.astro';
 import PackageCard from '../components/package-card.astro';
 import BaseLayout from '../layouts/base-layout.astro';
 import { loadWebsiteModel } from '../lib/generation/generation.ts';
@@ -23,9 +24,9 @@ const cliPackage = model.packages.find(({ slug }) => slug === 'cli');
     </h1>
     <div class="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-end">
       <p class="max-w-3xl text-xl leading-9 text-muted-foreground sm:text-2xl">
-        moldea is the behavioral integrity layer for AI agents. This repository provides the
-        deterministic readers, repository interpretation, local CLI, and runtime adapters that make
-        its behavior inspectable.
+        <InlineBrandText
+          text="moldea is the behavioral integrity layer for AI agents. This repository provides the deterministic readers, repository interpretation, local CLI, and runtime adapters that make its behavior inspectable."
+        />
       </p>
       <div class="flex flex-wrap gap-3 lg:justify-end">
         <a
@@ -119,7 +120,9 @@ const cliPackage = model.packages.find(({ slug }) => slug === 'cli');
                 href={withBase(packageModel.route)}
               >
                 <p class="mb-5 font-mono text-xs text-muted-foreground">{packageModel.name}</p>
-                <p class="text-sm leading-6">{packageModel.description}</p>
+                <p class="text-sm leading-6">
+                  <InlineBrandText text={packageModel.description} />
+                </p>
               </a>
             ))
         }

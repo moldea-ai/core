@@ -1,5 +1,6 @@
 ---
 import { withBase } from '../lib/site/url.ts';
+import InlineBrandText from './inline-brand-text.astro';
 import Logo from './logo.astro';
 ---
 
@@ -8,8 +9,9 @@ import Logo from './logo.astro';
     <div class="max-w-md space-y-4">
       <Logo />
       <p class="text-sm leading-6 text-muted-foreground">
-        The open-source technical foundation that powers moldea—the behavioral integrity layer for
-        AI agents.
+        <InlineBrandText
+          text="The open-source technical foundation that powers moldea—the behavioral integrity layer for AI agents."
+        />
       </p>
     </div>
     <nav

@@ -1,0 +1,20 @@
+---
+interface Props {
+  text: string;
+}
+
+const { text } = Astro.props;
+const segments = text.split(/(\bmoldea\b)/gu);
+---
+
+{
+  segments.map((segment) =>
+    segment === 'moldea' ? (
+      <code class="rounded-md bg-code px-1.5 py-1 font-mono text-[0.86em] font-semibold text-code-foreground">
+        {segment}
+      </code>
+    ) : (
+      segment
+    ),
+  )
+}

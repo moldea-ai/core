@@ -3,6 +3,7 @@ import { ArrowUpRight, Box, Braces, Database, FolderTree, Terminal } from '@luci
 
 import type { IPublicPackage } from '../lib/model/types.ts';
 import { withBase } from '../lib/site/url.ts';
+import InlineBrandText from './inline-brand-text.astro';
 
 interface Props {
   packageModel: IPublicPackage;
@@ -37,6 +38,8 @@ const Icon = icons[packageModel.slug as keyof typeof icons] ?? Box;
   </div>
   <p class="mb-2 font-mono text-xs text-muted-foreground">v{packageModel.version}</p>
   <h3 class="mb-3 text-xl font-semibold tracking-tight break-all">{packageModel.name}</h3>
-  <p class="mb-6 leading-6 text-muted-foreground">{packageModel.description}</p>
+  <p class="mb-6 leading-6 text-muted-foreground">
+    <InlineBrandText text={packageModel.description} />
+  </p>
   <span class="mt-auto text-sm font-bold">Explore package <span aria-hidden="true">→</span></span>
 </a>
