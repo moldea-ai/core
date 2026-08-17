@@ -86,10 +86,7 @@ const breadcrumbs = [{ href: '/', label: 'Home' }, { label: 'Runtime Compatibili
     <div class="space-y-5">
       {
         model.adapters.map((adapter) => (
-          <details
-            class="surface-card group"
-            open={adapter.entry.implementationStatus === 'available'}
-          >
+          <details class="surface-card group">
             <summary class="flex min-h-16 list-none items-center justify-between gap-4 px-5 font-semibold [&::-webkit-details-marker]:hidden">
               <span class="font-mono">{adapter.id}</span>
               <span class="text-sm text-muted-foreground group-open:hidden">Show details</span>

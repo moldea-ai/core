@@ -2,7 +2,7 @@
 
 Deterministic runtime evidence and diagnostics for direct Anthropic SDK integrations.
 
-Version `1.0.1` experimentally supports:
+Version `2.0.0` experimentally supports:
 
 - TypeScript ESM source in `.ts`, `.tsx`, and `.mts` files
 - `@anthropic-ai/sdk >=0.117.1 <0.118.0`
@@ -11,6 +11,7 @@ Version `1.0.1` experimentally supports:
 - direct `client.messages.create(...)` calls
 - instruction loaders wired through `system`
 - closed client-tool arrays and direct `input_schema` bindings
+- client-tool names matching `^[A-Za-z0-9_-]{1,64}$`
 
 The adapter performs static inspection only. It does not import or execute the Anthropic SDK, send provider requests, validate model output, or interpret streaming behavior.
 

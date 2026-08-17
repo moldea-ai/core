@@ -34,4 +34,4 @@ Diagnostics use Core's adapter shape, preserve logical source locations, identif
 
 ## Package detection
 
-Detection stops at the nearest existing `package.json` owning each runtime-agent source. Dependency declarations across `dependencies`, `optionalDependencies`, `peerDependencies`, and `devDependencies` are considered collectively. A collectively disjoint range produces the unsupported-version diagnostic; an ambiguous range remains observational evidence.
+Detection stops at the nearest existing `package.json` owning each runtime-agent source. Dependency declarations across `dependencies`, `optionalDependencies`, `peerDependencies`, and `devDependencies` are considered collectively. A collectively disjoint range produces the unsupported-version diagnostic; an ambiguous range remains observational evidence. Invalid UTF-8 or NUL in the owning manifest produces only `ANTHROPIC_PACKAGE_MANIFEST_INVALID`; `ANTHROPIC_SOURCE_TEXT_INVALID` is reserved for referenced TypeScript source files.

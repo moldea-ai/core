@@ -8,7 +8,6 @@ import {
   getClosedObjectProperties,
   getConstExport,
   getStaticString,
-  getUnicodeScalarLength,
   isBoundIdentifier,
   isNullLiteral,
   isStaticLiteralValue,
@@ -20,7 +19,7 @@ import type { IAdapterDiagnostic } from '@moldea.ai/core/adapter';
 import type { IRepositoryReference, IToolManifestEntry } from '@moldea.ai/core/format';
 import { parseRepositoryPath } from '@moldea.ai/repository';
 
-import { ANTHROPIC_ADAPTER_ID, ANTHROPIC_TOOL_NAME_MAX_SCALAR_LENGTH } from '../constants/index.js';
+import { ANTHROPIC_ADAPTER_ID, ANTHROPIC_TOOL_NAME_PATTERN } from '../constants/index.js';
 import type {
   IAnthropicInspectionSession,
   IAnthropicMessagesAnalysis,
@@ -156,15 +155,7 @@ const getRegistrationShape = (
   };
 };
 
-const isValidAnthropicToolName = (name: string): boolean => {
-  const scalarLength = getUnicodeScalarLength(name);
-
-  return (
-    scalarLength !== null &&
-    scalarLength > 0 &&
-    scalarLength <= ANTHROPIC_TOOL_NAME_MAX_SCALAR_LENGTH
-  );
-};
+const isValidAnthropicToolName = (name: string): boolean => ANTHROPIC_TOOL_NAME_PATTERN.test(name);
 
 const inspectRegistration = async (
   session: IAnthropicInspectionSession,

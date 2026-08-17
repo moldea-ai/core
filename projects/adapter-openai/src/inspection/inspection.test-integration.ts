@@ -286,6 +286,21 @@ describe('openAiAdapter Core integration', () => {
     expect(result.valid).toBe(false);
   });
 
+  test.each([
+    ['invalid UTF-8', Uint8Array.from([0xff])],
+    ['NUL', new TextEncoder().encode('{"dependencies":{}}\0')],
+  ])(
+    'maps a package manifest with %s only to the package diagnostic',
+    async (_description, content) => {
+      const result = await inspect({ '/package.json': content });
+
+      expect(result.diagnostics).toStrictEqual([
+        createExpectedDiagnostic('OPENAI_PACKAGE_MANIFEST_INVALID', '/package.json', null),
+      ]);
+      expect(result.valid).toBe(false);
+    },
+  );
+
   test('returns no false runtime diagnostic when the bound pattern is indirect', async () => {
     const result = await inspect({
       '/src/agent.ts': [

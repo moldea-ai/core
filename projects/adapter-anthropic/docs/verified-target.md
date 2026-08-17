@@ -32,6 +32,6 @@ Positive evidence is existential across supported calls. A negative wiring diagn
 
 Supported client-tool objects require a static `name` and `input_schema`. `description`, `strict`, and `type` are optional; `strict` accepts only literal booleans, and `type` accepts `custom` or `null`. The statically named `allowed_callers`, `cache_control`, `defer_loading`, `eager_input_streaming`, and `input_examples` fields are tolerated without interpreting their values.
 
-Tool names contain 1–128 Unicode scalar values. Punctuation and non-ASCII names are accepted without Unicode normalization.
+Tool names match `^[A-Za-z0-9_-]{1,64}$` against the complete Unicode-scalar sequence. Only ASCII letters, digits, underscores, and hyphens are accepted, and no Unicode normalization is applied.
 
 Inline schemas support static strings, no-substitution templates, signed numbers, booleans, `null`, arrays without holes or spreads, and objects with exact identifier or string-literal properties. The adapter proves wiring, not provider schema validity.

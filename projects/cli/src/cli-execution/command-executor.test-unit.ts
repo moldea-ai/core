@@ -28,22 +28,22 @@ import type { IMoldeaCliCommandExecutionInput } from './types.js';
 
 const INSTALLED_PACKAGE_METADATA = Object.freeze({
   dependencies: Object.freeze({
-    '@moldea.ai/adapter-anthropic': 'workspace:1.0.1',
-    '@moldea.ai/adapter-openai': 'workspace:2.0.2',
+    '@moldea.ai/adapter-anthropic': 'workspace:2.0.0',
+    '@moldea.ai/adapter-openai': 'workspace:2.0.3',
     '@moldea.ai/core': 'workspace:2.0.0',
     '@moldea.ai/repository': 'workspace:1.0.1',
     '@moldea.ai/repository-fs': 'workspace:1.0.1',
     semver: '7.8.5',
   }),
   installedPackageVersions: Object.freeze({
-    '@moldea.ai/adapter-anthropic': '1.0.1',
-    '@moldea.ai/adapter-openai': '2.0.2',
+    '@moldea.ai/adapter-anthropic': '2.0.0',
+    '@moldea.ai/adapter-openai': '2.0.3',
     '@moldea.ai/core': '2.0.0',
     '@moldea.ai/repository': '1.0.1',
     '@moldea.ai/repository-fs': '1.0.1',
   }),
   supportedNodeRange: '^22.11.0 || ^24.11.0',
-  version: '2.1.1',
+  version: '3.0.0',
 });
 
 /** Creates one normalized command execution input. */
@@ -280,7 +280,7 @@ describe('createMoldeaCliCommandExecutor', () => {
       exitCode: 1,
       stderr: '',
       stdout:
-        '{"cliVersion":"2.1.1","command":"validate","error":null,"result":{"diagnostics":[{"code":"MOLDEA_MANIFEST_MISSING","details":{},"entity":null,"message":"The project manifest is missing.","path":"/moldea/moldea.yaml","pointer":null,"range":null,"source":"core"}],"formatVersion":null,"source":{"kind":"git-working-tree"}},"schemaVersion":1,"status":"invalid"}\n',
+        '{"cliVersion":"3.0.0","command":"validate","error":null,"result":{"diagnostics":[{"code":"MOLDEA_MANIFEST_MISSING","details":{},"entity":null,"message":"The project manifest is missing.","path":"/moldea/moldea.yaml","pointer":null,"range":null,"source":"core"}],"formatVersion":null,"source":{"kind":"git-working-tree"}},"schemaVersion":1,"status":"invalid"}\n',
     });
     const envelope = JSON.parse(result.stdout) as {
       readonly result: Readonly<Record<string, unknown>>;
@@ -356,7 +356,7 @@ Adapter evidence items: 0
       exitCode: 1,
       stderr: '',
       stdout:
-        '{"cliVersion":"2.1.1","command":"inspect","error":null,"result":{"inspection":{"diagnostics":[{"code":"MOLDEA_MANIFEST_MISSING","details":{},"entity":null,"message":"The project manifest is missing.","path":"/moldea/moldea.yaml","pointer":null,"range":null,"source":"core"}],"evidence":[],"formatVersion":null,"project":null,"valid":false},"source":{"kind":"git-working-tree"}},"schemaVersion":1,"status":"invalid"}\n',
+        '{"cliVersion":"3.0.0","command":"inspect","error":null,"result":{"inspection":{"diagnostics":[{"code":"MOLDEA_MANIFEST_MISSING","details":{},"entity":null,"message":"The project manifest is missing.","path":"/moldea/moldea.yaml","pointer":null,"range":null,"source":"core"}],"evidence":[],"formatVersion":null,"project":null,"valid":false},"source":{"kind":"git-working-tree"}},"schemaVersion":1,"status":"invalid"}\n',
     });
   });
 
@@ -384,7 +384,7 @@ Adapter evidence items: 0
       exitCode: 3,
       stderr: '',
       stdout:
-        '{"cliVersion":"2.1.1","command":"inspect","error":{"code":"INTERNAL_ERROR","details":{},"message":"The command could not be completed.","path":null,"retryable":false,"source":"cli"},"result":null,"schemaVersion":1,"status":"error"}\n',
+        '{"cliVersion":"3.0.0","command":"inspect","error":{"code":"INTERNAL_ERROR","details":{},"message":"The command could not be completed.","path":null,"retryable":false,"source":"cli"},"result":null,"schemaVersion":1,"status":"error"}\n',
     });
   });
 
@@ -446,7 +446,7 @@ Adapter evidence items: 0
       await expect(executeCommand(createCommandInput(command, true))).resolves.toStrictEqual({
         exitCode: 3,
         stderr: '',
-        stdout: `{"cliVersion":"2.1.1","command":"${command}","error":{"code":"COMPATIBILITY_STATE_INVALID","details":{},"message":"The installed compatibility state is invalid.","path":null,"retryable":false,"source":"cli"},"result":null,"schemaVersion":1,"status":"error"}\n`,
+        stdout: `{"cliVersion":"3.0.0","command":"${command}","error":{"code":"COMPATIBILITY_STATE_INVALID","details":{},"message":"The installed compatibility state is invalid.","path":null,"retryable":false,"source":"cli"},"result":null,"schemaVersion":1,"status":"error"}\n`,
       });
       expect(workingTreeDiscovery).not.toHaveBeenCalled();
       expect(snapshot.execution.calls).toBe(0);
@@ -482,22 +482,22 @@ Adapter evidence items: 0
       exitCode: 3,
       stderr: '',
       stdout:
-        '{"cliVersion":"2.1.1","command":"inspect","error":{"code":"GIT_COMMAND_FAILED","details":{},"message":"The Git command failed.","path":null,"retryable":true,"source":"git"},"result":null,"schemaVersion":1,"status":"error"}\n',
+        '{"cliVersion":"3.0.0","command":"inspect","error":{"code":"GIT_COMMAND_FAILED","details":{},"message":"The Git command failed.","path":null,"retryable":true,"source":"git"},"result":null,"schemaVersion":1,"status":"error"}\n',
     });
   });
 
   test.each([
     [
       'GIT_OPERATION_ABORTED',
-      '{"cliVersion":"2.1.1","command":"inspect","error":{"code":"GIT_OPERATION_ABORTED","details":{},"message":"The Git operation was aborted.","path":null,"retryable":true,"source":"git"},"result":null,"schemaVersion":1,"status":"error"}\n',
+      '{"cliVersion":"3.0.0","command":"inspect","error":{"code":"GIT_OPERATION_ABORTED","details":{},"message":"The Git operation was aborted.","path":null,"retryable":true,"source":"git"},"result":null,"schemaVersion":1,"status":"error"}\n',
     ],
     [
       'RESOURCE_LIMIT_EXCEEDED',
-      '{"cliVersion":"2.1.1","command":"inspect","error":{"code":"RESOURCE_LIMIT_EXCEEDED","details":{},"message":"A resource limit was exceeded.","path":null,"retryable":false,"source":"cli"},"result":null,"schemaVersion":1,"status":"error"}\n',
+      '{"cliVersion":"3.0.0","command":"inspect","error":{"code":"RESOURCE_LIMIT_EXCEEDED","details":{},"message":"A resource limit was exceeded.","path":null,"retryable":false,"source":"cli"},"result":null,"schemaVersion":1,"status":"error"}\n',
     ],
     [
       'WORKING_TREE_UNSTABLE',
-      '{"cliVersion":"2.1.1","command":"inspect","error":{"code":"WORKING_TREE_UNSTABLE","details":{},"message":"The working tree did not remain stable.","path":null,"retryable":true,"source":"cli"},"result":null,"schemaVersion":1,"status":"error"}\n',
+      '{"cliVersion":"3.0.0","command":"inspect","error":{"code":"WORKING_TREE_UNSTABLE","details":{},"message":"The working tree did not remain stable.","path":null,"retryable":true,"source":"cli"},"result":null,"schemaVersion":1,"status":"error"}\n',
     ],
   ] as const)('returns safe snapshot failure %s', async (errorCode, expectedOutput) => {
     const workingTreeDiscovery = vi
@@ -535,7 +535,7 @@ Adapter evidence items: 0
       exitCode: 3,
       stderr: '',
       stdout:
-        '{"cliVersion":"2.1.1","command":"inspect","error":{"code":"GIT_CONTENT_TRANSFORM_UNSUPPORTED","details":{},"message":"The requested file uses an unsupported Git content transformation.","path":"/assets/model.bin","retryable":false,"source":"git"},"result":null,"schemaVersion":1,"status":"error"}\n',
+        '{"cliVersion":"3.0.0","command":"inspect","error":{"code":"GIT_CONTENT_TRANSFORM_UNSUPPORTED","details":{},"message":"The requested file uses an unsupported Git content transformation.","path":"/assets/model.bin","retryable":false,"source":"git"},"result":null,"schemaVersion":1,"status":"error"}\n',
     });
   });
 
@@ -562,7 +562,7 @@ Adapter evidence items: 0
       exitCode: 3,
       stderr: '',
       stdout:
-        '{"cliVersion":"2.1.1","command":"validate","error":{"code":"ADAPTER_EXECUTION_FAILED","details":{"adapterId":"openai","operation":"validate-adapter"},"message":"A runtime adapter failed during inspection.","path":null,"retryable":false,"source":"core"},"result":null,"schemaVersion":1,"status":"error"}\n',
+        '{"cliVersion":"3.0.0","command":"validate","error":{"code":"ADAPTER_EXECUTION_FAILED","details":{"adapterId":"openai","operation":"validate-adapter"},"message":"A runtime adapter failed during inspection.","path":null,"retryable":false,"source":"core"},"result":null,"schemaVersion":1,"status":"error"}\n',
     });
   });
 });

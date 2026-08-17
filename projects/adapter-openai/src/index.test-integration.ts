@@ -82,7 +82,7 @@ describe('@moldea.ai/adapter-openai public API', () => {
 
     expect(packResult).toMatchObject({
       name: '@moldea.ai/adapter-openai',
-      version: '2.0.2',
+      version: '2.0.3',
     });
     expect(packedPaths).toContain('dist/index.js');
     expect(packedPaths).toContain('dist/index.d.ts');

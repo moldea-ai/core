@@ -33,4 +33,4 @@ Diagnostics use the shared Core adapter shape, preserve logical source locations
 
 ## Package detection
 
-Detection stops at the nearest existing `package.json` owning each runtime-agent source. Supported dependency fields are considered collectively. A collectively disjoint range produces the unsupported-version diagnostic without package evidence; an ambiguous range remains evidence rather than being promoted to verified support.
+Detection stops at the nearest existing `package.json` owning each runtime-agent source. Supported dependency fields are considered collectively. A collectively disjoint range produces the unsupported-version diagnostic without package evidence; an ambiguous range remains evidence rather than being promoted to verified support. Invalid UTF-8 or NUL in the owning manifest produces only `OPENAI_PACKAGE_MANIFEST_INVALID`; `OPENAI_SOURCE_TEXT_INVALID` is reserved for referenced TypeScript source files.

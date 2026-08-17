@@ -10,7 +10,7 @@ Its behavior is intentionally uneventful: the same repository snapshot and resou
 
 ## Supported target
 
-Version `2.0.2` experimentally supports:
+Version `2.0.3` experimentally supports:
 
 - Repository Format version `1`
 - `@moldea.ai/core ^2.0.0`
@@ -68,7 +68,7 @@ The initial target may emit `runtime-package`, `language`, `runtime-pattern`, `i
 
 Missing local runtime evidence is not a diagnostic. Dynamic or indirect patterns that cannot be resolved without execution produce partial or no evidence rather than guessed failures. Chat Completions and other OpenAI APIs are not rejected merely because the initial verified target uses Responses.
 
-Package detection stops at the nearest existing `package.json` that owns each runtime-agent source. Every `openai` declaration in its supported dependency fields is retained as agent-scoped evidence when the collective range is supported or ambiguous; a collectively disjoint range emits the unsupported-version diagnostic without package evidence.
+Package detection stops at the nearest existing `package.json` that owns each runtime-agent source. Every `openai` declaration in its supported dependency fields is retained as agent-scoped evidence when the collective range is supported or ambiguous; a collectively disjoint range emits the unsupported-version diagnostic without package evidence. Invalid UTF-8 or NUL in the owning manifest produces only `OPENAI_PACKAGE_MANIFEST_INVALID`; `OPENAI_SOURCE_TEXT_INVALID` is reserved for referenced TypeScript source files.
 
 ## Development
 

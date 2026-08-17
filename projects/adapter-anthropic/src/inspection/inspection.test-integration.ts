@@ -289,6 +289,21 @@ describe('anthropicAdapter Core integration', () => {
     expect(result.valid).toBe(false);
   });
 
+  test.each([
+    ['invalid UTF-8', Uint8Array.from([0xff])],
+    ['NUL', new TextEncoder().encode('{"dependencies":{}}\0')],
+  ])(
+    'maps a package manifest with %s only to the package diagnostic',
+    async (_description, content) => {
+      const result = await inspect({ '/package.json': content });
+
+      expect(result.diagnostics).toStrictEqual([
+        createExpectedDiagnostic('ANTHROPIC_PACKAGE_MANIFEST_INVALID', '/package.json', null),
+      ]);
+      expect(result.valid).toBe(false);
+    },
+  );
+
   test('returns no false runtime diagnostic when the bound pattern is indirect', async () => {
     const result = await inspect({
       '/src/agent.ts': [
@@ -366,9 +381,9 @@ describe('anthropicAdapter Core integration', () => {
   });
 
   test.each([
-    ['one Unicode scalar', 'é'],
-    ['128 Unicode scalars', '😀'.repeat(128)],
-    ['supported punctuation', 'find.order-β'],
+    ['one ASCII character', 'a'],
+    ['64 ASCII characters', 'a'.repeat(64)],
+    ['ASCII letters, digits, underscores, hyphens, and a leading digit', '42_Find-Order'],
   ])('accepts a client-tool name at %s', async (_description, toolName) => {
     const registration = fixture.entries
       .find(({ path }) => path === '/src/find-order.ts')
@@ -404,8 +419,13 @@ describe('anthropicAdapter Core integration', () => {
     ]);
   });
 
-  test('diagnoses a client-tool name longer than 128 Unicode scalars', async () => {
-    const toolName = 'a'.repeat(129);
+  test.each([
+    ['65 ASCII characters', 'a'.repeat(65)],
+    ['whitespace', 'find order'],
+    ['unsupported punctuation', 'find.order'],
+    ['composed non-ASCII characters', 'café'],
+    ['decomposed non-ASCII characters', 'cafe\u0301'],
+  ])('rejects a client-tool name with %s', async (_description, toolName) => {
     const registration = fixture.entries
       .find(({ path }) => path === '/src/find-order.ts')
       ?.text.replace("name: 'find_order'", `name: '${toolName}'`);
@@ -711,7 +731,7 @@ describe('anthropicAdapter Core integration', () => {
         content: [
           'export const extraTool = {',
           "  type: 'custom',",
-          `  name: '${'a'.repeat(129)}',`,
+          "  name: 'invalid.name',",
           '  input_schema: {},',
           '  strict: false,',
           '} as const;',

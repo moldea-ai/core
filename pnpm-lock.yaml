@@ -225,10 +225,10 @@ importers:
   projects/cli:
     dependencies:
       '@moldea.ai/adapter-anthropic':
-        specifier: workspace:1.0.1
+        specifier: workspace:2.0.0
         version: link:../adapter-anthropic
       '@moldea.ai/adapter-openai':
-        specifier: workspace:2.0.2
+        specifier: workspace:2.0.3
         version: link:../adapter-openai
       '@moldea.ai/core':
         specifier: workspace:2.0.0

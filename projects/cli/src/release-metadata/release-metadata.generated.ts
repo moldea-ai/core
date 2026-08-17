@@ -17,7 +17,7 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
   cliPackage: {
     name: '@moldea.ai/cli',
     supportedNodeRange: '^22.11.0 || ^24.11.0',
-    version: '2.1.1',
+    version: '3.0.0',
   },
   coreRecognizedAdapterIds: [
     'anthropic',
@@ -40,10 +40,10 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
           distribution: 'public',
           kind: 'package',
           package: '@moldea.ai/adapter-anthropic',
-          versionRange: '^1.0.0',
+          versionRange: '^2.0.0',
         },
         implementationStatus: 'available',
-        lastVerifiedAt: '2026-08-16',
+        lastVerifiedAt: '2026-08-17',
         runtimeGuidance: {
           expectation: 'optional',
           notes:
@@ -87,7 +87,7 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
               'Source forms outside the verified TypeScript ESM target, dynamic factories, mutable requests, provider tools, output schemas, runtime variables, and handoffs are outside the initial target.',
             ],
             language: 'typescript',
-            lastVerifiedAt: '2026-08-16',
+            lastVerifiedAt: '2026-08-17',
             packages: [
               {
                 ecosystem: 'npm',
@@ -143,12 +143,12 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
             providerLimits: [
               {
                 description:
-                  'Anthropic client-tool names contain at most 128 Unicode scalar values.',
+                  'Anthropic client-tool names match the complete ASCII letter, digit, underscore, and hyphen pattern.',
                 id: 'client-tool-name',
-                kind: 'max-unicode-scalars',
+                kind: 'pattern',
                 reference: 'Anthropic Messages API reference for client tools.',
                 subject: 'tool-name',
-                value: 128,
+                value: '^[A-Za-z0-9_-]{1,64}$',
               },
             ],
             supportLevel: 'experimental',
@@ -245,7 +245,7 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
           versionRange: '^2.0.0',
         },
         implementationStatus: 'available',
-        lastVerifiedAt: '2026-08-15',
+        lastVerifiedAt: '2026-08-17',
         runtimeGuidance: {
           expectation: 'recommended',
           notes:
@@ -289,7 +289,7 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
               'Source forms outside the verified TypeScript ESM target, Realtime, Assistants, Agents SDK, streaming semantics, and provider-hosted configuration are not interpreted.',
             ],
             language: 'typescript',
-            lastVerifiedAt: '2026-08-15',
+            lastVerifiedAt: '2026-08-17',
             packages: [
               {
                 ecosystem: 'npm',
@@ -370,11 +370,11 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
   packages: [
     {
       name: '@moldea.ai/adapter-anthropic',
-      version: '1.0.1',
+      version: '2.0.0',
     },
     {
       name: '@moldea.ai/adapter-openai',
-      version: '2.0.2',
+      version: '2.0.3',
     },
     {
       name: '@moldea.ai/core',
