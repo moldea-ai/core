@@ -23,9 +23,17 @@ export {
 // requests
 export {
   analyzeClientRequests,
+  analyzeObjectRelationships,
   getClosedArrayIdentifiers,
   indexSafeModuleArrayNames,
 } from './requests.js';
+
+// module values
+export {
+  getSafeModuleConstLiteral,
+  isModuleConstValueSafe,
+  isModuleValueBindingSafe,
+} from './module-values.js';
 
 // source analysis
 export {

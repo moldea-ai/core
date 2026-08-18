@@ -15,6 +15,7 @@ on:
           - repository-fs
           - core
           - adapter-anthropic
+          - adapter-google-genai
           - adapter-openai
           - cli
           - website-ui
@@ -50,6 +51,8 @@ jobs:
     outputs:
       adapter_anthropic: ${{ steps.release.outputs.adapter_anthropic }}
       adapter_anthropic_previous_version: ${{ steps.release.outputs.adapter_anthropic_previous_version }}
+      adapter_google_genai: ${{ steps.release.outputs.adapter_google_genai }}
+      adapter_google_genai_previous_version: ${{ steps.release.outputs.adapter_google_genai_previous_version }}
       adapter_openai: ${{ steps.release.outputs.adapter_openai }}
       adapter_openai_previous_version: ${{ steps.release.outputs.adapter_openai_previous_version }}
       cli: ${{ steps.release.outputs.cli }}
@@ -201,6 +204,37 @@ jobs:
       previous_version: ${{ needs.plan.outputs.adapter_anthropic_previous_version }}
       project: adapter-anthropic
 
+  release_adapter_google_genai:
+    name: Release Google Gen AI Adapter
+    needs:
+      - plan
+      - verify
+      - release_repository
+      - release_repository_fs
+      - release_core
+      - release_adapter_anthropic
+    if: >-
+      ${{
+        always() &&
+        needs.plan.outputs.adapter_google_genai == 'true' &&
+        needs.verify.result == 'success' &&
+        (needs.release_repository.result == 'success' ||
+          needs.release_repository.result == 'skipped') &&
+        (needs.release_repository_fs.result == 'success' ||
+          needs.release_repository_fs.result == 'skipped') &&
+        (needs.release_core.result == 'success' || needs.release_core.result == 'skipped') &&
+        (needs.release_adapter_anthropic.result == 'success' ||
+          needs.release_adapter_anthropic.result == 'skipped')
+      }}
+    permissions:
+      contents: write
+      id-token: write
+    uses: ./.github/workflows/publish-package.yml
+    with:
+      mode: ${{ needs.plan.outputs.mode }}
+      previous_version: ${{ needs.plan.outputs.adapter_google_genai_previous_version }}
+      project: adapter-google-genai
+
   release_adapter_openai:
     name: Release OpenAI Adapter
     needs:
@@ -210,6 +244,7 @@ jobs:
       - release_repository_fs
       - release_core
       - release_adapter_anthropic
+      - release_adapter_google_genai
     if: >-
       ${{
         always() &&
@@ -221,7 +256,9 @@ jobs:
           needs.release_repository_fs.result == 'skipped') &&
         (needs.release_core.result == 'success' || needs.release_core.result == 'skipped') &&
         (needs.release_adapter_anthropic.result == 'success' ||
-          needs.release_adapter_anthropic.result == 'skipped')
+          needs.release_adapter_anthropic.result == 'skipped') &&
+        (needs.release_adapter_google_genai.result == 'success' ||
+          needs.release_adapter_google_genai.result == 'skipped')
       }}
     permissions:
       contents: write
@@ -241,6 +278,7 @@ jobs:
       - release_repository_fs
       - release_core
       - release_adapter_anthropic
+      - release_adapter_google_genai
       - release_adapter_openai
     if: >-
       ${{
@@ -254,6 +292,8 @@ jobs:
         (needs.release_core.result == 'success' || needs.release_core.result == 'skipped') &&
         (needs.release_adapter_anthropic.result == 'success' ||
           needs.release_adapter_anthropic.result == 'skipped') &&
+        (needs.release_adapter_google_genai.result == 'success' ||
+          needs.release_adapter_google_genai.result == 'skipped') &&
         (needs.release_adapter_openai.result == 'success' ||
           needs.release_adapter_openai.result == 'skipped')
       }}

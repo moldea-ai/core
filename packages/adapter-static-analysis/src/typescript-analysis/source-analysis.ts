@@ -7,7 +7,12 @@ import type {
   IStaticAnalysisSourceResult,
 } from '../types.js';
 import { normalizeText } from '../text/index.js';
-import { indexImports, indexLocalBindingNames, indexModuleDeclarations } from './bindings.js';
+import {
+  indexIdentifierUses,
+  indexImports,
+  indexLocalBindingNames,
+  indexModuleDeclarations,
+} from './bindings.js';
 import { unwrapExpression } from './expressions.js';
 import { indexSafeModuleArrayNames } from './requests.js';
 
@@ -97,12 +102,15 @@ export const analyzeSource = (
     constructorNames,
   );
   signal?.throwIfAborted();
+  const identifierUses = indexIdentifierUses(sourceFile);
+  signal?.throwIfAborted();
   const localBindingNames = indexLocalBindingNames(sourceFile);
   signal?.throwIfAborted();
   const preliminaryAnalysis: IStaticAnalysisSource = Object.freeze({
     clientNames,
     constructorNames,
     exports,
+    identifierUses,
     localBindingNames,
     moduleArrays,
     moduleConstDeclarations,

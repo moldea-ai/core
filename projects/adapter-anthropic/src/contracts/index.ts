@@ -75,6 +75,7 @@ export interface IAnthropicModuleArray {
 export interface IAnthropicSourceAnalysis {
   readonly clientNames: ReadonlySet<string>;
   readonly exports: ReadonlyMap<string, IAnthropicExportState & { readonly declaration: ts.Node }>;
+  readonly identifierUses: ReadonlyMap<string, readonly ts.Identifier[]>;
   readonly localBindingNames: ReadonlyMap<ts.Node, ReadonlySet<string>>;
   readonly moduleArrays: ReadonlyMap<string, IAnthropicModuleArray>;
   readonly moduleConstDeclarations: ReadonlyMap<string, ts.VariableDeclaration>;

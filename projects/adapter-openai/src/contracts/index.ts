@@ -74,6 +74,7 @@ export interface IOpenAiModuleArray {
 export interface IOpenAiSourceAnalysis {
   readonly clientNames: ReadonlySet<string>;
   readonly exports: ReadonlyMap<string, IOpenAiExportState & { readonly declaration: ts.Node }>;
+  readonly identifierUses: ReadonlyMap<string, readonly ts.Identifier[]>;
   readonly localBindingNames: ReadonlyMap<ts.Node, ReadonlySet<string>>;
   readonly moduleArrays: ReadonlyMap<string, IOpenAiModuleArray>;
   readonly moduleConstDeclarations: ReadonlyMap<string, ts.VariableDeclaration>;

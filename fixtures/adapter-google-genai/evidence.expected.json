@@ -1,0 +1,115 @@
+[
+  {
+    "agentId": "support",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "requestProperty": "config.systemInstruction"
+    },
+    "kind": "instruction-loader",
+    "references": [
+      {
+        "path": "/src/agent.ts"
+      },
+      {
+        "path": "/src/instructions.ts",
+        "symbol": "loadInstruction"
+      }
+    ],
+    "runtimeName": "loadInstruction",
+    "source": "google-genai"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "language": "typescript"
+    },
+    "kind": "language",
+    "references": [
+      {
+        "path": "/src/agent.ts",
+        "symbol": "supportAgent"
+      }
+    ],
+    "runtimeName": null,
+    "source": "google-genai"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "compatibility": "supported",
+      "declaredRange": "^2.17.1",
+      "dependencyKind": "dependencies"
+    },
+    "kind": "runtime-package",
+    "references": [
+      {
+        "path": "/package.json"
+      }
+    ],
+    "runtimeName": "@google/genai",
+    "source": "google-genai"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "api": "models"
+    },
+    "kind": "runtime-pattern",
+    "references": [
+      {
+        "path": "/src/agent.ts",
+        "symbol": "supportAgent"
+      }
+    ],
+    "runtimeName": "models.generateContent",
+    "source": "google-genai"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": "find-order",
+    "capabilityKind": "tool",
+    "details": {
+      "requestProperty": "parametersJsonSchema",
+      "schemaRole": "input"
+    },
+    "kind": "schema",
+    "references": [
+      {
+        "path": "/src/contracts.ts",
+        "symbol": "FindOrderInput"
+      },
+      {
+        "path": "/src/find-order.ts"
+      }
+    ],
+    "runtimeName": "FindOrderInput",
+    "source": "google-genai"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": "find-order",
+    "capabilityKind": "tool",
+    "details": {
+      "toolType": "function-declaration"
+    },
+    "kind": "tool-registration",
+    "references": [
+      {
+        "path": "/src/agent.ts"
+      },
+      {
+        "path": "/src/find-order.ts",
+        "symbol": "findOrderDeclaration"
+      }
+    ],
+    "runtimeName": "find_order",
+    "source": "google-genai"
+  }
+]

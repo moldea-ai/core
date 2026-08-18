@@ -349,6 +349,29 @@ export const indexLocalBindingNames = (
 };
 
 /**
+ * Indexes identifier occurrences once for binding-specific safety analysis.
+ * @param sourceFile The parsed TypeScript source.
+ * @returns Identifier occurrences grouped by exact source spelling.
+ */
+export const indexIdentifierUses = (
+  sourceFile: ts.SourceFile,
+): ReadonlyMap<string, readonly ts.Identifier[]> => {
+  const identifierUses = new Map<string, ts.Identifier[]>();
+  const visit = (node: ts.Node): void => {
+    if (ts.isIdentifier(node)) {
+      const uses = identifierUses.get(node.text) ?? [];
+      uses.push(node);
+      identifierUses.set(node.text, uses);
+    }
+
+    ts.forEachChild(node, visit);
+  };
+
+  visit(sourceFile);
+  return new Map([...identifierUses].map(([name, uses]) => [name, Object.freeze(uses)] as const));
+};
+
+/**
  * Determines whether a module-bound name is visible at one identifier use.
  * @param identifier The identifier whose lexical environment is inspected.
  * @param analysis The indexed source containing the identifier.

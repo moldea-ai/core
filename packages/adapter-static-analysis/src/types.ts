@@ -102,7 +102,7 @@ export interface IStaticAnalysisRequestConfig {
   readonly methodName: string;
   readonly relationshipNames: readonly string[];
   readonly resourceName: string;
-  readonly toolRelationshipName: string;
+  readonly toolRelationshipName?: string;
 }
 
 // source parser configuration for one provider target
@@ -119,6 +119,7 @@ export interface IStaticAnalysisSource {
     string,
     IStaticAnalysisExportState & { readonly declaration: ts.Node }
   >;
+  readonly identifierUses: ReadonlyMap<string, readonly ts.Identifier[]>;
   readonly localBindingNames: ReadonlyMap<ts.Node, ReadonlySet<string>>;
   readonly moduleArrays: ReadonlyMap<string, IStaticAnalysisModuleArray>;
   readonly moduleConstDeclarations: ReadonlyMap<string, ts.VariableDeclaration>;

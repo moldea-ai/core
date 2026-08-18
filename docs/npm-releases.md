@@ -6,15 +6,16 @@ Package-owned full documentation under `projects/<project>/docs/**` is repositor
 
 ## Release identity
 
-| Project             | Package                        | Tag format                     |
-| ------------------- | ------------------------------ | ------------------------------ |
-| `repository`        | `@moldea.ai/repository`        | `repository-v<version>`        |
-| `repository-fs`     | `@moldea.ai/repository-fs`     | `repository-fs-v<version>`     |
-| `core`              | `@moldea.ai/core`              | `core-v<version>`              |
-| `adapter-anthropic` | `@moldea.ai/adapter-anthropic` | `adapter-anthropic-v<version>` |
-| `adapter-openai`    | `@moldea.ai/adapter-openai`    | `adapter-openai-v<version>`    |
-| `cli`               | `@moldea.ai/cli`               | `cli-v<version>`               |
-| `website-ui`        | `@moldea.ai/website-ui`        | `website-ui-v<version>`        |
+| Project                | Package                           | Tag format                        |
+| ---------------------- | --------------------------------- | --------------------------------- |
+| `repository`           | `@moldea.ai/repository`           | `repository-v<version>`           |
+| `repository-fs`        | `@moldea.ai/repository-fs`        | `repository-fs-v<version>`        |
+| `core`                 | `@moldea.ai/core`                 | `core-v<version>`                 |
+| `adapter-anthropic`    | `@moldea.ai/adapter-anthropic`    | `adapter-anthropic-v<version>`    |
+| `adapter-google-genai` | `@moldea.ai/adapter-google-genai` | `adapter-google-genai-v<version>` |
+| `adapter-openai`       | `@moldea.ai/adapter-openai`       | `adapter-openai-v<version>`       |
+| `cli`                  | `@moldea.ai/cli`                  | `cli-v<version>`                  |
+| `website-ui`           | `@moldea.ai/website-ui`           | `website-ui-v<version>`           |
 
 Package versions follow their focused semantic-versioning contracts independently. A coordinated release may place multiple package tags on one commit, but it does not create a lockstep-versioning requirement.
 
@@ -43,7 +44,7 @@ The workflow uses npm OIDC and contains no npm publication token. The publicatio
 
 Pull-request CI compares every public project directory with the target commit and rejects a changed existing project with an unchanged, lower, prerelease, or noncanonical version. A new project absent from the target commit is selected with no predecessor version and must still declare a canonical stable version. The resulting push to `main` repeats the comparison against the exact pushed commits before selecting releases. Selected projects pass one complete repository, supported-Node, cross-platform, packed-artifact, checksum, and runtime verification boundary before any tag or publication is attempted.
 
-Repository publishes first, followed by Repository FS, Core, the Anthropic adapter, the OpenAI adapter, and the CLI. Website UI is independent of that runtime dependency chain and may publish after the shared verification boundary without waiting for those package jobs. An unselected package is skipped without blocking later selected packages. A failed package blocks every dependent downstream release, while a rerun or manual trusted dispatch can resume from a matching tag without republishing completed versions.
+Repository publishes first, followed by Repository FS, Core, the Anthropic adapter, the Google Gen AI adapter, the OpenAI adapter, and the CLI. Website UI is independent of that runtime dependency chain and may publish after the shared verification boundary without waiting for those package jobs. An unselected package is skipped without blocking later selected packages. A failed package blocks every dependent downstream release, while a rerun or manual trusted dispatch can resume from a matching tag without republishing completed versions.
 
 The workflow accepts stable semantic versions only. Prerelease versions and alternate npm distribution tags require a separately designed release path.
 
@@ -73,11 +74,12 @@ npm requires a package to exist before it can be connected to a trusted publishe
    2. `@moldea.ai/repository-fs`
    3. `@moldea.ai/core`
    4. `@moldea.ai/adapter-anthropic`
-   5. `@moldea.ai/adapter-openai`
-   6. `@moldea.ai/cli`
-   7. `@moldea.ai/website-ui`
+   5. `@moldea.ai/adapter-google-genai`
+   6. `@moldea.ai/adapter-openai`
+   7. `@moldea.ai/cli`
+   8. `@moldea.ai/website-ui`
 
-Repository FS and Core require a compatible Repository version to exist on npm. The Anthropic and OpenAI adapters require compatible Repository and Core versions. The CLI requires the exact Repository, Repository FS, Core, and active adapter versions declared by its release.
+Repository FS and Core require a compatible Repository version to exist on npm. The Anthropic, Google Gen AI, and OpenAI adapters require compatible Repository and Core versions. The CLI requires the exact Repository, Repository FS, Core, and active adapter versions declared by its release.
 
 Website UI has no dependency on the runtime package chain, so its first publication may be bootstrapped independently after its own artifact passes the shared release verification boundary.
 
