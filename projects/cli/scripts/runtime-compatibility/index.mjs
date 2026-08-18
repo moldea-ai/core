@@ -267,7 +267,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     );
     assertRuntimeInvariant(
       googleGenAiAdapter?.active === true &&
-        googleGenAiAdapter.bundledVersion === '1.0.0' &&
+        googleGenAiAdapter.bundledVersion === '1.0.1' &&
         googleGenAiAdapter.matrix?.implementationStatus === 'available' &&
         googleGenAiAdapter.matrix?.compatibleCoreRange === '^2.0.0' &&
         googleGenAiAdapter.matrix?.runtimeGuidance?.expectation === 'optional' &&
