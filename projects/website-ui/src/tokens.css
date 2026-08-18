@@ -56,6 +56,25 @@
   --shadow-raised: var(--shadow-raised-value);
   --shadow-surface: var(--shadow-surface-value);
   --shadow-inset: var(--shadow-inset-value);
+
+  --animate-navigation-progress: navigation-progress 1.2s ease-in-out infinite;
+}
+
+@keyframes navigation-progress {
+  0% {
+    opacity: 0;
+    transform: translateX(-100%) scaleX(0.2);
+  }
+
+  40% {
+    opacity: 1;
+    transform: translateX(-20%) scaleX(0.55);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(100%) scaleX(0.2);
+  }
 }
 
 :root {

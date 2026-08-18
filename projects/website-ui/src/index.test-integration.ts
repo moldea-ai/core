@@ -80,12 +80,15 @@ describe('published website UI package', () => {
     const packResult = JSON.parse(output) as IPackDryRunResult;
     const packedPaths = packResult.files.map((file) => file.path);
 
-    expect(packResult).toMatchObject({ name: '@moldea.ai/website-ui', version: '1.0.1' });
+    expect(packResult).toMatchObject({ name: '@moldea.ai/website-ui', version: '1.1.0' });
     expect(packedPaths).toContain('dist/index.js');
     expect(packedPaths).toContain('dist/site/index.d.ts');
     expect(packedPaths).toContain('src/styles.css');
     expect(packedPaths).toContain('src/tokens.css');
     expect(packedPaths).toContain('src/components/local-search/local-search.component.astro');
+    expect(packedPaths).toContain(
+      'src/components/navigation-progress/navigation-progress.component.astro',
+    );
     expect(packedPaths).toContain('LICENSE');
     expect(packedPaths).toContain('README.md');
     expect(packedPaths).toContain('cover.png');
@@ -168,12 +171,14 @@ describe('published website UI package', () => {
       path.join(pagesDirectory, 'index.astro'),
       [
         '---',
+        "import { ClientRouter } from 'astro:transitions';",
         "import ActionButton from '@moldea.ai/website-ui/action-button';",
         "import ActionLink from '@moldea.ai/website-ui/action-link';",
         "import BrandLogo from '@moldea.ai/website-ui/brand-logo';",
         "import Breadcrumbs from '@moldea.ai/website-ui/breadcrumbs';",
         "import InlineBrandText from '@moldea.ai/website-ui/inline-brand-text';",
         "import LocalSearch from '@moldea.ai/website-ui/local-search';",
+        "import NavigationProgress from '@moldea.ai/website-ui/navigation-progress';",
         "import ThemeBootstrap from '@moldea.ai/website-ui/theme-bootstrap';",
         "import ThemeControl from '@moldea.ai/website-ui/theme-control';",
         "import { withBase } from '@moldea.ai/website-ui/site';",
@@ -181,9 +186,11 @@ describe('published website UI package', () => {
         '---',
         '<html lang="en" data-theme="system">',
         '  <head>',
+        '    <ClientRouter />',
         '    <ThemeBootstrap storageKey="fixture-theme" />',
         '  </head>',
         '  <body>',
+        '    <NavigationProgress />',
         '    <BrandLogo compact darkCompactLogoPath="/dark-icon.png" darkLogoPath="/dark.png" homeLabel="Fixture home" lightCompactLogoPath="/light-icon.png" lightLogoPath="/light.png" suffix="fixture" />',
         '    <Breadcrumbs items={[{ href: "/", label: "Home" }, { label: "Fixture" }]} />',
         '    <InlineBrandText text="Use moldea here." />',
@@ -213,6 +220,9 @@ describe('published website UI package', () => {
 
     expect(readFileSync(path.join(fixtureDirectory, 'dist', 'index.html'), 'utf8')).toContain(
       'Fixture home',
+    );
+    expect(readFileSync(path.join(fixtureDirectory, 'dist', 'index.html'), 'utf8')).toContain(
+      'Page navigation progress',
     );
   }, 90_000);
 });
