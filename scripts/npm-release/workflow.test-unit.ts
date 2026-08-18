@@ -60,6 +60,10 @@ describe('npm release workflow', () => {
     expect(ciSource).toContain('release_build:');
     expect(ciSource).toContain('name: Check Changed Package Versions');
     expect(ciSource).toContain('pnpm release:check-changes');
+    expect(ciSource).toContain('name: Trust Container Workspace for Git');
+    expect(ciSource).toContain(
+      'git config --global --add safe.directory "$GITHUB_WORKSPACE"',
+    );
     expect(ciSource).toContain('name: public-package-tarballs');
     expect(ciSource).toContain('SHA256SUMS');
     expect(ciSource).not.toContain('playwright install --with-deps chromium');
