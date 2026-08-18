@@ -12,7 +12,7 @@ import type { IMoldeaCliCompatibilityStateInput } from './types.js';
 // exact source-workspace package metadata used by compatibility tests
 export const INSTALLED_PACKAGE_METADATA: IMoldeaCliPackageMetadata = Object.freeze({
   dependencies: Object.freeze({
-    '@moldea.ai/adapter-anthropic': 'workspace:2.0.0',
+    '@moldea.ai/adapter-anthropic': 'workspace:2.0.1',
     '@moldea.ai/adapter-openai': 'workspace:2.0.3',
     '@moldea.ai/core': 'workspace:2.0.0',
     '@moldea.ai/repository': 'workspace:1.0.1',
@@ -20,14 +20,14 @@ export const INSTALLED_PACKAGE_METADATA: IMoldeaCliPackageMetadata = Object.free
     semver: '7.8.5',
   }),
   installedPackageVersions: Object.freeze({
-    '@moldea.ai/adapter-anthropic': '2.0.0',
+    '@moldea.ai/adapter-anthropic': '2.0.1',
     '@moldea.ai/adapter-openai': '2.0.3',
     '@moldea.ai/core': '2.0.0',
     '@moldea.ai/repository': '1.0.1',
     '@moldea.ai/repository-fs': '1.0.1',
   }),
   supportedNodeRange: '^22.11.0 || ^24.11.0',
-  version: '3.0.0',
+  version: '3.0.1',
 });
 
 const availableOpenAiMatrixEntry = MOLDEA_CLI_RELEASE_METADATA.matrix.adapters['openai'];

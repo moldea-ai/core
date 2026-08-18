@@ -17,7 +17,7 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
   cliPackage: {
     name: '@moldea.ai/cli',
     supportedNodeRange: '^22.11.0 || ^24.11.0',
-    version: '3.0.0',
+    version: '3.0.1',
   },
   coreRecognizedAdapterIds: [
     'anthropic',
@@ -370,7 +370,7 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
   packages: [
     {
       name: '@moldea.ai/adapter-anthropic',
-      version: '2.0.0',
+      version: '2.0.1',
     },
     {
       name: '@moldea.ai/adapter-openai',
