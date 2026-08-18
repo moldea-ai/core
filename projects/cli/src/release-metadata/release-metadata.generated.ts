@@ -13,11 +13,11 @@ import { freezeMoldeaCliReleaseMetadata } from './utilities.js';
 
 // immutable compatibility and package composition bundled into this CLI release
 export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
-  activeAdapterIds: ['anthropic', 'openai'],
+  activeAdapterIds: ['anthropic', 'google-genai', 'openai'],
   cliPackage: {
     name: '@moldea.ai/cli',
     supportedNodeRange: '^22.11.0 || ^24.11.0',
-    version: '3.0.1',
+    version: '3.1.0',
   },
   coreRecognizedAdapterIds: [
     'anthropic',
@@ -213,12 +213,166 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
         implementationStatus: 'planned',
       },
       'google-genai': {
+        compatibleCoreRange: '^2.0.0',
         implementation: {
           distribution: 'public',
           kind: 'package',
           package: '@moldea.ai/adapter-google-genai',
+          versionRange: '^1.0.0',
         },
-        implementationStatus: 'planned',
+        implementationStatus: 'available',
+        lastVerifiedAt: '2026-08-18',
+        runtimeGuidance: {
+          expectation: 'optional',
+          notes:
+            'Project-local guidance is needed only for repository-specific wrappers or unsupported indirect integration patterns.',
+        },
+        supportedRepositoryFormatVersions: [1],
+        targets: [
+          {
+            bindingSupport: {
+              'instruction-loader': {
+                relationship: 'full',
+                symbol: 'full',
+              },
+              'runtime-agent': {
+                relationship: 'full',
+                symbol: 'full',
+              },
+              'tool-input-schema': {
+                relationship: 'full',
+                symbol: 'full',
+              },
+              'tool-registration': {
+                relationship: 'full',
+                symbol: 'full',
+              },
+            },
+            evidenceKinds: [
+              'instruction-loader',
+              'language',
+              'runtime-package',
+              'runtime-pattern',
+              'schema',
+              'tool-registration',
+            ],
+            id: 'typescript-models-generate-content-2',
+            kind: 'package',
+            knownLimitations: [
+              'Arbitrary compiler resolution, path aliases, directory indexes, package exports, subpath imports, and re-export graphs are not resolved.',
+              'Backend-specific function-name restrictions are not validated; the published function-name rules cover only the version-matched SDK declaration contract.',
+              'Constructor configuration, provider backend, API version, authentication mode, model selection, request contents, and response handling are not interpreted.',
+              'Dynamic configuration, callable tools, MCP helpers, provider/server tools, automatic function execution, streaming, chats, live sessions, and Interactions API calls are outside the initial target.',
+              'Function input-schema contents, including top-level object shape and parameter-name restrictions, are not validated; the target establishes only direct parametersJsonSchema wiring.',
+              'Source forms outside the verified TypeScript ESM target, legacy @google/generative-ai, alternative parameters schemas, output schemas, runtime variables, and handoffs are outside the initial target.',
+            ],
+            language: 'typescript',
+            lastVerifiedAt: '2026-08-18',
+            packages: [
+              {
+                ecosystem: 'npm',
+                name: '@google/genai',
+                role: 'primary',
+                versionRange: '>=2.17.1 <3.0.0',
+              },
+            ],
+            patterns: [
+              {
+                description:
+                  'A directly bound instruction loader supplies config.systemInstruction in a closed generate-content request.',
+                id: 'direct-config-system-instruction',
+                kind: 'instruction-loader',
+                support: 'full',
+              },
+              {
+                description:
+                  'Direct Google Gen AI models.generateContent invocation through a module-local client in a directly exported TypeScript function.',
+                id: 'direct-models-generate-content',
+                kind: 'runtime',
+                support: 'full',
+              },
+              {
+                description:
+                  'Dynamically assembled requests or configuration cannot be mapped reliably without semantic analysis.',
+                id: 'dynamic-request-or-config',
+                kind: 'runtime',
+                support: 'ambiguous',
+              },
+              {
+                description:
+                  'Streaming generation, chat sessions, live sessions, and Interactions API calls are outside the initial direct generate-content target.',
+                id: 'streaming-chat-live-interactions',
+                kind: 'runtime',
+                support: 'unsupported',
+              },
+              {
+                description:
+                  'FunctionDeclaration.parameters and its OpenAPI-style Schema representation are outside the initial JSON-schema target.',
+                id: 'alternative-parameters-schema',
+                kind: 'schema',
+                support: 'unsupported',
+              },
+              {
+                description:
+                  'A bound tool input schema is referenced directly through the function declaration parametersJsonSchema property.',
+                id: 'direct-parameters-json-schema',
+                kind: 'schema',
+                support: 'full',
+              },
+              {
+                description:
+                  'Callable tools, MCP conversion helpers, and automatic tool execution are outside the initial static function-declaration target.',
+                id: 'callable-and-mcp-tools',
+                kind: 'tool',
+                support: 'unsupported',
+              },
+              {
+                description:
+                  'Closed inline or immutable module-local collections expose statically declared functions through config.tools and functionDeclarations.',
+                id: 'closed-function-declaration-tools',
+                kind: 'tool',
+                support: 'full',
+              },
+              {
+                description:
+                  'Google-hosted or provider/server tools do not establish version 1 repository-local manifest tool relationships.',
+                id: 'provider-server-tools',
+                kind: 'tool',
+                support: 'unsupported',
+              },
+            ],
+            providerLimits: [
+              {
+                description:
+                  'The Google Gen AI SDK Tool contract permits at most 512 function declarations in each closed functionDeclarations collection.',
+                id: 'function-declaration-count',
+                kind: 'other',
+                reference: 'Google Gen AI SDK Tool reference.',
+                subject: 'other',
+                value: 512,
+              },
+              {
+                description:
+                  'The Google Gen AI SDK FunctionDeclaration contract limits function names to 128 Unicode scalar values.',
+                id: 'function-name-length',
+                kind: 'max-unicode-scalars',
+                reference: 'Google Gen AI SDK FunctionDeclaration reference.',
+                subject: 'tool-name',
+                value: 128,
+              },
+              {
+                description:
+                  'The Google Gen AI SDK FunctionDeclaration contract uses the documented ASCII leading and continuation character set.',
+                id: 'function-name-pattern',
+                kind: 'pattern',
+                reference: 'Google Gen AI SDK FunctionDeclaration reference.',
+                subject: 'tool-name',
+                value: '^[A-Za-z_][A-Za-z0-9_.:-]*$',
+              },
+            ],
+            supportLevel: 'experimental',
+          },
+        ],
       },
       langchain: {
         implementation: {
@@ -371,6 +525,10 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
     {
       name: '@moldea.ai/adapter-anthropic',
       version: '2.0.1',
+    },
+    {
+      name: '@moldea.ai/adapter-google-genai',
+      version: '1.0.0',
     },
     {
       name: '@moldea.ai/adapter-openai',

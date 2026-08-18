@@ -102,7 +102,7 @@ export interface IStaticAnalysisRequestConfig {
   readonly methodName: string;
   readonly relationshipNames: readonly string[];
   readonly resourceName: string;
-  readonly toolRelationshipName: string;
+  readonly toolRelationshipName?: string;
 }
 
 // source parser configuration for one provider target
@@ -129,10 +129,19 @@ export interface IStaticAnalysisSource {
   readonly text: IStaticAnalysisTextResult & { readonly valid: true };
 }
 
+// source index extended with identifier uses for module-value escape analysis
+export interface IStaticAnalysisModuleValueSource extends IStaticAnalysisSource {
+  readonly identifierUses: ReadonlyMap<string, readonly ts.Identifier[]>;
+}
+
 export type IStaticAnalysisSourceResult =
   | { readonly kind: 'invalid-syntax'; readonly range: IStaticAnalysisSourceRange | null }
   | { readonly kind: 'invalid-text' }
   | { readonly analysis: IStaticAnalysisSource; readonly kind: 'valid' };
+
+export type IStaticAnalysisModuleValueSourceResult =
+  | Exclude<IStaticAnalysisSourceResult, { readonly kind: 'valid' }>
+  | { readonly analysis: IStaticAnalysisModuleValueSource; readonly kind: 'valid' };
 
 export type IStaticAnalysisRequestRelationship =
   | { readonly kind: 'absent' }

@@ -6,6 +6,8 @@ export type {
   IStaticAnalysisInspectionSessionOptions,
   IStaticAnalysisImportConfig,
   IStaticAnalysisModuleArray,
+  IStaticAnalysisModuleValueSource,
+  IStaticAnalysisModuleValueSourceResult,
   IStaticAnalysisNamedImport,
   IStaticAnalysisPackageCompatibility,
   IStaticAnalysisPackageDeclaration,
@@ -51,6 +53,7 @@ export {
 // TypeScript analysis
 export {
   analyzeClientRequests,
+  analyzeObjectRelationships,
   analyzeSource,
   getCallableExportState,
   getClosedArrayIdentifiers,
@@ -58,6 +61,7 @@ export {
   getConstExport,
   getDirectCall,
   getRuntimeExport,
+  getSafeModuleConstLiteral,
   getStaticString,
   indexImports,
   indexLocalBindingNames,
@@ -65,6 +69,8 @@ export {
   indexSafeModuleArrayNames,
   isBoundIdentifier,
   isModuleBindingVisible,
+  isModuleConstValueSafe,
+  isModuleValueBindingSafe,
   isNullLiteral,
   isStaticLiteralValue,
   isStrictLiteral,

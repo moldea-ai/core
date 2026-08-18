@@ -1,0 +1,93 @@
+<div
+  class="pointer-events-none fixed inset-x-0 top-0 z-[999] h-1 overflow-hidden bg-background"
+  data-navigation-progress
+  role="progressbar"
+  aria-label="Page navigation progress"
+  aria-valuetext="Loading next page"
+  hidden
+>
+  <span
+    class="block h-full w-full origin-left animate-navigation-progress bg-foreground will-change-[transform,opacity]"
+    data-navigation-progress-indicator
+    aria-hidden="true"
+  ></span>
+</div>
+
+<script>
+  import type { TransitionBeforePreparationEvent } from 'astro:transitions/client';
+
+  type INavigationProgressWindow = Window & {
+    __moldeaWebsiteUiNavigationProgressInitialized?: boolean;
+  };
+
+  const pendingPreparations = new Set<symbol>();
+
+  /** Shows or hides every mounted navigation progress indicator. */
+  const setNavigationProgressVisibility = (isVisible: boolean): void => {
+    for (const progress of document.querySelectorAll<HTMLElement>('[data-navigation-progress]')) {
+      progress.hidden = !isVisible;
+    }
+  };
+
+  /** Clears pending navigation state and restores the idle presentation. */
+  const resetNavigationProgress = (): void => {
+    pendingPreparations.clear();
+    setNavigationProgressVisibility(false);
+  };
+
+  /** Completes one preparation without hiding a newer concurrent navigation. */
+  const finishPreparation = (preparationId: symbol): void => {
+    pendingPreparations.delete(preparationId);
+
+    if (pendingPreparations.size === 0) {
+      setNavigationProgressVisibility(false);
+    }
+  };
+
+  /** Starts progress and guarantees cleanup when Astro's loader resolves, rejects, or aborts. */
+  const handleBeforePreparation = (event: TransitionBeforePreparationEvent): void => {
+    const preparationId = Symbol('navigation-preparation');
+    const loader = event.loader;
+
+    pendingPreparations.add(preparationId);
+    setNavigationProgressVisibility(true);
+
+    event.loader = async (): Promise<void> => {
+      try {
+        await loader();
+      } finally {
+        finishPreparation(preparationId);
+      }
+    };
+  };
+
+  /** Provides an idempotent lifecycle cleanup after successful preparation. */
+  const handleAfterPreparation = (): void => {
+    if (pendingPreparations.size === 0) {
+      setNavigationProgressVisibility(false);
+    }
+  };
+
+  const navigationWindow = window as INavigationProgressWindow;
+
+  if (navigationWindow.__moldeaWebsiteUiNavigationProgressInitialized !== true) {
+    navigationWindow.__moldeaWebsiteUiNavigationProgressInitialized = true;
+    document.addEventListener('astro:before-preparation', handleBeforePreparation);
+    document.addEventListener('astro:after-preparation', handleAfterPreparation);
+    document.addEventListener('astro:page-load', resetNavigationProgress);
+    window.addEventListener('pageshow', resetNavigationProgress);
+  }
+
+  resetNavigationProgress();
+</script>
+
+<style>
+  @media (prefers-reduced-motion: reduce) {
+    [data-navigation-progress-indicator] {
+      animation: none;
+      opacity: 1;
+      transform: translateX(8%) scaleX(0.32);
+      will-change: auto;
+    }
+  }
+</style>

@@ -94,6 +94,7 @@ describe('discoverPublicPackages', () => {
 
     expect(model.packages.map(({ name }) => name)).toStrictEqual([
       '@moldea.ai/adapter-anthropic',
+      '@moldea.ai/adapter-google-genai',
       '@moldea.ai/adapter-openai',
       '@moldea.ai/cli',
       '@moldea.ai/core',
@@ -105,6 +106,9 @@ describe('discoverPublicPackages', () => {
       'runtime-adapters',
     );
     expect(model.packages.find(({ slug }) => slug === 'adapter-anthropic')?.family).toBe(
+      'runtime-adapters',
+    );
+    expect(model.packages.find(({ slug }) => slug === 'adapter-google-genai')?.family).toBe(
       'runtime-adapters',
     );
     expect(

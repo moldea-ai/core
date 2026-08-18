@@ -18,6 +18,47 @@ const REPRESENTATIVE_PATHS = [
   '/search/',
 ] as const;
 
+/** Converts an OKLCH token to clipped linear-sRGB relative luminance. */
+const calculateRelativeLuminance = (color: string): number => {
+  const match = /^oklch\(\s*([\d.]+)(%)?\s+([\d.]+)\s+([\d.]+)(?:deg)?(?:\s*\/[^)]+)?\s*\)$/u.exec(
+    color.trim(),
+  );
+
+  if (match === null) {
+    throw new Error(`Expected an OKLCH color token, received: ${color}`);
+  }
+
+  const lightness = Number(match[1]) / (match[2] === '%' ? 100 : 1);
+  const chroma = Number(match[3]);
+  const hue = (Number(match[4]) * Math.PI) / 180;
+  const labA = chroma * Math.cos(hue);
+  const labB = chroma * Math.sin(hue);
+  const lPrime = lightness + 0.3963377774 * labA + 0.2158037573 * labB;
+  const mPrime = lightness - 0.1055613458 * labA - 0.0638541728 * labB;
+  const sPrime = lightness - 0.0894841775 * labA - 1.291485548 * labB;
+  const lValue = lPrime ** 3;
+  const mValue = mPrime ** 3;
+  const sValue = sPrime ** 3;
+  const clampChannel = (channel: number): number => Math.min(1, Math.max(0, channel));
+  const red = clampChannel(4.0767416621 * lValue - 3.3077115913 * mValue + 0.2309699292 * sValue);
+  const green = clampChannel(
+    -1.2684380046 * lValue + 2.6097574011 * mValue - 0.3413193965 * sValue,
+  );
+  const blue = clampChannel(-0.0041960863 * lValue - 0.7034186147 * mValue + 1.707614701 * sValue);
+
+  return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+};
+
+/** Calculates the WCAG contrast ratio between two OKLCH color tokens. */
+const calculateContrastRatio = (firstColor: string, secondColor: string): number => {
+  const firstLuminance = calculateRelativeLuminance(firstColor);
+  const secondLuminance = calculateRelativeLuminance(secondColor);
+  const lighterLuminance = Math.max(firstLuminance, secondLuminance);
+  const darkerLuminance = Math.min(firstLuminance, secondLuminance);
+
+  return (lighterLuminance + 0.05) / (darkerLuminance + 0.05);
+};
+
 test('renders standalone moldea references as inline code in visible prose', async ({ page }) => {
   await page.goto(toPublicPath('/'));
 
@@ -93,6 +134,221 @@ test('uses smooth client-side navigation while preserving ordinary static routes
 
   await page.getByRole('button', { name: 'Use dark theme' }).click();
   await expect(page.locator('html')).toHaveClass(/dark/);
+});
+
+test('shows accessible progress during delayed client navigation and hides it after success', async ({
+  page,
+}) => {
+  await page.setViewportSize({ height: 740, width: 320 });
+  await page.goto(toPublicPath('/'));
+
+  const progress = page.getByRole('progressbar', {
+    includeHidden: true,
+    name: 'Page navigation progress',
+  });
+  const delayedRequest = Promise.withResolvers<void>();
+
+  await expect(progress).toBeHidden();
+  await page.route(
+    `**${toPublicPath('/packages/')}`,
+    async (route) => {
+      await delayedRequest.promise;
+      await route.continue();
+    },
+    { times: 1 },
+  );
+
+  const navigation = page.getByRole('link', { name: 'Packages', exact: true }).first().click();
+
+  await expect(progress).toBeVisible();
+  await expect(progress).toHaveAttribute('aria-valuetext', 'Loading next page');
+  expect((await progress.boundingBox())?.width).toBe(320);
+
+  const accessibilityResults = await new AxeBuilder({ page })
+    .include('[data-navigation-progress]')
+    .analyze();
+
+  expect(accessibilityResults.violations).toStrictEqual([]);
+
+  delayedRequest.resolve();
+  await navigation;
+  await expect(page).toHaveURL(toPublicPath('/packages/'));
+  await expect(progress).toBeHidden();
+});
+
+test('cleans up progress after failed and interrupted navigation and across browser history', async ({
+  page,
+}) => {
+  await page.goto(toPublicPath('/'));
+
+  const progress = page.getByRole('progressbar', {
+    includeHidden: true,
+    name: 'Page navigation progress',
+  });
+  await page.evaluate(() => {
+    type IFailedPreparationEvent = Event & { loader: () => Promise<void> };
+    type IFailedPreparationWindow = Window & {
+      __moldeaFailedNavigationPreparation?: IFailedPreparationEvent;
+    };
+    const preparationEvent = new Event('astro:before-preparation') as IFailedPreparationEvent;
+
+    preparationEvent.loader = (): Promise<void> =>
+      Promise.reject(new Error('Deliberate navigation preparation failure.'));
+    (window as IFailedPreparationWindow).__moldeaFailedNavigationPreparation = preparationEvent;
+    document.dispatchEvent(preparationEvent);
+  });
+
+  await expect(progress).toBeVisible();
+  await page.evaluate(async () => {
+    type IFailedPreparationEvent = Event & { loader: () => Promise<void> };
+    type IFailedPreparationWindow = Window & {
+      __moldeaFailedNavigationPreparation?: IFailedPreparationEvent;
+    };
+    const failedPreparationWindow = window as IFailedPreparationWindow;
+    const preparationEvent = failedPreparationWindow.__moldeaFailedNavigationPreparation;
+
+    if (preparationEvent === undefined) {
+      throw new Error('The failed navigation preparation event is unavailable.');
+    }
+
+    try {
+      await preparationEvent.loader();
+    } catch {
+      // the rejected loader is the expected navigation failure under test
+    }
+
+    delete failedPreparationWindow.__moldeaFailedNavigationPreparation;
+  });
+  await expect(progress).toBeHidden();
+
+  await page.goto(toPublicPath('/'));
+
+  const interruptedRequest = Promise.withResolvers<void>();
+
+  await page.route(
+    `**${toPublicPath('/packages/')}`,
+    async (route) => {
+      await interruptedRequest.promise;
+      await route.continue();
+    },
+    { times: 1 },
+  );
+
+  const interruptedNavigation = page
+    .getByRole('link', { name: 'Packages', exact: true })
+    .first()
+    .click();
+
+  await expect(progress).toBeVisible();
+  await page.getByRole('link', { name: 'Adapters', exact: true }).first().click();
+  await expect(page).toHaveURL(toPublicPath('/adapters/'));
+  await expect(progress).toBeHidden();
+
+  interruptedRequest.resolve();
+  await interruptedNavigation;
+  await expect(page).toHaveURL(toPublicPath('/adapters/'));
+
+  await page.getByRole('link', { name: 'Packages', exact: true }).first().click();
+  await expect(page).toHaveURL(toPublicPath('/packages/'));
+  await expect(progress).toBeHidden();
+
+  await page.goBack();
+  await expect(page).toHaveURL(toPublicPath('/adapters/'));
+  await expect(progress).toBeHidden();
+
+  await page.goForward();
+  await expect(page).toHaveURL(toPublicPath('/packages/'));
+  await expect(progress).toBeHidden();
+});
+
+test('uses sufficient navigation progress contrast in light and dark themes', async ({ page }) => {
+  await page.goto(toPublicPath('/'));
+
+  const progress = page.locator('[data-navigation-progress]');
+  const indicator = progress.locator('[data-navigation-progress-indicator]');
+
+  for (const theme of ['light', 'dark'] as const) {
+    await page.locator('html').evaluate((root, activeTheme) => {
+      root.classList.remove('light', 'dark');
+      root.classList.add(activeTheme);
+    }, theme);
+
+    const colors = await progress.evaluate((progressElement) => {
+      const indicatorElement = progressElement.querySelector<HTMLElement>(
+        '[data-navigation-progress-indicator]',
+      );
+      const rootStyles = getComputedStyle(document.documentElement);
+
+      if (indicatorElement === null) {
+        throw new Error('The navigation progress indicator is unavailable.');
+      }
+
+      return {
+        backgroundToken: rootStyles.getPropertyValue('--background'),
+        foregroundToken: rootStyles.getPropertyValue('--foreground'),
+        indicatorColor: getComputedStyle(indicatorElement).backgroundColor,
+        pageBackground: getComputedStyle(document.body).backgroundColor,
+        pageForeground: getComputedStyle(document.body).color,
+        trackColor: getComputedStyle(progressElement).backgroundColor,
+      };
+    });
+
+    expect(colors.indicatorColor).toBe(colors.pageForeground);
+    expect(colors.trackColor).toBe(colors.pageBackground);
+    expect(
+      calculateContrastRatio(colors.foregroundToken, colors.backgroundToken),
+    ).toBeGreaterThanOrEqual(3);
+    await expect(indicator).toHaveCSS('background-color', colors.pageForeground);
+  }
+});
+
+test('shows a static navigation segment when reduced motion is preferred', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto(toPublicPath('/'));
+
+  const delayedRequest = Promise.withResolvers<void>();
+
+  await page.route(
+    `**${toPublicPath('/packages/')}`,
+    async (route) => {
+      await delayedRequest.promise;
+      await route.continue();
+    },
+    { times: 1 },
+  );
+
+  const navigation = page.getByRole('link', { name: 'Packages', exact: true }).first().click();
+  const progress = page.getByRole('progressbar', { name: 'Page navigation progress' });
+  const indicator = progress.locator('[data-navigation-progress-indicator]');
+
+  await expect(progress).toBeVisible();
+
+  const initialPresentation = await indicator.evaluate((element) => {
+    const styles = getComputedStyle(element);
+
+    return {
+      animationName: styles.animationName,
+      opacity: styles.opacity,
+      transform: styles.transform,
+    };
+  });
+  const progressBounds = await progress.boundingBox();
+  const indicatorBounds = await indicator.boundingBox();
+
+  await page.waitForTimeout(100);
+
+  expect(initialPresentation.animationName).toBe('none');
+  expect(initialPresentation.opacity).toBe('1');
+  expect(initialPresentation.transform).not.toBe('none');
+  expect(await indicator.evaluate((element) => getComputedStyle(element).transform)).toBe(
+    initialPresentation.transform,
+  );
+  expect(indicatorBounds?.width).toBeGreaterThan((progressBounds?.width ?? 0) * 0.2);
+  expect(indicatorBounds?.width).toBeLessThan((progressBounds?.width ?? 0) * 0.4);
+
+  delayedRequest.resolve();
+  await navigation;
+  await expect(progress).toBeHidden();
 });
 
 test('marks the current desktop and mobile navigation destinations', async ({ page }) => {
@@ -362,6 +618,7 @@ test('uses the branded input surface in light and dark themes', async ({ page })
   await page.goto(toPublicPath('/search/'));
 
   const searchInput = page.getByRole('searchbox', { name: 'Search documentation' });
+  await searchInput.blur();
   const lightInputStyles = await searchInput.evaluate((element) => {
     const styles = getComputedStyle(element);
 
@@ -387,6 +644,18 @@ test('uses the branded input surface in light and dark themes', async ({ page })
   expect(
     await searchInput.evaluate((element) => getComputedStyle(element).backgroundColor),
   ).not.toBe('rgba(0, 0, 0, 0)');
+});
+
+test('focuses the search input on direct and client-side page loads', async ({ page }) => {
+  const searchInput = page.getByRole('searchbox', { name: 'Search documentation' });
+
+  await page.goto(toPublicPath('/search/'));
+  await expect(searchInput).toBeFocused();
+
+  await page.goto(toPublicPath('/'));
+  await page.getByRole('link', { name: 'Search documentation' }).click();
+  await page.waitForURL((url) => url.pathname === toPublicPath('/search/'));
+  await expect(searchInput).toBeFocused();
 });
 
 test('searches the generated local index with a keyboard-submitted query', async ({ page }) => {

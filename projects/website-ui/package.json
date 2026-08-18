@@ -1,6 +1,6 @@
 {
   "name": "@moldea.ai/website-ui",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Shared Astro foundations for moldea public websites.",
   "homepage": "https://github.com/moldea-ai/packages/tree/main/projects/website-ui#readme",
   "bugs": {
@@ -64,6 +64,9 @@
     },
     "./local-search": {
       "import": "./src/components/local-search/local-search.component.astro"
+    },
+    "./navigation-progress": {
+      "import": "./src/components/navigation-progress/navigation-progress.component.astro"
     },
     "./theme-bootstrap": {
       "import": "./src/components/theme-bootstrap/theme-bootstrap.component.astro"

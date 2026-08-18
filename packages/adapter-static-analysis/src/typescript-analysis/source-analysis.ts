@@ -2,12 +2,18 @@ import ts from 'typescript';
 
 import type {
   IStaticAnalysisExportState,
+  IStaticAnalysisModuleValueSource,
+  IStaticAnalysisModuleValueSourceResult,
   IStaticAnalysisSource,
   IStaticAnalysisSourceConfig,
-  IStaticAnalysisSourceResult,
 } from '../types.js';
 import { normalizeText } from '../text/index.js';
-import { indexImports, indexLocalBindingNames, indexModuleDeclarations } from './bindings.js';
+import {
+  indexIdentifierUses,
+  indexImports,
+  indexLocalBindingNames,
+  indexModuleDeclarations,
+} from './bindings.js';
 import { unwrapExpression } from './expressions.js';
 import { indexSafeModuleArrayNames } from './requests.js';
 
@@ -55,7 +61,7 @@ export const analyzeSource = (
   bytes: Uint8Array,
   config: IStaticAnalysisSourceConfig,
   signal?: AbortSignal,
-): IStaticAnalysisSourceResult => {
+): IStaticAnalysisModuleValueSourceResult => {
   signal?.throwIfAborted();
   const text = normalizeText(bytes);
 
@@ -97,12 +103,15 @@ export const analyzeSource = (
     constructorNames,
   );
   signal?.throwIfAborted();
+  const identifierUses = indexIdentifierUses(sourceFile);
+  signal?.throwIfAborted();
   const localBindingNames = indexLocalBindingNames(sourceFile);
   signal?.throwIfAborted();
-  const preliminaryAnalysis: IStaticAnalysisSource = Object.freeze({
+  const preliminaryAnalysis: IStaticAnalysisModuleValueSource = Object.freeze({
     clientNames,
     constructorNames,
     exports,
+    identifierUses,
     localBindingNames,
     moduleArrays,
     moduleConstDeclarations,
@@ -112,7 +121,7 @@ export const analyzeSource = (
     sourceFile,
     text,
   });
-  const analysis: IStaticAnalysisSource = Object.freeze({
+  const analysis: IStaticAnalysisModuleValueSource = Object.freeze({
     ...preliminaryAnalysis,
     safeModuleArrayNames: indexSafeModuleArrayNames(preliminaryAnalysis, config.requestConfig),
   });

@@ -10,6 +10,7 @@ import { isNpmReleaseMode, isNpmReleaseProject } from './validations.ts';
 
 const NO_PREVIOUS_VERSIONS = Object.freeze({
   'adapter-anthropic': null,
+  'adapter-google-genai': null,
   'adapter-openai': null,
   cli: null,
   core: null,
@@ -63,6 +64,8 @@ export const createNpmReleaseWorkflowOutputs = (plan: INpmReleaseWorkflowPlan) =
   return {
     adapter_anthropic: String(selectedProjects.has('adapter-anthropic')),
     adapter_anthropic_previous_version: plan.previousVersions['adapter-anthropic'] ?? '',
+    adapter_google_genai: String(selectedProjects.has('adapter-google-genai')),
+    adapter_google_genai_previous_version: plan.previousVersions['adapter-google-genai'] ?? '',
     adapter_openai: String(selectedProjects.has('adapter-openai')),
     adapter_openai_previous_version: plan.previousVersions['adapter-openai'] ?? '',
     cli: String(selectedProjects.has('cli')),

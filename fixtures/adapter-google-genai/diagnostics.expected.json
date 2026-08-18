@@ -1,0 +1,58 @@
+[
+  {
+    "code": "GOOGLE_GENAI_FUNCTION_DECLARATION_LIMIT_EXCEEDED",
+    "message": "The detected Google Gen AI function-declaration collection exceeds the supported SDK declaration limit."
+  },
+  {
+    "code": "GOOGLE_GENAI_INSTRUCTION_LOADER_NOT_WIRED",
+    "message": "The declared instruction loader is not wired to the detected Google Gen AI generate-content configuration."
+  },
+  {
+    "code": "GOOGLE_GENAI_INSTRUCTION_LOADER_SYMBOL_NOT_FOUND",
+    "message": "The declared instruction-loader symbol was not found."
+  },
+  {
+    "code": "GOOGLE_GENAI_PACKAGE_MANIFEST_INVALID",
+    "message": "The owning package manifest is invalid for Google Gen AI dependency detection."
+  },
+  {
+    "code": "GOOGLE_GENAI_RUNTIME_AGENT_SYMBOL_NOT_FOUND",
+    "message": "The declared runtime-agent symbol was not found."
+  },
+  {
+    "code": "GOOGLE_GENAI_SDK_VERSION_UNSUPPORTED",
+    "message": "The observed Google Gen AI SDK dependency range is disjoint from the supported range."
+  },
+  {
+    "code": "GOOGLE_GENAI_SOURCE_SYNTAX_INVALID",
+    "message": "The referenced Google Gen AI source file contains invalid TypeScript syntax."
+  },
+  {
+    "code": "GOOGLE_GENAI_SOURCE_TEXT_INVALID",
+    "message": "The referenced Google Gen AI source file is not valid normalized text."
+  },
+  {
+    "code": "GOOGLE_GENAI_TOOL_INPUT_SCHEMA_NOT_WIRED",
+    "message": "The declared tool input schema is not wired to the detected function declaration's parameters JSON schema."
+  },
+  {
+    "code": "GOOGLE_GENAI_TOOL_INPUT_SCHEMA_SYMBOL_NOT_FOUND",
+    "message": "The declared tool input-schema symbol was not found."
+  },
+  {
+    "code": "GOOGLE_GENAI_TOOL_NAME_INVALID",
+    "message": "The detected Google Gen AI function name violates the supported SDK declaration limit."
+  },
+  {
+    "code": "GOOGLE_GENAI_TOOL_NAME_MISMATCH",
+    "message": "The declared tool name does not match the detected Google Gen AI function name."
+  },
+  {
+    "code": "GOOGLE_GENAI_TOOL_REGISTRATION_NOT_WIRED",
+    "message": "The declared tool registration is not wired to the detected Google Gen AI function-declaration collection."
+  },
+  {
+    "code": "GOOGLE_GENAI_TOOL_REGISTRATION_SYMBOL_NOT_FOUND",
+    "message": "The declared tool-registration symbol was not found."
+  }
+]

@@ -103,6 +103,11 @@ describe('npm release project changes', () => {
         isChanged: false,
         previousVersion: '1.0.0',
       },
+      'adapter-google-genai': {
+        currentVersion: '1.0.0',
+        isChanged: false,
+        previousVersion: '1.0.0',
+      },
       'adapter-openai': {
         currentVersion: '1.0.0',
         isChanged: false,
@@ -151,6 +156,7 @@ describe('npm release project changes', () => {
       mode: 'trusted',
       previousVersions: {
         'adapter-anthropic': null,
+        'adapter-google-genai': null,
         'adapter-openai': null,
         cli: null,
         core: null,

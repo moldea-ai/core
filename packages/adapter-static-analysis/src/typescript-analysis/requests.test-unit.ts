@@ -1,8 +1,9 @@
 // @vitest-environment node
+import ts from 'typescript';
 import { describe, expect, test } from 'vitest';
 
 import type { IStaticAnalysisSourceConfig } from '../types.js';
-import { analyzeClientRequests } from './requests.js';
+import { analyzeClientRequests, analyzeObjectRelationships } from './requests.js';
 import { analyzeSource, getRuntimeExport } from './source-analysis.js';
 
 const SOURCE_CONFIG: IStaticAnalysisSourceConfig = {
@@ -38,6 +39,36 @@ const analyzeRequests = (source: string) => {
 };
 
 describe('static provider requests', () => {
+  test('classifies nested object relationships independently', () => {
+    const sourceFile = ts.createSourceFile(
+      '/src/config.ts',
+      '({ systemInstruction: load(), ...dynamic, tools: [tool] })',
+      ts.ScriptTarget.ES2023,
+      true,
+      ts.ScriptKind.TS,
+    );
+    const expressionStatement = sourceFile.statements[0];
+
+    if (
+      expressionStatement === undefined ||
+      !ts.isExpressionStatement(expressionStatement) ||
+      !ts.isParenthesizedExpression(expressionStatement.expression) ||
+      !ts.isObjectLiteralExpression(expressionStatement.expression.expression)
+    ) {
+      throw new TypeError('The nested relationship fixture must contain an object literal.');
+    }
+
+    const result = analyzeObjectRelationships(expressionStatement.expression.expression, [
+      'systemInstruction',
+      'tools',
+    ]);
+
+    expect({
+      systemInstruction: result.relationships.get('systemInstruction')?.kind,
+      tools: result.relationships.get('tools')?.kind,
+    }).toStrictEqual({ systemInstruction: 'unresolved', tools: 'present' });
+  });
+
   test('recognizes direct calls and keeps relationship closure independent', () => {
     const result = analyzeRequests(
       [

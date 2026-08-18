@@ -16,6 +16,7 @@ export const NPM_RELEASE_PROJECT_ORDER = [
   'repository-fs',
   'core',
   'adapter-anthropic',
+  'adapter-google-genai',
   'adapter-openai',
   'cli',
   'website-ui',
@@ -28,6 +29,12 @@ export const NPM_RELEASE_PROJECTS = {
     packageName: '@moldea.ai/adapter-anthropic',
     projectDirectory: 'projects/adapter-anthropic',
     tagPrefix: 'adapter-anthropic-v',
+  },
+  'adapter-google-genai': {
+    artifactPrefix: 'moldea.ai-adapter-google-genai',
+    packageName: '@moldea.ai/adapter-google-genai',
+    projectDirectory: 'projects/adapter-google-genai',
+    tagPrefix: 'adapter-google-genai-v',
   },
   'adapter-openai': {
     artifactPrefix: 'moldea.ai-adapter-openai',

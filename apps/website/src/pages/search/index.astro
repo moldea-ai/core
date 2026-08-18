@@ -51,3 +51,14 @@ const searchIndexUrl = withBase('/search-index.json', basePath);
     </div>
   </section>
 </BaseLayout>
+
+<script>
+  const focusSearchInput = (): void => {
+    document
+      .querySelector<HTMLInputElement>('[data-local-search] [data-search-input]')
+      ?.focus({ preventScroll: true });
+  };
+
+  document.addEventListener('astro:page-load', focusSearchInput);
+  focusSearchInput();
+</script>

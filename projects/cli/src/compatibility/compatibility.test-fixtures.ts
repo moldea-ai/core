@@ -13,6 +13,7 @@ import type { IMoldeaCliCompatibilityStateInput } from './types.js';
 export const INSTALLED_PACKAGE_METADATA: IMoldeaCliPackageMetadata = Object.freeze({
   dependencies: Object.freeze({
     '@moldea.ai/adapter-anthropic': 'workspace:2.0.1',
+    '@moldea.ai/adapter-google-genai': 'workspace:1.0.0',
     '@moldea.ai/adapter-openai': 'workspace:2.0.3',
     '@moldea.ai/core': 'workspace:2.0.0',
     '@moldea.ai/repository': 'workspace:1.0.1',
@@ -21,13 +22,14 @@ export const INSTALLED_PACKAGE_METADATA: IMoldeaCliPackageMetadata = Object.free
   }),
   installedPackageVersions: Object.freeze({
     '@moldea.ai/adapter-anthropic': '2.0.1',
+    '@moldea.ai/adapter-google-genai': '1.0.0',
     '@moldea.ai/adapter-openai': '2.0.3',
     '@moldea.ai/core': '2.0.0',
     '@moldea.ai/repository': '1.0.1',
     '@moldea.ai/repository-fs': '1.0.1',
   }),
   supportedNodeRange: '^22.11.0 || ^24.11.0',
-  version: '3.0.1',
+  version: '3.1.0',
 });
 
 const availableOpenAiMatrixEntry = MOLDEA_CLI_RELEASE_METADATA.matrix.adapters['openai'];
@@ -59,7 +61,11 @@ export const createTestCompatibilityState = (): IMoldeaCliCompatibilityStateInpu
   const releaseMetadata = createTestReleaseMetadata();
 
   return {
-    activeAdapters: [createTestRuntimeAdapter('anthropic'), createTestRuntimeAdapter('openai')],
+    activeAdapters: [
+      createTestRuntimeAdapter('anthropic'),
+      createTestRuntimeAdapter('google-genai'),
+      createTestRuntimeAdapter('openai'),
+    ],
     coreRecognizedAdapterIds: releaseMetadata.coreRecognizedAdapterIds,
     coreSupportedRepositoryFormatVersions: [1],
     minimumGitVersion: '2.30.0',

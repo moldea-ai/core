@@ -7,7 +7,7 @@ The package owns the reusable design tokens, global website primitives, interact
 ## Install after release
 
 ```bash
-pnpm add @moldea.ai/website-ui@1.0.1
+pnpm add @moldea.ai/website-ui@1.1.0
 ```
 
 The package currently supports Astro `7.2.2` and Tailwind CSS `4.3.3` exactly. Import the shared stylesheet once from the website's global stylesheet:
@@ -38,10 +38,11 @@ Every component has a dedicated public subpath:
 - `@moldea.ai/website-ui/breadcrumbs`
 - `@moldea.ai/website-ui/inline-brand-text`
 - `@moldea.ai/website-ui/local-search`
+- `@moldea.ai/website-ui/navigation-progress`
 - `@moldea.ai/website-ui/theme-bootstrap`
 - `@moldea.ai/website-ui/theme-control`
 
-`ThemeBootstrap` belongs in the document head before rendered content. Pass the same app-owned storage key to `ThemeControl`. `BrandLogo` receives app-owned asset paths and labels rather than embedding one site's identity. `LocalSearch` receives app-owned copy, routes, and the generated index URL.
+`ThemeBootstrap` belongs in the document head before rendered content. Pass the same app-owned storage key to `ThemeControl`. Mount `NavigationProgress` once near the start of the document body in websites that use Astro's `ClientRouter`; it reports client navigation preparation without taking ownership of the app's layout. `BrandLogo` receives app-owned asset paths and labels rather than embedding one site's identity. `LocalSearch` receives app-owned copy, routes, and the generated index URL.
 
 ## Development
 

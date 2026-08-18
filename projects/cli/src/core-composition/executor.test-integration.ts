@@ -129,6 +129,60 @@ describe('CLI Core composition with the memory repository reader', () => {
     });
   });
 
+  test('runs the active Google Gen AI adapter through CLI composition', async () => {
+    const reader = createMemoryRepositoryReader([
+      {
+        content: [
+          'version: 1',
+          'agents:',
+          '  alpha:',
+          '    runtime:',
+          '      id: google-genai',
+          '    bindings:',
+          '      runtimeAgent:',
+          '        path: /src/agent.ts',
+          '        symbol: alphaAgent',
+          '',
+        ].join('\n'),
+        path: '/moldea/moldea.yaml',
+        type: 'file',
+      },
+      { content: '# Project\n', path: '/moldea/project.md', type: 'file' },
+      ...createAgentEntries('alpha'),
+      {
+        content: '{"dependencies":{"@google/genai":"2.17.1"}}\n',
+        path: '/package.json',
+        type: 'file',
+      },
+      {
+        content: [
+          "import { GoogleGenAI } from '@google/genai';",
+          'const client = new GoogleGenAI();',
+          "export const alphaAgent = () => client.models.generateContent({ contents: 'hello' });",
+          '',
+        ].join('\n'),
+        path: '/src/agent.ts',
+        type: 'file',
+      },
+    ]);
+
+    const result = await executeMoldeaCliCoreInspection({
+      repository: reader,
+      resourceLimits: RESOURCE_LIMITS,
+    });
+
+    expect(result).toMatchObject({
+      diagnostics: [],
+      evidence: [
+        { agentId: 'alpha', kind: 'language', source: 'google-genai' },
+        { kind: 'runtime-package', runtimeName: '@google/genai', source: 'google-genai' },
+        { agentId: 'alpha', kind: 'runtime-pattern', source: 'google-genai' },
+      ],
+      project: { agents: [{ id: 'alpha' }] },
+      valid: true,
+    });
+  });
+
   test('normalizes injected adapter execution while universal failure remains all-or-nothing', async () => {
     const calls: string[] = [];
     const projectPath = parseRepositoryPath('/moldea/project.md');

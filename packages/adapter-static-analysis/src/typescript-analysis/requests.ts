@@ -173,7 +173,13 @@ const getPotentialRelationshipNames = (
   return relationshipNames;
 };
 
-const analyzeRequestRelationships = (
+/**
+ * Classifies selected properties on one object literal without interpreting unrelated values.
+ * @param object The object literal whose direct properties are inspected.
+ * @param relationshipNames The exact properties owned by the caller.
+ * @returns Independent closed, absent, or unresolved relationship observations.
+ */
+export const analyzeObjectRelationships = (
   object: ts.ObjectLiteralExpression,
   relationshipNames: readonly string[],
 ): IStaticAnalysisRequest => {
@@ -397,7 +403,7 @@ export const analyzeClientRequests = (
       } else if (classification === 'recognized') {
         const request = unwrapExpression(node.arguments[0] as ts.Expression);
         requests.push(
-          analyzeRequestRelationships(
+          analyzeObjectRelationships(
             request as ts.ObjectLiteralExpression,
             config.relationshipNames,
           ),
@@ -505,6 +511,10 @@ const isDirectToolRequestPropertyUse = (
   analysis: IStaticAnalysisSource,
   config: IStaticAnalysisRequestConfig,
 ): boolean => {
+  if (config.toolRelationshipName === undefined) {
+    return false;
+  }
+
   const expression = skipTransparentParents(identifier);
   const property = expression.parent;
   const isToolProperty =
@@ -640,6 +650,10 @@ export const indexSafeModuleArrayNames = (
   analysis: IStaticAnalysisSource,
   config: IStaticAnalysisRequestConfig,
 ): ReadonlySet<string> => {
+  if (config.toolRelationshipName === undefined) {
+    return new Set();
+  }
+
   const unsafeNames = new Set<string>();
   const visit = (node: ts.Node): void => {
     if (ts.isIdentifier(node)) {

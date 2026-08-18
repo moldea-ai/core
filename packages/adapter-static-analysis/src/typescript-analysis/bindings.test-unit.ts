@@ -3,6 +3,7 @@ import ts from 'typescript';
 import { describe, expect, test } from 'vitest';
 
 import {
+  indexIdentifierUses,
   indexImports,
   indexLocalBindingNames,
   indexModuleDeclarations,
@@ -36,6 +37,7 @@ describe('static TypeScript bindings', () => {
     expect(imports.constructorNames).toStrictEqual(new Set(['Client', 'NamedClient']));
     expect(declarations.clientNames).toStrictEqual(new Set(['client']));
     expect(declarations.exports.get('agent')?.kind).toBe('present-supported');
+    expect(indexIdentifierUses(sourceFile).get('client')).toHaveLength(2);
     expect(declarations.moduleArrays.has('tools')).toBe(true);
   });
 

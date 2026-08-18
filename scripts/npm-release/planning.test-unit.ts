@@ -10,6 +10,7 @@ import { createNpmReleaseWorkflowOutputs, createNpmReleaseWorkflowPlan } from '.
 
 const NO_PREVIOUS_VERSIONS = {
   'adapter-anthropic': null,
+  'adapter-google-genai': null,
   'adapter-openai': null,
   cli: null,
   core: null,
@@ -25,6 +26,7 @@ const createProjectChanges = (
     (
       [
         'adapter-anthropic',
+        'adapter-google-genai',
         'adapter-openai',
         'cli',
         'core',
@@ -68,6 +70,11 @@ describe('npm release workflow planning', () => {
         project: '',
         projectChanges: createProjectChanges({
           'adapter-anthropic': { currentVersion: '1.0.1', isChanged: true },
+          'adapter-google-genai': {
+            currentVersion: '1.0.0',
+            isChanged: true,
+            previousVersion: null,
+          },
           'adapter-openai': { currentVersion: '1.0.1', isChanged: true },
           cli: { currentVersion: '1.0.1', isChanged: true },
           repository: { currentVersion: '1.1.0', isChanged: true },
@@ -79,6 +86,7 @@ describe('npm release workflow planning', () => {
       mode: 'trusted',
       previousVersions: {
         'adapter-anthropic': '1.0.0',
+        'adapter-google-genai': null,
         'adapter-openai': '1.0.0',
         cli: '1.0.0',
         core: null,
@@ -90,6 +98,7 @@ describe('npm release workflow planning', () => {
         'repository',
         'repository-fs',
         'adapter-anthropic',
+        'adapter-google-genai',
         'adapter-openai',
         'cli',
         'website-ui',
@@ -150,6 +159,8 @@ describe('npm release workflow planning', () => {
     expect(createNpmReleaseWorkflowOutputs(plan)).toStrictEqual({
       adapter_anthropic: 'false',
       adapter_anthropic_previous_version: '',
+      adapter_google_genai: 'false',
+      adapter_google_genai_previous_version: '',
       adapter_openai: 'false',
       adapter_openai_previous_version: '',
       cli: 'false',
