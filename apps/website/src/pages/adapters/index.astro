@@ -1,14 +1,16 @@
 ---
+import Breadcrumbs from '@moldea.ai/website-ui/breadcrumbs';
+import { withBase } from '@moldea.ai/website-ui/site';
+
 import AdapterCard from '../../components/adapter-card.astro';
-import Breadcrumbs from '../../components/breadcrumbs.astro';
 import BaseLayout from '../../layouts/base-layout.astro';
 import { loadWebsiteModel } from '../../lib/generation/generation.ts';
-import { withBase } from '../../lib/site/url.ts';
 
 const model = loadWebsiteModel();
 const available = model.adapters.filter(({ entry }) => entry.implementationStatus === 'available');
 const upcoming = model.adapters.filter(({ entry }) => entry.implementationStatus !== 'available');
 const breadcrumbs = [{ href: '/', label: 'Home' }, { label: 'Runtime Adapters' }];
+const basePath = import.meta.env.BASE_URL;
 ---
 
 <BaseLayout
@@ -28,7 +30,7 @@ const breadcrumbs = [{ href: '/', label: 'Home' }, { label: 'Runtime Adapters' }
       </p>
       <a
         class="mt-7 inline-flex items-center gap-2 font-bold"
-        href={withBase('/compatibility/')}
+        href={withBase('/compatibility/', basePath)}
       >
         View the complete compatibility matrix <span aria-hidden="true">→</span>
       </a>

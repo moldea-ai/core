@@ -6,8 +6,9 @@ import remarkGfm from 'remark-gfm';
 import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
 import { unified } from 'unified';
+import { withBase } from '@moldea.ai/website-ui/site';
 
-import { withBase } from '../site/url.ts';
+const BASE_PATH = import.meta.env.BASE_URL;
 
 export interface IRenderedMarkdownHeading {
   depth: 2 | 3;
@@ -23,13 +24,20 @@ export interface IRenderedMarkdown {
 const stripTags = (value: string): string => value.replaceAll(/<[^>]+>/g, '');
 
 const prefixInternalLinks = (html: string): string => {
-  return html.replaceAll(/href="\/(?!\/)/g, `href="${withBase('/')}`);
+  return html.replaceAll(/href="\/(?!\/)/g, `href="${withBase('/', BASE_PATH)}`);
 };
 
 const markExternalLinks = (html: string): string => {
   return html.replaceAll(
     /<a href="((?:https?:)?\/\/[^" ]+)"/g,
     '<a href="$1" target="_blank" rel="noopener noreferrer"',
+  );
+};
+
+const wrapTables = (html: string): string => {
+  return html.replaceAll(
+    /<table>([\s\S]*?)<\/table>/g,
+    '<div class="table-scroll" tabindex="0" role="region" aria-label="Scrollable table"><table>$1</table></div>',
   );
 };
 
@@ -69,7 +77,7 @@ export const renderMarkdown = async (
     })
     .use(rehypeStringify)
     .process(source);
-  const html = markExternalLinks(prefixInternalLinks(String(file)));
+  const html = wrapTables(markExternalLinks(prefixInternalLinks(String(file))));
 
   return { headings: getHeadings(html), html };
 };

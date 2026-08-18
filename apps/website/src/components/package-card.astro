@@ -1,10 +1,10 @@
 ---
-import { ArrowUpRight, Box, Database, FolderTree, Terminal } from '@lucide/astro';
+import { ArrowUpRight, Box, Database, FolderTree, LayoutTemplate, Terminal } from '@lucide/astro';
+import InlineBrandText from '@moldea.ai/website-ui/inline-brand-text';
+import { withBase } from '@moldea.ai/website-ui/site';
 
 import type { IPublicPackage } from '../lib/model/types.ts';
-import { withBase } from '../lib/site/url.ts';
 import AdapterCompanyLogo from './adapter-company-logo.astro';
-import InlineBrandText from './inline-brand-text.astro';
 
 interface Props {
   adapterId?: string;
@@ -12,18 +12,20 @@ interface Props {
 }
 
 const { adapterId, packageModel } = Astro.props;
+const basePath = import.meta.env.BASE_URL;
 const icons = {
   cli: Terminal,
   core: Box,
   repository: Database,
   'repository-fs': FolderTree,
+  'website-ui': LayoutTemplate,
 } as const;
 const Icon = icons[packageModel.slug as keyof typeof icons] ?? Box;
 ---
 
 <a
   class="surface-card interactive-card group flex min-h-64 flex-col p-6"
-  href={withBase(packageModel.route)}
+  href={withBase(packageModel.route, basePath)}
 >
   <div class="mb-8 flex items-start justify-between gap-4">
     {

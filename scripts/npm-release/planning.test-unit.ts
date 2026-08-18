@@ -15,6 +15,7 @@ const NO_PREVIOUS_VERSIONS = {
   core: null,
   repository: null,
   'repository-fs': null,
+  'website-ui': null,
 } as const;
 
 const createProjectChanges = (
@@ -22,7 +23,15 @@ const createProjectChanges = (
 ): INpmReleaseWorkflowPlanSources['projectChanges'] =>
   Object.fromEntries(
     (
-      ['adapter-anthropic', 'adapter-openai', 'cli', 'core', 'repository', 'repository-fs'] as const
+      [
+        'adapter-anthropic',
+        'adapter-openai',
+        'cli',
+        'core',
+        'repository',
+        'repository-fs',
+        'website-ui',
+      ] as const
     ).map((project) => [
       project,
       {
@@ -63,6 +72,7 @@ describe('npm release workflow planning', () => {
           cli: { currentVersion: '1.0.1', isChanged: true },
           repository: { currentVersion: '1.1.0', isChanged: true },
           'repository-fs': { currentVersion: '2.0.0', isChanged: true },
+          'website-ui': { currentVersion: '1.0.0', isChanged: true, previousVersion: null },
         }),
       }),
     ).toStrictEqual({
@@ -74,8 +84,16 @@ describe('npm release workflow planning', () => {
         core: null,
         repository: '1.0.0',
         'repository-fs': '1.0.0',
+        'website-ui': null,
       },
-      projects: ['repository', 'repository-fs', 'adapter-anthropic', 'adapter-openai', 'cli'],
+      projects: [
+        'repository',
+        'repository-fs',
+        'adapter-anthropic',
+        'adapter-openai',
+        'cli',
+        'website-ui',
+      ],
       trigger: 'automatic',
     });
   });
@@ -146,6 +164,8 @@ describe('npm release workflow planning', () => {
       repository_previous_version: '1.0.0',
       repository_fs: 'false',
       repository_fs_previous_version: '',
+      website_ui: 'false',
+      website_ui_previous_version: '',
     });
   });
 

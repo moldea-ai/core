@@ -1,0 +1,126 @@
+---
+import { Moon, Sun } from '@lucide/astro';
+
+export interface Props {
+  class?: string;
+  storageKey: string;
+}
+
+const { class: className, storageKey } = Astro.props;
+---
+
+<button
+  class:list={['action-control action-ghost action-size-icon max-md:size-11', className]}
+  type="button"
+  data-theme-control
+  data-theme-storage-key={storageKey}
+  aria-label="Use dark theme"
+  title="Use dark theme"
+>
+  <Moon
+    class="theme-use-dark-icon size-4"
+    aria-hidden="true"
+  />
+  <Sun
+    class="theme-use-light-icon hidden size-4"
+    aria-hidden="true"
+  />
+</button>
+
+<script>
+  import { isDarkTheme, parseThemePreference, type IThemePreference } from '../../theme/index.ts';
+
+  const readPreference = (storageKey: string): IThemePreference => {
+    try {
+      return parseThemePreference(localStorage.getItem(storageKey));
+    } catch {
+      return 'system';
+    }
+  };
+
+  const persistPreference = (storageKey: string, preference: IThemePreference): void => {
+    try {
+      localStorage.setItem(storageKey, preference);
+    } catch {
+      // theme selection still applies to the active page when storage is unavailable
+    }
+  };
+
+  const applyTheme = (preference: IThemePreference, storageKey: string): void => {
+    const isDark = isDarkTheme(
+      preference,
+      window.matchMedia('(prefers-color-scheme: dark)').matches,
+    );
+    const root = document.documentElement;
+
+    root.classList.remove('light', 'dark');
+    root.classList.add(isDark ? 'dark' : 'light');
+    root.dataset.theme = preference;
+    root.dataset.themeStorageKey = storageKey;
+    root.style.colorScheme = isDark ? 'dark' : 'light';
+
+    const label = isDark ? 'Use light theme' : 'Use dark theme';
+
+    for (const control of document.querySelectorAll<HTMLButtonElement>(
+      `[data-theme-control][data-theme-storage-key="${CSS.escape(storageKey)}"]`,
+    )) {
+      control.dataset.nextTheme = isDark ? 'light' : 'dark';
+      control.setAttribute('aria-label', label);
+      control.title = label;
+    }
+  };
+
+  const synchronizeThemeControls = (): void => {
+    const controls = document.querySelectorAll<HTMLButtonElement>('[data-theme-control]');
+    const storageKeys = new Set(
+      [...controls]
+        .map((control) => control.dataset.themeStorageKey)
+        .filter((storageKey): storageKey is string => Boolean(storageKey)),
+    );
+
+    for (const storageKey of storageKeys) {
+      applyTheme(readPreference(storageKey), storageKey);
+    }
+  };
+
+  if (document.documentElement.dataset.themeControlInitialized !== 'true') {
+    document.documentElement.dataset.themeControlInitialized = 'true';
+
+    document.addEventListener('click', (event) => {
+      const target = event.target;
+
+      if (!(target instanceof Element)) return;
+
+      const control = target.closest<HTMLButtonElement>('[data-theme-control]');
+      const storageKey = control?.dataset.themeStorageKey;
+
+      if (!control || !storageKey) return;
+
+      const preference = control.dataset.nextTheme === 'light' ? 'light' : 'dark';
+
+      persistPreference(storageKey, preference);
+      applyTheme(preference, storageKey);
+    });
+
+    document.addEventListener('astro:page-load', synchronizeThemeControls);
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+      const storageKey = document.documentElement.dataset.themeStorageKey;
+
+      if (storageKey && document.documentElement.dataset.theme === 'system') {
+        applyTheme('system', storageKey);
+      }
+    });
+  }
+
+  synchronizeThemeControls();
+</script>
+
+<style>
+  :global(html.dark) .theme-use-dark-icon {
+    display: none;
+  }
+
+  :global(html.dark) .theme-use-light-icon {
+    display: block;
+  }
+</style>

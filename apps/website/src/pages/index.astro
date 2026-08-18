@@ -1,12 +1,13 @@
 ---
 import { ArrowRight, GitFork, Layers, ShieldCheck, Workflow } from '@lucide/astro';
+import ActionLink from '@moldea.ai/website-ui/action-link';
+import InlineBrandText from '@moldea.ai/website-ui/inline-brand-text';
+import { withBase } from '@moldea.ai/website-ui/site';
 
 import AdapterCard from '../components/adapter-card.astro';
-import InlineBrandText from '../components/inline-brand-text.astro';
 import PackageCard from '../components/package-card.astro';
 import BaseLayout from '../layouts/base-layout.astro';
 import { loadWebsiteModel } from '../lib/generation/generation.ts';
-import { withBase } from '../lib/site/url.ts';
 
 const model = loadWebsiteModel();
 const toolingPackages = model.packages.filter(({ family }) => family === 'skill-core-tooling');
@@ -15,6 +16,7 @@ const availableAdapters = model.adapters.filter(
   ({ entry }) => entry.implementationStatus === 'available',
 );
 const cliPackage = model.packages.find(({ slug }) => slug === 'cli');
+const basePath = import.meta.env.BASE_URL;
 ---
 
 <BaseLayout
@@ -39,26 +41,27 @@ const cliPackage = model.packages.find(({ slug }) => slug === 'cli');
           />
         </p>
         <div class="flex flex-wrap gap-3 lg:justify-end">
-          <a
-            class="action-control action-primary min-h-12 gap-2 px-5 py-3 font-bold"
-            href={withBase('/packages/')}
+          <ActionLink
+            href={withBase('/packages/', basePath)}
+            size="lg"
           >
             Explore packages <ArrowRight
               class="size-4"
               aria-hidden="true"
             />
-          </a>
-          <a
-            class="action-control action-outline min-h-12 gap-2 px-5 py-3 font-bold"
+          </ActionLink>
+          <ActionLink
             href="https://github.com/moldea-ai/packages"
+            size="lg"
             target="_blank"
             rel="noopener noreferrer"
+            variant="outline"
           >
             <GitFork
               class="size-4"
               aria-hidden="true"
             /> Source
-          </a>
+          </ActionLink>
         </div>
       </div>
     </div>
@@ -129,8 +132,8 @@ const cliPackage = model.packages.find(({ slug }) => slug === 'cli');
             .filter(({ slug }) => slug !== 'cli')
             .map((packageModel) => (
               <a
-                class="rounded-xl border bg-muted/60 p-5 hover:bg-muted"
-                href={withBase(packageModel.route)}
+                class="interactive-card rounded-xl border bg-muted/60 p-5 hover:bg-muted"
+                href={withBase(packageModel.route, basePath)}
               >
                 <p class="mb-5 font-mono text-xs text-muted-foreground">{packageModel.name}</p>
                 <p class="text-sm leading-6">
@@ -142,8 +145,8 @@ const cliPackage = model.packages.find(({ slug }) => slug === 'cli');
         {
           adapterPackages.map((packageModel) => (
             <a
-              class="rounded-xl border bg-muted/60 p-5 hover:bg-muted"
-              href={withBase(packageModel.route)}
+              class="interactive-card rounded-xl border bg-muted/60 p-5 hover:bg-muted"
+              href={withBase(packageModel.route, basePath)}
             >
               <p class="mb-5 font-mono text-xs text-muted-foreground">{packageModel.name}</p>
               <p class="text-sm leading-6">Runtime-specific evidence flows into Core.</p>
@@ -161,15 +164,16 @@ const cliPackage = model.packages.find(({ slug }) => slug === 'cli');
           <p class="eyebrow mb-4">Skill & Core Tooling</p>
           <h2 class="section-title font-semibold">Deterministic by design.</h2>
         </div>
-        <a
-          class="inline-flex items-center gap-2 font-bold"
-          href={withBase('/packages/')}
+        <ActionLink
+          class="font-bold"
+          href={withBase('/packages/', basePath)}
+          variant="link"
         >
           View all packages <ArrowRight
             class="size-4"
             aria-hidden="true"
           />
-        </a>
+        </ActionLink>
       </div>
       <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {toolingPackages.map((packageModel) => <PackageCard packageModel={packageModel} />)}
@@ -197,15 +201,16 @@ const cliPackage = model.packages.find(({ slug }) => slug === 'cli');
           application code. Available package-backed adapters and Core's built-in custom runtime
           come directly from the compatibility matrix.
         </p>
-        <a
-          class="mt-5 inline-flex items-center gap-2 font-bold"
-          href={withBase('/adapters/')}
+        <ActionLink
+          class="mt-5 font-bold"
+          href={withBase('/adapters/', basePath)}
+          variant="link"
         >
           View all adapters <ArrowRight
             class="size-4"
             aria-hidden="true"
           />
-        </a>
+        </ActionLink>
       </div>
     </div>
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -237,8 +242,8 @@ const cliPackage = model.packages.find(({ slug }) => slug === 'cli');
         </div>
         <div class="surface-card grid gap-3 p-5">
           <a
-            class="rounded-lg border p-4 font-semibold hover:bg-muted"
-            href={withBase('/adapters/')}
+            class="interactive-card rounded-lg border p-4 font-semibold hover:bg-muted"
+            href={withBase('/adapters/', basePath)}
           >
             Runtime adapter inventory <span
               class="float-end"
@@ -247,8 +252,8 @@ const cliPackage = model.packages.find(({ slug }) => slug === 'cli');
             >
           </a>
           <a
-            class="rounded-lg border p-4 font-semibold hover:bg-muted"
-            href={withBase('/compatibility/')}
+            class="interactive-card rounded-lg border p-4 font-semibold hover:bg-muted"
+            href={withBase('/compatibility/', basePath)}
           >
             Complete compatibility matrix <span
               class="float-end"
@@ -257,8 +262,8 @@ const cliPackage = model.packages.find(({ slug }) => slug === 'cli');
             >
           </a>
           <a
-            class="rounded-lg border p-4 font-semibold hover:bg-muted"
-            href={withBase('/llms.txt')}
+            class="interactive-card rounded-lg border p-4 font-semibold hover:bg-muted"
+            href={withBase('/llms.txt', basePath)}
           >
             Machine-oriented ecosystem map <span
               class="float-end"

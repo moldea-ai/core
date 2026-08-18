@@ -1,6 +1,5 @@
 import { expect, test } from '@playwright/test';
-
-import { DEFAULT_BASE_PATH, withBase } from '../lib/site/url.ts';
+import { DEFAULT_BASE_PATH, withBase } from '@moldea.ai/website-ui/site';
 
 const basePath = process.env.BASE_PATH ?? DEFAULT_BASE_PATH;
 const toPublicPath = (route: string): string => withBase(route, basePath);

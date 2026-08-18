@@ -1,0 +1,32 @@
+---
+export interface Props {
+  storageKey: string;
+}
+
+const { storageKey } = Astro.props;
+---
+
+<script is:inline define:vars={{ storageKey }}>
+  (() => {
+    let stored = null;
+
+    try {
+      stored = localStorage.getItem(storageKey);
+    } catch {
+      stored = null;
+    }
+
+    const preference =
+      stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system';
+    const isDark =
+      preference === 'dark' ||
+      (preference === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
+    const root = document.documentElement;
+
+    root.classList.remove('light', 'dark');
+    root.classList.add(isDark ? 'dark' : 'light');
+    root.dataset.theme = preference;
+    root.dataset.themeStorageKey = storageKey;
+    root.style.colorScheme = isDark ? 'dark' : 'light';
+  })();
+</script>

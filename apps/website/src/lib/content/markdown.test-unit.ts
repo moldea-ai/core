@@ -14,4 +14,12 @@ describe('renderMarkdown', () => {
     );
     expect(rendered.html).toContain('<a href="/packages/">Packages</a>');
   });
+
+  test('wraps wide tables in a keyboard-focusable labelled scroll region', async () => {
+    const rendered = await renderMarkdown('| Name | Value |\n| --- | --- |\n| Core | Stable |');
+
+    expect(rendered.html).toContain(
+      '<div class="table-scroll" tabindex="0" role="region" aria-label="Scrollable table"><table>',
+    );
+  });
 });

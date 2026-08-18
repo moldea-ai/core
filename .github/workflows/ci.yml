@@ -106,6 +106,7 @@ jobs:
           pnpm --dir projects/adapter-anthropic pack --pack-destination "$public_packages_directory"
           pnpm --dir projects/adapter-openai pack --pack-destination "$public_packages_directory"
           pnpm --dir projects/cli pack --pack-destination "$public_packages_directory"
+          pnpm --dir projects/website-ui pack --pack-destination "$public_packages_directory"
           pnpm release:checksums create "$public_packages_directory"
 
       - name: Upload Public Package Artifacts

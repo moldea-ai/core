@@ -35,6 +35,23 @@ describe('generateApiReference', () => {
     ).toThrow('Cannot resolve public declaration ./dist/missing.d.ts to a source entry point.');
   });
 
+  test('ignores source component and style entry points without TypeScript declarations', () => {
+    expect(
+      generateApiReference(resolve('../../projects/repository'), {
+        './component': { import: './src/component.astro' },
+        './styles.css': { default: './src/styles.css', style: './src/styles.css' },
+      }),
+    ).toStrictEqual([]);
+  });
+
+  test('rejects runtime entry points without TypeScript declarations', () => {
+    expect(() =>
+      generateApiReference(resolve('../../projects/repository'), {
+        './missing-types': { import: './dist/missing-types.js' },
+      }),
+    ).toThrow('Public entry point ./missing-types has no TypeScript declaration target.');
+  });
+
   test('renders declaration-only public class members without implementation bodies', () => {
     const reference = generateApiReference(resolve('../../projects/core'), {
       '.': { types: './dist/index.d.ts' },

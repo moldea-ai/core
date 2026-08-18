@@ -18,20 +18,26 @@ const createManifest = (project: INpmReleaseProject): Record<string, unknown> =>
     dependencies:
       project === 'repository'
         ? { 'error-message-utils': '1.2.11' }
-        : project === 'cli'
+        : project === 'website-ui'
           ? {
-              '@moldea.ai/adapter-anthropic': 'workspace:1.0.0',
-              '@moldea.ai/adapter-openai': 'workspace:1.0.0',
-              '@moldea.ai/core': 'workspace:1.0.0',
-              '@moldea.ai/repository': 'workspace:1.0.0',
-              '@moldea.ai/repository-fs': 'workspace:1.0.0',
+              '@fontsource-variable/ubuntu-sans': '5.2.10',
+              '@lucide/astro': '1.31.0',
+              'error-message-utils': '1.2.11',
             }
-          : project === 'adapter-anthropic' || project === 'adapter-openai'
+          : project === 'cli'
             ? {
-                '@moldea.ai/core': 'workspace:^1.0.0',
-                '@moldea.ai/repository': 'workspace:^1.0.0',
+                '@moldea.ai/adapter-anthropic': 'workspace:1.0.0',
+                '@moldea.ai/adapter-openai': 'workspace:1.0.0',
+                '@moldea.ai/core': 'workspace:1.0.0',
+                '@moldea.ai/repository': 'workspace:1.0.0',
+                '@moldea.ai/repository-fs': 'workspace:1.0.0',
               }
-            : { '@moldea.ai/repository': 'workspace:^1.0.0' },
+            : project === 'adapter-anthropic' || project === 'adapter-openai'
+              ? {
+                  '@moldea.ai/core': 'workspace:^1.0.0',
+                  '@moldea.ai/repository': 'workspace:^1.0.0',
+                }
+              : { '@moldea.ai/repository': 'workspace:^1.0.0' },
     name: packageName,
     publishConfig: { access: 'public' },
     repository: {
@@ -71,6 +77,7 @@ describe('npm release validation', () => {
     ['adapter-anthropic', 'moldea.ai-adapter-anthropic-1.0.0.tgz', 'adapter-anthropic-v1.0.0'],
     ['adapter-openai', 'moldea.ai-adapter-openai-1.0.0.tgz', 'adapter-openai-v1.0.0'],
     ['cli', 'moldea.ai-cli-1.0.0.tgz', 'cli-v1.0.0'],
+    ['website-ui', 'moldea.ai-website-ui-1.0.0.tgz', 'website-ui-v1.0.0'],
   ] as const)('createNpmReleaseIdentity(%s) -> %s and %s', (project, artifactName, tag) => {
     const identity = createNpmReleaseIdentity(createIdentitySources(project));
 

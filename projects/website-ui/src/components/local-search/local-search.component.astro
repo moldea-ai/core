@@ -1,0 +1,188 @@
+---
+import { Search } from '@lucide/astro';
+
+import ActionButton from '../action-button/action-button.component.astro';
+
+export interface Props {
+  action: string;
+  buttonLabel?: string;
+  failureMessage: string;
+  initialPrompt: string;
+  inputId?: string;
+  label?: string;
+  loadingMessage?: string;
+  noResultsMessage?: string;
+  placeholder: string;
+  searchIndexUrl: string;
+}
+
+const {
+  action,
+  buttonLabel = 'Search',
+  failureMessage,
+  initialPrompt,
+  inputId = 'documentation-search',
+  label = 'Search documentation',
+  loadingMessage = 'Searching the local documentation index…',
+  noResultsMessage = 'No matching documentation was found.',
+  placeholder,
+  searchIndexUrl,
+} = Astro.props;
+---
+
+<div
+  data-local-search
+  data-failure-message={failureMessage}
+  data-initial-prompt={initialPrompt}
+  data-loading-message={loadingMessage}
+  data-no-results-message={noResultsMessage}
+>
+  <form
+    class="mt-10"
+    data-search-form
+    data-search-index-url={searchIndexUrl}
+    {action}
+    method="get"
+    role="search"
+  >
+    <label
+      class="sr-only"
+      for={inputId}
+      >{label}</label
+    >
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div class="relative min-w-0 flex-1">
+        <Search
+          class="pointer-events-none absolute start-3 top-1/2 size-5 -translate-y-1/2 text-secondary-foreground"
+          aria-hidden="true"
+        />
+        <input
+          id={inputId}
+          class="min-h-12 w-full min-w-0 rounded-lg border border-border bg-background py-2 ps-10 pe-3 text-lg shadow-inset transition-colors outline-none placeholder:text-secondary-foreground focus-visible:border-transparent! focus-visible:shadow-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:bg-border/30"
+          type="search"
+          name="query"
+          {placeholder}
+          autocomplete="off"
+          data-search-input
+        />
+      </div>
+      <ActionButton
+        class="px-5 py-3 font-bold"
+        size="lg"
+        type="submit"
+      >
+        {buttonLabel}
+      </ActionButton>
+    </div>
+  </form>
+
+  <p
+    class="mt-4 text-sm text-muted-foreground"
+    aria-live="polite"
+    data-search-status
+  >
+    {initialPrompt}
+  </p>
+  <ol
+    class="mt-8 grid gap-4"
+    data-search-results
+  >
+  </ol>
+</div>
+
+<script>
+  import {
+    parseSearchDocuments,
+    searchDocuments,
+    type ISearchDocument,
+  } from '../../search/index.ts';
+
+  const createSearchResult = (searchDocument: ISearchDocument): HTMLLIElement => {
+    const item = document.createElement('li');
+    const link = document.createElement('a');
+    const title = document.createElement('h2');
+    const excerpt = document.createElement('p');
+
+    item.className = 'surface-card interactive-card p-5';
+    link.className = 'block rounded-md';
+    link.href = searchDocument.url;
+    title.className = 'text-xl font-semibold tracking-tight';
+    title.textContent = searchDocument.title;
+    excerpt.className = 'mt-2 leading-6 text-muted-foreground';
+    excerpt.textContent = searchDocument.description;
+    link.append(title, excerpt);
+    item.append(link);
+
+    return item;
+  };
+
+  const initializeSearch = (root: HTMLElement): void => {
+    const form = root.querySelector<HTMLFormElement>('[data-search-form]');
+    const input = root.querySelector<HTMLInputElement>('[data-search-input]');
+    const status = root.querySelector<HTMLElement>('[data-search-status]');
+    const results = root.querySelector<HTMLOListElement>('[data-search-results]');
+
+    if (!form || !input || !status || !results || root.dataset.searchInitialized === 'true') {
+      return;
+    }
+
+    const searchIndexUrl = form.dataset.searchIndexUrl;
+
+    if (!searchIndexUrl) return;
+
+    root.dataset.searchInitialized = 'true';
+    const documentsPromise = fetch(searchIndexUrl).then(async (response) => {
+      if (!response.ok) {
+        throw new Error('The documentation search index could not be loaded.');
+      }
+
+      return parseSearchDocuments(await response.json());
+    });
+
+    const runSearch = async (query: string): Promise<void> => {
+      results.replaceChildren();
+
+      if (!query.trim()) {
+        status.textContent = root.dataset.initialPrompt ?? '';
+        return;
+      }
+
+      status.textContent = root.dataset.loadingMessage ?? '';
+
+      try {
+        const matches = searchDocuments(query, await documentsPromise);
+
+        for (const match of matches) {
+          results.append(createSearchResult(match));
+        }
+
+        status.textContent = matches.length
+          ? `${matches.length} result${matches.length === 1 ? '' : 's'} for “${query}”.`
+          : (root.dataset.noResultsMessage ?? '');
+      } catch {
+        status.textContent = root.dataset.failureMessage ?? '';
+      }
+    };
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      void runSearch(input.value);
+    });
+
+    const query = new URLSearchParams(window.location.search).get('query');
+
+    if (query) {
+      input.value = query;
+      void runSearch(query);
+    }
+  };
+
+  const initializeLocalSearch = (): void => {
+    for (const root of document.querySelectorAll<HTMLElement>('[data-local-search]')) {
+      initializeSearch(root);
+    }
+  };
+
+  document.addEventListener('astro:page-load', initializeLocalSearch);
+  initializeLocalSearch();
+</script>

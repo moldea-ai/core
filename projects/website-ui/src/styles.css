@@ -1,0 +1,248 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/ubuntu-sans/wght.css';
+@import './tokens.css';
+
+@source './components/**/*.{astro,ts}';
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply bg-background font-sans text-foreground antialiased;
+    color-scheme: light;
+    scroll-behavior: smooth;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply min-w-80 bg-background text-foreground;
+    margin: 0;
+    overflow-wrap: break-word;
+  }
+
+  ::selection {
+    @apply bg-primary text-primary-foreground;
+  }
+
+  a,
+  button,
+  summary,
+  select,
+  input {
+    @apply outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+
+  button:not(:disabled),
+  summary,
+  select {
+    cursor: pointer;
+  }
+}
+
+@layer components {
+  .page-shell {
+    width: min(100%, 82rem);
+    margin-inline: auto;
+    padding-inline: var(--spacing-page-gutter);
+  }
+
+  .docs-shell {
+    width: min(100%, 94rem);
+    margin-inline: auto;
+    padding-inline: var(--spacing-page-gutter);
+  }
+
+  .eyebrow {
+    @apply text-xs font-bold tracking-[0.16em] text-muted-foreground uppercase;
+  }
+
+  .display-title {
+    font-size: clamp(2.65rem, 9vw, 6.6rem);
+    line-height: 0.91;
+    letter-spacing: -0.065em;
+  }
+
+  .section-title {
+    font-size: clamp(2rem, 5vw, 4.25rem);
+    line-height: 0.98;
+    letter-spacing: -0.045em;
+  }
+
+  .surface-card {
+    @apply rounded-xl border border-border bg-card shadow-surface;
+  }
+
+  .interactive-card {
+    @apply transition duration-200 ease-out hover:-translate-y-0.5 hover:border-foreground/25 active:translate-y-px motion-reduce:transform-none motion-reduce:transition-none;
+  }
+
+  .action-control {
+    @apply inline-flex shrink-0 items-center justify-center rounded-lg border bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-transparent! focus-visible:shadow-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background not-disabled:not-aria-disabled:active:not-aria-[haspopup]:translate-y-px disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 motion-reduce:transition-none dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4;
+  }
+
+  .action-primary {
+    @apply border-transparent bg-primary text-primary-foreground not-disabled:not-aria-disabled:hover:bg-primary/80 dark:not-disabled:not-aria-disabled:hover:bg-primary/30;
+  }
+
+  .action-outline {
+    @apply border-border bg-background text-foreground not-disabled:not-aria-disabled:hover:bg-secondary not-disabled:not-aria-disabled:hover:text-foreground aria-expanded:bg-secondary aria-expanded:text-foreground dark:bg-border/30 dark:not-disabled:not-aria-disabled:hover:bg-border/50;
+  }
+
+  .action-secondary {
+    @apply border-transparent bg-secondary text-foreground not-disabled:not-aria-disabled:hover:bg-secondary/70 aria-expanded:bg-secondary aria-expanded:text-foreground;
+  }
+
+  .action-ghost {
+    @apply border-transparent bg-transparent text-foreground not-disabled:not-aria-disabled:hover:bg-secondary not-disabled:not-aria-disabled:hover:text-foreground aria-expanded:bg-secondary aria-expanded:text-foreground dark:not-disabled:not-aria-disabled:hover:bg-secondary/50;
+  }
+
+  .action-link {
+    @apply border-transparent bg-transparent px-0! text-primary underline-offset-4 not-disabled:not-aria-disabled:hover:underline dark:text-primary-foreground dark:not-disabled:not-aria-disabled:hover:text-primary-foreground/80;
+  }
+
+  .action-size-sm {
+    @apply min-h-8 gap-1.5 px-3 py-1.5 text-sm;
+  }
+
+  .action-size-md {
+    @apply min-h-10 gap-2 px-4 py-2 text-sm;
+  }
+
+  .action-size-lg {
+    @apply min-h-12 gap-2 px-5 py-3;
+  }
+
+  .action-size-icon {
+    @apply size-10;
+  }
+
+  .prose-moldea {
+    @apply min-w-0 text-[1.05rem] leading-8 text-foreground;
+  }
+
+  .prose-moldea > :first-child {
+    margin-top: 0;
+  }
+
+  .prose-moldea :is(h2, h3, h4) {
+    @apply scroll-mt-24 font-heading font-semibold tracking-tight text-foreground;
+  }
+
+  .prose-moldea h2 {
+    @apply mt-14 mb-5 border-t pt-10 text-3xl;
+  }
+
+  .prose-moldea > h2:first-child {
+    @apply mt-0 border-t-0 pt-0;
+  }
+
+  .prose-moldea h3 {
+    @apply mt-10 mb-4 text-2xl;
+  }
+
+  .prose-moldea h4 {
+    @apply mt-8 mb-3 text-xl;
+  }
+
+  .prose-moldea :is(p, ul, ol, table, pre, blockquote) {
+    @apply my-5;
+  }
+
+  .prose-moldea :is(ul, ol) {
+    @apply space-y-2 ps-6;
+  }
+
+  .prose-moldea ul {
+    list-style: disc;
+  }
+
+  .prose-moldea ol {
+    list-style: decimal;
+  }
+
+  .prose-moldea a,
+  .text-link {
+    @apply font-medium text-link underline decoration-link/40 underline-offset-4 hover:decoration-current;
+  }
+
+  .prose-moldea code:not(pre code) {
+    @apply rounded-md bg-code px-1.5 py-1 font-mono text-[0.86em] font-semibold text-code-foreground;
+  }
+
+  .prose-moldea pre {
+    @apply max-w-full overflow-x-auto rounded-xl border bg-code p-5 text-sm leading-6 text-code-foreground shadow-inset;
+  }
+
+  .prose-moldea-wrap-code pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .prose-moldea .shiki,
+  .prose-moldea .shiki code {
+    background: transparent !important;
+  }
+
+  .prose-moldea .shiki span {
+    color: var(--shiki-light);
+  }
+
+  .dark .prose-moldea .shiki span {
+    color: var(--shiki-dark);
+  }
+
+  .prose-moldea blockquote {
+    @apply rounded-r-lg border-s-4 bg-accent px-5 py-1 text-accent-foreground;
+  }
+
+  .prose-moldea table {
+    @apply w-full border-collapse text-sm;
+  }
+
+  .prose-moldea th {
+    @apply bg-muted text-start font-semibold text-foreground;
+  }
+
+  .prose-moldea :is(th, td) {
+    @apply border px-3 py-2.5 align-top;
+  }
+
+  .table-scroll {
+    @apply my-5 max-w-full overflow-x-auto rounded-xl border focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not(.light):not(.dark) {
+    color-scheme: dark;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
+
+  .action-control:not(:disabled):not([aria-disabled='true']):active:not([aria-haspopup]) {
+    translate: none;
+  }
+
+  .interactive-card:active {
+    translate: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

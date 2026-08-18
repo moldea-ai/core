@@ -1,12 +1,13 @@
 ---
-import { Search } from '@lucide/astro';
+import Breadcrumbs from '@moldea.ai/website-ui/breadcrumbs';
+import LocalSearch from '@moldea.ai/website-ui/local-search';
+import { withBase } from '@moldea.ai/website-ui/site';
 
-import Breadcrumbs from '../../components/breadcrumbs.astro';
 import BaseLayout from '../../layouts/base-layout.astro';
-import { withBase } from '../../lib/site/url.ts';
 
 const breadcrumbs = [{ href: '/', label: 'Home' }, { label: 'Search' }];
-const searchIndexUrl = withBase('/search-index.json');
+const basePath = import.meta.env.BASE_URL;
+const searchIndexUrl = withBase('/search-index.json', basePath);
 ---
 
 <BaseLayout
@@ -24,156 +25,29 @@ const searchIndexUrl = withBase('/search-index.json');
         from repository sources and sends no query to a hosted service.
       </p>
 
-      <form
-        class="mt-10"
-        data-search-form
-        data-search-index-url={searchIndexUrl}
-        action={withBase('/search/')}
-        method="get"
-        role="search"
-      >
-        <label
-          class="sr-only"
-          for="documentation-search"
-          >Search documentation</label
-        >
-        <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div class="relative min-w-0 flex-1">
-            <Search
-              class="pointer-events-none absolute start-3 top-1/2 size-5 -translate-y-1/2 text-secondary-foreground"
-              aria-hidden="true"
-            />
-            <input
-              id="documentation-search"
-              class="min-h-12 w-full min-w-0 rounded-lg border border-border bg-background py-2 ps-10 pe-3 text-lg shadow-inset transition-colors outline-none placeholder:text-secondary-foreground focus-visible:border-transparent! focus-visible:shadow-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:bg-border/30"
-              type="search"
-              name="query"
-              placeholder="e.g. repository snapshots"
-              autocomplete="off"
-              data-search-input
-            />
-          </div>
-          <button
-            class="action-control action-primary min-h-12 px-5 py-3 font-bold"
-            type="submit"
-          >
-            Search
-          </button>
-        </div>
-      </form>
-
-      <p
-        class="mt-4 text-sm text-muted-foreground"
-        aria-live="polite"
-        data-search-status
-      >
-        Enter a package, concept, API symbol, or adapter ID.
-      </p>
-      <ol
-        class="mt-8 grid gap-4"
-        data-search-results
-      >
-      </ol>
+      <LocalSearch
+        action={withBase('/search/', basePath)}
+        failureMessage="The local search index could not be loaded. Use package navigation instead."
+        initialPrompt="Enter a package, concept, API symbol, or adapter ID."
+        noResultsMessage="No matching package documentation or adapter status was found."
+        placeholder="e.g. repository snapshots"
+        {searchIndexUrl}
+      />
 
       <noscript>
         <div class="mt-8 rounded-xl border bg-accent p-5 leading-7 text-accent-foreground">
           Interactive search requires JavaScript. All documentation remains available through the <a
             class="font-bold underline"
-            href={withBase('/packages/')}
+            href={withBase('/packages/', basePath)}
             >package</a
           >
           and <a
             class="font-bold underline"
-            href={withBase('/adapters/')}
+            href={withBase('/adapters/', basePath)}
             >adapter</a
           > navigation.
         </div>
       </noscript>
     </div>
   </section>
-
-  <script>
-    import {
-      parseSearchDocuments,
-      searchDocuments,
-      type ISearchDocument,
-    } from '../../lib/search/search.ts';
-
-    const createResult = (searchDocument: ISearchDocument): HTMLLIElement => {
-      const item = document.createElement('li');
-      const link = document.createElement('a');
-      const title = document.createElement('h2');
-      const excerpt = document.createElement('p');
-
-      item.className = 'surface-card interactive-card p-5';
-      link.className = 'block rounded-md';
-      link.href = searchDocument.url;
-      title.className = 'text-xl font-semibold tracking-tight';
-      title.textContent = searchDocument.title;
-      excerpt.className = 'text-muted-foreground mt-2 leading-6';
-      excerpt.textContent = searchDocument.description;
-      link.append(title, excerpt);
-      item.append(link);
-
-      return item;
-    };
-
-    const initializeSearch = (): void => {
-      const form = document.querySelector<HTMLFormElement>('[data-search-form]');
-      const input = document.querySelector<HTMLInputElement>('[data-search-input]');
-      const status = document.querySelector<HTMLElement>('[data-search-status]');
-      const results = document.querySelector<HTMLOListElement>('[data-search-results]');
-
-      if (!form || !input || !status || !results || form.dataset.searchInitialized === 'true') {
-        return;
-      }
-
-      const searchIndexUrl = form.dataset.searchIndexUrl;
-
-      if (!searchIndexUrl) return;
-
-      form.dataset.searchInitialized = 'true';
-      const documentsPromise = fetch(searchIndexUrl).then(async (response) => {
-        if (!response.ok) throw new Error('The documentation search index could not be loaded.');
-
-        return parseSearchDocuments(await response.json());
-      });
-
-      const runSearch = async (query: string): Promise<void> => {
-        results.replaceChildren();
-
-        if (!query.trim()) {
-          status.textContent = 'Enter a package, concept, API symbol, or adapter ID.';
-          return;
-        }
-
-        status.textContent = 'Searching the local documentation index…';
-
-        try {
-          const matches = searchDocuments(query, await documentsPromise);
-
-          for (const match of matches) results.append(createResult(match));
-          status.textContent = `${matches.length} result${matches.length === 1 ? '' : 's'} for “${query}”.`;
-        } catch {
-          status.textContent =
-            'The local search index could not be loaded. Use package navigation instead.';
-        }
-      };
-
-      form.addEventListener('submit', (event) => {
-        event.preventDefault();
-        void runSearch(input.value);
-      });
-
-      const query = new URLSearchParams(window.location.search).get('query');
-
-      if (query) {
-        input.value = query;
-        void runSearch(query);
-      }
-    };
-
-    document.addEventListener('astro:page-load', initializeSearch);
-    initializeSearch();
-  </script>
 </BaseLayout>

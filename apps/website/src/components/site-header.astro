@@ -1,9 +1,9 @@
 ---
 import { GitFork, Menu, Search } from '@lucide/astro';
+import ThemeControl from '@moldea.ai/website-ui/theme-control';
+import { isPublicRouteActive, withBase } from '@moldea.ai/website-ui/site';
 
-import { isPublicRouteActive, withBase } from '../lib/site/url.ts';
 import Logo from './logo.astro';
-import ThemeControl from './theme-control.astro';
 
 const navigation = [
   { href: '/packages/', label: 'Packages' },
@@ -11,13 +11,14 @@ const navigation = [
   { href: '/compatibility/', label: 'Compatibility' },
 ] as const;
 const currentPathname = Astro.url.pathname;
+const basePath = import.meta.env.BASE_URL;
 const navigationItems = navigation.map(({ href, label }) => ({
-  href: withBase(href),
-  isActive: isPublicRouteActive(currentPathname, href),
+  href: withBase(href, basePath),
+  isActive: isPublicRouteActive(currentPathname, href, basePath),
   label,
 }));
-const searchHref = withBase('/search/');
-const isSearchActive = isPublicRouteActive(currentPathname, '/search/');
+const searchHref = withBase('/search/', basePath);
+const isSearchActive = isPublicRouteActive(currentPathname, '/search/', basePath);
 ---
 
 <header class="sticky top-0 z-50 border-b border-border bg-background/92 backdrop-blur-lg">
@@ -73,7 +74,7 @@ const isSearchActive = isPublicRouteActive(currentPathname, '/search/');
           aria-hidden="true"
         />
       </a>
-      <ThemeControl />
+      <ThemeControl storageKey="moldea-website-theme" />
     </div>
 
     <details class="group relative md:hidden">
@@ -131,7 +132,7 @@ const isSearchActive = isPublicRouteActive(currentPathname, '/search/');
           </a>
         </nav>
         <div class="mt-3 border-t border-border pt-3">
-          <ThemeControl />
+          <ThemeControl storageKey="moldea-website-theme" />
         </div>
       </div>
     </details>

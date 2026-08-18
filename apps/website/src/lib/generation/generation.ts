@@ -31,7 +31,9 @@ const PackageManifestSchema = z.object({
   exports: z.record(
     z.string(),
     z.strictObject({
+      default: z.string().optional(),
       import: z.string().optional(),
+      style: z.string().optional(),
       types: z.string().optional(),
     }),
   ),
@@ -140,7 +142,9 @@ export const discoverPublicPackages = (repositoryRoot: string): IPublicPackage[]
 
       const family = manifest.name.startsWith('@moldea.ai/adapter-')
         ? 'runtime-adapters'
-        : 'skill-core-tooling';
+        : manifest.name === '@moldea.ai/website-ui'
+          ? 'website-foundations'
+          : 'skill-core-tooling';
       const route =
         family === 'runtime-adapters'
           ? `/adapters/${entry.name.replace(/^adapter-/, '')}/`
@@ -414,6 +418,19 @@ export const createLlmsText = (packages: IPublicPackage[], adapters: IAdapterPag
   }
 
   const adapterPackages = orderedPackages.filter(({ family }) => family === 'runtime-adapters');
+
+  const websitePackages = orderedPackages.filter(({ family }) => family === 'website-foundations');
+
+  if (websitePackages.length > 0) {
+    lines.push('', '## Website Foundations', '');
+
+    for (const packageModel of websitePackages) {
+      const overview = packageModel.documents.find(({ slug }) => slug === '');
+      lines.push(
+        `- [${packageModel.name}](${packageModel.route}): ${overview?.description ?? packageModel.description}`,
+      );
+    }
+  }
 
   if (adapterPackages.length > 0) {
     lines.push('', '## Runtime Adapter Packages', '');

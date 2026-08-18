@@ -1,7 +1,10 @@
 ---
-import { withBase } from '../lib/site/url.ts';
-import InlineBrandText from './inline-brand-text.astro';
+import InlineBrandText from '@moldea.ai/website-ui/inline-brand-text';
+import { withBase } from '@moldea.ai/website-ui/site';
+
 import Logo from './logo.astro';
+
+const basePath = import.meta.env.BASE_URL;
 ---
 
 <footer class="mt-section-gap border-t border-border">
@@ -10,7 +13,7 @@ import Logo from './logo.astro';
       <Logo />
       <p class="text-sm leading-6 text-muted-foreground">
         <InlineBrandText
-          text="The open-source technical foundation that powers moldea—the behavioral integrity layer for AI agents."
+          text="The open-source technical foundation that powers moldea, the behavioral integrity layer for AI agents."
         />
       </p>
     </div>
@@ -21,23 +24,23 @@ import Logo from './logo.astro';
       <p class="font-bold">Documentation</p>
       <a
         class="text-muted-foreground hover:text-foreground"
-        href={withBase('/packages/')}
+        href={withBase('/packages/', basePath)}
         >Packages</a
       >
       <a
         class="text-muted-foreground hover:text-foreground"
-        href={withBase('/adapters/')}
+        href={withBase('/adapters/', basePath)}
         >Adapters</a
       >
       <a
         class="text-muted-foreground hover:text-foreground"
-        href={withBase('/compatibility/')}
+        href={withBase('/compatibility/', basePath)}
       >
         Compatibility
       </a>
       <a
         class="text-muted-foreground hover:text-foreground"
-        href={withBase('/llms.txt')}
+        href={withBase('/llms.txt', basePath)}
         >llms.txt</a
       >
     </nav>

@@ -4,22 +4,22 @@ The `packages` project is the open-source package monorepo for `moldea`. It deve
 
 The repository is intentionally separate from the hosted [`platform`](https://github.com/moldea-ai/platform) monorepo. It contains reusable package products and their shared development infrastructure, not Cloud applications, hosted APIs, runtime infrastructure, or deployment configuration.
 
-`@moldea.ai/repository`, `@moldea.ai/repository-fs`, `@moldea.ai/core`, `@moldea.ai/adapter-anthropic`, `@moldea.ai/adapter-openai`, and `@moldea.ai/cli` form the available package set. Repository and Core provide the source-neutral reader and universal interpretation foundations, Repository FS supplies the coherent local-filesystem reader, the Anthropic and OpenAI adapters contribute static evidence for their experimental direct SDK targets, and the CLI composes them into the complete version `1` read-only executable. The built-in `custom` runtime and package-backed `anthropic` and `openai` runtimes are verified as available; the remaining package-backed adapters stay `planned`. Real tarball installation and execution remain the release boundary for every package version.
+`@moldea.ai/repository`, `@moldea.ai/repository-fs`, `@moldea.ai/core`, `@moldea.ai/adapter-anthropic`, `@moldea.ai/adapter-openai`, `@moldea.ai/cli`, and `@moldea.ai/website-ui` form the available package set. Repository and Core provide the source-neutral reader and universal interpretation foundations, Repository FS supplies the coherent local-filesystem reader, the Anthropic and OpenAI adapters contribute static evidence for their experimental direct SDK targets, the CLI composes them into the complete version `1` read-only executable, and Website UI provides the shared Astro and Tailwind foundations for moldea public websites. The built-in `custom` runtime and package-backed `anthropic` and `openai` runtimes are verified as available; the remaining package-backed adapters stay `planned`. Real tarball installation and execution remain the release boundary for every package version.
 
 ## Specifications
 
 The product and package specifications are currently maintained in the `platform` repository:
 
-- [`moldea` packages](https://github.com/moldea-ai/platform/blob/main/moldea/context/packages.md) — monorepo organization, package catalog, dependencies, distribution, and shared conventions.
-- [`@moldea.ai/repository`](https://github.com/moldea-ai/platform/blob/main/moldea/context/repository-package.md) — source-neutral repository-reader contract and in-memory reference implementation.
-- [`@moldea.ai/repository-fs`](https://github.com/moldea-ai/platform/blob/main/moldea/context/repository-fs-package.md) — coherent local filesystem reader.
-- [`@moldea.ai/core`](https://github.com/moldea-ai/platform/blob/main/moldea/context/core-package.md) — deterministic repository-format interpretation and indexing.
-- [`@moldea.ai/cli`](https://github.com/moldea-ai/platform/blob/main/moldea/context/cli-package.md) — read-only Git working-tree composition and executable contract.
-- [`@moldea.ai/adapter-anthropic`](https://github.com/moldea-ai/platform/blob/main/moldea/context/adapter-anthropic-package.md) — experimental TypeScript Anthropic Messages API inspection target.
-- [`@moldea.ai/adapter-google-genai`](https://github.com/moldea-ai/platform/blob/main/moldea/context/adapter-google-genai-package.md) — proposed TypeScript Google Gen AI SDK inspection target.
-- [`@moldea.ai/adapter-openai`](https://github.com/moldea-ai/platform/blob/main/moldea/context/adapter-openai-package.md) — experimental TypeScript OpenAI Responses API inspection target.
-- [Runtime Adapter Contract](https://github.com/moldea-ai/platform/blob/main/moldea/context/runtime-adapter-contract.md) — deterministic extension contract for official adapters.
-- [Runtime Compatibility Matrix](https://github.com/moldea-ai/platform/blob/main/moldea/context/runtime-compatibility-matrix.md) — canonical compatibility-data contract and initial adapter inventory.
+- [`moldea` packages](https://github.com/moldea-ai/platform/blob/main/moldea/context/packages.md): monorepo organization, package catalog, dependencies, distribution, and shared conventions.
+- [`@moldea.ai/repository`](https://github.com/moldea-ai/platform/blob/main/moldea/context/repository-package.md): source-neutral repository-reader contract and in-memory reference implementation.
+- [`@moldea.ai/repository-fs`](https://github.com/moldea-ai/platform/blob/main/moldea/context/repository-fs-package.md): coherent local filesystem reader.
+- [`@moldea.ai/core`](https://github.com/moldea-ai/platform/blob/main/moldea/context/core-package.md): deterministic repository-format interpretation and indexing.
+- [`@moldea.ai/cli`](https://github.com/moldea-ai/platform/blob/main/moldea/context/cli-package.md): read-only Git working-tree composition and executable contract.
+- [`@moldea.ai/adapter-anthropic`](https://github.com/moldea-ai/platform/blob/main/moldea/context/adapter-anthropic-package.md): experimental TypeScript Anthropic Messages API inspection target.
+- [`@moldea.ai/adapter-google-genai`](https://github.com/moldea-ai/platform/blob/main/moldea/context/adapter-google-genai-package.md): proposed TypeScript Google Gen AI SDK inspection target.
+- [`@moldea.ai/adapter-openai`](https://github.com/moldea-ai/platform/blob/main/moldea/context/adapter-openai-package.md): experimental TypeScript OpenAI Responses API inspection target.
+- [Runtime Adapter Contract](https://github.com/moldea-ai/platform/blob/main/moldea/context/runtime-adapter-contract.md): deterministic extension contract for official adapters.
+- [Runtime Compatibility Matrix](https://github.com/moldea-ai/platform/blob/main/moldea/context/runtime-compatibility-matrix.md): canonical compatibility-data contract and initial adapter inventory.
 
 The specification documents remain the design authority. Compatibility artifacts are introduced in their specified implementation phase, after their foundational packages and conformance requirements are in place.
 
@@ -49,6 +49,7 @@ projects/
   core/                        # Deterministic repository-format interpretation
   repository/                  # Source-neutral reader contract and memory reader
   repository-fs/               # Explicit local-filesystem repository reader
+  website-ui/                  # Shared Astro and Tailwind website foundations
 scripts/
   runtime-compatibility/       # Matrix validation and deterministic generation
 eslint.config.js
@@ -73,6 +74,7 @@ repository-github   → repository
 core                → repository
 adapter-*           → core
 cli                 → repository + repository-fs + core + active adapter packages
+packages-website    → website-ui
 ```
 
 Shared internal packages may support first-class projects but never depend on them. Published packages must bundle private internal implementation or otherwise ensure that private imports and declarations do not leak into the consumer artifact.
@@ -96,6 +98,7 @@ Shared internal packages may support first-class projects but never depend on th
 | `adapter-openai`            | `@moldea.ai/adapter-openai`            | Public            |
 | `adapter-openai-agents-sdk` | `@moldea.ai/adapter-openai-agents-sdk` | Public            |
 | `adapter-vercel-ai-sdk`     | `@moldea.ai/adapter-vercel-ai-sdk`     | Public            |
+| `website-ui`                | `@moldea.ai/website-ui`                | Public            |
 
 The catalog records approved architecture, not implementation or release status. The `custom` adapter remains built into `@moldea.ai/core` and has no separate package project.
 
@@ -145,7 +148,7 @@ Useful focused commands:
 
 ## Build and test conventions
 
-Public JavaScript artifacts are ESM-only unless a focused specification establishes another format. Vite bundles JavaScript in library mode with explicit entry points, stable output names, source maps by default, and deliberate dependency externalization. Packages may omit JavaScript source maps when bundling a private workspace implementation would expose private import paths in published artifacts. TypeScript performs strict source checking and emits declarations separately so public types remain a first-class package artifact. Package build scripts clean their output directory once, run Vite, and then emit declarations; the shared Vite configuration does not delete output owned by another build step.
+Public JavaScript artifacts are ESM-only unless a focused specification establishes another format. Vite bundles JavaScript in library mode with explicit entry points, stable output names, source maps by default, and deliberate dependency externalization. Packages may omit JavaScript source maps when bundling a private workspace implementation would expose private import paths in published artifacts. TypeScript performs strict source checking and emits declarations separately so public types remain a first-class package artifact. Package build scripts clean their output directory once, run Vite, and then emit declarations; the shared Vite configuration does not delete output owned by another build step. Website UI additionally publishes source Astro components and CSS because the consuming Astro application owns their compilation and Tailwind source scan.
 
 Environment-neutral packages extend `configs/typescript/environment-neutral.json`; Node-specific packages extend `configs/typescript/node.json`. Declaration builds use the corresponding `*-library.json` configuration and set package-local `rootDir` and `outDir` values.
 
@@ -171,7 +174,7 @@ Generated output changes through its canonical source and generator. Compatibili
 
 ## Packages website and deployment
 
-[`apps/website`](apps/website/) is the private Astro static application for the public packages ecosystem. It uses `SITE_URL` and `BASE_PATH`; the defaults match the established `https://packages.moldea.ai/` custom domain, while explicit inputs continue to support a GitHub project-site base path without component changes. See its [application README](apps/website/README.md) for focused commands and source boundaries.
+[`apps/website`](apps/website/) is the private Astro static application for the public packages ecosystem. It consumes `@moldea.ai/website-ui` through the workspace protocol for shared design tokens, interaction states, theme behavior, search behavior, and small components while retaining local ownership of layouts, navigation, content generation, SEO identity, and assets. It uses `SITE_URL` and `BASE_PATH`; the defaults match the established `https://packages.moldea.ai/` custom domain, while explicit inputs continue to support a GitHub project-site base path without component changes. See its [application README](apps/website/README.md) for focused commands and source boundaries.
 
 Pull requests run non-deploying repository verification, including documentation discovery, generated API, route, and local search-index checks, website unit and browser tests, type checking, linting, the complete static build, internal-link validation, and final artifact inspection. Relevant pushes to `main` trigger [the Pages workflow](.github/workflows/pages.yml), read the configured origin and base path from GitHub Pages, rebuild from that exact merged commit, and deploy with GitHub's official Pages artifact flow. npm publication remains a separate workflow and is never triggered merely by website or full-documentation changes.
 
@@ -183,4 +186,4 @@ A push to `main` automatically selects every release-relevant changed public pro
 
 ## Initial implementation sequence
 
-The first implementation project was `@moldea.ai/repository`, followed by its in-memory reader and shared conformance suite. Core's universal behavior was then completed through that memory-reader boundary, followed by Repository FS, the CLI's installed-tarball runtime boundary, and the first official package-backed adapters. The Anthropic and OpenAI adapters now own experimental TypeScript Messages and Responses API targets with deterministic fixtures, diagnostics, evidence, package metadata, and packed-runtime verification. Their provider-neutral source analysis, relationship classification, and operation-local inspection caches live in the private `@moldea.ai/adapter-static-analysis` package and are bundled into each public adapter artifact. Package publication remains an explicit independently versioned release operation; other official package-backed adapters stay `planned` until their implementations and fixtures support verified compatibility claims.
+The first implementation project was `@moldea.ai/repository`, followed by its in-memory reader and shared conformance suite. Core's universal behavior was then completed through that memory-reader boundary, followed by Repository FS, the CLI's installed-tarball runtime boundary, and the first official package-backed adapters. The Anthropic and OpenAI adapters now own experimental TypeScript Messages and Responses API targets with deterministic fixtures, diagnostics, evidence, package metadata, and packed-runtime verification. Their provider-neutral source analysis, relationship classification, and operation-local inspection caches live in the private `@moldea.ai/adapter-static-analysis` package and are bundled into each public adapter artifact. Website UI now owns the reusable public-website foundation independently of the runtime package chain. Package publication remains an explicit independently versioned release operation; other official package-backed adapters stay `planned` until their implementations and fixtures support verified compatibility claims.

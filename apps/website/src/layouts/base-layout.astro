@@ -1,9 +1,10 @@
 ---
 import { ClientRouter, fade } from 'astro:transitions';
+import ThemeBootstrap from '@moldea.ai/website-ui/theme-bootstrap';
+import { withBase } from '@moldea.ai/website-ui/site';
 
 import SiteFooter from '../components/site-footer.astro';
 import SiteHeader from '../components/site-header.astro';
-import { withBase } from '../lib/site/url.ts';
 import '../styles/global.css';
 
 interface Props {
@@ -14,9 +15,10 @@ interface Props {
 }
 
 const { breadcrumbs = [], description, noIndex = false, title } = Astro.props;
+const basePath = import.meta.env.BASE_URL;
 const pageTitle = title === 'moldea packages' ? title : `${title} · moldea packages`;
 const canonicalUrl = new URL(Astro.url.pathname, Astro.site);
-const openGraphImage = new URL(withBase('/open-graph/ogimage.png'), Astro.site);
+const openGraphImage = new URL(withBase('/open-graph/ogimage.png', basePath), Astro.site);
 const structuredBreadcrumbs = breadcrumbs.length
   ? {
       '@context': 'https://schema.org',
@@ -25,7 +27,7 @@ const structuredBreadcrumbs = breadcrumbs.length
         '@type': 'ListItem',
         position: index + 1,
         name: item.label,
-        ...(item.href ? { item: new URL(withBase(item.href), Astro.site).href } : {}),
+        ...(item.href ? { item: new URL(withBase(item.href, basePath), Astro.site).href } : {}),
       })),
     }
   : null;
@@ -76,7 +78,7 @@ const structuredBreadcrumbJson = structuredBreadcrumbs
     }
     <link
       rel="icon"
-      href={withBase('/favicon.ico')}
+      href={withBase('/favicon.ico', basePath)}
       sizes="any"
     />
     <meta
@@ -128,20 +130,7 @@ const structuredBreadcrumbJson = structuredBreadcrumbs
       content={openGraphImage}
     />
     <title>{pageTitle}</title>
-    <script is:inline>
-      (() => {
-        const key = 'moldea-website-theme';
-        const stored = localStorage.getItem(key);
-        const preference =
-          stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system';
-        const isDark =
-          preference === 'dark' ||
-          (preference === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
-        document.documentElement.classList.toggle('dark', isDark);
-        document.documentElement.dataset.theme = preference;
-        document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
-      })();
-    </script>
+    <ThemeBootstrap storageKey="moldea-website-theme" />
     {
       structuredBreadcrumbs && (
         <script

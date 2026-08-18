@@ -1,0 +1,118 @@
+{
+  "name": "@moldea.ai/website-ui",
+  "version": "1.0.0",
+  "description": "Shared Astro foundations for moldea public websites.",
+  "homepage": "https://github.com/moldea-ai/packages/tree/main/projects/website-ui#readme",
+  "bugs": {
+    "url": "https://github.com/moldea-ai/packages/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/moldea-ai/packages.git",
+    "directory": "projects/website-ui"
+  },
+  "license": "MIT",
+  "author": "Jesus Graterol",
+  "type": "module",
+  "sideEffects": [
+    "./src/**/*.astro",
+    "./src/**/*.css"
+  ],
+  "files": [
+    "cover.png",
+    "dist",
+    "src/**/*.astro",
+    "src/**/*.css",
+    "src/exceptions.ts",
+    "src/search/index.ts",
+    "src/site/index.ts",
+    "src/theme/index.ts",
+    "LICENSE",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./site": {
+      "types": "./dist/site/index.d.ts",
+      "import": "./dist/site.js"
+    },
+    "./search": {
+      "types": "./dist/search/index.d.ts",
+      "import": "./dist/search.js"
+    },
+    "./theme": {
+      "types": "./dist/theme/index.d.ts",
+      "import": "./dist/theme.js"
+    },
+    "./action-button": {
+      "import": "./src/components/action-button/action-button.component.astro"
+    },
+    "./action-link": {
+      "import": "./src/components/action-link/action-link.component.astro"
+    },
+    "./brand-logo": {
+      "import": "./src/components/brand-logo/brand-logo.component.astro"
+    },
+    "./breadcrumbs": {
+      "import": "./src/components/breadcrumbs/breadcrumbs.component.astro"
+    },
+    "./inline-brand-text": {
+      "import": "./src/components/inline-brand-text/inline-brand-text.component.astro"
+    },
+    "./local-search": {
+      "import": "./src/components/local-search/local-search.component.astro"
+    },
+    "./theme-bootstrap": {
+      "import": "./src/components/theme-bootstrap/theme-bootstrap.component.astro"
+    },
+    "./theme-control": {
+      "import": "./src/components/theme-control/theme-control.component.astro"
+    },
+    "./styles.css": {
+      "style": "./src/styles.css",
+      "default": "./src/styles.css"
+    },
+    "./tokens.css": {
+      "style": "./src/tokens.css",
+      "default": "./src/tokens.css"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "vite build --emptyOutDir && tsc -p tsconfig.build.json",
+    "dev": "vite build --watch",
+    "lint": "eslint src vite.config.ts vitest",
+    "test": "pnpm run test:unit && pnpm run test:integration",
+    "test:integration": "pnpm run build && vitest run --config vitest/test-integration.config.ts",
+    "test:unit": "vitest run --config vitest/test-unit.config.ts",
+    "typecheck": "tsc -p tsconfig.src.json --noEmit && tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@fontsource-variable/ubuntu-sans": "5.2.10",
+    "@lucide/astro": "1.31.0",
+    "error-message-utils": "1.2.11"
+  },
+  "peerDependencies": {
+    "astro": "7.2.2",
+    "tailwindcss": "4.3.3"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.1",
+    "astro": "7.2.2",
+    "tailwindcss": "4.3.3",
+    "typescript": "6.0.3",
+    "vite": "8.2.1",
+    "vitest": "4.1.10",
+    "web-utils-kit": "1.3.1"
+  },
+  "engines": {
+    "node": "^24.15.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

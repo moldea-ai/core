@@ -1,6 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
-
-import { DEFAULT_BASE_PATH, normalizeBasePath } from './src/lib/site/url.ts';
+import { DEFAULT_BASE_PATH, normalizeBasePath } from '@moldea.ai/website-ui/site';
 
 const basePath = normalizeBasePath(process.env.BASE_PATH ?? DEFAULT_BASE_PATH);
 const previewOrigin = 'http://127.0.0.1:4322';

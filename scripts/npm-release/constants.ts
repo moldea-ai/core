@@ -18,6 +18,7 @@ export const NPM_RELEASE_PROJECT_ORDER = [
   'adapter-anthropic',
   'adapter-openai',
   'cli',
+  'website-ui',
 ] as const satisfies readonly INpmReleaseProject[];
 
 // public package identities currently eligible for release
@@ -57,6 +58,12 @@ export const NPM_RELEASE_PROJECTS = {
     packageName: '@moldea.ai/repository-fs',
     projectDirectory: 'projects/repository-fs',
     tagPrefix: 'repository-fs-v',
+  },
+  'website-ui': {
+    artifactPrefix: 'moldea.ai-website-ui',
+    packageName: '@moldea.ai/website-ui',
+    projectDirectory: 'projects/website-ui',
+    tagPrefix: 'website-ui-v',
   },
 } as const satisfies Readonly<Record<INpmReleaseProject, INpmReleaseProjectConfiguration>>;
 

@@ -7,16 +7,16 @@ The matrix publishes only the verified targets and support boundaries shown belo
 | Adapter ID          | Owning package                         | Implementation | Distribution | Implementation range | Status      | Runtime guidance | Verified targets |
 | ------------------- | -------------------------------------- | -------------- | ------------ | -------------------- | ----------- | ---------------- | ---------------: |
 | `anthropic`         | `@moldea.ai/adapter-anthropic`         | `package`      | `public`     | `^2.0.0`             | `available` | `optional`       |              `1` |
-| `claude-agent-sdk`  | `@moldea.ai/adapter-claude-agent-sdk`  | `package`      | `public`     | —                    | `planned`   | —                |              `0` |
-| `cloudflare-agents` | `@moldea.ai/adapter-cloudflare-agents` | `package`      | `public`     | —                    | `planned`   | —                |              `0` |
-| `custom`            | `@moldea.ai/core`                      | `built-in`     | `public`     | —                    | `available` | `required`       |              `1` |
-| `eve`               | `@moldea.ai/adapter-eve`               | `package`      | `public`     | —                    | `planned`   | —                |              `0` |
-| `google-genai`      | `@moldea.ai/adapter-google-genai`      | `package`      | `public`     | —                    | `planned`   | —                |              `0` |
-| `langchain`         | `@moldea.ai/adapter-langchain`         | `package`      | `public`     | —                    | `planned`   | —                |              `0` |
-| `langgraph`         | `@moldea.ai/adapter-langgraph`         | `package`      | `public`     | —                    | `planned`   | —                |              `0` |
+| `claude-agent-sdk`  | `@moldea.ai/adapter-claude-agent-sdk`  | `package`      | `public`     | Not available        | `planned`   | Not available    |              `0` |
+| `cloudflare-agents` | `@moldea.ai/adapter-cloudflare-agents` | `package`      | `public`     | Not available        | `planned`   | Not available    |              `0` |
+| `custom`            | `@moldea.ai/core`                      | `built-in`     | `public`     | Not available        | `available` | `required`       |              `1` |
+| `eve`               | `@moldea.ai/adapter-eve`               | `package`      | `public`     | Not available        | `planned`   | Not available    |              `0` |
+| `google-genai`      | `@moldea.ai/adapter-google-genai`      | `package`      | `public`     | Not available        | `planned`   | Not available    |              `0` |
+| `langchain`         | `@moldea.ai/adapter-langchain`         | `package`      | `public`     | Not available        | `planned`   | Not available    |              `0` |
+| `langgraph`         | `@moldea.ai/adapter-langgraph`         | `package`      | `public`     | Not available        | `planned`   | Not available    |              `0` |
 | `openai`            | `@moldea.ai/adapter-openai`            | `package`      | `public`     | `^2.0.0`             | `available` | `recommended`    |              `1` |
-| `openai-agents-sdk` | `@moldea.ai/adapter-openai-agents-sdk` | `package`      | `public`     | —                    | `planned`   | —                |              `0` |
-| `vercel-ai-sdk`     | `@moldea.ai/adapter-vercel-ai-sdk`     | `package`      | `public`     | —                    | `planned`   | —                |              `0` |
+| `openai-agents-sdk` | `@moldea.ai/adapter-openai-agents-sdk` | `package`      | `public`     | Not available        | `planned`   | Not available    |              `0` |
+| `vercel-ai-sdk`     | `@moldea.ai/adapter-vercel-ai-sdk`     | `package`      | `public`     | Not available        | `planned`   | Not available    |              `0` |
 
 ## Adapter: `anthropic`
 
@@ -52,14 +52,14 @@ Runtime guidance notes: Project-local guidance is needed only for repository-spe
 
 #### Patterns
 
-| Kind                 | Pattern                        | Support       | Description                                                                                                        | Notes |
-| -------------------- | ------------------------------ | ------------- | ------------------------------------------------------------------------------------------------------------------ | ----- |
-| `instruction-loader` | `direct-system-loader`         | `full`        | A directly bound instruction loader supplies the top-level system request property.                                | —     |
-| `runtime`            | `direct-messages-create`       | `full`        | Direct Anthropic Messages API invocation through a module-local client in a directly exported TypeScript function. | —     |
-| `runtime`            | `dynamic-request-construction` | `ambiguous`   | Dynamically assembled Messages requests cannot be mapped reliably without semantic analysis.                       | —     |
-| `schema`             | `direct-tool-input-schema`     | `full`        | A bound tool input schema is referenced directly through the client tool input_schema property.                    | —     |
-| `tool`               | `closed-client-tool-array`     | `full`        | Closed inline or immutable module-local arrays contain statically declared Anthropic client tools.                 | —     |
-| `tool`               | `provider-server-tools`        | `unsupported` | Anthropic provider or server tools are outside the initial client-tool target.                                     | —     |
+| Kind                 | Pattern                        | Support       | Description                                                                                                        | Notes         |
+| -------------------- | ------------------------------ | ------------- | ------------------------------------------------------------------------------------------------------------------ | ------------- |
+| `instruction-loader` | `direct-system-loader`         | `full`        | A directly bound instruction loader supplies the top-level system request property.                                | Not available |
+| `runtime`            | `direct-messages-create`       | `full`        | Direct Anthropic Messages API invocation through a module-local client in a directly exported TypeScript function. | Not available |
+| `runtime`            | `dynamic-request-construction` | `ambiguous`   | Dynamically assembled Messages requests cannot be mapped reliably without semantic analysis.                       | Not available |
+| `schema`             | `direct-tool-input-schema`     | `full`        | A bound tool input schema is referenced directly through the client tool input_schema property.                    | Not available |
+| `tool`               | `closed-client-tool-array`     | `full`        | Closed inline or immutable module-local arrays contain statically declared Anthropic client tools.                 | Not available |
+| `tool`               | `provider-server-tools`        | `unsupported` | Anthropic provider or server tools are outside the initial client-tool target.                                     | Not available |
 
 #### Provider limits
 
@@ -77,7 +77,7 @@ Runtime guidance notes: Project-local guidance is needed only for repository-spe
 ## Adapter: `custom`
 
 - Owning package: `@moldea.ai/core`
-- Implementation range: —
+- Implementation range: Not available
 - Supported repository-format versions: `1`
 - Compatible Core range: `^2.0.0`
 - Runtime guidance: `required`
@@ -90,14 +90,14 @@ Runtime guidance notes: Project-local guidance defines the custom runtime integr
 - Kind: `custom`
 - Support level: `supported`
 - Language: `any`
-- Evidence kinds: —
+- Evidence kinds: Not available
 - Last verified: `2026-08-15`
 
 #### Patterns
 
-| Kind      | Pattern                             | Support | Description                                                                                        | Notes |
-| --------- | ----------------------------------- | ------- | -------------------------------------------------------------------------------------------------- | ----- |
-| `runtime` | `explicit-repository-relationships` | `full`  | Universal Core validation of explicit repository relationships without runtime-specific inference. | —     |
+| Kind      | Pattern                             | Support | Description                                                                                        | Notes         |
+| --------- | ----------------------------------- | ------- | -------------------------------------------------------------------------------------------------- | ------------- |
+| `runtime` | `explicit-repository-relationships` | `full`  | Universal Core validation of explicit repository relationships without runtime-specific inference. | Not available |
 
 ## Adapter: `openai`
 
@@ -133,14 +133,14 @@ Runtime guidance notes: Document project-specific model selection, tool executio
 
 #### Patterns
 
-| Kind                 | Pattern                          | Support     | Description                                                                                                                                                             | Notes |
-| -------------------- | -------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
-| `instruction-loader` | `direct-instruction-loader`      | `full`      | A bound loader is called directly, optionally through await, by a Responses request instructions property.                                                              | —     |
-| `runtime`            | `chat-completions`               | `ambiguous` | Chat Completions usage is outside this target and is not rejected merely because Responses is preferred.                                                                | —     |
-| `runtime`            | `direct-responses-runtime-agent` | `full`      | A bound exported TypeScript function uses a module-local OpenAI client for one or more direct Responses API object-literal requests with relationship-specific closure. | —     |
-| `runtime`            | `dynamic-source-indirection`     | `ambiguous` | Factories, relationship-affecting computed properties and spreads, mutable arrays, and indirect request values remain unresolved.                                       | —     |
-| `schema`             | `direct-tool-input-schema`       | `full`      | A bound tool input schema is referenced directly by function-tool parameters.                                                                                           | —     |
-| `tool`               | `static-function-tools`          | `full`      | Bound static OpenAI function-tool objects with the supported exact fields are included in a closed inline or immutable module-local Responses tools array.              | —     |
+| Kind                 | Pattern                          | Support     | Description                                                                                                                                                             | Notes         |
+| -------------------- | -------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| `instruction-loader` | `direct-instruction-loader`      | `full`      | A bound loader is called directly, optionally through await, by a Responses request instructions property.                                                              | Not available |
+| `runtime`            | `chat-completions`               | `ambiguous` | Chat Completions usage is outside this target and is not rejected merely because Responses is preferred.                                                                | Not available |
+| `runtime`            | `direct-responses-runtime-agent` | `full`      | A bound exported TypeScript function uses a module-local OpenAI client for one or more direct Responses API object-literal requests with relationship-specific closure. | Not available |
+| `runtime`            | `dynamic-source-indirection`     | `ambiguous` | Factories, relationship-affecting computed properties and spreads, mutable arrays, and indirect request values remain unresolved.                                       | Not available |
+| `schema`             | `direct-tool-input-schema`       | `full`      | A bound tool input schema is referenced directly by function-tool parameters.                                                                                           | Not available |
+| `tool`               | `static-function-tools`          | `full`      | Bound static OpenAI function-tool objects with the supported exact fields are included in a closed inline or immutable module-local Responses tools array.              | Not available |
 
 #### Known limitations
 

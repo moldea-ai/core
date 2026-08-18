@@ -1,6 +1,5 @@
 import type { APIRoute } from 'astro';
-
-import { createCanonicalUrl, withBase } from '../lib/site/url.ts';
+import { createCanonicalUrl, withBase } from '@moldea.ai/website-ui/site';
 
 export const prerender = true;
 
