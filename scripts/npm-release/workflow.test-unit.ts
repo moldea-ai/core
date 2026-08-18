@@ -10,6 +10,7 @@ interface IWorkflowJob {
     image?: string;
     options?: string;
   };
+  env?: Record<string, string>;
   environment?: string;
   if?: string;
   needs?: string | string[];
@@ -34,6 +35,10 @@ interface IWebsitePackageManifest {
   devDependencies?: Record<string, string>;
 }
 
+interface ITurboConfiguration {
+  tasks?: Record<string, { env?: string[] }>;
+}
+
 const repositoryRoot = new URL('../../', import.meta.url);
 const ciSource = readFileSync(new URL('.github/workflows/ci.yml', repositoryRoot), 'utf8');
 const publishSource = readFileSync(
@@ -47,6 +52,9 @@ const publishPackageSource = readFileSync(
 const websitePackageManifest = JSON.parse(
   readFileSync(new URL('apps/website/package.json', repositoryRoot), 'utf8'),
 ) as IWebsitePackageManifest;
+const turboConfiguration = JSON.parse(
+  readFileSync(new URL('turbo.json', repositoryRoot), 'utf8'),
+) as ITurboConfiguration;
 const ciWorkflow = parse(ciSource) as IWorkflow;
 const publishWorkflow = parse(publishSource) as IWorkflow;
 const publishPackageWorkflow = parse(publishPackageSource) as IWorkflow;
@@ -70,6 +78,10 @@ describe('npm release workflow', () => {
       image: `mcr.microsoft.com/playwright:v${websitePackageManifest.devDependencies?.['@playwright/test']}-noble`,
       options: '--ipc=host',
     });
+    expect(ciWorkflow.jobs?.['verify']?.env).toStrictEqual({
+      PLAYWRIGHT_BROWSERS_PATH: '/ms-playwright',
+    });
+    expect(turboConfiguration.tasks?.['test:e2e']?.env).toContain('PLAYWRIGHT_BROWSERS_PATH');
     expect(publishWorkflow.jobs?.['verify']).toMatchObject({
       if: "${{ github.event_name == 'push' || needs.plan.outputs.has_releases == 'true' }}",
       needs: 'plan',

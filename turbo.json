@@ -23,7 +23,8 @@
       "dependsOn": ["^test"]
     },
     "test:e2e": {
-      "dependsOn": ["build", "^build"]
+      "dependsOn": ["build", "^build"],
+      "env": ["PLAYWRIGHT_BROWSERS_PATH"]
     },
     "test:integration": {
       "dependsOn": ["build", "^test:integration"]

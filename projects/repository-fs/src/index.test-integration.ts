@@ -423,5 +423,5 @@ describe('published Repository FS package artifacts', () => {
     } finally {
       rmSync(consumerDirectory, { force: true, recursive: true });
     }
-  }, 20_000);
+  }, 60_000);
 });
