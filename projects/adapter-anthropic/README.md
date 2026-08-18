@@ -2,7 +2,7 @@
 
 Deterministic runtime evidence and diagnostics for direct Anthropic SDK integrations.
 
-Version `2.0.0` experimentally supports:
+Version `2.0.1` experimentally supports:
 
 - TypeScript ESM source in `.ts`, `.tsx`, and `.mts` files
 - `@anthropic-ai/sdk >=0.117.1 <0.118.0`
