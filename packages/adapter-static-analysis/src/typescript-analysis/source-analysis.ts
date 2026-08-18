@@ -2,9 +2,10 @@ import ts from 'typescript';
 
 import type {
   IStaticAnalysisExportState,
+  IStaticAnalysisModuleValueSource,
+  IStaticAnalysisModuleValueSourceResult,
   IStaticAnalysisSource,
   IStaticAnalysisSourceConfig,
-  IStaticAnalysisSourceResult,
 } from '../types.js';
 import { normalizeText } from '../text/index.js';
 import {
@@ -60,7 +61,7 @@ export const analyzeSource = (
   bytes: Uint8Array,
   config: IStaticAnalysisSourceConfig,
   signal?: AbortSignal,
-): IStaticAnalysisSourceResult => {
+): IStaticAnalysisModuleValueSourceResult => {
   signal?.throwIfAborted();
   const text = normalizeText(bytes);
 
@@ -106,7 +107,7 @@ export const analyzeSource = (
   signal?.throwIfAborted();
   const localBindingNames = indexLocalBindingNames(sourceFile);
   signal?.throwIfAborted();
-  const preliminaryAnalysis: IStaticAnalysisSource = Object.freeze({
+  const preliminaryAnalysis: IStaticAnalysisModuleValueSource = Object.freeze({
     clientNames,
     constructorNames,
     exports,
@@ -120,7 +121,7 @@ export const analyzeSource = (
     sourceFile,
     text,
   });
-  const analysis: IStaticAnalysisSource = Object.freeze({
+  const analysis: IStaticAnalysisModuleValueSource = Object.freeze({
     ...preliminaryAnalysis,
     safeModuleArrayNames: indexSafeModuleArrayNames(preliminaryAnalysis, config.requestConfig),
   });

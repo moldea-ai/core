@@ -1,6 +1,6 @@
 import ts from 'typescript';
 
-import type { IStaticAnalysisSource } from '../types.js';
+import type { IStaticAnalysisModuleValueSource } from '../types.js';
 import { isModuleBindingVisible } from './bindings.js';
 import { unwrapExpression } from './expressions.js';
 
@@ -145,7 +145,7 @@ const isIgnoredIdentifierPosition = (
  * @returns Whether the binding cannot be aliased, escaped, reassigned, or mutated.
  */
 export const isModuleValueBindingSafe = (
-  analysis: IStaticAnalysisSource,
+  analysis: IStaticAnalysisModuleValueSource,
   bindingName: string,
   declarationName: ts.Identifier | null,
   allowedReferences: ReadonlySet<ts.Identifier>,
@@ -190,7 +190,7 @@ export const isModuleValueBindingSafe = (
  * @returns Whether the binding cannot be aliased, escaped, reassigned, or mutated.
  */
 export const isModuleConstValueSafe = (
-  analysis: IStaticAnalysisSource,
+  analysis: IStaticAnalysisModuleValueSource,
   declaration: ts.VariableDeclaration,
   allowedReferences: ReadonlySet<ts.Identifier>,
   kind: 'array' | 'object',
@@ -218,7 +218,7 @@ export const isModuleConstValueSafe = (
  */
 export function getSafeModuleConstLiteral(
   expression: ts.Expression,
-  analysis: IStaticAnalysisSource,
+  analysis: IStaticAnalysisModuleValueSource,
   allowedReferences: ReadonlySet<ts.Identifier>,
   kind: 'array',
 ): {
@@ -227,7 +227,7 @@ export function getSafeModuleConstLiteral(
 } | null;
 export function getSafeModuleConstLiteral(
   expression: ts.Expression,
-  analysis: IStaticAnalysisSource,
+  analysis: IStaticAnalysisModuleValueSource,
   allowedReferences: ReadonlySet<ts.Identifier>,
   kind: 'object',
 ): {
@@ -236,7 +236,7 @@ export function getSafeModuleConstLiteral(
 } | null;
 export function getSafeModuleConstLiteral(
   expression: ts.Expression,
-  analysis: IStaticAnalysisSource,
+  analysis: IStaticAnalysisModuleValueSource,
   allowedReferences: ReadonlySet<ts.Identifier>,
   kind: 'array' | 'object',
 ): {

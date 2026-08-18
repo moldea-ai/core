@@ -6,6 +6,8 @@ export type {
   IStaticAnalysisInspectionSessionOptions,
   IStaticAnalysisImportConfig,
   IStaticAnalysisModuleArray,
+  IStaticAnalysisModuleValueSource,
+  IStaticAnalysisModuleValueSourceResult,
   IStaticAnalysisNamedImport,
   IStaticAnalysisPackageCompatibility,
   IStaticAnalysisPackageDeclaration,

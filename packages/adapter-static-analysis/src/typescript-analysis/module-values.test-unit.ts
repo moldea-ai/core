@@ -2,7 +2,7 @@
 import ts from 'typescript';
 import { describe, expect, test } from 'vitest';
 
-import type { IStaticAnalysisSource, IStaticAnalysisSourceConfig } from '../types.js';
+import type { IStaticAnalysisModuleValueSource, IStaticAnalysisSourceConfig } from '../types.js';
 import { getSafeModuleConstLiteral } from './module-values.js';
 import { analyzeSource } from './source-analysis.js';
 
@@ -21,7 +21,7 @@ const SOURCE_CONFIG: IStaticAnalysisSourceConfig = {
 };
 
 /** Parses one module-value fixture and returns its indexed source. */
-const analyzeFixture = (source: string): IStaticAnalysisSource => {
+const analyzeFixture = (source: string): IStaticAnalysisModuleValueSource => {
   const result = analyzeSource('/src/agent.ts', new TextEncoder().encode(source), SOURCE_CONFIG);
 
   if (result.kind !== 'valid') {
@@ -33,7 +33,7 @@ const analyzeFixture = (source: string): IStaticAnalysisSource => {
 
 /** Finds the identifier used as the initializer of the requested property. */
 const findPropertyReference = (
-  analysis: IStaticAnalysisSource,
+  analysis: IStaticAnalysisModuleValueSource,
   propertyName: string,
 ): ts.Identifier => {
   let reference: ts.Identifier | null = null;

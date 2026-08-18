@@ -68,7 +68,6 @@ describe('static TypeScript bindings', () => {
         clientNames: new Set(['client']),
         constructorNames: new Set(['Client']),
         exports: new Map(),
-        identifierUses: new Map(),
         localBindingNames: indexLocalBindingNames(sourceFile),
         moduleArrays: new Map(),
         moduleConstDeclarations: new Map(),
