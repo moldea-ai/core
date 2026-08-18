@@ -1,7 +1,10 @@
 // @vitest-environment node
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 
 import { renderMarkdown } from './markdown.ts';
+
+// syntax highlighting is verified against the production artifact
+vi.mock('@shikijs/rehype', () => ({ default: () => undefined }));
 
 describe('renderMarkdown', () => {
   test('opens external links safely without changing internal navigation', async () => {

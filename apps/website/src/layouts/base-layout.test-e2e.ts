@@ -362,6 +362,7 @@ test('uses the branded input surface in light and dark themes', async ({ page })
   await page.goto(toPublicPath('/search/'));
 
   const searchInput = page.getByRole('searchbox', { name: 'Search documentation' });
+  await searchInput.blur();
   const lightInputStyles = await searchInput.evaluate((element) => {
     const styles = getComputedStyle(element);
 
@@ -387,6 +388,18 @@ test('uses the branded input surface in light and dark themes', async ({ page })
   expect(
     await searchInput.evaluate((element) => getComputedStyle(element).backgroundColor),
   ).not.toBe('rgba(0, 0, 0, 0)');
+});
+
+test('focuses the search input on direct and client-side page loads', async ({ page }) => {
+  const searchInput = page.getByRole('searchbox', { name: 'Search documentation' });
+
+  await page.goto(toPublicPath('/search/'));
+  await expect(searchInput).toBeFocused();
+
+  await page.goto(toPublicPath('/'));
+  await page.getByRole('link', { name: 'Search documentation' }).click();
+  await page.waitForURL((url) => url.pathname === toPublicPath('/search/'));
+  await expect(searchInput).toBeFocused();
 });
 
 test('searches the generated local index with a keyboard-submitted query', async ({ page }) => {

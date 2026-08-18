@@ -210,6 +210,12 @@ export const verifyProductionBuild = (): void => {
     .map((path) => readFileSync(path, 'utf8'))
     .join('\n');
 
+  if (
+    !publicText.includes('<pre class="shiki shiki-themes github-dark-default github-light-default"')
+  ) {
+    throw new Error('The production artifact is missing syntax-highlighted documentation code.');
+  }
+
   if (publicText.includes('@moldea.ai/packages-website')) {
     throw new Error('The private website workspace leaked into public output.');
   }
