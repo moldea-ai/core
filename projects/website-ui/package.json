@@ -1,6 +1,6 @@
 {
   "name": "@moldea.ai/website-ui",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Shared Astro foundations for moldea public websites.",
   "homepage": "https://github.com/moldea-ai/packages/tree/main/projects/website-ui#readme",
   "bugs": {
