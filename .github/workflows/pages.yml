@@ -66,6 +66,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build website UI
+        run: pnpm --filter @moldea.ai/website-ui build
+
       - name: Install website browser
         run: pnpm --filter @moldea.ai/packages-website exec playwright install --with-deps chromium
 
