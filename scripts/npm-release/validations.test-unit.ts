@@ -20,12 +20,13 @@ const createManifest = (project: INpmReleaseProject): Record<string, unknown> =>
         ? { 'error-message-utils': '1.2.11' }
         : project === 'cli'
           ? {
+              '@moldea.ai/adapter-anthropic': 'workspace:1.0.0',
               '@moldea.ai/adapter-openai': 'workspace:1.0.0',
               '@moldea.ai/core': 'workspace:1.0.0',
               '@moldea.ai/repository': 'workspace:1.0.0',
               '@moldea.ai/repository-fs': 'workspace:1.0.0',
             }
-          : project === 'adapter-openai'
+          : project === 'adapter-anthropic' || project === 'adapter-openai'
             ? {
                 '@moldea.ai/core': 'workspace:^1.0.0',
                 '@moldea.ai/repository': 'workspace:^1.0.0',
@@ -67,6 +68,7 @@ describe('npm release validation', () => {
     ['repository', 'moldea.ai-repository-1.0.0.tgz', 'repository-v1.0.0'],
     ['repository-fs', 'moldea.ai-repository-fs-1.0.0.tgz', 'repository-fs-v1.0.0'],
     ['core', 'moldea.ai-core-1.0.0.tgz', 'core-v1.0.0'],
+    ['adapter-anthropic', 'moldea.ai-adapter-anthropic-1.0.0.tgz', 'adapter-anthropic-v1.0.0'],
     ['adapter-openai', 'moldea.ai-adapter-openai-1.0.0.tgz', 'adapter-openai-v1.0.0'],
     ['cli', 'moldea.ai-cli-1.0.0.tgz', 'cli-v1.0.0'],
   ] as const)('createNpmReleaseIdentity(%s) -> %s and %s', (project, artifactName, tag) => {

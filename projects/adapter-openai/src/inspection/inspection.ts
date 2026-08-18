@@ -1,3 +1,7 @@
+import {
+  getRuntimeExport,
+  isSupportedTypeScriptSourcePath,
+} from '@moldea.ai/adapter-static-analysis';
 import type { IIndexedAgent, IRuntimeAdapterEvidence } from '@moldea.ai/core';
 import type {
   IAdapterDiagnostic,
@@ -7,11 +11,7 @@ import type {
 
 import { OPENAI_ADAPTER_ID, OPENAI_RESPONSES_RUNTIME_NAME } from '../constants/index.js';
 import type { IOpenAiInspectionSession } from '../contracts/index.js';
-import {
-  analyzeOpenAiResponses,
-  getOpenAiRuntimeExport,
-  isSupportedOpenAiSourcePath,
-} from '../source-analysis/index.js';
+import { analyzeOpenAiResponses } from '../source-analysis/index.js';
 import {
   addOpenAiDiagnostic,
   analyzeOpenAiBoundReference,
@@ -36,7 +36,7 @@ const inspectAgent = async (
 
   await inspectOpenAiPackage(session, runtimeAgent.path, evidence, diagnostics, agent.id);
 
-  if (!isSupportedOpenAiSourcePath(runtimeAgent.path)) {
+  if (!isSupportedTypeScriptSourcePath(runtimeAgent.path)) {
     return;
   }
 
@@ -67,7 +67,7 @@ const inspectAgent = async (
     return;
   }
 
-  const runtimeExport = getOpenAiRuntimeExport(analysis, runtimeAgent.symbol);
+  const runtimeExport = getRuntimeExport(analysis, runtimeAgent.symbol);
 
   if (runtimeExport.kind === 'absent') {
     addOpenAiDiagnostic(

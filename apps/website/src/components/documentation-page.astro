@@ -5,6 +5,7 @@ import type { IPackageDocument, IPublicPackage } from '../lib/model/types.ts';
 import type { IRenderedMarkdownHeading } from '../lib/content/markdown.ts';
 import { withBase } from '../lib/site/url.ts';
 import Breadcrumbs from './breadcrumbs.astro';
+import InlineBrandText from './inline-brand-text.astro';
 
 interface Props {
   allPackages: IPublicPackage[];
@@ -150,10 +151,12 @@ const breadcrumbs = [
         <h1 class="text-4xl leading-tight font-semibold tracking-[-0.04em] break-words sm:text-5xl">
           {pageTitle}
         </h1>
-        <p class="mt-5 max-w-3xl text-lg leading-8 text-muted-foreground">{pageDescription}</p>
+        <p class="mt-5 max-w-3xl text-lg leading-8 text-muted-foreground">
+          <InlineBrandText text={pageDescription} />
+        </p>
         <div class="mt-6 flex flex-wrap gap-3">
           <a
-            class="inline-flex min-h-10 items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
+            class="action-control action-primary min-h-10 gap-2 px-4 py-2 text-sm font-bold"
             href={packageModel.sourceUrl}
             target="_blank"
             rel="noopener noreferrer"
@@ -164,7 +167,7 @@ const breadcrumbs = [
             />
           </a>
           <a
-            class="inline-flex min-h-10 items-center gap-2 rounded-lg border border-input px-4 py-2 text-sm font-bold hover:bg-muted"
+            class="action-control action-outline min-h-10 gap-2 px-4 py-2 text-sm font-bold"
             href={packageModel.npmUrl}
             target="_blank"
             rel="noopener noreferrer"

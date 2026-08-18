@@ -75,7 +75,7 @@ describe('createMoldeaCliCoreInspectionExecutor', () => {
       throw new TypeError('The Core factory input is required.');
     }
 
-    expect(coreFactoryInput.adapters.map(({ id }) => id)).toStrictEqual(['openai']);
+    expect(coreFactoryInput.adapters.map(({ id }) => id)).toStrictEqual(['anthropic', 'openai']);
     expect(coreFactoryInput.adapters[0]).toBe(ACTIVE_RUNTIME_ADAPTERS[0]);
     expect(coreFactoryInput.limits).toStrictEqual({
       maxDiagnostics: 32,
@@ -95,7 +95,7 @@ describe('createMoldeaCliCoreInspectionExecutor', () => {
     await executeInspection({ repository: reader, resourceLimits: RESOURCE_LIMITS });
 
     expect(coreFactory).toHaveBeenCalledTimes(2);
-    expect(ACTIVE_RUNTIME_ADAPTERS.map(({ id }) => id)).toStrictEqual(['openai']);
+    expect(ACTIVE_RUNTIME_ADAPTERS.map(({ id }) => id)).toStrictEqual(['anthropic', 'openai']);
     expect(Object.isFrozen(ACTIVE_RUNTIME_ADAPTERS)).toBe(true);
     expect(ACTIVE_RUNTIME_ADAPTER_RELEASE_DEFINITIONS).toStrictEqual(
       ACTIVE_RUNTIME_ADAPTERS.map(({ id, supportedRepositoryFormatVersions }) => ({

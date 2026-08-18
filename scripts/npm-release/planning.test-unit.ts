@@ -9,6 +9,7 @@ import type {
 import { createNpmReleaseWorkflowOutputs, createNpmReleaseWorkflowPlan } from './planning.ts';
 
 const NO_PREVIOUS_VERSIONS = {
+  'adapter-anthropic': null,
   'adapter-openai': null,
   cli: null,
   core: null,
@@ -20,7 +21,9 @@ const createProjectChanges = (
   overrides: Partial<Record<INpmReleaseProject, Partial<INpmReleaseProjectChange>>> = {},
 ): INpmReleaseWorkflowPlanSources['projectChanges'] =>
   Object.fromEntries(
-    (['adapter-openai', 'cli', 'core', 'repository', 'repository-fs'] as const).map((project) => [
+    (
+      ['adapter-anthropic', 'adapter-openai', 'cli', 'core', 'repository', 'repository-fs'] as const
+    ).map((project) => [
       project,
       {
         currentVersion: '1.0.0',
@@ -55,6 +58,7 @@ describe('npm release workflow planning', () => {
         mode: '',
         project: '',
         projectChanges: createProjectChanges({
+          'adapter-anthropic': { currentVersion: '1.0.1', isChanged: true },
           'adapter-openai': { currentVersion: '1.0.1', isChanged: true },
           cli: { currentVersion: '1.0.1', isChanged: true },
           repository: { currentVersion: '1.1.0', isChanged: true },
@@ -64,13 +68,14 @@ describe('npm release workflow planning', () => {
     ).toStrictEqual({
       mode: 'trusted',
       previousVersions: {
+        'adapter-anthropic': '1.0.0',
         'adapter-openai': '1.0.0',
         cli: '1.0.0',
         core: null,
         repository: '1.0.0',
         'repository-fs': '1.0.0',
       },
-      projects: ['repository', 'repository-fs', 'adapter-openai', 'cli'],
+      projects: ['repository', 'repository-fs', 'adapter-anthropic', 'adapter-openai', 'cli'],
       trigger: 'automatic',
     });
   });
@@ -82,7 +87,7 @@ describe('npm release workflow planning', () => {
         mode: '',
         project: '',
         projectChanges: createProjectChanges({
-          'adapter-openai': {
+          'adapter-anthropic': {
             currentVersion: '1.0.0',
             isChanged: true,
             previousVersion: null,
@@ -92,7 +97,7 @@ describe('npm release workflow planning', () => {
     ).toStrictEqual({
       mode: 'trusted',
       previousVersions: NO_PREVIOUS_VERSIONS,
-      projects: ['adapter-openai'],
+      projects: ['adapter-anthropic'],
       trigger: 'automatic',
     });
   });
@@ -125,6 +130,8 @@ describe('npm release workflow planning', () => {
     });
 
     expect(createNpmReleaseWorkflowOutputs(plan)).toStrictEqual({
+      adapter_anthropic: 'false',
+      adapter_anthropic_previous_version: '',
       adapter_openai: 'false',
       adapter_openai_previous_version: '',
       cli: 'false',
@@ -170,7 +177,7 @@ describe('npm release workflow planning', () => {
         mode: '',
         project: '',
         projectChanges: createProjectChanges({
-          'adapter-openai': { currentVersion, isChanged: true, previousVersion: null },
+          'adapter-anthropic': { currentVersion, isChanged: true, previousVersion: null },
         }),
       }),
     ).toThrow('must declare a greater stable package version');

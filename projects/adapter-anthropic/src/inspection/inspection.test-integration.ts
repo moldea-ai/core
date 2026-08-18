@@ -11,10 +11,10 @@ import {
   type IMemoryRepositoryEntry,
 } from '@moldea.ai/repository/memory';
 
-import { openAiAdapter } from '../adapter/index.js';
-import { OPENAI_ADAPTER_DIAGNOSTICS } from '../diagnostics/index.js';
+import { anthropicAdapter } from '../adapter/index.js';
+import { ANTHROPIC_ADAPTER_DIAGNOSTICS } from '../diagnostics/index.js';
 
-interface IOpenAiFixture {
+interface IAnthropicFixture {
   readonly entries: readonly {
     readonly path: string;
     readonly text: string;
@@ -26,17 +26,20 @@ interface IOpenAiFixture {
 type IFixtureReplacement = string | Uint8Array;
 
 const fixture = JSON.parse(
-  readFileSync(new URL('../../../../fixtures/adapter-openai/cases.json', import.meta.url), 'utf8'),
-) as IOpenAiFixture;
+  readFileSync(
+    new URL('../../../../fixtures/adapter-anthropic/cases.json', import.meta.url),
+    'utf8',
+  ),
+) as IAnthropicFixture;
 const expectedEvidence = JSON.parse(
   readFileSync(
-    new URL('../../../../fixtures/adapter-openai/evidence.expected.json', import.meta.url),
+    new URL('../../../../fixtures/adapter-anthropic/evidence.expected.json', import.meta.url),
     'utf8',
   ),
 ) as readonly unknown[];
 const expectedDiagnostics = JSON.parse(
   readFileSync(
-    new URL('../../../../fixtures/adapter-openai/diagnostics.expected.json', import.meta.url),
+    new URL('../../../../fixtures/adapter-anthropic/diagnostics.expected.json', import.meta.url),
     'utf8',
   ),
 ) as readonly { readonly code: string; readonly message: string }[];
@@ -57,7 +60,7 @@ const createEntries = (
 ];
 
 const inspectEntries = async (entries: readonly IMemoryRepositoryEntry[]) =>
-  createCore({ adapters: [openAiAdapter] }).inspectProject({
+  createCore({ adapters: [anthropicAdapter] }).inspectProject({
     repository: createMemoryRepositoryReader(entries),
   });
 
@@ -68,7 +71,7 @@ const createNullPrototypeRecord = <Value extends object>(value: Value): Value =>
   Object.assign(Object.create(null) as Value, value);
 
 const createExpectedDiagnostic = (
-  code: keyof typeof OPENAI_ADAPTER_DIAGNOSTICS,
+  code: keyof typeof ANTHROPIC_ADAPTER_DIAGNOSTICS,
   path: string,
   range: IAdapterDiagnostic['range'],
   capabilityId?: string,
@@ -78,19 +81,19 @@ const createExpectedDiagnostic = (
   entity: createNullPrototypeRecord({
     agentId: 'support',
     ...(capabilityId === undefined ? {} : { capabilityId, capabilityKind: 'tool' as const }),
-    adapterId: 'openai',
+    adapterId: 'anthropic',
   }),
-  message: OPENAI_ADAPTER_DIAGNOSTICS[code],
+  message: ANTHROPIC_ADAPTER_DIAGNOSTICS[code],
   path: parseRepositoryPath(path),
   pointer: null,
   range,
-  source: 'openai',
+  source: 'anthropic',
 });
 
-describe('openAiAdapter Core integration', () => {
+describe('anthropicAdapter Core integration', () => {
   test('keeps the diagnostic catalog synchronized with its conformance golden', () => {
     expect(
-      Object.entries(OPENAI_ADAPTER_DIAGNOSTICS)
+      Object.entries(ANTHROPIC_ADAPTER_DIAGNOSTICS)
         .map(([code, message]) => ({ code, message }))
         .sort((left, right) => (left.code < right.code ? -1 : left.code > right.code ? 1 : 0)),
     ).toStrictEqual(expectedDiagnostics);
@@ -115,24 +118,24 @@ describe('openAiAdapter Core integration', () => {
   });
 
   test.each([
-    ['OPENAI_PACKAGE_MANIFEST_INVALID', '/package.json', '{', null, undefined],
+    ['ANTHROPIC_PACKAGE_MANIFEST_INVALID', '/package.json', '{', null, undefined],
     [
-      'OPENAI_SDK_VERSION_UNSUPPORTED',
+      'ANTHROPIC_SDK_VERSION_UNSUPPORTED',
       '/package.json',
-      '{"dependencies":{"openai":"7.3.0"}}',
+      '{"dependencies":{"@anthropic-ai/sdk":"0.116.0"}}',
       null,
       undefined,
     ],
-    ['OPENAI_SOURCE_TEXT_INVALID', '/src/agent.ts', Uint8Array.from([0xff]), null, undefined],
+    ['ANTHROPIC_SOURCE_TEXT_INVALID', '/src/agent.ts', Uint8Array.from([0xff]), null, undefined],
     [
-      'OPENAI_SOURCE_TEXT_INVALID',
+      'ANTHROPIC_SOURCE_TEXT_INVALID',
       '/src/find-order.ts',
       Uint8Array.from([0xff]),
       null,
       'find-order',
     ],
     [
-      'OPENAI_SOURCE_SYNTAX_INVALID',
+      'ANTHROPIC_SOURCE_SYNTAX_INVALID',
       '/src/agent.ts',
       'export const supportAgent = (;',
       {
@@ -142,7 +145,7 @@ describe('openAiAdapter Core integration', () => {
       undefined,
     ],
     [
-      'OPENAI_SOURCE_SYNTAX_INVALID',
+      'ANTHROPIC_SOURCE_SYNTAX_INVALID',
       '/src/contracts.ts',
       'export const FindOrderInput = (;',
       {
@@ -152,76 +155,76 @@ describe('openAiAdapter Core integration', () => {
       'find-order',
     ],
     [
-      'OPENAI_RUNTIME_AGENT_SYMBOL_NOT_FOUND',
+      'ANTHROPIC_RUNTIME_AGENT_SYMBOL_NOT_FOUND',
       '/src/agent.ts',
-      "import OpenAI from 'openai';\nconst client = new OpenAI();\nexport const anotherAgent = () => client.responses.create({ input: 'x' });\n",
+      "import Anthropic from '@anthropic-ai/sdk';\nconst client = new Anthropic();\nexport const anotherAgent = () => client.messages.create({ input: 'x' });\n",
       null,
       undefined,
     ],
     [
-      'OPENAI_INSTRUCTION_LOADER_SYMBOL_NOT_FOUND',
+      'ANTHROPIC_INSTRUCTION_LOADER_SYMBOL_NOT_FOUND',
       '/src/instructions.ts',
       "export const anotherLoader = () => 'instruction';\n",
       null,
       undefined,
     ],
     [
-      'OPENAI_TOOL_REGISTRATION_SYMBOL_NOT_FOUND',
+      'ANTHROPIC_TOOL_REGISTRATION_SYMBOL_NOT_FOUND',
       '/src/find-order.ts',
       'export const findOrder = async () => undefined;\nexport const anotherTool = {};\n',
       null,
       'find-order',
     ],
     [
-      'OPENAI_INSTRUCTION_LOADER_NOT_WIRED',
+      'ANTHROPIC_INSTRUCTION_LOADER_NOT_WIRED',
       '/src/agent.ts',
       fixture.entries
         .find(({ path }) => path === '/src/agent.ts')
-        ?.text.replace('instructions: readInstruction()', "instructions: 'static'") ?? '',
+        ?.text.replace('system: readInstruction()', "system: 'static'") ?? '',
       {
-        end: { column: 27, line: 12, offset: 380 },
-        start: { column: 19, line: 12, offset: 372 },
+        end: { column: 21, line: 12, offset: 396 },
+        start: { column: 13, line: 12, offset: 388 },
       },
       undefined,
     ],
     [
-      'OPENAI_TOOL_REGISTRATION_NOT_WIRED',
+      'ANTHROPIC_TOOL_REGISTRATION_NOT_WIRED',
       '/src/agent.ts',
       fixture.entries
         .find(({ path }) => path === '/src/agent.ts')
         ?.text.replace('tools: [registeredFindOrder]', 'tools: []') ?? '',
       {
-        end: { column: 14, line: 14, offset: 437 },
-        start: { column: 12, line: 14, offset: 435 },
+        end: { column: 14, line: 14, offset: 453 },
+        start: { column: 12, line: 14, offset: 451 },
       },
       'find-order',
     ],
     [
-      'OPENAI_TOOL_NAME_MISMATCH',
+      'ANTHROPIC_TOOL_NAME_MISMATCH',
       '/src/find-order.ts',
       fixture.entries
         .find(({ path }) => path === '/src/find-order.ts')
         ?.text.replace("name: 'find_order'", "name: 'lookup_order'") ?? '',
       {
-        end: { column: 23, line: 7, offset: 191 },
-        start: { column: 9, line: 7, offset: 177 },
+        end: { column: 23, line: 7, offset: 189 },
+        start: { column: 9, line: 7, offset: 175 },
       },
       'find-order',
     ],
     [
-      'OPENAI_TOOL_INPUT_SCHEMA_NOT_WIRED',
+      'ANTHROPIC_TOOL_INPUT_SCHEMA_NOT_WIRED',
       '/src/find-order.ts',
       fixture.entries
         .find(({ path }) => path === '/src/find-order.ts')
-        ?.text.replace('parameters: FindOrderInput', 'parameters: {}') ?? '',
+        ?.text.replace('input_schema: FindOrderInput', 'input_schema: {}') ?? '',
       {
-        end: { column: 17, line: 9, offset: 264 },
-        start: { column: 15, line: 9, offset: 262 },
+        end: { column: 19, line: 9, offset: 264 },
+        start: { column: 17, line: 9, offset: 262 },
       },
       'find-order',
     ],
     [
-      'OPENAI_TOOL_INPUT_SCHEMA_SYMBOL_NOT_FOUND',
+      'ANTHROPIC_TOOL_INPUT_SCHEMA_SYMBOL_NOT_FOUND',
       '/src/contracts.ts',
       'export const AnotherInput = {};\n',
       null,
@@ -243,7 +246,7 @@ describe('openAiAdapter Core integration', () => {
     const registration = fixture.entries
       .find(({ path }) => path === '/src/find-order.ts')
       ?.text.replace("import { FindOrderInput } from './contracts.js';\n\n", '')
-      .replace('parameters: FindOrderInput', 'parameters: MissingInput');
+      .replace('input_schema: FindOrderInput', 'input_schema: MissingInput');
 
     if (registration === undefined) {
       throw new TypeError('The registration fixture is required.');
@@ -259,7 +262,7 @@ describe('openAiAdapter Core integration', () => {
 
     expect(result.diagnostics).toStrictEqual([
       createExpectedDiagnostic(
-        'OPENAI_TOOL_INPUT_SCHEMA_SYMBOL_NOT_FOUND',
+        'ANTHROPIC_TOOL_INPUT_SCHEMA_SYMBOL_NOT_FOUND',
         '/src/find-order.ts',
         null,
         'find-order',
@@ -275,9 +278,9 @@ describe('openAiAdapter Core integration', () => {
     });
 
     expect(result.diagnostics).toStrictEqual([
-      createExpectedDiagnostic('OPENAI_PACKAGE_MANIFEST_INVALID', '/package.json', null),
+      createExpectedDiagnostic('ANTHROPIC_PACKAGE_MANIFEST_INVALID', '/package.json', null),
       createExpectedDiagnostic(
-        'OPENAI_SOURCE_TEXT_INVALID',
+        'ANTHROPIC_SOURCE_TEXT_INVALID',
         '/src/find-order.ts',
         null,
         'find-order',
@@ -286,13 +289,28 @@ describe('openAiAdapter Core integration', () => {
     expect(result.valid).toBe(false);
   });
 
+  test.each([
+    ['invalid UTF-8', Uint8Array.from([0xff])],
+    ['NUL', new TextEncoder().encode('{"dependencies":{}}\0')],
+  ])(
+    'maps a package manifest with %s only to the package diagnostic',
+    async (_description, content) => {
+      const result = await inspect({ '/package.json': content });
+
+      expect(result.diagnostics).toStrictEqual([
+        createExpectedDiagnostic('ANTHROPIC_PACKAGE_MANIFEST_INVALID', '/package.json', null),
+      ]);
+      expect(result.valid).toBe(false);
+    },
+  );
+
   test('returns no false runtime diagnostic when the bound pattern is indirect', async () => {
     const result = await inspect({
       '/src/agent.ts': [
-        "import OpenAI from 'openai';",
-        'const client = new OpenAI();',
+        "import Anthropic from '@anthropic-ai/sdk';",
+        'const client = new Anthropic();',
         "const request = { input: 'x' };",
-        'export const supportAgent = () => client.responses.create(request);',
+        'export const supportAgent = () => client.messages.create(request);',
       ].join('\n'),
     });
 
@@ -301,13 +319,13 @@ describe('openAiAdapter Core integration', () => {
     expect(result.evidence.map(({ kind }) => kind)).toStrictEqual(['language', 'runtime-package']);
   });
 
-  test('returns no runtime-pattern evidence for a shadowed OpenAI client', async () => {
+  test('returns no runtime-pattern evidence for a shadowed Anthropic client', async () => {
     const result = await inspect({
       '/src/agent.ts': [
-        "import OpenAI from 'openai';",
-        'const client = new OpenAI();',
-        'export const supportAgent = (client: OpenAI) =>',
-        "  client.responses.create({ input: 'x' });",
+        "import Anthropic from '@anthropic-ai/sdk';",
+        'const client = new Anthropic();',
+        'export const supportAgent = (client: Anthropic) =>',
+        "  client.messages.create({ input: 'x' });",
       ].join('\n'),
     });
 
@@ -319,13 +337,13 @@ describe('openAiAdapter Core integration', () => {
   test('rejects instruction and tool evidence through shadowed imports', async () => {
     const result = await inspect({
       '/src/agent.ts': [
-        "import OpenAI from 'openai';",
+        "import Anthropic from '@anthropic-ai/sdk';",
         "import { loadInstruction as readInstruction } from './instructions.js';",
         "import { registeredFindOrder } from './find-order.js';",
-        'const client = new OpenAI();',
+        'const client = new Anthropic();',
         'export const supportAgent = (readInstruction: () => string, registeredFindOrder: object) =>',
-        '  client.responses.create({',
-        '    instructions: readInstruction(),',
+        '  client.messages.create({',
+        '    system: readInstruction(),',
         '    tools: [registeredFindOrder],',
         '  });',
       ].join('\n'),
@@ -333,7 +351,7 @@ describe('openAiAdapter Core integration', () => {
 
     expect(result.valid).toBe(false);
     expect(result.diagnostics.map(({ code }) => code)).toStrictEqual([
-      'OPENAI_INSTRUCTION_LOADER_NOT_WIRED',
+      'ANTHROPIC_INSTRUCTION_LOADER_NOT_WIRED',
     ]);
     expect(result.evidence.map(({ kind }) => kind)).toStrictEqual([
       'language',
@@ -343,7 +361,7 @@ describe('openAiAdapter Core integration', () => {
     ]);
   });
 
-  test('does not compare the manifest description with the OpenAI tool description', async () => {
+  test('does not compare the manifest description with the Anthropic tool description', async () => {
     const registration = fixture.entries
       .find(({ path }) => path === '/src/find-order.ts')
       ?.text.replace(
@@ -362,7 +380,127 @@ describe('openAiAdapter Core integration', () => {
     expect(result.evidence.map(({ kind }) => kind)).toContain('tool-registration');
   });
 
-  test('tolerates additional FunctionTool fields without interpreting their values', async () => {
+  test.each([
+    ['one ASCII character', 'a'],
+    ['64 ASCII characters', 'a'.repeat(64)],
+    ['ASCII letters, digits, underscores, hyphens, and a leading digit', '42_Find-Order'],
+  ])('accepts a client-tool name at %s', async (_description, toolName) => {
+    const registration = fixture.entries
+      .find(({ path }) => path === '/src/find-order.ts')
+      ?.text.replace("name: 'find_order'", `name: '${toolName}'`);
+
+    if (registration === undefined) {
+      throw new TypeError('The registration fixture is required.');
+    }
+
+    const result = await inspect({
+      '/moldea/moldea.yaml': fixture.manifest.replace('name: find_order', `name: ${toolName}`),
+      '/src/find-order.ts': registration,
+    });
+
+    expect(result.diagnostics).toStrictEqual([]);
+    expect(result.evidence.map(({ kind }) => kind)).toContain('tool-registration');
+  });
+
+  test('diagnoses an empty client-tool name and its independent mismatch', async () => {
+    const registration = fixture.entries
+      .find(({ path }) => path === '/src/find-order.ts')
+      ?.text.replace("name: 'find_order'", "name: ''");
+
+    if (registration === undefined) {
+      throw new TypeError('The registration fixture is required.');
+    }
+
+    const result = await inspect({ '/src/find-order.ts': registration });
+
+    expect(result.diagnostics.map(({ code }) => code)).toStrictEqual([
+      'ANTHROPIC_TOOL_NAME_INVALID',
+      'ANTHROPIC_TOOL_NAME_MISMATCH',
+    ]);
+  });
+
+  test.each([
+    ['65 ASCII characters', 'a'.repeat(65)],
+    ['whitespace', 'find order'],
+    ['unsupported punctuation', 'find.order'],
+    ['composed non-ASCII characters', 'café'],
+    ['decomposed non-ASCII characters', 'cafe\u0301'],
+  ])('rejects a client-tool name with %s', async (_description, toolName) => {
+    const registration = fixture.entries
+      .find(({ path }) => path === '/src/find-order.ts')
+      ?.text.replace("name: 'find_order'", `name: '${toolName}'`);
+
+    if (registration === undefined) {
+      throw new TypeError('The registration fixture is required.');
+    }
+
+    const result = await inspect({
+      '/moldea/moldea.yaml': fixture.manifest.replace('name: find_order', `name: ${toolName}`),
+      '/src/find-order.ts': registration,
+    });
+
+    expect(result.diagnostics.map(({ code }) => code)).toStrictEqual([
+      'ANTHROPIC_TOOL_NAME_INVALID',
+    ]);
+    expect(result.evidence.map(({ kind }) => kind)).not.toContain('tool-registration');
+  });
+
+  test('diagnoses a client-tool name containing an unpaired surrogate escape', async () => {
+    const registration = fixture.entries
+      .find(({ path }) => path === '/src/find-order.ts')
+      ?.text.replace("name: 'find_order'", String.raw`name: '\uD800'`);
+
+    if (registration === undefined) {
+      throw new TypeError('The registration fixture is required.');
+    }
+
+    const result = await inspect({ '/src/find-order.ts': registration });
+
+    expect(result.diagnostics.map(({ code }) => code)).toStrictEqual([
+      'ANTHROPIC_TOOL_NAME_INVALID',
+      'ANTHROPIC_TOOL_NAME_MISMATCH',
+    ]);
+    expect(result.evidence.map(({ kind }) => kind)).not.toContain('tool-registration');
+  });
+
+  test.each([
+    ['omitted optional fields', ["  type: 'custom',\n", '  strict: true,\n'].join('')],
+    ['a null type', "  type: 'custom',", '  type: null,'],
+  ])('accepts a client tool with %s', async (_description, searchValue, replacement = '') => {
+    const registration = fixture.entries
+      .find(({ path }) => path === '/src/find-order.ts')
+      ?.text.replace(searchValue, replacement);
+
+    if (registration === undefined) {
+      throw new TypeError('The registration fixture is required.');
+    }
+
+    const result = await inspect({ '/src/find-order.ts': registration });
+
+    expect(result.diagnostics).toStrictEqual([]);
+    expect(result.evidence.map(({ kind }) => kind)).toEqual(
+      expect.arrayContaining(['schema', 'tool-registration']),
+    );
+  });
+
+  test('leaves a provider/server tool type unsupported', async () => {
+    const registration = fixture.entries
+      .find(({ path }) => path === '/src/find-order.ts')
+      ?.text.replace("type: 'custom'", "type: 'computer_20241022'");
+
+    if (registration === undefined) {
+      throw new TypeError('The registration fixture is required.');
+    }
+
+    const result = await inspect({ '/src/find-order.ts': registration });
+
+    expect(result.diagnostics).toStrictEqual([]);
+    expect(
+      result.evidence.some(({ kind }) => kind === 'schema' || kind === 'tool-registration'),
+    ).toBe(false);
+  });
+
+  test('tolerates additional client-tool fields without interpreting their values', async () => {
     const registration = fixture.entries
       .find(({ path }) => path === '/src/find-order.ts')
       ?.text.replace(
@@ -370,8 +508,10 @@ describe('openAiAdapter Core integration', () => {
         [
           '  strict: true,',
           '  allowed_callers: resolveAllowedCallers(),',
+          '  cache_control: buildCacheControl(),',
           '  defer_loading: shouldDeferLoading(),',
-          '  output_schema: buildOutputSchema(),',
+          '  eager_input_streaming: shouldStreamInput(),',
+          '  input_examples: buildInputExamples(),',
           '',
         ].join('\n'),
       );
@@ -397,7 +537,7 @@ describe('openAiAdapter Core integration', () => {
     ['a method', '  allowed_callers() { return []; },\n'],
     ['a getter', '  get allowed_callers() { return []; },\n'],
     ['a setter', '  set allowed_callers(value) {},\n'],
-  ])('silently leaves a FunctionTool with %s unsupported', async (_description, property) => {
+  ])('silently leaves a client tool with %s unsupported', async (_description, property) => {
     const registration = fixture.entries
       .find(({ path }) => path === '/src/find-order.ts')
       ?.text.replace('  strict: true,\n', `  strict: true,\n${property}`);
@@ -426,14 +566,14 @@ describe('openAiAdapter Core integration', () => {
     expect(result.evidence.map(({ kind }) => kind)).toContain('tool-registration');
   });
 
-  test('leaves dynamically constructed registration parameters unestablished', async () => {
+  test('leaves dynamically constructed registration input_schema unestablished', async () => {
     const registration = fixture.entries
       .find(({ path }) => path === '/src/find-order.ts')
       ?.text.replace(
         'export const findOrder = async',
         'const DynamicInput = buildSchema();\n\nexport const findOrder = async',
       )
-      .replace('parameters: FindOrderInput', 'parameters: DynamicInput');
+      .replace('input_schema: FindOrderInput', 'input_schema: DynamicInput');
 
     if (registration === undefined) {
       throw new TypeError('The registration fixture is required.');
@@ -451,7 +591,7 @@ describe('openAiAdapter Core integration', () => {
   test('ignores unrelated dynamic request properties for both relationships', async () => {
     const agent = fixture.entries
       .find(({ path }) => path === '/src/agent.ts')
-      ?.text.replace("model: 'gpt-5'", 'model: selectModel()');
+      ?.text.replace("model: 'claude-test'", 'model: selectModel()');
 
     if (agent === undefined) {
       throw new TypeError('The runtime-agent fixture is required.');
@@ -469,13 +609,13 @@ describe('openAiAdapter Core integration', () => {
   test('keeps ambiguity local to the affected request relationship', async () => {
     const result = await inspect({
       '/src/agent.ts': [
-        "import OpenAI from 'openai';",
+        "import Anthropic from '@anthropic-ai/sdk';",
         "import { findOrderTool as registeredFindOrder } from './find-order.js';",
         "import { loadInstruction as readInstruction } from './instructions.js';",
-        'const client = new OpenAI();',
+        'const client = new Anthropic();',
         'export const supportAgent = () =>',
-        '  client.responses.create({',
-        '    instructions: readInstruction(),',
+        '  client.messages.create({',
+        '    system: readInstruction(),',
         '    [dynamicKey]: dynamicValue,',
         '    tools: [registeredFindOrder],',
         '  });',
@@ -491,13 +631,13 @@ describe('openAiAdapter Core integration', () => {
   test('emits a negative diagnostic despite an unrelated dynamic request property', async () => {
     const result = await inspect({
       '/src/agent.ts': [
-        "import OpenAI from 'openai';",
+        "import Anthropic from '@anthropic-ai/sdk';",
         "import { findOrderTool as registeredFindOrder } from './find-order.js';",
         "import { loadInstruction as readInstruction } from './instructions.js';",
-        'const client = new OpenAI();',
+        'const client = new Anthropic();',
         'export const supportAgent = () =>',
-        '  client.responses.create({',
-        "    instructions: 'static',",
+        '  client.messages.create({',
+        "    system: 'static',",
         '    model: selectModel(),',
         '    tools: [registeredFindOrder],',
         '  });',
@@ -505,23 +645,23 @@ describe('openAiAdapter Core integration', () => {
     });
 
     expect(result.diagnostics.map(({ code }) => code)).toStrictEqual([
-      'OPENAI_INSTRUCTION_LOADER_NOT_WIRED',
+      'ANTHROPIC_INSTRUCTION_LOADER_NOT_WIRED',
     ]);
     expect(result.evidence.map(({ kind }) => kind)).toContain('tool-registration');
   });
 
-  test('uses positive existential matching across multiple calls and a reusable tool array', async () => {
+  test('uses positive existential matching across multiple calls and a shorthand tool array', async () => {
     const result = await inspect({
       '/src/agent.ts': [
-        "import OpenAI from 'openai';",
+        "import Anthropic from '@anthropic-ai/sdk';",
         "import { findOrderTool as registeredFindOrder } from './find-order.js';",
         "import { loadInstruction as readInstruction } from './instructions.js';",
-        'const client = new OpenAI();',
+        'const client = new Anthropic();',
         'const tools = [registeredFindOrder];',
         'export const supportAgent = async () => {',
-        "  await client.responses.create({ instructions: 'static', tools: [] });",
-        '  await client.responses.create({ instructions: await readInstruction(), tools: tools });',
-        '  return client.responses.create({ ...dynamicRequest });',
+        "  await client.messages.create({ system: 'static', tools: [] });",
+        '  await client.messages.create({ system: await readInstruction(), tools });',
+        '  return client.messages.create({ ...dynamicRequest });',
         '};',
       ].join('\n'),
     });
@@ -533,17 +673,17 @@ describe('openAiAdapter Core integration', () => {
     );
   });
 
-  test('accepts additional statically resolvable OpenAI registrations in a closed tool array', async () => {
+  test('accepts additional statically resolvable Anthropic registrations in a closed tool array', async () => {
     const entries = createEntries({
       '/src/agent.ts': [
-        "import OpenAI from 'openai';",
+        "import Anthropic from '@anthropic-ai/sdk';",
         "import { extraTool } from './extra-tool.js';",
         "import { findOrderTool as registeredFindOrder } from './find-order.js';",
         "import { loadInstruction as readInstruction } from './instructions.js';",
-        'const client = new OpenAI();',
+        'const client = new Anthropic();',
         'export const supportAgent = () =>',
-        '  client.responses.create({',
-        '    instructions: readInstruction(),',
+        '  client.messages.create({',
+        '    system: readInstruction(),',
         '    tools: [registeredFindOrder, extraTool],',
         '  });',
       ].join('\n'),
@@ -553,10 +693,10 @@ describe('openAiAdapter Core integration', () => {
       {
         content: [
           'export const extraTool = {',
-          "  type: 'function',",
+          "  type: 'custom',",
           "  name: 'extra_tool',",
-          '  parameters: {},',
-          '  strict: null,',
+          '  input_schema: {},',
+          '  strict: false,',
           '} as const;',
         ].join('\n'),
         path: '/src/extra-tool.ts',
@@ -569,16 +709,53 @@ describe('openAiAdapter Core integration', () => {
     expect(result.evidence.map(({ kind }) => kind)).toContain('tool-registration');
   });
 
+  test('keeps a closed tool array ambiguous when an additional registration name is invalid', async () => {
+    const entries = createEntries({
+      '/src/agent.ts': [
+        "import Anthropic from '@anthropic-ai/sdk';",
+        "import { extraTool } from './extra-tool.js';",
+        "import { findOrderTool as registeredFindOrder } from './find-order.js';",
+        "import { loadInstruction as readInstruction } from './instructions.js';",
+        'const client = new Anthropic();',
+        'export const supportAgent = () =>',
+        '  client.messages.create({',
+        '    system: readInstruction(),',
+        '    tools: [extraTool],',
+        '  });',
+        'void registeredFindOrder;',
+      ].join('\n'),
+    });
+    const result = await inspectEntries([
+      ...entries,
+      {
+        content: [
+          'export const extraTool = {',
+          "  type: 'custom',",
+          "  name: 'invalid.name',",
+          '  input_schema: {},',
+          '  strict: false,',
+          '} as const;',
+        ].join('\n'),
+        path: '/src/extra-tool.ts',
+        type: 'file',
+      },
+    ]);
+
+    expect(result.valid).toBe(true);
+    expect(result.diagnostics).toStrictEqual([]);
+    expect(result.evidence.map(({ kind }) => kind)).not.toContain('tool-registration');
+  });
+
   test('emits negative relationship diagnostics only when every candidate is closed', async () => {
     const closedResult = await inspect({
       '/src/agent.ts': [
-        "import OpenAI from 'openai';",
+        "import Anthropic from '@anthropic-ai/sdk';",
         "import { findOrderTool as registeredFindOrder } from './find-order.js';",
         "import { loadInstruction as readInstruction } from './instructions.js';",
-        'const client = new OpenAI();',
+        'const client = new Anthropic();',
         'export const supportAgent = async () => {',
-        "  await client.responses.create({ instructions: 'static', tools: [] });",
-        '  return client.responses.create({ input: 1 });',
+        "  await client.messages.create({ system: 'static', tools: [] });",
+        '  return client.messages.create({ input: 1 });',
         '};',
         'void registeredFindOrder;',
         'void readInstruction;',
@@ -586,13 +763,13 @@ describe('openAiAdapter Core integration', () => {
     });
     const ambiguousResult = await inspect({
       '/src/agent.ts': [
-        "import OpenAI from 'openai';",
+        "import Anthropic from '@anthropic-ai/sdk';",
         "import { findOrderTool as registeredFindOrder } from './find-order.js';",
         "import { loadInstruction as readInstruction } from './instructions.js';",
-        'const client = new OpenAI();',
+        'const client = new Anthropic();',
         'export const supportAgent = async () => {',
-        '  await client.responses.create({ input: 1 });',
-        '  return client.responses.create({ ...dynamicRequest });',
+        '  await client.messages.create({ input: 1 });',
+        '  return client.messages.create({ ...dynamicRequest });',
         '};',
         'void registeredFindOrder;',
         'void readInstruction;',
@@ -600,24 +777,24 @@ describe('openAiAdapter Core integration', () => {
     });
 
     expect(closedResult.diagnostics.map(({ code }) => code)).toStrictEqual([
-      'OPENAI_INSTRUCTION_LOADER_NOT_WIRED',
-      'OPENAI_TOOL_REGISTRATION_NOT_WIRED',
+      'ANTHROPIC_INSTRUCTION_LOADER_NOT_WIRED',
+      'ANTHROPIC_TOOL_REGISTRATION_NOT_WIRED',
     ]);
     expect(ambiguousResult.diagnostics).toStrictEqual([]);
   });
 
-  test('suppresses negative relationship diagnostics for an aliased Responses candidate', async () => {
+  test('suppresses negative relationship diagnostics for an aliased Messages candidate', async () => {
     const result = await inspect({
       '/src/agent.ts': [
-        "import OpenAI from 'openai';",
+        "import Anthropic from '@anthropic-ai/sdk';",
         "import { findOrderTool as registeredFindOrder } from './find-order.js';",
         "import { loadInstruction as readInstruction } from './instructions.js';",
-        'const client = new OpenAI();',
+        'const client = new Anthropic();',
         'export const supportAgent = () => {',
-        '  client.responses.create({ input: 1 });',
-        '  const responses = client.responses;',
-        '  return responses.create({',
-        '    instructions: readInstruction(),',
+        '  client.messages.create({ input: 1 });',
+        '  const messages = client.messages;',
+        '  return messages.create({',
+        '    system: readInstruction(),',
         '    tools: [registeredFindOrder],',
         '  });',
         '};',
@@ -636,14 +813,14 @@ describe('openAiAdapter Core integration', () => {
   ])('does not trust a module tool array after a %s', async (_description, unsafeUse) => {
     const result = await inspect({
       '/src/agent.ts': [
-        "import OpenAI from 'openai';",
+        "import Anthropic from '@anthropic-ai/sdk';",
         "import { findOrderTool as registeredFindOrder } from './find-order.js';",
         "import { loadInstruction as readInstruction } from './instructions.js';",
-        'const client = new OpenAI();',
+        'const client = new Anthropic();',
         'const tools = [registeredFindOrder];',
         unsafeUse,
         'export const supportAgent = () =>',
-        '  client.responses.create({ instructions: readInstruction(), tools });',
+        '  client.messages.create({ system: readInstruction(), tools });',
       ].join('\n'),
     });
 
@@ -694,8 +871,8 @@ describe('openAiAdapter Core integration', () => {
   test('emits one agent-scoped package observation per supported declaration', async () => {
     const result = await inspect({
       '/package.json': JSON.stringify({
-        dependencies: { openai: '^7.4.0' },
-        peerDependencies: { openai: '>=7.4.0 <8.0.0' },
+        dependencies: { '@anthropic-ai/sdk': '^0.117.1' },
+        peerDependencies: { '@anthropic-ai/sdk': '>=0.117.1 <0.118.0' },
       }),
     });
     const packageEvidence = result.evidence.filter(({ kind }) => kind === 'runtime-package');
@@ -707,7 +884,7 @@ describe('openAiAdapter Core integration', () => {
           agentId: 'support',
           details: {
             compatibility: 'supported',
-            declaredRange: '^7.4.0',
+            declaredRange: '^0.117.1',
             dependencyKind: 'dependencies',
           },
         },
@@ -715,7 +892,7 @@ describe('openAiAdapter Core integration', () => {
           agentId: 'support',
           details: {
             compatibility: 'supported',
-            declaredRange: '>=7.4.0 <8.0.0',
+            declaredRange: '>=0.117.1 <0.118.0',
             dependencyKind: 'peerDependencies',
           },
         },
@@ -726,12 +903,14 @@ describe('openAiAdapter Core integration', () => {
   test('emits one unsupported-range diagnostic without package evidence', async () => {
     const result = await inspect({
       '/package.json': JSON.stringify({
-        dependencies: { openai: '7.3.0' },
-        peerDependencies: { openai: '<7.0.0' },
+        dependencies: { '@anthropic-ai/sdk': '0.116.0' },
+        peerDependencies: { '@anthropic-ai/sdk': '<0.100.0' },
       }),
     });
 
-    expect(result.diagnostics.map(({ code }) => code)).toContain('OPENAI_SDK_VERSION_UNSUPPORTED');
+    expect(result.diagnostics.map(({ code }) => code)).toContain(
+      'ANTHROPIC_SDK_VERSION_UNSUPPORTED',
+    );
     expect(result.evidence.some(({ kind }) => kind === 'runtime-package')).toBe(false);
   });
 
@@ -743,14 +922,14 @@ describe('openAiAdapter Core integration', () => {
           'agents:',
           '  alpha:',
           '    runtime:',
-          '      id: openai',
+          '      id: anthropic',
           '    bindings:',
           '      runtimeAgent:',
           '        path: /src/agent.ts',
           '        symbol: sharedAgent',
           '  beta:',
           '    runtime:',
-          '      id: openai',
+          '      id: anthropic',
           '    bindings:',
           '      runtimeAgent:',
           '        path: /src/agent.ts',
@@ -782,15 +961,15 @@ describe('openAiAdapter Core integration', () => {
         type: 'file',
       },
       {
-        content: JSON.stringify({ dependencies: { openai: '^7.4.0' } }),
+        content: JSON.stringify({ dependencies: { '@anthropic-ai/sdk': '^0.117.1' } }),
         path: '/package.json',
         type: 'file',
       },
       {
         content: [
-          "import OpenAI from 'openai';",
-          'const client = new OpenAI();',
-          'export const sharedAgent = () => client.responses.create({ input: 1 });',
+          "import Anthropic from '@anthropic-ai/sdk';",
+          'const client = new Anthropic();',
+          'export const sharedAgent = () => client.messages.create({ input: 1 });',
         ].join('\n'),
         path: '/src/agent.ts',
         type: 'file',
@@ -806,7 +985,9 @@ describe('openAiAdapter Core integration', () => {
         return memoryRepository.readFile(path, options);
       },
     };
-    const result = await createCore({ adapters: [openAiAdapter] }).inspectProject({ repository });
+    const result = await createCore({ adapters: [anthropicAdapter] }).inspectProject({
+      repository,
+    });
     const packageEvidence = result.evidence.filter(({ kind }) => kind === 'runtime-package');
 
     expect(result.diagnostics).toStrictEqual([]);
@@ -819,7 +1000,10 @@ describe('openAiAdapter Core integration', () => {
   test('suppresses derived tool evidence for an unsupported registration shape', async () => {
     const registration = fixture.entries
       .find(({ path }) => path === '/src/find-order.ts')
-      ?.text.replace('  strict: true,\n', '');
+      ?.text.replace(
+        "description: 'Retrieves one order by its identifier.'",
+        'description: buildDescription()',
+      );
 
     if (registration === undefined) {
       throw new TypeError('The registration fixture is required.');
@@ -852,7 +1036,7 @@ describe('openAiAdapter Core integration', () => {
     controller.abort(new Error('test cancellation'));
 
     await expect(
-      createCore({ adapters: [openAiAdapter] }).inspectProject({
+      createCore({ adapters: [anthropicAdapter] }).inspectProject({
         repository: createMemoryRepositoryReader(createEntries()),
         signal: controller.signal,
       }),

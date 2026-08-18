@@ -7,7 +7,7 @@ import type { IMoldeaCliCompatibilityStateInput } from './types.js';
 import { isMoldeaCliCompatibilityStateValid } from './validations.js';
 import {
   AVAILABLE_OPENAI_MATRIX_ENTRY,
-  createTestActiveOpenAiState,
+  createTestActivePackageAdaptersState,
   createTestCompatibilityState,
   createTestRuntimeAdapter,
 } from './compatibility.test-fixtures.js';
@@ -15,7 +15,7 @@ import {
 describe('isMoldeaCliCompatibilityStateValid', () => {
   test('accepts the exact generated, installed, and runtime composition', () => {
     expect(isMoldeaCliCompatibilityStateValid(createTestCompatibilityState())).toBe(true);
-    expect(isMoldeaCliCompatibilityStateValid(createTestActiveOpenAiState())).toBe(true);
+    expect(isMoldeaCliCompatibilityStateValid(createTestActivePackageAdaptersState())).toBe(true);
   });
 
   test.each([
@@ -134,7 +134,8 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
         packageMetadata: {
           ...state.packageMetadata,
           dependencies: {
-            '@moldea.ai/adapter-openai': '2.0.0',
+            '@moldea.ai/adapter-anthropic': '2.0.0',
+            '@moldea.ai/adapter-openai': '2.0.3',
             '@moldea.ai/core': '2.0.0',
             '@moldea.ai/repository': '1.0.1',
             '@moldea.ai/repository-fs': '1.0.1',
@@ -146,49 +147,12 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
   });
 
   test('treats active package-backed adapter registration order as semantically irrelevant', () => {
-    const state = createTestActiveOpenAiState();
-    const openAiEntry = state.releaseMetadata.matrix.adapters['openai'];
-
-    if (openAiEntry === undefined) {
-      throw new TypeError('The OpenAI matrix entry is required.');
-    }
+    const state = createTestActivePackageAdaptersState();
 
     expect(
       isMoldeaCliCompatibilityStateValid({
         ...state,
         activeAdapters: [createTestRuntimeAdapter('openai'), createTestRuntimeAdapter('anthropic')],
-        packageMetadata: {
-          ...state.packageMetadata,
-          dependencies: {
-            ...state.packageMetadata.dependencies,
-            '@moldea.ai/adapter-anthropic': 'workspace:2.0.0',
-          },
-          installedPackageVersions: {
-            ...state.packageMetadata.installedPackageVersions,
-            '@moldea.ai/adapter-anthropic': '2.0.0',
-          },
-        },
-        releaseMetadata: {
-          ...state.releaseMetadata,
-          activeAdapterIds: ['anthropic', 'openai'],
-          matrix: {
-            ...state.releaseMetadata.matrix,
-            adapters: {
-              ...state.releaseMetadata.matrix.adapters,
-              anthropic: {
-                ...openAiEntry,
-                implementation: {
-                  ...openAiEntry.implementation,
-                  package: '@moldea.ai/adapter-anthropic',
-                },
-              },
-            },
-          },
-          packages: [
-            { name: '@moldea.ai/adapter-anthropic', version: '2.0.0' },
-            ...state.releaseMetadata.packages,
-          ],
-        },
       }),
     ).toBe(true);
   });
@@ -199,7 +163,7 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
       [createTestRuntimeAdapter('openai'), createTestRuntimeAdapter('openai')],
     ],
     ['the built-in custom ID', [createTestRuntimeAdapter('custom')]],
-    ['a planned adapter', [createTestRuntimeAdapter('anthropic')]],
+    ['a planned adapter', [createTestRuntimeAdapter('claude-agent-sdk')]],
   ])('rejects active registration containing %s', (_description, activeAdapters) => {
     const state = createTestCompatibilityState();
 
@@ -207,7 +171,7 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
   });
 
   test('rejects an available adapter that is absent from active registration', () => {
-    const state = createTestActiveOpenAiState();
+    const state = createTestActivePackageAdaptersState();
 
     expect(isMoldeaCliCompatibilityStateValid({ ...state, activeAdapters: [] })).toBe(false);
   });
@@ -302,7 +266,9 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
       }),
     ],
   ])('rejects active-adapter mismatch in %s', (_description, mutate) => {
-    expect(isMoldeaCliCompatibilityStateValid(mutate(createTestActiveOpenAiState()))).toBe(false);
+    expect(isMoldeaCliCompatibilityStateValid(mutate(createTestActivePackageAdaptersState()))).toBe(
+      false,
+    );
   });
 
   test('rejects an available custom claim incompatible with bundled Core', () => {
@@ -375,10 +341,10 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
     ],
   ])('rejects a planned entry carrying prohibited %s', (_description, mutate) => {
     const state = createTestCompatibilityState();
-    const plannedEntry = state.releaseMetadata.matrix.adapters['anthropic'];
+    const plannedEntry = state.releaseMetadata.matrix.adapters['claude-agent-sdk'];
 
     if (plannedEntry === undefined) {
-      throw new TypeError('The planned Anthropic matrix entry is required.');
+      throw new TypeError('The planned Claude Agent SDK matrix entry is required.');
     }
 
     expect(
@@ -390,7 +356,7 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
             ...state.releaseMetadata.matrix,
             adapters: {
               ...state.releaseMetadata.matrix.adapters,
-              anthropic: mutate(plannedEntry),
+              'claude-agent-sdk': mutate(plannedEntry),
             },
           },
         },
@@ -401,7 +367,7 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
   test.each(['runtimeGuidance', 'targets', 'lastVerifiedAt'] as const)(
     'rejects an available adapter missing required %s',
     (propertyName) => {
-      const state = createTestActiveOpenAiState();
+      const state = createTestActivePackageAdaptersState();
       const openAiEntry = state.releaseMetadata.matrix.adapters['openai'];
 
       if (openAiEntry === undefined) {
@@ -430,7 +396,7 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
   );
 
   test('rejects an available package adapter without a current target', () => {
-    const state = createTestActiveOpenAiState();
+    const state = createTestActivePackageAdaptersState();
     const openAiEntry = state.releaseMetadata.matrix.adapters['openai'];
 
     if (openAiEntry === undefined || openAiEntry.targets === undefined) {
@@ -545,7 +511,7 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
   test('rejects deprecated custom and invalid deprecated replacement claims', () => {
     const state = createTestCompatibilityState();
     const customEntry = state.releaseMetadata.matrix.adapters['custom'];
-    const availableState = createTestActiveOpenAiState();
+    const availableState = createTestActivePackageAdaptersState();
     const openAiEntry = availableState.releaseMetadata.matrix.adapters['openai'];
 
     if (

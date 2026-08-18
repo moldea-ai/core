@@ -3,7 +3,10 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
-import { afterEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeAll, describe, expect, test } from 'vitest';
+
+import type { IRuntimeCompatibilityMatrix } from '../../../../../scripts/runtime-compatibility/types.ts';
+import type { IWebsiteModel } from '../model/types.ts';
 
 import {
   buildAdapterPages,
@@ -13,9 +16,16 @@ import {
   createWebsiteModel,
   discoverPublicPackages,
 } from './generation.ts';
-import type { IRuntimeCompatibilityMatrix } from '../../../../../scripts/runtime-compatibility/types.ts';
 
 const temporaryDirectories: string[] = [];
+let currentWebsiteModel: IWebsiteModel;
+
+// full TypeScript model generation can exceed the default hook timeout on Windows CI
+beforeAll(() => {
+  currentWebsiteModel = createWebsiteModel();
+}, 60_000);
+
+const getCurrentWebsiteModel = (): IWebsiteModel => structuredClone(currentWebsiteModel);
 
 const createTemporaryRepository = (): string => {
   const directory = mkdtempSync(join(tmpdir(), 'moldea-website-generation-'));
@@ -80,9 +90,10 @@ afterEach(() => {
 
 describe('discoverPublicPackages', () => {
   test('discovers the complete current public implementation set and package families', () => {
-    const model = createWebsiteModel();
+    const model = getCurrentWebsiteModel();
 
     expect(model.packages.map(({ name }) => name)).toStrictEqual([
+      '@moldea.ai/adapter-anthropic',
       '@moldea.ai/adapter-openai',
       '@moldea.ai/cli',
       '@moldea.ai/core',
@@ -90,6 +101,9 @@ describe('discoverPublicPackages', () => {
       '@moldea.ai/repository-fs',
     ]);
     expect(model.packages.find(({ slug }) => slug === 'adapter-openai')?.family).toBe(
+      'runtime-adapters',
+    );
+    expect(model.packages.find(({ slug }) => slug === 'adapter-anthropic')?.family).toBe(
       'runtime-adapters',
     );
     expect(
@@ -110,6 +124,66 @@ describe('discoverPublicPackages', () => {
 
     expect(discoverPublicPackages(repositoryRoot).map(({ slug }) => slug)).toStrictEqual([
       'public-package',
+    ]);
+  });
+
+  test('resolves public API types from private workspace packages without built declarations', () => {
+    const repositoryRoot = createTemporaryRepository();
+    const sharedPackageDirectory = join(repositoryRoot, 'packages', 'shared-contracts');
+    mkdirSync(join(sharedPackageDirectory, 'src'), { recursive: true });
+    writeFileSync(
+      join(sharedPackageDirectory, 'package.json'),
+      JSON.stringify({
+        name: '@moldea.ai/shared-contracts',
+        private: true,
+        exports: {
+          '.': {
+            types: './dist/index.d.ts',
+            import: './dist/index.js',
+          },
+        },
+      }),
+    );
+    writeFileSync(
+      join(sharedPackageDirectory, 'src', 'index.ts'),
+      'export interface ISharedContract { name: string; }\n',
+    );
+
+    writeProject(repositoryRoot, 'public-package', {
+      documents: { 'index.md': 'Public' },
+    });
+    const publicPackageDirectory = join(repositoryRoot, 'projects', 'public-package');
+    const publicPackageManifest = JSON.parse(
+      readFileSync(join(publicPackageDirectory, 'package.json'), 'utf8'),
+    ) as Record<string, unknown>;
+    publicPackageManifest.exports = {
+      '.': {
+        types: './dist/index.d.ts',
+        import: './dist/index.js',
+      },
+    };
+    writeFileSync(
+      join(publicPackageDirectory, 'package.json'),
+      JSON.stringify(publicPackageManifest),
+    );
+    writeFileSync(
+      join(publicPackageDirectory, 'src', 'index.ts'),
+      "import type { ISharedContract } from '@moldea.ai/shared-contracts';\n\nexport type IPublicContract = ISharedContract;\n",
+    );
+
+    expect(discoverPublicPackages(repositoryRoot)[0]?.api).toStrictEqual([
+      {
+        name: '.',
+        route: 'api',
+        symbols: [
+          {
+            description: '',
+            kind: 'type',
+            name: 'IPublicContract',
+            signature: 'export type IPublicContract = ISharedContract;',
+          },
+        ],
+      },
     ]);
   });
 
@@ -172,8 +246,8 @@ describe('discoverPublicPackages', () => {
 });
 
 describe('adapter and route generation', () => {
-  test('preserves planned, built-in available, and experimental package-backed states', () => {
-    const model = createWebsiteModel();
+  test('preserves built-in and experimental package-backed availability states', () => {
+    const model = getCurrentWebsiteModel();
     const custom = model.adapters.find(({ id }) => id === 'custom');
     const openAi = model.adapters.find(({ id }) => id === 'openai');
     const anthropic = model.adapters.find(({ id }) => id === 'anthropic');
@@ -190,10 +264,12 @@ describe('adapter and route generation', () => {
       },
     });
     expect(anthropic).toMatchObject({
-      implementedPackageSlug: null,
-      entry: { implementationStatus: 'planned' },
+      implementedPackageSlug: 'adapter-anthropic',
+      entry: {
+        implementationStatus: 'available',
+        targets: [{ supportLevel: 'experimental' }],
+      },
     });
-    expect(anthropic && 'targets' in anthropic.entry).toBe(false);
   });
 
   test('rejects an available package-backed adapter without an implemented package', () => {
@@ -217,7 +293,7 @@ describe('adapter and route generation', () => {
   });
 
   test('rejects two package documents resolving to one route', () => {
-    const model = createWebsiteModel();
+    const model = getCurrentWebsiteModel();
     const first = {
       ...model.packages[0],
       api: [],
@@ -237,7 +313,7 @@ describe('adapter and route generation', () => {
 
 describe('createLlmsText', () => {
   test('is deterministic under reversed source enumeration', () => {
-    const model = createWebsiteModel();
+    const model = getCurrentWebsiteModel();
 
     expect(createLlmsText([...model.packages].reverse(), [...model.adapters].reverse())).toBe(
       createLlmsText(model.packages, model.adapters),
@@ -245,7 +321,7 @@ describe('createLlmsText', () => {
   });
 
   test('represents every public package and canonical adapter without exposing the website package', () => {
-    const model = createWebsiteModel();
+    const model = getCurrentWebsiteModel();
     const text = createLlmsText(model.packages, model.adapters);
     const lines = text.split('\n');
 
@@ -272,13 +348,14 @@ describe('createLlmsText', () => {
     for (const route of internalLinks) expect(model.routes).toContain(route);
     expect(text).not.toContain('@moldea.ai/packages-website');
     expect(text).toContain('available; built into @moldea.ai/core; custom: supported');
+    expect(text).toContain('typescript-messages-api-0-117: experimental');
     expect(text).toContain('typescript-responses-api-7: experimental');
   });
 });
 
 describe('createSearchRecords', () => {
   test('represents every public package and canonical adapter', () => {
-    const model = createWebsiteModel();
+    const model = getCurrentWebsiteModel();
     const searchRecords = createSearchRecords(model.packages, model.adapters);
 
     for (const packageModel of model.packages) {
@@ -300,7 +377,7 @@ describe('createSearchRecords', () => {
   });
 
   test('is deterministic under reversed source enumeration', () => {
-    const model = createWebsiteModel();
+    const model = getCurrentWebsiteModel();
 
     expect(
       createSearchRecords([...model.packages].reverse(), [...model.adapters].reverse()),

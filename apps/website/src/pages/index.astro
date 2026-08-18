@@ -1,6 +1,8 @@
 ---
 import { ArrowRight, GitFork, Layers, ShieldCheck, Workflow } from '@lucide/astro';
 
+import AdapterCard from '../components/adapter-card.astro';
+import InlineBrandText from '../components/inline-brand-text.astro';
 import PackageCard from '../components/package-card.astro';
 import BaseLayout from '../layouts/base-layout.astro';
 import { loadWebsiteModel } from '../lib/generation/generation.ts';
@@ -9,6 +11,9 @@ import { withBase } from '../lib/site/url.ts';
 const model = loadWebsiteModel();
 const toolingPackages = model.packages.filter(({ family }) => family === 'skill-core-tooling');
 const adapterPackages = model.packages.filter(({ family }) => family === 'runtime-adapters');
+const availableAdapters = model.adapters.filter(
+  ({ entry }) => entry.implementationStatus === 'available',
+);
 const cliPackage = model.packages.find(({ slug }) => slug === 'cli');
 ---
 
@@ -16,38 +21,45 @@ const cliPackage = model.packages.find(({ slug }) => slug === 'cli');
   title="moldea packages"
   description="The open-source deterministic package foundation that powers moldea, the behavioral integrity layer for AI agents."
 >
-  <section class="page-shell pt-16 pb-12 sm:pt-24 lg:pt-32">
-    <p class="eyebrow mb-7">Open-source technical foundation</p>
-    <h1 class="display-title max-w-6xl font-semibold">
-      Behavioral integrity,<br />built in the open.
-    </h1>
-    <div class="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-end">
-      <p class="max-w-3xl text-xl leading-9 text-muted-foreground sm:text-2xl">
-        moldea is the behavioral integrity layer for AI agents. This repository provides the
-        deterministic readers, repository interpretation, local CLI, and runtime adapters that make
-        its behavior inspectable.
-      </p>
-      <div class="flex flex-wrap gap-3 lg:justify-end">
-        <a
-          class="inline-flex min-h-12 items-center gap-2 rounded-lg bg-primary px-5 py-3 font-bold text-primary-foreground"
-          href={withBase('/packages/')}
-        >
-          Explore packages <ArrowRight
-            class="size-4"
-            aria-hidden="true"
+  <section class="relative overflow-hidden border-b border-border">
+    <div
+      class="pointer-events-none absolute inset-0 [background-image:radial-gradient(circle_at_70%_18%,color-mix(in_oklch,var(--accent)_60%,transparent),transparent_30%),linear-gradient(to_right,color-mix(in_oklch,var(--border)_35%,transparent)_1px,transparent_1px),linear-gradient(to_bottom,color-mix(in_oklch,var(--border)_35%,transparent)_1px,transparent_1px)] [mask-image:linear-gradient(to_bottom,black,transparent_92%)] [background-size:auto,3rem_3rem,3rem_3rem] opacity-60"
+      aria-hidden="true"
+    >
+    </div>
+    <div class="page-shell relative pt-16 pb-20 sm:pt-24 sm:pb-24 lg:pt-32 lg:pb-32">
+      <p class="eyebrow mb-8">Open-source technical foundation</p>
+      <h1 class="display-title max-w-6xl font-semibold">
+        Behavioral integrity,<br />built in the open.
+      </h1>
+      <div class="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-end">
+        <p class="max-w-3xl text-xl leading-9 text-muted-foreground sm:text-2xl">
+          <InlineBrandText
+            text="moldea is the behavioral integrity layer for AI agents. This repository provides the deterministic readers, repository interpretation, local CLI, and runtime adapters that make its behavior inspectable."
           />
-        </a>
-        <a
-          class="inline-flex min-h-12 items-center gap-2 rounded-lg border border-input px-5 py-3 font-bold hover:bg-muted"
-          href="https://github.com/moldea-ai/packages"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <GitFork
-            class="size-4"
-            aria-hidden="true"
-          /> Source
-        </a>
+        </p>
+        <div class="flex flex-wrap gap-3 lg:justify-end">
+          <a
+            class="action-control action-primary min-h-12 gap-2 px-5 py-3 font-bold"
+            href={withBase('/packages/')}
+          >
+            Explore packages <ArrowRight
+              class="size-4"
+              aria-hidden="true"
+            />
+          </a>
+          <a
+            class="action-control action-outline min-h-12 gap-2 px-5 py-3 font-bold"
+            href="https://github.com/moldea-ai/packages"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <GitFork
+              class="size-4"
+              aria-hidden="true"
+            /> Source
+          </a>
+        </div>
       </div>
     </div>
   </section>
@@ -63,12 +75,14 @@ const cliPackage = model.packages.find(({ slug }) => slug === 'cli');
           id="architecture-title"
           class="section-title max-w-3xl font-semibold"
         >
-          Source bytes become trustworthy structure.
+          From source bytes to trusted structure.
         </h2>
       </div>
       <p class="max-w-xl leading-7 text-muted-foreground lg:justify-self-end">
-        The Agent Skill is the semantic local operating layer. It consumes this package foundation;
-        package contracts never depend back on the skill or on this website.
+        Repository readers preserve exact source state, Core turns it into deterministic project
+        structure, and runtime adapters add source-grounded evidence. The Agent Skill consumes that
+        foundation as its semantic operating layer; package contracts never depend back on the skill
+        or this website.
       </p>
     </div>
 
@@ -119,7 +133,9 @@ const cliPackage = model.packages.find(({ slug }) => slug === 'cli');
                 href={withBase(packageModel.route)}
               >
                 <p class="mb-5 font-mono text-xs text-muted-foreground">{packageModel.name}</p>
-                <p class="text-sm leading-6">{packageModel.description}</p>
+                <p class="text-sm leading-6">
+                  <InlineBrandText text={packageModel.description} />
+                </p>
               </a>
             ))
         }
@@ -161,53 +177,96 @@ const cliPackage = model.packages.find(({ slug }) => slug === 'cli');
     </div>
   </section>
 
-  <section class="page-shell py-section-gap">
-    <div class="grid gap-8 lg:grid-cols-[minmax(0,1fr)_25rem] lg:items-center">
+  <section
+    class="page-shell py-section-gap"
+    aria-labelledby="available-adapters-title"
+  >
+    <div class="mb-10 grid gap-5 lg:grid-cols-2 lg:items-end">
       <div>
-        <ShieldCheck
-          class="mb-7 size-9 text-foreground"
-          aria-hidden="true"
-        />
-        <p class="eyebrow mb-4">Compatibility without guesswork</p>
-        <h2 class="section-title max-w-4xl font-semibold">
-          Every runtime claim comes from one matrix.
+        <p class="eyebrow mb-4">Available runtime adapters</p>
+        <h2
+          id="available-adapters-title"
+          class="section-title max-w-4xl font-semibold"
+        >
+          Runtime-specific evidence, built in.
         </h2>
-        <p class="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">
-          Available, planned, experimental, supported, ambiguous, and unsupported remain distinct. A
-          specification does not become a compatibility claim until the canonical matrix says so.
-        </p>
       </div>
-      <div class="surface-card grid gap-3 p-5">
+      <div class="max-w-xl lg:justify-self-end">
+        <p class="leading-7 text-muted-foreground">
+          Official adapters add source-grounded runtime interpretation to Core without executing
+          application code. Available package-backed adapters and Core's built-in custom runtime
+          come directly from the compatibility matrix.
+        </p>
         <a
-          class="rounded-lg border p-4 font-semibold hover:bg-muted"
+          class="mt-5 inline-flex items-center gap-2 font-bold"
           href={withBase('/adapters/')}
         >
-          Runtime adapter inventory <span
-            class="float-end"
+          View all adapters <ArrowRight
+            class="size-4"
             aria-hidden="true"
-            >→</span
-          >
+          />
         </a>
-        <a
-          class="rounded-lg border p-4 font-semibold hover:bg-muted"
-          href={withBase('/compatibility/')}
-        >
-          Complete compatibility matrix <span
-            class="float-end"
+      </div>
+    </div>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {availableAdapters.map((adapter) => <AdapterCard {adapter} />)}
+    </div>
+    <p class="mt-5 text-xs leading-5 text-muted-foreground">
+      Company names and marks belong to their respective owners. Compatibility does not imply
+      endorsement.
+    </p>
+  </section>
+
+  <section class="border-t border-border">
+    <div class="page-shell py-section-gap">
+      <div class="grid gap-8 lg:grid-cols-[minmax(0,1fr)_25rem] lg:items-center">
+        <div>
+          <ShieldCheck
+            class="mb-7 size-9 text-foreground"
             aria-hidden="true"
-            >→</span
+          />
+          <p class="eyebrow mb-4">Compatibility without guesswork</p>
+          <h2 class="section-title max-w-4xl font-semibold">
+            Every runtime claim comes from one matrix.
+          </h2>
+          <p class="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">
+            Available, planned, experimental, supported, ambiguous, and unsupported remain distinct.
+            A specification does not become a compatibility claim until the canonical matrix says
+            so.
+          </p>
+        </div>
+        <div class="surface-card grid gap-3 p-5">
+          <a
+            class="rounded-lg border p-4 font-semibold hover:bg-muted"
+            href={withBase('/adapters/')}
           >
-        </a>
-        <a
-          class="rounded-lg border p-4 font-semibold hover:bg-muted"
-          href={withBase('/llms.txt')}
-        >
-          Machine-oriented ecosystem map <span
-            class="float-end"
-            aria-hidden="true"
-            >→</span
+            Runtime adapter inventory <span
+              class="float-end"
+              aria-hidden="true"
+              >→</span
+            >
+          </a>
+          <a
+            class="rounded-lg border p-4 font-semibold hover:bg-muted"
+            href={withBase('/compatibility/')}
           >
-        </a>
+            Complete compatibility matrix <span
+              class="float-end"
+              aria-hidden="true"
+              >→</span
+            >
+          </a>
+          <a
+            class="rounded-lg border p-4 font-semibold hover:bg-muted"
+            href={withBase('/llms.txt')}
+          >
+            Machine-oriented ecosystem map <span
+              class="float-end"
+              aria-hidden="true"
+              >→</span
+            >
+          </a>
+        </div>
       </div>
     </div>
   </section>

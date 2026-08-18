@@ -1,6 +1,8 @@
-import type { ISourcePosition } from '@moldea.ai/core';
-
-import type { IOpenAiSourceLocator, IOpenAiTextResult } from '../contracts/index.js';
+import type {
+  IStaticAnalysisSourceLocator,
+  IStaticAnalysisSourcePosition,
+  IStaticAnalysisTextResult,
+} from '../types.js';
 
 const decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
 
@@ -22,11 +24,11 @@ const findLineIndex = (lineStarts: readonly number[], offset: number): number =>
 };
 
 /**
- * Creates a TypeScript UTF-16-offset to Core Unicode-scalar source locator.
+ * Creates a TypeScript UTF-16-offset to Unicode-scalar source locator.
  * @param value The normalized valid Unicode-scalar text.
  * @returns The scalar-aware source locator.
  */
-export const createOpenAiSourceLocator = (value: string): IOpenAiSourceLocator => {
+export const createSourceLocator = (value: string): IStaticAnalysisSourceLocator => {
   const scalarOffsets = new Uint32Array(value.length + 1);
   const lineStarts = [0];
   let scalarOffset = 0;
@@ -50,7 +52,7 @@ export const createOpenAiSourceLocator = (value: string): IOpenAiSourceLocator =
     }
   }
 
-  const locatePosition = (candidateOffset: number): ISourcePosition => {
+  const locatePosition = (candidateOffset: number): IStaticAnalysisSourcePosition => {
     const codeUnitOffset = Math.max(0, Math.min(value.length, candidateOffset));
     const lineIndex = findLineIndex(lineStarts, codeUnitOffset);
     const lineStart = lineStarts[lineIndex] ?? 0;
@@ -73,11 +75,11 @@ export const createOpenAiSourceLocator = (value: string): IOpenAiSourceLocator =
 };
 
 /**
- * Decodes and normalizes repository bytes through the adapter text contract.
+ * Decodes and normalizes source bytes through the runtime-adapter text contract.
  * @param bytes The exact reader-owned source bytes.
  * @returns The normalized text and locator or an invalid-text result.
  */
-export const normalizeOpenAiText = (bytes: Uint8Array): IOpenAiTextResult => {
+export const normalizeText = (bytes: Uint8Array): IStaticAnalysisTextResult => {
   let decoded: string;
 
   try {
@@ -94,7 +96,7 @@ export const normalizeOpenAiText = (bytes: Uint8Array): IOpenAiTextResult => {
   }
 
   return Object.freeze({
-    locator: createOpenAiSourceLocator(value),
+    locator: createSourceLocator(value),
     valid: true,
     value,
   });

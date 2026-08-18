@@ -6,7 +6,7 @@ The matrix publishes only the verified targets and support boundaries shown belo
 
 | Adapter ID          | Owning package                         | Implementation | Distribution | Implementation range | Status      | Runtime guidance | Verified targets |
 | ------------------- | -------------------------------------- | -------------- | ------------ | -------------------- | ----------- | ---------------- | ---------------: |
-| `anthropic`         | `@moldea.ai/adapter-anthropic`         | `package`      | `public`     | —                    | `planned`   | —                |              `0` |
+| `anthropic`         | `@moldea.ai/adapter-anthropic`         | `package`      | `public`     | `^2.0.0`             | `available` | `optional`       |              `1` |
 | `claude-agent-sdk`  | `@moldea.ai/adapter-claude-agent-sdk`  | `package`      | `public`     | —                    | `planned`   | —                |              `0` |
 | `cloudflare-agents` | `@moldea.ai/adapter-cloudflare-agents` | `package`      | `public`     | —                    | `planned`   | —                |              `0` |
 | `custom`            | `@moldea.ai/core`                      | `built-in`     | `public`     | —                    | `available` | `required`       |              `1` |
@@ -17,6 +17,62 @@ The matrix publishes only the verified targets and support boundaries shown belo
 | `openai`            | `@moldea.ai/adapter-openai`            | `package`      | `public`     | `^2.0.0`             | `available` | `recommended`    |              `1` |
 | `openai-agents-sdk` | `@moldea.ai/adapter-openai-agents-sdk` | `package`      | `public`     | —                    | `planned`   | —                |              `0` |
 | `vercel-ai-sdk`     | `@moldea.ai/adapter-vercel-ai-sdk`     | `package`      | `public`     | —                    | `planned`   | —                |              `0` |
+
+## Adapter: `anthropic`
+
+- Owning package: `@moldea.ai/adapter-anthropic`
+- Implementation range: `^2.0.0`
+- Supported repository-format versions: `1`
+- Compatible Core range: `^2.0.0`
+- Runtime guidance: `optional`
+- Last verified: `2026-08-17`
+
+Runtime guidance notes: Project-local guidance is needed only for repository-specific wrappers or unsupported indirect integration patterns.
+
+### Target: `typescript-messages-api-0-117`
+
+- Kind: `package`
+- Support level: `experimental`
+- Language: `typescript`
+- Evidence kinds: `instruction-loader`, `language`, `runtime-package`, `runtime-pattern`, `schema`, `tool-registration`
+- Last verified: `2026-08-17`
+
+| Ecosystem | Package             | Role      | Verified range       |
+| --------- | ------------------- | --------- | -------------------- |
+| `npm`     | `@anthropic-ai/sdk` | `primary` | `>=0.117.1 <0.118.0` |
+
+#### Binding support
+
+| Subject              | Relationship | Symbol |
+| -------------------- | ------------ | ------ |
+| `runtime-agent`      | `full`       | `full` |
+| `instruction-loader` | `full`       | `full` |
+| `tool-registration`  | `full`       | `full` |
+| `tool-input-schema`  | `full`       | `full` |
+
+#### Patterns
+
+| Kind                 | Pattern                        | Support       | Description                                                                                                        | Notes |
+| -------------------- | ------------------------------ | ------------- | ------------------------------------------------------------------------------------------------------------------ | ----- |
+| `instruction-loader` | `direct-system-loader`         | `full`        | A directly bound instruction loader supplies the top-level system request property.                                | —     |
+| `runtime`            | `direct-messages-create`       | `full`        | Direct Anthropic Messages API invocation through a module-local client in a directly exported TypeScript function. | —     |
+| `runtime`            | `dynamic-request-construction` | `ambiguous`   | Dynamically assembled Messages requests cannot be mapped reliably without semantic analysis.                       | —     |
+| `schema`             | `direct-tool-input-schema`     | `full`        | A bound tool input schema is referenced directly through the client tool input_schema property.                    | —     |
+| `tool`               | `closed-client-tool-array`     | `full`        | Closed inline or immutable module-local arrays contain statically declared Anthropic client tools.                 | —     |
+| `tool`               | `provider-server-tools`        | `unsupported` | Anthropic provider or server tools are outside the initial client-tool target.                                     | —     |
+
+#### Provider limits
+
+| Subject     | Limit              | Kind      | Value                   | Description                                                                                         | Reference                                          |
+| ----------- | ------------------ | --------- | ----------------------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| `tool-name` | `client-tool-name` | `pattern` | `^[A-Za-z0-9_-]{1,64}$` | Anthropic client-tool names match the complete ASCII letter, digit, underscore, and hyphen pattern. | Anthropic Messages API reference for client tools. |
+
+#### Known limitations
+
+- Arbitrary compiler resolution, path aliases, directory indexes, package exports, and re-export graphs are not resolved.
+- Beta resources, client.messages.stream, parse helpers, and tool-runner abstractions are not interpreted; an exact stream property on direct messages.create requests is tolerated, but its semantics are not validated.
+- Client-tool input-schema contents, including the provider-required top-level type object, are not validated; the target establishes only direct schema wiring.
+- Source forms outside the verified TypeScript ESM target, dynamic factories, mutable requests, provider tools, output schemas, runtime variables, and handoffs are outside the initial target.
 
 ## Adapter: `custom`
 
@@ -50,7 +106,7 @@ Runtime guidance notes: Project-local guidance defines the custom runtime integr
 - Supported repository-format versions: `1`
 - Compatible Core range: `^2.0.0`
 - Runtime guidance: `recommended`
-- Last verified: `2026-08-15`
+- Last verified: `2026-08-17`
 
 Runtime guidance notes: Document project-specific model selection, tool execution, streaming, retry, and error behavior that static inspection cannot establish.
 
@@ -60,7 +116,7 @@ Runtime guidance notes: Document project-specific model selection, tool executio
 - Support level: `experimental`
 - Language: `typescript`
 - Evidence kinds: `instruction-loader`, `language`, `runtime-package`, `runtime-pattern`, `schema`, `tool-registration`
-- Last verified: `2026-08-15`
+- Last verified: `2026-08-17`
 
 | Ecosystem | Package  | Role      | Verified range   |
 | --------- | -------- | --------- | ---------------- |

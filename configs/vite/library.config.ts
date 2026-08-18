@@ -9,6 +9,7 @@ export type ILibraryBuildPlatform = 'environment-neutral' | 'node';
 export interface ILibraryBuildConfigOptions {
   readonly entry: Readonly<Record<string, string>>;
   readonly externalPackages?: readonly string[];
+  readonly isSourceMapEnabled?: boolean;
   readonly platform: ILibraryBuildPlatform;
   readonly rootDirectory: string;
 }
@@ -65,7 +66,7 @@ export const createLibraryConfig = (options: ILibraryBuildConfigOptions): UserCo
           entryFileNames: '[name].js',
         },
       },
-      sourcemap: true,
+      sourcemap: options.isSourceMapEnabled ?? true,
       target: 'es2023',
     },
   });

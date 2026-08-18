@@ -15,12 +15,19 @@ export const NPM_RELEASE_PROJECT_ORDER = [
   'repository',
   'repository-fs',
   'core',
+  'adapter-anthropic',
   'adapter-openai',
   'cli',
 ] as const satisfies readonly INpmReleaseProject[];
 
 // public package identities currently eligible for release
 export const NPM_RELEASE_PROJECTS = {
+  'adapter-anthropic': {
+    artifactPrefix: 'moldea.ai-adapter-anthropic',
+    packageName: '@moldea.ai/adapter-anthropic',
+    projectDirectory: 'projects/adapter-anthropic',
+    tagPrefix: 'adapter-anthropic-v',
+  },
   'adapter-openai': {
     artifactPrefix: 'moldea.ai-adapter-openai',
     packageName: '@moldea.ai/adapter-openai',

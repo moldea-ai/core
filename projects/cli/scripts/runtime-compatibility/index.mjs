@@ -64,6 +64,11 @@ const executeFixtureGit = (consumerDirectory, hooksDirectory, environment, argum
 const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
   const tarballNames = await readdir(artifactDirectory);
   const packageTarballNames = {
+    '@moldea.ai/adapter-anthropic': selectPackageTarball(
+      tarballNames,
+      /^moldea\.ai-adapter-anthropic-.+\.tgz$/u,
+      '@moldea.ai/adapter-anthropic',
+    ),
     '@moldea.ai/adapter-openai': selectPackageTarball(
       tarballNames,
       /^moldea\.ai-adapter-openai-.+\.tgz$/u,
@@ -155,12 +160,13 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     };
 
     assertRuntimeInvariant(cliManifest?.name === '@moldea.ai/cli', 'The CLI identity is invalid.');
-    assertRuntimeInvariant(cliManifest?.version === '2.0.0', 'The CLI version is invalid.');
+    assertRuntimeInvariant(cliManifest?.version === '3.0.0', 'The CLI version is invalid.');
     assertRuntimeInvariant(
       cliManifest?.engines?.node === '^22.11.0 || ^24.11.0',
       'The CLI runtime range is invalid.',
     );
     for (const packageName of [
+      '@moldea.ai/adapter-anthropic',
       '@moldea.ai/adapter-openai',
       '@moldea.ai/core',
       '@moldea.ai/repository',
@@ -180,7 +186,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
 
     assertRuntimeInvariant(versionResult.status === 0, 'The installed CLI version command failed.');
     assertRuntimeInvariant(versionResult.stderr === '', 'The version command wrote stderr.');
-    assertRuntimeInvariant(versionResult.stdout === '2.0.0\n', 'The version output is invalid.');
+    assertRuntimeInvariant(versionResult.stdout === '3.0.0\n', 'The version output is invalid.');
 
     const compatibilityResult = executeCli(
       executablePath,
@@ -189,6 +195,9 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
       environment,
     );
     const compatibilityEnvelope = JSON.parse(compatibilityResult.stdout);
+    const anthropicAdapter = compatibilityEnvelope.result?.adapters?.find(
+      ({ id }) => id === 'anthropic',
+    );
     const customAdapter = compatibilityEnvelope.result?.adapters?.find(({ id }) => id === 'custom');
     const openAiAdapter = compatibilityEnvelope.result?.adapters?.find(({ id }) => id === 'openai');
 
@@ -206,7 +215,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
       'The compatibility result is invalid.',
     );
     assertRuntimeInvariant(
-      compatibilityEnvelope.cliVersion === '2.0.0' &&
+      compatibilityEnvelope.cliVersion === '3.0.0' &&
         compatibilityEnvelope.schemaVersion === 1 &&
         compatibilityEnvelope.result?.outputSchemaVersion === 1,
       'The compatibility envelope is invalid.',
@@ -214,7 +223,8 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     assertRuntimeInvariant(
       JSON.stringify(compatibilityEnvelope.result?.packages) ===
         JSON.stringify([
-          { name: '@moldea.ai/adapter-openai', version: '2.0.0' },
+          { name: '@moldea.ai/adapter-anthropic', version: '2.0.0' },
+          { name: '@moldea.ai/adapter-openai', version: '2.0.3' },
           { name: '@moldea.ai/core', version: '2.0.0' },
           { name: '@moldea.ai/repository', version: '1.0.1' },
           { name: '@moldea.ai/repository-fs', version: '1.0.1' },
@@ -235,8 +245,19 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
       'The custom compatibility claim is invalid.',
     );
     assertRuntimeInvariant(
+      anthropicAdapter?.active === true &&
+        anthropicAdapter.bundledVersion === '2.0.0' &&
+        anthropicAdapter.matrix?.implementationStatus === 'available' &&
+        anthropicAdapter.matrix?.compatibleCoreRange === '^2.0.0' &&
+        anthropicAdapter.matrix?.runtimeGuidance?.expectation === 'optional' &&
+        JSON.stringify(anthropicAdapter.matrix?.supportedRepositoryFormatVersions) === '[1]' &&
+        anthropicAdapter.matrix?.targets?.[0]?.id === 'typescript-messages-api-0-117' &&
+        anthropicAdapter.matrix?.targets?.[0]?.supportLevel === 'experimental',
+      'The Anthropic compatibility claim is invalid.',
+    );
+    assertRuntimeInvariant(
       openAiAdapter?.active === true &&
-        openAiAdapter.bundledVersion === '2.0.0' &&
+        openAiAdapter.bundledVersion === '2.0.3' &&
         openAiAdapter.matrix?.implementationStatus === 'available' &&
         openAiAdapter.matrix?.compatibleCoreRange === '^2.0.0' &&
         openAiAdapter.matrix?.runtimeGuidance?.expectation === 'recommended' &&

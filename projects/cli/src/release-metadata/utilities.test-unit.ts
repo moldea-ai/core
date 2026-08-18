@@ -30,11 +30,11 @@ const expectDeeplyFrozen = (root: object): void => {
 describe('CLI release metadata immutability', () => {
   test('deeply freezes generated release metadata with exact current composition', () => {
     expect(MOLDEA_CLI_RELEASE_METADATA).toMatchObject({
-      activeAdapterIds: ['openai'],
+      activeAdapterIds: ['anthropic', 'openai'],
       cliPackage: {
         name: '@moldea.ai/cli',
         supportedNodeRange: '^22.11.0 || ^24.11.0',
-        version: '2.0.0',
+        version: '3.0.0',
       },
       coreRecognizedAdapterIds: [
         'anthropic',
@@ -52,7 +52,8 @@ describe('CLI release metadata immutability', () => {
       minimumGitVersion: '2.30.0',
       outputSchemaVersion: 1,
       packages: [
-        { name: '@moldea.ai/adapter-openai', version: '2.0.0' },
+        { name: '@moldea.ai/adapter-anthropic', version: '2.0.0' },
+        { name: '@moldea.ai/adapter-openai', version: '2.0.3' },
         { name: '@moldea.ai/core', version: '2.0.0' },
         { name: '@moldea.ai/repository', version: '1.0.1' },
         { name: '@moldea.ai/repository-fs', version: '1.0.1' },
@@ -90,7 +91,10 @@ describe('CLI release metadata immutability', () => {
     expect(
       Object.entries(MOLDEA_CLI_RELEASE_METADATA.matrix.adapters).every(
         ([adapterId, { implementationStatus }]) =>
-          adapterId === 'custom' || adapterId === 'openai' || implementationStatus === 'planned',
+          adapterId === 'anthropic' ||
+          adapterId === 'custom' ||
+          adapterId === 'openai' ||
+          implementationStatus === 'planned',
       ),
     ).toBe(true);
     expectDeeplyFrozen(MOLDEA_CLI_RELEASE_METADATA);

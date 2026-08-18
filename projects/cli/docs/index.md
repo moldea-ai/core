@@ -18,7 +18,7 @@ The package exposes no supported JavaScript or TypeScript import API. Its public
 
 ## Composition
 
-The CLI composes `@moldea.ai/repository`, `@moldea.ai/repository-fs`, `@moldea.ai/core`, and the currently active package-backed adapters. The `custom` runtime remains built into Core. The OpenAI adapter is active for the matrix's experimental TypeScript Responses API target.
+The CLI composes `@moldea.ai/repository`, `@moldea.ai/repository-fs`, `@moldea.ai/core`, and the currently active package-backed adapters. The `custom` runtime remains built into Core. The Anthropic and OpenAI adapters are active for the matrix's experimental TypeScript Messages and Responses API targets.
 
 The Agent Skill consumes this local executable as its deterministic package layer. Complete skill installation, workflows, and tutorials belong to the separate Agent Skill experience; this documentation covers only the CLI contract.
 

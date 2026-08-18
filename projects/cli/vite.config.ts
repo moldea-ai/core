@@ -7,6 +7,7 @@ const libraryConfig = createLibraryConfig({
     moldea: 'src/bin/index.ts',
   },
   externalPackages: [
+    '@moldea.ai/adapter-anthropic',
     '@moldea.ai/adapter-openai',
     '@moldea.ai/core',
     '@moldea.ai/repository',

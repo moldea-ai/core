@@ -12,6 +12,10 @@ import { expect } from 'vitest';
 // package and build paths shared by the installed-executable tests
 export const CLI_PROJECT_DIRECTORY = path.resolve(import.meta.dirname, '..', '..');
 const projectsDirectory = path.dirname(CLI_PROJECT_DIRECTORY);
+export const ADAPTER_ANTHROPIC_PROJECT_DIRECTORY = path.join(
+  projectsDirectory,
+  'adapter-anthropic',
+);
 export const ADAPTER_OPENAI_PROJECT_DIRECTORY = path.join(projectsDirectory, 'adapter-openai');
 export const CORE_PROJECT_DIRECTORY = path.join(projectsDirectory, 'core');
 export const REPOSITORY_PROJECT_DIRECTORY = path.join(projectsDirectory, 'repository');
@@ -130,7 +134,8 @@ export const readTarEntry = (tarball: Buffer, entryPath: string): Buffer => {
 export const expectPackageManifest = (
   manifest: IMoldeaCliPackageManifest,
   coreVersion: string,
-  adapterVersion: string,
+  anthropicAdapterVersion: string,
+  openAiAdapterVersion: string,
   repositoryVersion: string,
 ): void => {
   expect(manifest).toMatchObject({
@@ -141,10 +146,11 @@ export const expectPackageManifest = (
     name: '@moldea.ai/cli',
     preferUnplugged: true,
     type: 'module',
-    version: '2.0.0',
+    version: '3.0.0',
   });
   expect(manifest.dependencies).toStrictEqual({
-    '@moldea.ai/adapter-openai': adapterVersion,
+    '@moldea.ai/adapter-anthropic': anthropicAdapterVersion,
+    '@moldea.ai/adapter-openai': openAiAdapterVersion,
     '@moldea.ai/core': coreVersion,
     '@moldea.ai/repository': repositoryVersion,
     '@moldea.ai/repository-fs': repositoryVersion,

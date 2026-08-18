@@ -71,6 +71,156 @@ test('uses smooth client-side navigation while preserving ordinary static routes
   await expect(page.locator('html')).toHaveClass(/dark/);
 });
 
+test('marks the current desktop and mobile navigation destinations', async ({ page }) => {
+  await page.goto(toPublicPath('/packages/core/api/'));
+
+  const primaryNavigation = page.getByRole('navigation', { name: 'Primary navigation' });
+  const activeDesktopLink = primaryNavigation.locator('a[aria-current="page"]');
+  const inactiveDesktopLink = primaryNavigation.getByRole('link', { name: 'Adapters' });
+
+  await expect(activeDesktopLink).toHaveText('Packages');
+  expect(
+    await activeDesktopLink.evaluate((element) => getComputedStyle(element).backgroundColor),
+  ).not.toBe(
+    await inactiveDesktopLink.evaluate((element) => getComputedStyle(element).backgroundColor),
+  );
+
+  await page.getByRole('button', { name: 'Use dark theme' }).click();
+  await expect(page.locator('html')).toHaveClass(/dark/);
+  expect(
+    await activeDesktopLink.evaluate((element) => getComputedStyle(element).backgroundColor),
+  ).not.toBe(
+    await inactiveDesktopLink.evaluate((element) => getComputedStyle(element).backgroundColor),
+  );
+
+  await page.goto(toPublicPath('/search/'));
+  await expect(page.getByRole('link', { name: 'Search documentation' })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
+
+  await page.setViewportSize({ height: 740, width: 320 });
+  await page.goto(toPublicPath('/adapters/openai/api/'));
+  await page.getByLabel('Open navigation').click();
+
+  const mobileNavigation = page.getByRole('navigation', { name: 'Mobile navigation' });
+  const activeMobileLink = mobileNavigation.locator('a[aria-current="page"]');
+  const inactiveMobileLink = mobileNavigation.getByRole('link', { name: 'Packages' });
+
+  await expect(activeMobileLink).toHaveText('Adapters');
+  expect(
+    await activeMobileLink.evaluate((element) => getComputedStyle(element).backgroundColor),
+  ).not.toBe(
+    await inactiveMobileLink.evaluate((element) => getComputedStyle(element).backgroundColor),
+  );
+});
+
+test('presents available runtime adapters without promoting planned inventory', async ({
+  page,
+}) => {
+  await page.goto(toPublicPath('/'));
+
+  const adapterSection = page.locator('section[aria-labelledby="available-adapters-title"]');
+
+  await expect(
+    adapterSection.getByRole('heading', { level: 2, name: 'Runtime-specific evidence, built in.' }),
+  ).toBeVisible();
+  await expect(adapterSection.getByRole('link', { name: /anthropic/ })).toBeVisible();
+  await expect(adapterSection.getByRole('link', { name: /custom/ })).toBeVisible();
+  await expect(adapterSection.getByRole('link', { name: /openai/ })).toBeVisible();
+  await expect(adapterSection.getByAltText('Anthropic company logo')).toBeVisible();
+  await expect(adapterSection.getByRole('img', { name: 'Custom adapter icon' })).toBeVisible();
+  await expect(adapterSection.getByAltText('OpenAI company logo')).toBeVisible();
+  await expect(adapterSection.getByRole('link', { name: /claude-agent-sdk/ })).toHaveCount(0);
+  await expect(adapterSection.getByRole('link', { name: 'View all adapters' })).toHaveAttribute(
+    'href',
+    toPublicPath('/adapters/'),
+  );
+});
+
+test('shows company marks for provider adapters and keeps the custom adapter icon', async ({
+  page,
+}) => {
+  await page.goto(toPublicPath('/adapters/'));
+
+  for (const [companyName, expectedCount] of [
+    ['Anthropic', 2],
+    ['Cloudflare', 1],
+    ['Google', 1],
+    ['LangChain', 2],
+    ['OpenAI', 2],
+    ['Vercel', 2],
+  ] as const) {
+    await expect(page.getByAltText(`${companyName} company logo`)).toHaveCount(expectedCount);
+  }
+
+  const companyMarks = page.locator('img[alt$=" company logo"]');
+
+  await expect(companyMarks).toHaveCount(10);
+  await companyMarks.last().scrollIntoViewIfNeeded();
+  await expect
+    .poll(() =>
+      companyMarks.evaluateAll((images) =>
+        images.every(
+          (image) => image instanceof HTMLImageElement && image.complete && image.naturalWidth > 0,
+        ),
+      ),
+    )
+    .toBe(true);
+
+  const customAdapterCard = page.getByRole('link', { name: /Custom adapter icon/ });
+
+  await expect(customAdapterCard.getByRole('img', { name: 'Custom adapter icon' })).toBeVisible();
+  await expect(customAdapterCard.locator('img')).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Use dark theme' }).click();
+  await expect(page.locator('html')).toHaveClass(/dark/);
+  expect(
+    await page
+      .getByAltText('OpenAI company logo')
+      .first()
+      .evaluate((element) => getComputedStyle(element).filter),
+  ).not.toBe('none');
+});
+
+test('shows the same company marks in the compatibility summary table', async ({ page }) => {
+  await page.goto(toPublicPath('/compatibility/'));
+
+  const compatibilityTable = page.getByRole('table', {
+    name: 'Official moldea runtime adapter compatibility summary',
+  });
+
+  for (const [companyName, expectedCount] of [
+    ['Anthropic', 2],
+    ['Cloudflare', 1],
+    ['Google', 1],
+    ['LangChain', 2],
+    ['OpenAI', 2],
+    ['Vercel', 2],
+  ] as const) {
+    await expect(compatibilityTable.getByAltText(`${companyName} company logo`)).toHaveCount(
+      expectedCount,
+    );
+  }
+
+  const customAdapterLink = compatibilityTable.getByRole('link', {
+    name: /Custom adapter icon/,
+  });
+
+  await expect(customAdapterLink.getByRole('img', { name: 'Custom adapter icon' })).toBeVisible();
+  await expect(customAdapterLink.locator('img')).toHaveCount(0);
+});
+
+test('shows company marks for runtime adapters on the packages page', async ({ page }) => {
+  await page.goto(toPublicPath('/packages/'));
+
+  const runtimeAdapters = page.locator('section[aria-labelledby="adapter-packages-title"]');
+
+  await expect(runtimeAdapters.getByAltText('Anthropic company logo')).toBeVisible();
+  await expect(runtimeAdapters.getByAltText('OpenAI company logo')).toBeVisible();
+  await expect(runtimeAdapters.getByRole('img', { name: 'Custom adapter icon' })).toHaveCount(0);
+});
+
 test('has no page-level horizontal overflow at 320px on representative routes', async ({
   page,
 }) => {
@@ -99,6 +249,96 @@ test('keeps primary static routes free of serious automated accessibility violat
 
     expect(materialViolations, `${path} has material accessibility violations`).toStrictEqual([]);
   }
+});
+
+test('uses branded action states in both themes and respects reduced motion', async ({ page }) => {
+  await page.goto(toPublicPath('/'));
+
+  const primaryAction = page.getByRole('link', { name: 'Explore packages' });
+  const outlineAction = page.getByRole('link', { name: 'Source', exact: true });
+  const lightPrimaryBackground = await primaryAction.evaluate(
+    (element) => getComputedStyle(element).backgroundColor,
+  );
+  const lightOutlineBackground = await outlineAction.evaluate(
+    (element) => getComputedStyle(element).backgroundColor,
+  );
+
+  await primaryAction.hover();
+  await expect
+    .poll(() => primaryAction.evaluate((element) => getComputedStyle(element).backgroundColor))
+    .not.toBe(lightPrimaryBackground);
+
+  await outlineAction.hover();
+  await expect
+    .poll(() => outlineAction.evaluate((element) => getComputedStyle(element).backgroundColor))
+    .not.toBe(lightOutlineBackground);
+
+  const primaryActionBounds = await primaryAction.boundingBox();
+
+  if (primaryActionBounds === null) {
+    throw new Error('The primary action bounds could not be resolved.');
+  }
+
+  await page.mouse.move(
+    primaryActionBounds.x + primaryActionBounds.width / 2,
+    primaryActionBounds.y + primaryActionBounds.height / 2,
+  );
+  await page.mouse.down();
+  await expect
+    .poll(() => primaryAction.evaluate((element) => getComputedStyle(element).translate))
+    .not.toBe('none');
+  await page.mouse.move(0, 0);
+  await page.mouse.up();
+
+  await page.getByRole('button', { name: 'Use dark theme' }).click();
+  await expect(page.locator('html')).toHaveClass(/dark/);
+  const darkPrimaryBackground = await primaryAction.evaluate(
+    (element) => getComputedStyle(element).backgroundColor,
+  );
+
+  await primaryAction.hover();
+  await expect
+    .poll(() => primaryAction.evaluate((element) => getComputedStyle(element).backgroundColor))
+    .not.toBe(darkPrimaryBackground);
+
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await primaryAction.hover();
+  await page.mouse.down();
+  await expect(primaryAction).toHaveCSS('translate', 'none');
+  await expect(primaryAction).toHaveCSS('transition-property', 'none');
+  await page.mouse.move(0, 0);
+  await page.mouse.up();
+});
+
+test('uses the branded input surface in light and dark themes', async ({ page }) => {
+  await page.goto(toPublicPath('/search/'));
+
+  const searchInput = page.getByRole('searchbox', { name: 'Search documentation' });
+  const lightInputStyles = await searchInput.evaluate((element) => {
+    const styles = getComputedStyle(element);
+
+    return {
+      backgroundColor: styles.backgroundColor,
+      borderTopWidth: styles.borderTopWidth,
+      boxShadow: styles.boxShadow,
+    };
+  });
+
+  expect(lightInputStyles.backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
+  expect(lightInputStyles.borderTopWidth).toBe('1px');
+  expect(lightInputStyles.boxShadow).not.toBe('none');
+
+  await searchInput.focus();
+  await expect(searchInput).toBeFocused();
+  expect(await searchInput.evaluate((element) => getComputedStyle(element).boxShadow)).not.toBe(
+    lightInputStyles.boxShadow,
+  );
+
+  await page.getByRole('button', { name: 'Use dark theme' }).click();
+  await expect(page.locator('html')).toHaveClass(/dark/);
+  expect(
+    await searchInput.evaluate((element) => getComputedStyle(element).backgroundColor),
+  ).not.toBe('rgba(0, 0, 0, 0)');
 });
 
 test('searches the generated local index with a keyboard-submitted query', async ({ page }) => {

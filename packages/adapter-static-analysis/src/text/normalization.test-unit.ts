@@ -1,24 +1,24 @@
 // @vitest-environment node
 import { describe, expect, test } from 'vitest';
 
-import { normalizeOpenAiText } from './index.js';
+import { normalizeText } from './normalization.js';
 
-describe('normalizeOpenAiText', () => {
+describe('normalizeText', () => {
   test('normalizes a leading BOM and platform line endings', () => {
-    const result = normalizeOpenAiText(new TextEncoder().encode('\ufefffirst\r\nsecond\rthird\n'));
+    const result = normalizeText(new TextEncoder().encode('\ufefffirst\r\nsecond\rthird\n'));
 
     expect(result).toMatchObject({ valid: true, value: 'first\nsecond\nthird\n' });
   });
 
   test('rejects invalid UTF-8 and NUL', () => {
-    expect(normalizeOpenAiText(Uint8Array.from([0xff]))).toStrictEqual({ valid: false });
-    expect(normalizeOpenAiText(new TextEncoder().encode('invalid\0text'))).toStrictEqual({
+    expect(normalizeText(Uint8Array.from([0xff]))).toStrictEqual({ valid: false });
+    expect(normalizeText(new TextEncoder().encode('invalid\0text'))).toStrictEqual({
       valid: false,
     });
   });
 
   test('locates normalized positions with Unicode-scalar offsets', () => {
-    const result = normalizeOpenAiText(new TextEncoder().encode('a😀\r\nβ'));
+    const result = normalizeText(new TextEncoder().encode('a😀\r\nβ'));
 
     if (!result.valid) {
       throw new TypeError('The source fixture must be valid.');

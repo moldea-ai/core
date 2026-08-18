@@ -98,6 +98,11 @@ describe('npm release project changes', () => {
     const changes = await loadChanges(baseCommit, currentCommit);
 
     expect(changes).toStrictEqual({
+      'adapter-anthropic': {
+        currentVersion: '1.0.0',
+        isChanged: false,
+        previousVersion: '1.0.0',
+      },
       'adapter-openai': {
         currentVersion: '1.0.0',
         isChanged: false,
@@ -115,15 +120,15 @@ describe('npm release project changes', () => {
   });
 
   test('selects a newly introduced public project without a base package version', async () => {
-    const projectDirectory = NPM_RELEASE_PROJECTS['adapter-openai'].projectDirectory;
+    const projectDirectory = NPM_RELEASE_PROJECTS['adapter-anthropic'].projectDirectory;
 
     await rm(join(repositoryDirectory, projectDirectory), { recursive: true });
     const baseCommit = commitWorktree('test: establish the tree before the new project');
 
-    await writeProjectManifest('adapter-openai', '1.0.0');
+    await writeProjectManifest('adapter-anthropic', '1.0.0');
     await writeRepositoryFile(`${projectDirectory}/src/index.ts`, 'export const adapter = true;\n');
 
-    const currentCommit = commitWorktree('feat(adapter-openai): introduce the project');
+    const currentCommit = commitWorktree('feat(adapter-anthropic): introduce the project');
     const projectChanges = await loadChanges(baseCommit, currentCommit);
     const plan = createNpmReleaseWorkflowPlan({
       eventName: 'push',
@@ -132,7 +137,7 @@ describe('npm release project changes', () => {
       projectChanges,
     });
 
-    expect(projectChanges['adapter-openai']).toStrictEqual({
+    expect(projectChanges['adapter-anthropic']).toStrictEqual({
       currentVersion: '1.0.0',
       isChanged: true,
       previousVersion: null,
@@ -140,13 +145,14 @@ describe('npm release project changes', () => {
     expect(plan).toStrictEqual({
       mode: 'trusted',
       previousVersions: {
+        'adapter-anthropic': null,
         'adapter-openai': null,
         cli: null,
         core: null,
         repository: null,
         'repository-fs': null,
       },
-      projects: ['adapter-openai'],
+      projects: ['adapter-anthropic'],
       trigger: 'automatic',
     });
   });

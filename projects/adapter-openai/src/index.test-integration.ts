@@ -43,13 +43,16 @@ describe('@moldea.ai/adapter-openai public API', () => {
     expect(Object.keys(publicApi)).toStrictEqual(['openAiAdapter']);
   });
 
-  test('emits consumable public declarations without test files', () => {
+  test('emits consumable public artifacts without private imports or test files', () => {
     const declaration = readFileSync(new URL('../dist/index.d.ts', import.meta.url), 'utf8');
+    const runtime = readFileSync(new URL('../dist/index.js', import.meta.url), 'utf8');
 
     expect(declaration).toContain('openAiAdapter');
     expect(declaration).not.toContain('OPENAI_ADAPTER_DIAGNOSTICS');
     expect(declaration).not.toContain('IOpenAiAdapterDiagnosticCode');
+    expect(declaration).not.toContain('@moldea.ai/adapter-static-analysis');
     expect(declaration).not.toContain('.test-');
+    expect(runtime).not.toContain('@moldea.ai/adapter-static-analysis');
     execFileSync(
       process.execPath,
       [typescriptEntrypoint, '--project', path.join(publicApiFixtureDirectory, 'tsconfig.json')],
@@ -73,13 +76,17 @@ describe('@moldea.ai/adapter-openai public API', () => {
       readFileSync(path.join(projectDirectory, 'package.json'), 'utf8'),
     ) as { readonly dependencies?: Readonly<Record<string, string>> };
     const packedPaths = packResult.files.map((file) => file.path);
+    const packedCodePaths = packedPaths.filter(
+      (filePath) => filePath.startsWith('dist/') && /\.(?:d\.ts|js)$/u.test(filePath),
+    );
 
     expect(packResult).toMatchObject({
       name: '@moldea.ai/adapter-openai',
-      version: '2.0.0',
+      version: '2.0.3',
     });
     expect(packedPaths).toContain('dist/index.js');
     expect(packedPaths).toContain('dist/index.d.ts');
+    expect(packedPaths.every((filePath) => !filePath.endsWith('.js.map'))).toBe(true);
     expect(packedPaths).toContain('LICENSE');
     expect(packedPaths).toContain('README.md');
     expect(packedPaths).toContain('cover.png');
@@ -95,6 +102,14 @@ describe('@moldea.ai/adapter-openai public API', () => {
       ),
     ).toBe(true);
     expect(packedPaths.every((filePath) => !filePath.includes('.test-'))).toBe(true);
+    expect(
+      packedCodePaths.every(
+        (filePath) =>
+          !readFileSync(path.join(projectDirectory, filePath), 'utf8').includes(
+            '@moldea.ai/adapter-static-analysis',
+          ),
+      ),
+    ).toBe(true);
     expect(manifest.dependencies).toStrictEqual({
       '@moldea.ai/core': 'workspace:^2.0.0',
       '@moldea.ai/repository': 'workspace:^1.0.0',

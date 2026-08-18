@@ -61,6 +61,17 @@ describe('createLibraryConfig', () => {
     expect(external('node:fs', undefined, false)).toBe(false);
   });
 
+  it('allows packages to omit JavaScript source maps', () => {
+    const config = createLibraryConfig({
+      entry: { index: 'src/index.ts' },
+      isSourceMapEnabled: false,
+      platform: 'environment-neutral',
+      rootDirectory: import.meta.dirname,
+    });
+
+    expect(config.build?.sourcemap).toBe(false);
+  });
+
   it('externalizes Node.js built-ins for Node-specific packages', () => {
     const config = createLibraryConfig({
       entry: { index: 'src/index.ts' },

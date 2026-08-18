@@ -1,7 +1,7 @@
 ---
 import { GitFork, Menu, Search } from '@lucide/astro';
 
-import { withBase } from '../lib/site/url.ts';
+import { isPublicRouteActive, withBase } from '../lib/site/url.ts';
 import Logo from './logo.astro';
 import ThemeControl from './theme-control.astro';
 
@@ -10,6 +10,14 @@ const navigation = [
   { href: '/adapters/', label: 'Adapters' },
   { href: '/compatibility/', label: 'Compatibility' },
 ] as const;
+const currentPathname = Astro.url.pathname;
+const navigationItems = navigation.map(({ href, label }) => ({
+  href: withBase(href),
+  isActive: isPublicRouteActive(currentPathname, href),
+  label,
+}));
+const searchHref = withBase('/search/');
+const isSearchActive = isPublicRouteActive(currentPathname, '/search/');
 ---
 
 <header class="sticky top-0 z-50 border-b border-border bg-background/92 backdrop-blur-lg">
@@ -21,10 +29,16 @@ const navigation = [
       aria-label="Primary navigation"
     >
       {
-        navigation.map(({ href, label }) => (
+        navigationItems.map(({ href, isActive, label }) => (
           <a
-            class="rounded-lg px-3 py-2 text-sm font-semibold transition-colors hover:bg-muted"
-            href={withBase(href)}
+            class:list={[
+              'rounded-lg px-3 py-2 text-sm transition-colors',
+              isActive
+                ? 'bg-secondary/70 font-bold text-foreground dark:bg-secondary/50'
+                : 'font-semibold text-muted-foreground hover:bg-muted hover:text-foreground',
+            ]}
+            href={href}
+            aria-current={isActive ? 'page' : undefined}
           >
             {label}
           </a>
@@ -34,9 +48,13 @@ const navigation = [
 
     <div class="hidden items-center gap-2 md:flex">
       <a
-        class="inline-flex size-10 items-center justify-center rounded-lg hover:bg-muted"
-        href={withBase('/search/')}
+        class:list={[
+          'inline-flex size-10 items-center justify-center rounded-lg transition-colors',
+          isSearchActive ? 'bg-secondary/70 dark:bg-secondary/50' : 'hover:bg-muted',
+        ]}
+        href={searchHref}
         aria-label="Search documentation"
+        aria-current={isSearchActive ? 'page' : undefined}
       >
         <Search
           class="size-4"
@@ -76,18 +94,30 @@ const navigation = [
           aria-label="Mobile navigation"
         >
           {
-            navigation.map(({ href, label }) => (
+            navigationItems.map(({ href, isActive, label }) => (
               <a
-                class="rounded-lg px-3 py-3 font-semibold hover:bg-muted"
-                href={withBase(href)}
+                class:list={[
+                  'rounded-lg px-3 py-3 transition-colors',
+                  isActive
+                    ? 'bg-secondary/70 font-bold text-foreground dark:bg-secondary/50'
+                    : 'font-semibold text-muted-foreground hover:bg-muted hover:text-foreground',
+                ]}
+                href={href}
+                aria-current={isActive ? 'page' : undefined}
               >
                 {label}
               </a>
             ))
           }
           <a
-            class="rounded-lg px-3 py-3 font-semibold hover:bg-muted"
-            href={withBase('/search/')}
+            class:list={[
+              'rounded-lg px-3 py-3 transition-colors',
+              isSearchActive
+                ? 'bg-secondary/70 font-bold text-foreground dark:bg-secondary/50'
+                : 'font-semibold text-muted-foreground hover:bg-muted hover:text-foreground',
+            ]}
+            href={searchHref}
+            aria-current={isSearchActive ? 'page' : undefined}
           >
             Search
           </a>

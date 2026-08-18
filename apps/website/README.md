@@ -26,7 +26,7 @@ The default build inputs are `SITE_URL=https://packages.moldea.ai` and `BASE_PAT
 
 ## Design and rendering
 
-The application uses Astro static output, Tailwind CSS 4's CSS-first configuration, Ubuntu Sans Variable, local Lucide Astro icons, and semantic OKLCH tokens recreated from the current platform UI. Light and dark themes have distinct token sets. The pre-paint initializer applies system or persisted preference before rendering, while small browser scripts own theme selection, mobile-native disclosure behavior, reduced-motion-aware route transitions, and the generated local search index. Core documentation remains ordinary static HTML when JavaScript is disabled.
+The application uses Astro static output, Tailwind CSS 4's CSS-first configuration, Ubuntu Sans Variable, local Lucide Astro icons, and semantic OKLCH tokens recreated from the current platform UI. Light and dark themes have distinct token sets. Visible prose renders standalone `moldea` references as inline code so the product name remains distinct from surrounding copy. The pre-paint initializer applies system or persisted preference before rendering, while small browser scripts own theme selection, mobile-native disclosure behavior, reduced-motion-aware route transitions, and the generated local search index. Core documentation remains ordinary static HTML when JavaScript is disabled.
 
 The sibling platform repository is a design and specification reference only. The build never imports it, links it as a workspace, fetches private files, or requires it in CI.
 

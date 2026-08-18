@@ -23,7 +23,7 @@ Bindings must remain lexically visible at each matched use. Parameters or local 
 
 ## Responses request analysis
 
-Each supported call is analyzed independently. `instructions` and `tools` have separate closure: a dynamic unrelated property does not erase a statically provable relationship. Computed relationship properties, spreads, duplicate effective properties, shorthand members, methods, getters, or setters leave only the affected relationship unresolved.
+Each supported call is analyzed independently. `instructions` and `tools` have separate closure: a dynamic unrelated property does not erase a statically provable relationship. Exact shorthand relationship properties are treated as direct identifier values. Computed relationship properties, spreads, duplicate effective properties, methods, getters, or setters leave only the affected relationship unresolved.
 
 Positive evidence is existential across supported calls. A negative wiring diagnostic requires every relevant supported call to prove the relationship absent with no unresolved candidate. This prevents dynamic code from being mislabeled as a definite failure.
 

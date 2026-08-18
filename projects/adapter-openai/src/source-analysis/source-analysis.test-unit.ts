@@ -2,20 +2,18 @@
 import ts from 'typescript';
 import { describe, expect, test } from 'vitest';
 
+import {
+  getClosedObjectProperties,
+  getConstExport,
+  getRuntimeExport,
+  getStaticString,
+  isBoundIdentifier,
+  isStaticLiteralValue,
+  resolveImportCandidatePaths,
+} from '@moldea.ai/adapter-static-analysis';
 import { parseRepositoryPath } from '@moldea.ai/repository';
 
-import {
-  analyzeOpenAiResponses,
-  analyzeOpenAiSource,
-  getOpenAiClosedObjectProperties,
-  getOpenAiConstExport,
-  getOpenAiRuntimeExport,
-  getOpenAiStaticString,
-  isOpenAiBoundIdentifier,
-  isSafeOpenAiModuleArray,
-  isOpenAiStaticLiteralValue,
-  resolveOpenAiImportCandidatePaths,
-} from './index.js';
+import { analyzeOpenAiResponses, analyzeOpenAiSource } from './index.js';
 
 const analyze = (source: string) => {
   const result = analyzeOpenAiSource(
@@ -32,7 +30,7 @@ const analyze = (source: string) => {
 
 const findResponses = (source: string, symbol = 'agent') => {
   const analysis = analyze(source);
-  const runtime = getOpenAiRuntimeExport(analysis, symbol);
+  const runtime = getRuntimeExport(analysis, symbol);
 
   if (runtime.kind !== 'present-supported' || runtime.body === undefined) {
     throw new TypeError('The runtime fixture must use a supported export.');
@@ -47,7 +45,7 @@ describe('analyzeOpenAiSource', () => {
       [
         "import OpenAIClient from 'openai';",
         "import { loadInstruction as readInstruction } from './instructions.js';",
-        'const client = new OpenAIClient();',
+        'const client = new (OpenAIClient)();',
         'export const agent = async () =>',
         '  client.responses.create({ instructions: await readInstruction() });',
       ].join('\n'),
@@ -74,7 +72,7 @@ describe('analyzeOpenAiSource', () => {
     }
 
     expect(
-      isOpenAiBoundIdentifier(call.expression, analysis, {
+      isBoundIdentifier(call.expression, analysis, {
         path: parseRepositoryPath('/src/instructions.ts'),
         symbol: 'loadInstruction',
       }),
@@ -85,7 +83,7 @@ describe('analyzeOpenAiSource', () => {
     const analysis = analyze(
       "export const tool = ({ type: 'function', name: 'find_order' } as const) satisfies object;",
     );
-    const exported = getOpenAiConstExport(analysis, 'tool');
+    const exported = getConstExport(analysis, 'tool');
 
     if (
       exported.kind !== 'present-supported' ||
@@ -95,11 +93,11 @@ describe('analyzeOpenAiSource', () => {
       throw new TypeError('The registration fixture must be a supported object literal.');
     }
 
-    const properties = getOpenAiClosedObjectProperties(exported.expression);
+    const properties = getClosedObjectProperties(exported.expression);
 
     expect(properties).not.toBeNull();
-    expect(getOpenAiStaticString(properties?.get('type'))).toBe('function');
-    expect(getOpenAiStaticString(properties?.get('name'))).toBe('find_order');
+    expect(getStaticString(properties?.get('type'))).toBe('function');
+    expect(getStaticString(properties?.get('name'))).toBe('find_order');
   });
 
   test.each([
@@ -107,7 +105,7 @@ describe('analyzeOpenAiSource', () => {
     ["export const tool = { ['name']: 'first' };", 'computed property'],
     ["export const tool = { ...other, name: 'first' };", 'spread property'],
   ])('rejects a %s from closed object analysis', (source) => {
-    const exported = getOpenAiConstExport(analyze(source), 'tool');
+    const exported = getConstExport(analyze(source), 'tool');
 
     if (
       exported.kind !== 'present-supported' ||
@@ -117,7 +115,7 @@ describe('analyzeOpenAiSource', () => {
       throw new TypeError('The object fixture must be a direct exported constant.');
     }
 
-    expect(getOpenAiClosedObjectProperties(exported.expression)).toBeNull();
+    expect(getClosedObjectProperties(exported.expression)).toBeNull();
   });
 
   test('rejects invalid source text and syntax', () => {
@@ -211,13 +209,13 @@ describe('analyzeOpenAiSource', () => {
     ['undefined', '{ missing: undefined }', false],
   ])('classifies %s in the static schema grammar', (_description, expression, expected) => {
     const analysis = analyze(`export const schema = ${expression};`);
-    const schema = getOpenAiConstExport(analysis, 'schema');
+    const schema = getConstExport(analysis, 'schema');
 
     if (schema.kind !== 'present-supported' || schema.expression === undefined) {
       throw new TypeError('The schema fixture must be a direct exported constant.');
     }
 
-    expect(isOpenAiStaticLiteralValue(schema.expression)).toBe(expected);
+    expect(isStaticLiteralValue(schema.expression)).toBe(expected);
   });
 
   test('tracks an extracted Responses create member as an unresolved dynamic candidate', () => {
@@ -373,24 +371,24 @@ describe('analyzeOpenAiSource', () => {
     const defaultExport = analyze('export default function agent() {}');
     const indirectExport = analyze('const agent = () => undefined; export { agent };');
 
-    expect(getOpenAiRuntimeExport(defaultExport, 'agent').kind).toBe('present-unsupported');
-    expect(getOpenAiRuntimeExport(indirectExport, 'agent').kind).toBe('present-unsupported');
+    expect(getRuntimeExport(defaultExport, 'agent').kind).toBe('present-unsupported');
+    expect(getRuntimeExport(indirectExport, 'agent').kind).toBe('present-unsupported');
   });
 
   test('resolves only exact TypeScript and explicit JavaScript ESM source specifiers', () => {
     const containingPath = parseRepositoryPath('/src/agent.ts');
 
-    expect(resolveOpenAiImportCandidatePaths(containingPath, './tool.js')).toStrictEqual([
+    expect(resolveImportCandidatePaths(containingPath, './tool.js')).toStrictEqual([
       '/src/tool.ts',
       '/src/tool.tsx',
     ]);
-    expect(resolveOpenAiImportCandidatePaths(containingPath, './tool.mjs')).toStrictEqual([
+    expect(resolveImportCandidatePaths(containingPath, './tool.mjs')).toStrictEqual([
       '/src/tool.mts',
     ]);
-    expect(resolveOpenAiImportCandidatePaths(containingPath, './tool.ts')).toStrictEqual([
+    expect(resolveImportCandidatePaths(containingPath, './tool.ts')).toStrictEqual([
       '/src/tool.ts',
     ]);
-    expect(resolveOpenAiImportCandidatePaths(containingPath, './tool')).toStrictEqual([]);
+    expect(resolveImportCandidatePaths(containingPath, './tool')).toStrictEqual([]);
   });
 
   test('accepts reusable module tool arrays and rejects mutation or aliasing', () => {
@@ -482,17 +480,17 @@ describe('analyzeOpenAiSource', () => {
       ].join('\n'),
     );
 
-    expect(isSafeOpenAiModuleArray(safe, 'tools')).toBe(true);
-    expect(isSafeOpenAiModuleArray(safelyObserved, 'tools')).toBe(true);
-    expect(isSafeOpenAiModuleArray(mutated, 'tools')).toBe(false);
-    expect(isSafeOpenAiModuleArray(aliased, 'tools')).toBe(false);
-    expect(isSafeOpenAiModuleArray(computedMutation, 'tools')).toBe(false);
-    expect(isSafeOpenAiModuleArray(dynamicMutation, 'tools')).toBe(false);
-    expect(isSafeOpenAiModuleArray(deletedMember, 'tools')).toBe(false);
-    expect(isSafeOpenAiModuleArray(returnedFromConciseArrow, 'tools')).toBe(false);
-    expect(isSafeOpenAiModuleArray(destructuredMemberMutation, 'tools')).toBe(false);
-    expect(isSafeOpenAiModuleArray(contained, 'tools')).toBe(false);
-    expect(isSafeOpenAiModuleArray(callbackExposed, 'tools')).toBe(false);
-    expect(isSafeOpenAiModuleArray(forOfMemberMutation, 'tools')).toBe(false);
+    expect(safe.safeModuleArrayNames.has('tools')).toBe(true);
+    expect(safelyObserved.safeModuleArrayNames.has('tools')).toBe(true);
+    expect(mutated.safeModuleArrayNames.has('tools')).toBe(false);
+    expect(aliased.safeModuleArrayNames.has('tools')).toBe(false);
+    expect(computedMutation.safeModuleArrayNames.has('tools')).toBe(false);
+    expect(dynamicMutation.safeModuleArrayNames.has('tools')).toBe(false);
+    expect(deletedMember.safeModuleArrayNames.has('tools')).toBe(false);
+    expect(returnedFromConciseArrow.safeModuleArrayNames.has('tools')).toBe(false);
+    expect(destructuredMemberMutation.safeModuleArrayNames.has('tools')).toBe(false);
+    expect(contained.safeModuleArrayNames.has('tools')).toBe(false);
+    expect(callbackExposed.safeModuleArrayNames.has('tools')).toBe(false);
+    expect(forOfMemberMutation.safeModuleArrayNames.has('tools')).toBe(false);
   });
 });

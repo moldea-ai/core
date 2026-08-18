@@ -1,5 +1,20 @@
 import ts from 'typescript';
 
+import {
+  classifyDirectCallRelationship,
+  classifySchemaRelationship,
+  classifyToolRelationships,
+  getCallableExportState,
+  getClosedObjectProperties,
+  getConstExport,
+  getStaticString,
+  isBoundIdentifier,
+  isNullLiteral,
+  isStaticLiteralValue,
+  isStrictLiteral,
+  unwrapExpression,
+  type IStaticAnalysisSource,
+} from '@moldea.ai/adapter-static-analysis';
 import type { IIndexedAgent, IRuntimeAdapterEvidence } from '@moldea.ai/core';
 import type { IAdapterDiagnostic } from '@moldea.ai/core/adapter';
 import type { IRepositoryReference, IToolManifestEntry } from '@moldea.ai/core/format';
@@ -8,26 +23,9 @@ import { parseRepositoryPath } from '@moldea.ai/repository';
 import { OPENAI_ADAPTER_ID } from '../constants/index.js';
 import type {
   IOpenAiInspectionSession,
-  IOpenAiRequestRelationship,
   IOpenAiResponsesAnalysis,
   IOpenAiSourceAnalysis,
 } from '../contracts/index.js';
-import {
-  getOpenAiCallableExportState,
-  getOpenAiClosedArrayIdentifiers,
-  getOpenAiClosedObjectProperties,
-  getOpenAiConstExport,
-  getOpenAiDirectCall,
-  getOpenAiStaticString,
-  isOpenAiBoundIdentifier,
-  isOpenAiModuleBindingVisible,
-  isOpenAiNullLiteral,
-  isOpenAiStaticLiteralValue,
-  isOpenAiStrictLiteral,
-  isSafeOpenAiModuleArray,
-  resolveOpenAiImportCandidatePaths,
-  unwrapOpenAiExpression,
-} from '../source-analysis/index.js';
 import {
   addOpenAiDiagnostic,
   analyzeOpenAiBoundReference,
@@ -53,11 +51,6 @@ type IOpenAiRegistrationShapeResult =
   | { readonly kind: 'present-unsupported' }
   | ({ readonly kind: 'present-supported' } & IOpenAiRegistrationShape);
 
-type IOpenAiRelationshipResult =
-  | { readonly expression: ts.Expression | null; readonly kind: 'absent' }
-  | { readonly kind: 'ambiguous' }
-  | { readonly kind: 'present' };
-
 const getExpressionRange = (analysis: IOpenAiSourceAnalysis, expression: ts.Expression | null) =>
   expression === null
     ? null
@@ -65,26 +58,26 @@ const getExpressionRange = (analysis: IOpenAiSourceAnalysis, expression: ts.Expr
 
 const isSupportedRegistrationParameters = (
   expression: ts.Expression,
-  analysis: IOpenAiSourceAnalysis,
+  analysis: IStaticAnalysisSource,
   inputSchemaReference: IRepositoryReference | undefined,
 ): boolean => {
-  const candidate = unwrapOpenAiExpression(expression);
+  const candidate = unwrapExpression(expression);
 
   return (
-    isOpenAiNullLiteral(candidate) ||
-    (ts.isObjectLiteralExpression(candidate) && isOpenAiStaticLiteralValue(candidate)) ||
+    isNullLiteral(candidate) ||
+    (ts.isObjectLiteralExpression(candidate) && isStaticLiteralValue(candidate)) ||
     (ts.isIdentifier(candidate) &&
       inputSchemaReference?.symbol !== undefined &&
-      isOpenAiBoundIdentifier(candidate, analysis, inputSchemaReference))
+      isBoundIdentifier(candidate, analysis, inputSchemaReference))
   );
 };
 
 const getRegistrationShape = (
-  analysis: IOpenAiSourceAnalysis,
+  analysis: IStaticAnalysisSource,
   symbol: string,
   inputSchemaReference?: IRepositoryReference,
 ): IOpenAiRegistrationShapeResult => {
-  const exported = getOpenAiConstExport(analysis, symbol);
+  const exported = getConstExport(analysis, symbol);
 
   if (exported.kind === 'absent') {
     return { kind: 'absent' };
@@ -104,7 +97,7 @@ const getRegistrationShape = (
     return { kind: 'present-unsupported' };
   }
 
-  const properties = getOpenAiClosedObjectProperties(object);
+  const properties = getClosedObjectProperties(object);
 
   if (properties === null) {
     return { kind: 'present-unsupported' };
@@ -130,19 +123,19 @@ const getRegistrationShape = (
   const parameters = properties.get('parameters');
   const strict = properties.get('strict');
   const description = properties.get('description');
-  const detectedName = getOpenAiStaticString(name);
+  const detectedName = getStaticString(name);
   const isSupportedDescription =
     description === undefined ||
-    isOpenAiNullLiteral(description) ||
-    getOpenAiStaticString(description) !== null;
+    isNullLiteral(description) ||
+    getStaticString(description) !== null;
 
   if (
-    getOpenAiStaticString(type) !== 'function' ||
+    getStaticString(type) !== 'function' ||
     detectedName === null ||
     parameters === undefined ||
     !isSupportedRegistrationParameters(parameters, analysis, inputSchemaReference) ||
     strict === undefined ||
-    !isOpenAiStrictLiteral(strict) ||
+    !isStrictLiteral(strict) ||
     !isSupportedDescription
   ) {
     return { kind: 'present-unsupported' };
@@ -274,7 +267,7 @@ const inspectInputSchema = async (
     return;
   }
 
-  const schema = getOpenAiConstExport(schemaAnalysis, reference.symbol);
+  const schema = getConstExport(schemaAnalysis, reference.symbol);
 
   if (schema.kind === 'absent') {
     addOpenAiDiagnostic(
@@ -296,12 +289,9 @@ const inspectInputSchema = async (
     return;
   }
 
-  const candidate = unwrapOpenAiExpression(parameters);
+  const relationship = classifySchemaRelationship(registrationAnalysis, parameters, reference);
 
-  if (
-    ts.isIdentifier(candidate) &&
-    isOpenAiBoundIdentifier(candidate, registrationAnalysis, reference)
-  ) {
+  if (relationship.kind === 'present') {
     evidence.push(
       createOpenAiEvidence({
         agentId: agent.id,
@@ -320,17 +310,13 @@ const inspectInputSchema = async (
     return;
   }
 
-  const isProvablyDifferent =
-    isOpenAiNullLiteral(candidate) ||
-    (ts.isObjectLiteralExpression(candidate) && isOpenAiStaticLiteralValue(candidate));
-
-  if (isProvablyDifferent) {
+  if (relationship.kind === 'absent') {
     addOpenAiDiagnostic(
       diagnostics,
       'OPENAI_TOOL_INPUT_SCHEMA_NOT_WIRED',
       registrationAnalysis.path,
       agent.id,
-      getExpressionRange(registrationAnalysis, candidate),
+      getExpressionRange(registrationAnalysis, relationship.expression),
       capabilityId,
     );
   }
@@ -361,7 +347,7 @@ const inspectInstructionLoader = async (
     return;
   }
 
-  const loader = getOpenAiCallableExportState(loaderAnalysis, reference.symbol);
+  const loader = getCallableExportState(loaderAnalysis, reference.symbol);
 
   if (loader.kind === 'absent') {
     addOpenAiDiagnostic(
@@ -377,235 +363,38 @@ const inspectInstructionLoader = async (
     return;
   }
 
-  let absentExpression: ts.Expression | null = null;
-  let hasAmbiguousRelationship = responses.hasAmbiguousCandidate;
+  const relationship = classifyDirectCallRelationship(
+    runtimeAnalysis,
+    responses.requests.map((request) => request.instructions),
+    responses.hasAmbiguousCandidate,
+    reference,
+  );
 
-  for (const request of responses.requests) {
-    if (request.instructions.kind === 'unresolved') {
-      hasAmbiguousRelationship = true;
-      continue;
-    }
-
-    if (request.instructions.kind === 'absent') {
-      continue;
-    }
-
-    const instructions = request.instructions.expression;
-
-    const call = getOpenAiDirectCall(instructions);
-
-    if (call !== null) {
-      const callee = unwrapOpenAiExpression(call.expression);
-
-      if (ts.isIdentifier(callee) && isOpenAiBoundIdentifier(callee, runtimeAnalysis, reference)) {
-        evidence.push(
-          createOpenAiEvidence({
-            agentId: agent.id,
-            capabilityId: null,
-            capabilityKind: null,
-            details: { requestProperty: 'instructions' },
-            kind: 'instruction-loader',
-            references: [
-              { path: runtimeAnalysis.path },
-              { path: reference.path, symbol: reference.symbol },
-            ],
-            runtimeName: reference.symbol,
-            source: OPENAI_ADAPTER_ID,
-          }),
-        );
-        return;
-      }
-
-      if (ts.isIdentifier(callee)) {
-        absentExpression ??= instructions;
-        continue;
-      }
-    }
-
-    if (isOpenAiStaticLiteralValue(instructions)) {
-      absentExpression ??= instructions;
-    } else {
-      hasAmbiguousRelationship = true;
-    }
-  }
-
-  if (!hasAmbiguousRelationship) {
+  if (relationship.kind === 'present') {
+    evidence.push(
+      createOpenAiEvidence({
+        agentId: agent.id,
+        capabilityId: null,
+        capabilityKind: null,
+        details: { requestProperty: 'instructions' },
+        kind: 'instruction-loader',
+        references: [
+          { path: runtimeAnalysis.path },
+          { path: reference.path, symbol: reference.symbol },
+        ],
+        runtimeName: reference.symbol,
+        source: OPENAI_ADAPTER_ID,
+      }),
+    );
+  } else if (relationship.kind === 'absent') {
     addOpenAiDiagnostic(
       diagnostics,
       'OPENAI_INSTRUCTION_LOADER_NOT_WIRED',
       runtimeAnalysis.path,
       agent.id,
-      getExpressionRange(runtimeAnalysis, absentExpression),
+      getExpressionRange(runtimeAnalysis, relationship.expression),
     );
   }
-};
-
-const resolveClosedToolIdentifiers = (
-  relationship: IOpenAiRequestRelationship,
-  runtimeAnalysis: IOpenAiSourceAnalysis,
-): readonly ts.Identifier[] | null | undefined => {
-  if (relationship.kind === 'absent') {
-    return [];
-  }
-
-  if (relationship.kind === 'unresolved') {
-    return undefined;
-  }
-
-  const candidate = unwrapOpenAiExpression(relationship.expression);
-
-  if (ts.isArrayLiteralExpression(candidate)) {
-    return getOpenAiClosedArrayIdentifiers(candidate);
-  }
-
-  if (ts.isIdentifier(candidate) && isOpenAiModuleBindingVisible(candidate, runtimeAnalysis)) {
-    const moduleArray = runtimeAnalysis.moduleArrays.get(candidate.text);
-
-    if (moduleArray === undefined || !isSafeOpenAiModuleArray(runtimeAnalysis, candidate.text)) {
-      return null;
-    }
-
-    return getOpenAiClosedArrayIdentifiers(moduleArray.expression);
-  }
-
-  return isOpenAiStaticLiteralValue(candidate) ? [] : undefined;
-};
-
-const findMatchingRegistrations = (
-  identifier: ts.Identifier,
-  runtimeAnalysis: IOpenAiSourceAnalysis,
-  registrations: readonly IOpenAiRegistrationInspection[],
-): readonly IOpenAiRegistrationInspection[] =>
-  registrations.filter((registration) =>
-    isOpenAiBoundIdentifier(identifier, runtimeAnalysis, registration.reference),
-  );
-
-const resolveAdditionalRegistration = async (
-  session: IOpenAiInspectionSession,
-  identifier: ts.Identifier,
-  runtimeAnalysis: IOpenAiSourceAnalysis,
-): Promise<boolean> => {
-  if (!isOpenAiModuleBindingVisible(identifier, runtimeAnalysis)) {
-    return false;
-  }
-
-  let reference: IRepositoryReference & { readonly symbol: string };
-
-  if (runtimeAnalysis.exports.has(identifier.text)) {
-    reference = { path: runtimeAnalysis.path, symbol: identifier.text };
-  } else {
-    const namedImport = runtimeAnalysis.namedImports.get(identifier.text);
-
-    if (namedImport === undefined) {
-      return false;
-    }
-
-    const candidates = resolveOpenAiImportCandidatePaths(
-      runtimeAnalysis.path,
-      namedImport.moduleSpecifier,
-    ).map(parseRepositoryPath);
-    const entries = await Promise.all(candidates.map((path) => session.getEntry(path)));
-    session.signal?.throwIfAborted();
-    const filePaths = entries
-      .filter((entry) => entry?.type === 'file')
-      .map((entry) => entry?.path)
-      .filter((path) => path !== undefined);
-
-    if (filePaths.length !== 1 || filePaths[0] === undefined) {
-      return false;
-    }
-
-    reference = { path: filePaths[0], symbol: namedImport.importedName };
-  }
-
-  const result =
-    reference.path === runtimeAnalysis.path
-      ? { analysis: runtimeAnalysis, kind: 'valid' as const }
-      : await session.analyzeSource(reference.path);
-  session.signal?.throwIfAborted();
-
-  return (
-    result.kind === 'valid' &&
-    getRegistrationShape(result.analysis, reference.symbol).kind === 'present-supported'
-  );
-};
-
-const collectAdditionalRegistrations = async (
-  session: IOpenAiInspectionSession,
-  runtimeAnalysis: IOpenAiSourceAnalysis,
-  responses: IOpenAiResponsesAnalysis,
-  registrations: readonly IOpenAiRegistrationInspection[],
-): Promise<ReadonlySet<ts.Identifier>> => {
-  const supportedIdentifiers = new Set<ts.Identifier>();
-
-  for (const request of responses.requests) {
-    const identifiers = resolveClosedToolIdentifiers(request.tools, runtimeAnalysis);
-
-    if (identifiers === null || identifiers === undefined) {
-      continue;
-    }
-
-    for (const identifier of identifiers) {
-      if (findMatchingRegistrations(identifier, runtimeAnalysis, registrations).length !== 0) {
-        continue;
-      }
-
-      if (await resolveAdditionalRegistration(session, identifier, runtimeAnalysis)) {
-        supportedIdentifiers.add(identifier);
-      }
-    }
-  }
-
-  return supportedIdentifiers;
-};
-
-const classifyToolRelationship = (
-  runtimeAnalysis: IOpenAiSourceAnalysis,
-  responses: IOpenAiResponsesAnalysis,
-  target: IOpenAiRegistrationInspection,
-  registrations: readonly IOpenAiRegistrationInspection[],
-  additionalRegistrations: ReadonlySet<ts.Identifier>,
-): IOpenAiRelationshipResult => {
-  let absentExpression: ts.Expression | null = null;
-  let hasAmbiguousRelationship = responses.hasAmbiguousCandidate;
-
-  for (const request of responses.requests) {
-    const identifiers = resolveClosedToolIdentifiers(request.tools, runtimeAnalysis);
-
-    if (identifiers === null || identifiers === undefined) {
-      hasAmbiguousRelationship = true;
-      continue;
-    }
-
-    let isClosedRegistrationArray = true;
-    let containsTarget = false;
-
-    for (const identifier of identifiers) {
-      const matches = findMatchingRegistrations(identifier, runtimeAnalysis, registrations);
-
-      if (matches.length === 1) {
-        containsTarget ||= matches[0] === target;
-      } else if (matches.length !== 0 || !additionalRegistrations.has(identifier)) {
-        isClosedRegistrationArray = false;
-        break;
-      }
-    }
-
-    if (!isClosedRegistrationArray) {
-      hasAmbiguousRelationship = true;
-      continue;
-    }
-
-    if (containsTarget) {
-      return { kind: 'present' };
-    }
-
-    absentExpression ??= request.tools.kind === 'present' ? request.tools.expression : null;
-  }
-
-  return hasAmbiguousRelationship
-    ? { kind: 'ambiguous' }
-    : { expression: absentExpression, kind: 'absent' };
 };
 
 const inspectToolRelationships = async (
@@ -641,22 +430,22 @@ const inspectToolRelationships = async (
     }
   }
 
-  const additionalRegistrations = await collectAdditionalRegistrations(
-    session,
-    runtimeAnalysis,
-    responses,
-    registrations,
-  );
-
-  for (const registration of registrations) {
-    const relationship = classifyToolRelationship(
-      runtimeAnalysis,
-      responses,
+  const relationships = await classifyToolRelationships({
+    analysis: runtimeAnalysis,
+    analyzeSource: (path) => session.analyzeSource(parseRepositoryPath(path)),
+    getEntry: (path) => session.getEntry(parseRepositoryPath(path)),
+    hasAmbiguousCandidate: responses.hasAmbiguousCandidate,
+    isSupportedAdditionalRegistration: (analysis, symbol) =>
+      getRegistrationShape(analysis, symbol).kind === 'present-supported',
+    registrations: registrations.map((registration) => ({
+      reference: registration.reference,
       registration,
-      registrations,
-      additionalRegistrations,
-    );
+    })),
+    relationships: responses.requests.map((request) => request.tools),
+    ...(session.signal === undefined ? {} : { signal: session.signal }),
+  });
 
+  for (const { registration, relationship } of relationships) {
     if (relationship.kind === 'absent') {
       addOpenAiDiagnostic(
         diagnostics,

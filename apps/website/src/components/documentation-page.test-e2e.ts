@@ -15,6 +15,11 @@ test('identifies API reference pages in breadcrumbs and documentation navigation
       path: '/packages/core/api/',
     },
     {
+      packageName: '@moldea.ai/adapter-anthropic',
+      packageRoute: '/adapters/anthropic/',
+      path: '/adapters/anthropic/api/',
+    },
+    {
       packageName: '@moldea.ai/adapter-openai',
       packageRoute: '/adapters/openai/',
       path: '/adapters/openai/api/',

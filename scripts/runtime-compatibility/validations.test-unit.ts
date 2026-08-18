@@ -104,10 +104,10 @@ describe('runtime compatibility matrix validation', () => {
     'accepts %s only without support claims',
     (status) => {
       const matrix = cloneCanonicalMatrix();
-      const adapter = matrix.adapters['anthropic'];
+      const adapter = matrix.adapters['claude-agent-sdk'];
 
       if (adapter === undefined) {
-        throw new Error('Canonical matrix is missing the anthropic adapter.');
+        throw new Error('Canonical matrix is missing the Claude Agent SDK adapter.');
       }
 
       adapter.implementationStatus = status;
@@ -425,7 +425,7 @@ describe('runtime compatibility matrix validation', () => {
     adapter.replacement = 'openai';
     expectIssue(stringify(matrix), 'cannot replace itself');
 
-    adapter.replacement = 'anthropic';
+    adapter.replacement = 'claude-agent-sdk';
     expectIssue(stringify(matrix), 'Replacement must identify an available adapter');
   });
 

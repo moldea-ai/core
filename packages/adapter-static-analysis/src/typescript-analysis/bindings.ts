@@ -1,16 +1,15 @@
 import { posix } from 'node:path';
 import ts from 'typescript';
 
-import type { IRepositoryReference } from '@moldea.ai/core/format';
-import type { IRepositoryPath } from '@moldea.ai/repository';
-
 import type {
-  IOpenAiExportState,
-  IOpenAiModuleArray,
-  IOpenAiNamedImport,
-  IOpenAiSourceAnalysis,
-} from '../contracts/index.js';
-import { unwrapOpenAiExpression } from './expressions.js';
+  IStaticAnalysisExportState,
+  IStaticAnalysisImportConfig,
+  IStaticAnalysisModuleArray,
+  IStaticAnalysisNamedImport,
+  IStaticAnalysisReference,
+  IStaticAnalysisSource,
+} from '../types.js';
+import { unwrapExpression } from './expressions.js';
 
 const hasModifier = (node: ts.Node, kind: ts.SyntaxKind): boolean =>
   ts.canHaveModifiers(node) &&
@@ -20,18 +19,21 @@ const isConstDeclarationList = (declarationList: ts.VariableDeclarationList): bo
   (declarationList.flags & ts.NodeFlags.Const) !== 0;
 
 /**
- * Indexes static value imports and the default OpenAI constructor import.
+ * Indexes static value imports and supported SDK constructor imports.
  * @param sourceFile The parsed TypeScript source.
- * @returns Module-owned import bindings needed by static relationship checks.
+ * @param config The provider package and constructor import forms.
+ * @returns Module-owned import bindings needed by static checks.
  */
-export const indexOpenAiImports = (
+export const indexImports = (
   sourceFile: ts.SourceFile,
+  config: IStaticAnalysisImportConfig,
 ): {
-  readonly namedImports: ReadonlyMap<string, IOpenAiNamedImport>;
-  readonly openAiConstructorNames: ReadonlySet<string>;
+  readonly constructorNames: ReadonlySet<string>;
+  readonly namedImports: ReadonlyMap<string, IStaticAnalysisNamedImport>;
 } => {
-  const namedImports = new Map<string, IOpenAiNamedImport>();
-  const openAiConstructorNames = new Set<string>();
+  const constructorNames = new Set<string>();
+  const namedImports = new Map<string, IStaticAnalysisNamedImport>();
+  const supportedNamedImports = new Set(config.namedConstructorImports);
 
   for (const statement of sourceFile.statements) {
     if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier)) {
@@ -46,8 +48,26 @@ export const indexOpenAiImports = (
 
     const moduleSpecifier = statement.moduleSpecifier.text;
 
-    if (moduleSpecifier === 'openai' && importClause?.name !== undefined) {
-      openAiConstructorNames.add(importClause.name.text);
+    if (
+      moduleSpecifier === config.packageName &&
+      config.supportsDefaultConstructorImport &&
+      importClause?.name !== undefined
+    ) {
+      constructorNames.add(importClause.name.text);
+    }
+
+    if (
+      moduleSpecifier === config.packageName &&
+      importClause?.namedBindings !== undefined &&
+      ts.isNamedImports(importClause.namedBindings)
+    ) {
+      for (const element of importClause.namedBindings.elements) {
+        const importedName = element.propertyName?.text ?? element.name.text;
+
+        if (!element.isTypeOnly && supportedNamedImports.has(importedName)) {
+          constructorNames.add(element.name.text);
+        }
+      }
     }
 
     if (
@@ -73,27 +93,30 @@ export const indexOpenAiImports = (
     }
   }
 
-  return { namedImports, openAiConstructorNames };
+  return { constructorNames, namedImports };
 };
 
 /**
- * Indexes direct value exports, module-level OpenAI clients, and module-local constant arrays.
+ * Indexes direct exports, module-level SDK clients, and constant arrays.
  * @param sourceFile The parsed TypeScript source.
- * @param openAiConstructorNames Default OpenAI constructor bindings.
- * @returns The module-owned static declarations used by inspection.
+ * @param constructorNames The supported constructor bindings.
+ * @returns Static module declarations used by adapter inspection.
  */
-export const indexOpenAiModuleDeclarations = (
+export const indexModuleDeclarations = (
   sourceFile: ts.SourceFile,
-  openAiConstructorNames: ReadonlySet<string>,
+  constructorNames: ReadonlySet<string>,
 ): {
   readonly clientNames: ReadonlySet<string>;
-  readonly exports: ReadonlyMap<string, IOpenAiExportState & { readonly declaration: ts.Node }>;
-  readonly moduleArrays: ReadonlyMap<string, IOpenAiModuleArray>;
+  readonly exports: ReadonlyMap<
+    string,
+    IStaticAnalysisExportState & { readonly declaration: ts.Node }
+  >;
+  readonly moduleArrays: ReadonlyMap<string, IStaticAnalysisModuleArray>;
   readonly moduleConstDeclarations: ReadonlyMap<string, ts.VariableDeclaration>;
 } => {
   const clientNames = new Set<string>();
-  const exports = new Map<string, IOpenAiExportState & { readonly declaration: ts.Node }>();
-  const moduleArrays = new Map<string, IOpenAiModuleArray>();
+  const exports = new Map<string, IStaticAnalysisExportState & { readonly declaration: ts.Node }>();
+  const moduleArrays = new Map<string, IStaticAnalysisModuleArray>();
   const moduleConstDeclarations = new Map<string, ts.VariableDeclaration>();
 
   for (const statement of sourceFile.statements) {
@@ -120,14 +143,12 @@ export const indexOpenAiModuleDeclarations = (
       }
 
       for (const element of statement.exportClause.elements) {
-        if (element.isTypeOnly) {
-          continue;
+        if (!element.isTypeOnly) {
+          exports.set(
+            element.name.text,
+            Object.freeze({ declaration: element, kind: 'present-unsupported' }),
+          );
         }
-
-        exports.set(
-          element.name.text,
-          Object.freeze({ declaration: element, kind: 'present-unsupported' }),
-        );
       }
 
       continue;
@@ -139,16 +160,11 @@ export const indexOpenAiModuleDeclarations = (
         (ts.isClassDeclaration(statement) ||
           ts.isEnumDeclaration(statement) ||
           ts.isModuleDeclaration(statement)) &&
-        statement.name !== undefined
+        statement.name !== undefined &&
+        ts.isIdentifier(statement.name)
       ) {
-        const exportName = ts.isIdentifier(statement.name) ? statement.name.text : null;
-
-        if (exportName === null) {
-          continue;
-        }
-
         exports.set(
-          exportName,
+          statement.name.text,
           Object.freeze({ declaration: statement, kind: 'present-unsupported' }),
         );
       }
@@ -182,15 +198,14 @@ export const indexOpenAiModuleDeclarations = (
       }
 
       moduleConstDeclarations.set(declaration.name.text, declaration);
+      const initializer = unwrapExpression(declaration.initializer);
 
-      const initializer = unwrapOpenAiExpression(declaration.initializer);
+      if (ts.isNewExpression(initializer)) {
+        const constructor = unwrapExpression(initializer.expression);
 
-      if (
-        ts.isNewExpression(initializer) &&
-        ts.isIdentifier(initializer.expression) &&
-        openAiConstructorNames.has(initializer.expression.text)
-      ) {
-        clientNames.add(declaration.name.text);
+        if (ts.isIdentifier(constructor) && constructorNames.has(constructor.text)) {
+          clientNames.add(declaration.name.text);
+        }
       }
 
       if (ts.isArrayLiteralExpression(initializer)) {
@@ -271,7 +286,7 @@ const getLocalBindingNames = (bindings: Map<ts.Node, Set<string>>, scope: ts.Nod
  * @param sourceFile The parsed TypeScript source.
  * @returns Local binding names keyed by lexical or function scope.
  */
-export const indexOpenAiLocalBindingNames = (
+export const indexLocalBindingNames = (
   sourceFile: ts.SourceFile,
 ): ReadonlyMap<ts.Node, ReadonlySet<string>> => {
   const bindings = new Map<ts.Node, Set<string>>();
@@ -339,9 +354,9 @@ export const indexOpenAiLocalBindingNames = (
  * @param analysis The indexed source containing the identifier.
  * @returns Whether no parameter or local declaration shadows the module binding.
  */
-export const isOpenAiModuleBindingVisible = (
+export const isModuleBindingVisible = (
   identifier: ts.Identifier,
-  analysis: IOpenAiSourceAnalysis,
+  analysis: IStaticAnalysisSource,
 ): boolean => {
   let current: ts.Node | undefined = identifier.parent;
 
@@ -357,13 +372,13 @@ export const isOpenAiModuleBindingVisible = (
 };
 
 /**
- * Resolves exact TypeScript source candidates for a supported relative ESM specifier.
+ * Resolves TypeScript source candidates for a supported relative ESM specifier.
  * @param containingPath The importing source path.
  * @param moduleSpecifier The exact relative ESM specifier.
- * @returns The supported logical source candidates in deterministic order.
+ * @returns Supported logical source candidates in deterministic order.
  */
-export const resolveOpenAiImportCandidatePaths = (
-  containingPath: IRepositoryPath,
+export const resolveImportCandidatePaths = (
+  containingPath: string,
   moduleSpecifier: string,
 ): readonly string[] => {
   const resolved = posix.resolve(posix.dirname(containingPath), moduleSpecifier);
@@ -382,32 +397,55 @@ export const resolveOpenAiImportCandidatePaths = (
 };
 
 /**
- * Checks whether one identifier resolves directly to an explicit bound reference.
+ * Resolves the explicit module references an identifier can denote.
  * @param identifier The local source identifier.
  * @param analysis The source containing that identifier.
- * @param reference The explicit repository binding to match.
- * @returns Whether local or named-import identity proves the relationship.
+ * @returns Same-file or relative-import candidates in deterministic order.
  */
-export const isOpenAiBoundIdentifier = (
+export const resolveBindingReferences = (
   identifier: ts.Identifier,
-  analysis: IOpenAiSourceAnalysis,
-  reference: IRepositoryReference,
-): boolean => {
-  if (reference.symbol === undefined || !isOpenAiModuleBindingVisible(identifier, analysis)) {
-    return false;
+  analysis: IStaticAnalysisSource,
+): readonly (IStaticAnalysisReference & { readonly symbol: string })[] => {
+  if (!isModuleBindingVisible(identifier, analysis)) {
+    return [];
   }
 
-  if (analysis.path === reference.path) {
-    return identifier.text === reference.symbol && analysis.exports.has(reference.symbol);
+  const references: (IStaticAnalysisReference & { readonly symbol: string })[] = [];
+
+  if (analysis.exports.has(identifier.text)) {
+    references.push(Object.freeze({ path: analysis.path, symbol: identifier.text }));
   }
 
   const namedImport = analysis.namedImports.get(identifier.text);
 
-  return (
-    namedImport !== undefined &&
-    namedImport.importedName === reference.symbol &&
-    resolveOpenAiImportCandidatePaths(analysis.path, namedImport.moduleSpecifier).includes(
-      reference.path,
-    )
+  if (namedImport !== undefined) {
+    references.push(
+      ...resolveImportCandidatePaths(analysis.path, namedImport.moduleSpecifier).map((path) =>
+        Object.freeze({ path, symbol: namedImport.importedName }),
+      ),
+    );
+  }
+
+  return references;
+};
+
+/**
+ * Checks whether an identifier resolves directly to an explicit bound reference.
+ * @param identifier The local source identifier.
+ * @param analysis The source containing that identifier.
+ * @param reference The explicit source binding to match.
+ * @returns Whether local or named-import identity proves the relationship.
+ */
+export const isBoundIdentifier = (
+  identifier: ts.Identifier,
+  analysis: IStaticAnalysisSource,
+  reference: IStaticAnalysisReference,
+): boolean => {
+  if (reference.symbol === undefined) {
+    return false;
+  }
+
+  return resolveBindingReferences(identifier, analysis).some(
+    (candidate) => candidate.path === reference.path && candidate.symbol === reference.symbol,
   );
 };
