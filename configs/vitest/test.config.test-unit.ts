@@ -28,6 +28,7 @@ describe('createTestConfig', () => {
 
     expect(config.test?.include).toEqual(include);
     expect(config.test?.include).not.toBe(include);
+    expect(config.test?.testTimeout).toBe(20_000);
   });
 
   it('creates the default end-to-end test include pattern', () => {
