@@ -544,7 +544,7 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
     },
     {
       name: '@moldea.ai/repository-fs',
-      version: '1.0.1',
+      version: '1.0.2',
     },
   ],
   repositoryFormatVersions: [1],

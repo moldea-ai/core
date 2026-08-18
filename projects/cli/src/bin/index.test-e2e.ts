@@ -211,6 +211,7 @@ describe('published CLI package and executable', () => {
       'workspace:1.0.2',
       'workspace:2.0.3',
       'workspace:1.0.1',
+      'workspace:1.0.2',
     );
     const executable = readFileSync(CLI_DISTRIBUTION_PATH, 'utf8');
     expect(executable.startsWith('#!/usr/bin/env node\n')).toBe(true);
@@ -241,7 +242,7 @@ describe('published CLI package and executable', () => {
       ) as IMoldeaCliPackageManifest;
       const executable = readTarEntry(tarball, 'package/dist/moldea.js').toString('utf8');
 
-      expectPackageManifest(manifest, '2.0.0', '2.0.1', '1.0.2', '2.0.3', '1.0.1');
+      expectPackageManifest(manifest, '2.0.0', '2.0.1', '1.0.2', '2.0.3', '1.0.1', '1.0.2');
       expect(executable.startsWith('#!/usr/bin/env node\n')).toBe(true);
       expect(executable).toContain('@moldea.ai/adapter-openai');
       expect(executable).toContain('@moldea.ai/adapter-anthropic');
@@ -511,7 +512,7 @@ describe('published CLI package and executable', () => {
             { name: '@moldea.ai/adapter-openai', version: '2.0.3' },
             { name: '@moldea.ai/core', version: '2.0.0' },
             { name: '@moldea.ai/repository', version: '1.0.1' },
-            { name: '@moldea.ai/repository-fs', version: '1.0.1' },
+            { name: '@moldea.ai/repository-fs', version: '1.0.2' },
           ],
         },
         status: 'valid',

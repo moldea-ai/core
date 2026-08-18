@@ -15,7 +15,7 @@ const INSTALLED_PACKAGE_METADATA = Object.freeze({
     '@moldea.ai/adapter-openai': 'workspace:2.0.3',
     '@moldea.ai/core': 'workspace:2.0.0',
     '@moldea.ai/repository': 'workspace:1.0.1',
-    '@moldea.ai/repository-fs': 'workspace:1.0.1',
+    '@moldea.ai/repository-fs': 'workspace:1.0.2',
     semver: '7.8.5',
   }),
   installedPackageVersions: Object.freeze({
@@ -24,7 +24,7 @@ const INSTALLED_PACKAGE_METADATA = Object.freeze({
     '@moldea.ai/adapter-openai': '2.0.3',
     '@moldea.ai/core': '2.0.0',
     '@moldea.ai/repository': '1.0.1',
-    '@moldea.ai/repository-fs': '1.0.1',
+    '@moldea.ai/repository-fs': '1.0.2',
   }),
   supportedNodeRange: '^22.11.0 || ^24.11.0',
   version: '3.1.2',

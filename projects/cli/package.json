@@ -44,7 +44,7 @@
     "@moldea.ai/adapter-openai": "workspace:2.0.3",
     "@moldea.ai/core": "workspace:2.0.0",
     "@moldea.ai/repository": "workspace:1.0.1",
-    "@moldea.ai/repository-fs": "workspace:1.0.1",
+    "@moldea.ai/repository-fs": "workspace:1.0.2",
     "semver": "7.8.5"
   },
   "devDependencies": {

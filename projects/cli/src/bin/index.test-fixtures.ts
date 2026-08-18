@@ -142,6 +142,7 @@ export const expectPackageManifest = (
   googleGenAiAdapterVersion: string,
   openAiAdapterVersion: string,
   repositoryVersion: string,
+  repositoryFilesystemVersion: string,
 ): void => {
   expect(manifest).toMatchObject({
     bin: { moldea: './dist/moldea.js' },
@@ -159,7 +160,7 @@ export const expectPackageManifest = (
     '@moldea.ai/adapter-openai': openAiAdapterVersion,
     '@moldea.ai/core': coreVersion,
     '@moldea.ai/repository': repositoryVersion,
-    '@moldea.ai/repository-fs': repositoryVersion,
+    '@moldea.ai/repository-fs': repositoryFilesystemVersion,
     semver: '7.8.5',
   });
   expect(manifest).not.toHaveProperty('main');

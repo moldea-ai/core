@@ -56,7 +56,7 @@ const expectPublicPackageManifest = (
     sideEffects: false,
     type: 'module',
     types: './dist/index.d.ts',
-    version: '1.0.1',
+    version: '1.0.2',
   });
   expect(manifest.exports).toStrictEqual({
     '.': {
@@ -184,7 +184,7 @@ describe('published Repository FS package artifacts', () => {
     ) as IRepositoryFilesystemPackageManifest;
     const packedPaths = packResult.files.map((file) => file.path);
 
-    expect(packResult).toMatchObject({ name: '@moldea.ai/repository-fs', version: '1.0.1' });
+    expect(packResult).toMatchObject({ name: '@moldea.ai/repository-fs', version: '1.0.2' });
     expect(packedPaths).toContain('dist/index.js');
     expect(packedPaths).toContain('dist/index.d.ts');
     expect(packedPaths).toContain('dist/contracts/index.d.ts');
