@@ -6,6 +6,10 @@ import { describe, expect, test } from 'vitest';
 
 // workflow fields inspected as durable release-security contracts
 interface IWorkflowJob {
+  container?: {
+    image?: string;
+    options?: string;
+  };
   environment?: string;
   if?: string;
   needs?: string | string[];
@@ -26,6 +30,10 @@ interface IWorkflow {
   permissions?: Record<string, unknown>;
 }
 
+interface IWebsitePackageManifest {
+  devDependencies?: Record<string, string>;
+}
+
 const repositoryRoot = new URL('../../', import.meta.url);
 const ciSource = readFileSync(new URL('.github/workflows/ci.yml', repositoryRoot), 'utf8');
 const publishSource = readFileSync(
@@ -36,20 +44,32 @@ const publishPackageSource = readFileSync(
   new URL('.github/workflows/publish-package.yml', repositoryRoot),
   'utf8',
 );
+const websitePackageManifest = JSON.parse(
+  readFileSync(new URL('apps/website/package.json', repositoryRoot), 'utf8'),
+) as IWebsitePackageManifest;
 const ciWorkflow = parse(ciSource) as IWorkflow;
 const publishWorkflow = parse(publishSource) as IWorkflow;
 const publishPackageWorkflow = parse(publishPackageSource) as IWorkflow;
 
 describe('npm release workflow', () => {
   test('reuses the complete CI boundary with release caching disabled', () => {
+    expect(ciWorkflow.on).toHaveProperty('pull_request');
     expect(ciWorkflow.on).toHaveProperty('workflow_call');
+    expect(ciWorkflow.on).toHaveProperty('workflow_dispatch');
+    expect(ciWorkflow.on).not.toHaveProperty('push');
     expect(ciSource).toContain('release_build:');
     expect(ciSource).toContain('name: Check Changed Package Versions');
     expect(ciSource).toContain('pnpm release:check-changes');
     expect(ciSource).toContain('name: public-package-tarballs');
     expect(ciSource).toContain('SHA256SUMS');
+    expect(ciSource).not.toContain('playwright install --with-deps chromium');
     expect(ciSource.match(/name: public-package-tarballs/gu)).toHaveLength(6);
+    expect(ciWorkflow.jobs?.['verify']?.container).toStrictEqual({
+      image: `mcr.microsoft.com/playwright:v${websitePackageManifest.devDependencies?.['@playwright/test']}-noble`,
+      options: '--ipc=host',
+    });
     expect(publishWorkflow.jobs?.['verify']).toMatchObject({
+      if: "${{ github.event_name == 'push' || needs.plan.outputs.has_releases == 'true' }}",
       needs: 'plan',
       permissions: { contents: 'read' },
       uses: './.github/workflows/ci.yml',
