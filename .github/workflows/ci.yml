@@ -103,7 +103,7 @@ jobs:
 
       - name: Pack Public Package Artifacts
         run: |
-          public_packages_directory="${{ runner.temp }}/public-package-tarballs"
+          public_packages_directory="artifacts/public-package-tarballs"
           mkdir -p "$public_packages_directory"
           pnpm --dir projects/repository pack --pack-destination "$public_packages_directory"
           pnpm --dir projects/repository-fs pack --pack-destination "$public_packages_directory"
@@ -115,13 +115,20 @@ jobs:
           pnpm --dir projects/website-ui pack --pack-destination "$public_packages_directory"
           pnpm release:checksums create "$public_packages_directory"
 
+          expected_tarball_count=8
+          actual_tarball_count=$(find "$public_packages_directory" -maxdepth 1 -type f -name '*.tgz' | wc -l)
+          if [ "$actual_tarball_count" -ne "$expected_tarball_count" ]; then
+            echo "Expected $expected_tarball_count package tarballs, found $actual_tarball_count." >&2
+            exit 1
+          fi
+
       - name: Upload Public Package Artifacts
         uses: actions/upload-artifact@v7
         with:
           name: public-package-tarballs
           path: |
-            ${{ runner.temp }}/public-package-tarballs/*.tgz
-            ${{ runner.temp }}/public-package-tarballs/SHA256SUMS
+            artifacts/public-package-tarballs/*.tgz
+            artifacts/public-package-tarballs/SHA256SUMS
           if-no-files-found: error
           compression-level: 0
           retention-days: 7
