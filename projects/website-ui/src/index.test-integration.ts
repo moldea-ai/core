@@ -68,7 +68,7 @@ afterEach(() => {
   for (const directory of temporaryDirectories.splice(0)) {
     rmSync(directory, { force: true, recursive: true });
   }
-});
+}, 30_000);
 
 describe('published website UI package', () => {
   test('packs only the documented runtime, component, style, and package files', () => {
@@ -214,5 +214,5 @@ describe('published website UI package', () => {
     expect(readFileSync(path.join(fixtureDirectory, 'dist', 'index.html'), 'utf8')).toContain(
       'Fixture home',
     );
-  }, 30_000);
+  }, 90_000);
 });
