@@ -3,7 +3,13 @@ export type INpmReleaseMode = 'bootstrap' | 'trusted';
 
 // public projects currently eligible for npm publication
 export type INpmReleaseProject =
-  'adapter-anthropic' | 'adapter-openai' | 'cli' | 'core' | 'repository' | 'repository-fs';
+  | 'adapter-anthropic'
+  | 'adapter-openai'
+  | 'cli'
+  | 'core'
+  | 'repository'
+  | 'repository-fs'
+  | 'website-ui';
 
 // immutable package identity and artifact naming owned by one project
 export interface INpmReleaseProjectConfiguration {

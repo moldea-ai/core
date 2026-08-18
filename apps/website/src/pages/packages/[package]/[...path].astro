@@ -19,7 +19,7 @@ export const getStaticPaths = () => {
   const model = loadWebsiteModel();
 
   return model.packages
-    .filter(({ family }) => family === 'skill-core-tooling')
+    .filter(({ family }) => family !== 'runtime-adapters')
     .flatMap((packageModel) => {
       const documentPaths = packageModel.documents.map((document) => ({
         params: { package: packageModel.slug, path: document.slug || undefined },

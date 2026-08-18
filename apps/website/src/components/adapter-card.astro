@@ -1,8 +1,8 @@
 ---
 import { ArrowUpRight } from '@lucide/astro';
+import { withBase } from '@moldea.ai/website-ui/site';
 
 import type { IAdapterPage } from '../lib/model/types.ts';
-import { withBase } from '../lib/site/url.ts';
 import AdapterCompanyLogo from './adapter-company-logo.astro';
 import StatusBadge from './status-badge.astro';
 
@@ -11,12 +11,13 @@ interface Props {
 }
 
 const { adapter } = Astro.props;
+const basePath = import.meta.env.BASE_URL;
 const target = adapter.entry.targets?.[0];
 ---
 
 <a
   class="surface-card interactive-card group flex min-h-60 flex-col p-6"
-  href={withBase(adapter.route)}
+  href={withBase(adapter.route, basePath)}
 >
   <div class="mb-7 flex items-start justify-between gap-3">
     <AdapterCompanyLogo adapterId={adapter.id} />

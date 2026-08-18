@@ -35,7 +35,7 @@ export interface IPublicPackage {
   description: string;
   documents: IPackageDocument[];
   engines: Record<string, string>;
-  family: 'runtime-adapters' | 'skill-core-tooling';
+  family: 'runtime-adapters' | 'skill-core-tooling' | 'website-foundations';
   name: string;
   npmUrl: string;
   repositoryDirectory: string;

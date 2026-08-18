@@ -116,6 +116,11 @@ describe('npm release project changes', () => {
         isChanged: false,
         previousVersion: '1.0.0',
       },
+      'website-ui': {
+        currentVersion: '1.0.0',
+        isChanged: false,
+        previousVersion: '1.0.0',
+      },
     });
   });
 
@@ -151,6 +156,7 @@ describe('npm release project changes', () => {
         core: null,
         repository: null,
         'repository-fs': null,
+        'website-ui': null,
       },
       projects: ['adapter-anthropic'],
       trigger: 'automatic',

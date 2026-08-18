@@ -6,27 +6,29 @@
 
 The build discovers immediate public implemented projects from `/projects/**`, validates their manifests and package-owned `docs/**`, derives dependencies from manifests, extracts API reference data from actual public TypeScript exports, and reads adapter status only through the repository's strict parser for `compatibility/runtimes.yaml`.
 
-The ignored `.generated/model.json` file is a deterministic build cache. Do not edit it. Authored website content is limited to landing-page framing, components, design-system tokens, accessibility labels, and other presentation concerns. Package behavior belongs in each project's docs; adapter compatibility belongs in the matrix.
+The ignored `.generated/model.json` file is a deterministic build cache. Do not edit it. Authored website content is limited to landing-page framing, application-owned layouts and navigation, SEO identity, public assets, accessibility labels, and other site-specific presentation concerns. Package behavior belongs in each project's docs; adapter compatibility belongs in the matrix.
+
+Reusable website foundations come from the public `@moldea.ai/website-ui` workspace package. That package owns shared semantic design tokens, global interaction states, base-path and theme utilities, local-search behavior, and small Astro components. This application owns the `https://packages.moldea.ai` origin, `moldea-website-theme` storage key, page composition, package discovery, generated content, and packages-specific copy.
 
 ## Commands
 
 Run these from the repository root:
 
-| Command                                                 | Purpose                                                                                  |
-| ------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `pnpm website:dev`                                      | Generate the content model and run Astro locally.                                        |
-| `pnpm docs:generate`                                    | Write the ignored deterministic content model.                                           |
-| `pnpm docs:check`                                       | Validate discovery, docs, exports, adapters, and routes without writing source.          |
-| `pnpm website:build`                                    | Generate, build static HTML and the local search index, then validate artifact links.    |
-| `pnpm website:check`                                    | Run the complete non-browser website verification sequence.                              |
-| `pnpm --filter @moldea.ai/packages-website test:e2e`    | Run focused browser accessibility, theme, navigation, search, and 320px overflow checks. |
-| `pnpm --filter @moldea.ai/packages-website check:links` | Revalidate an existing production artifact.                                              |
+| Command                                                        | Purpose                                                                                  |
+| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `pnpm website:dev`                                             | Generate the content model and run Astro locally.                                        |
+| `pnpm docs:generate`                                           | Write the ignored deterministic content model.                                           |
+| `pnpm docs:check`                                              | Validate discovery, docs, exports, adapters, and routes without writing source.          |
+| `pnpm website:build`                                           | Generate, build static HTML and the local search index, then validate artifact links.    |
+| `pnpm website:check`                                           | Run the complete non-browser website verification sequence.                              |
+| `pnpm turbo run test:e2e --filter @moldea.ai/packages-website` | Run focused browser accessibility, theme, navigation, search, and 320px overflow checks. |
+| `pnpm --filter @moldea.ai/packages-website check:links`        | Revalidate an existing production artifact.                                              |
 
 The default build inputs are `SITE_URL=https://packages.moldea.ai` and `BASE_PATH=/`, matching the established custom-domain deployment. Set both values explicitly to build for another mount point, such as `SITE_URL=https://moldea-ai.github.io BASE_PATH=/packages/` for the GitHub project-site URL. Internal links, assets, canonical metadata, Open Graph images, sitemap URLs, search results, robots, and `llms.txt` are all derived from these inputs.
 
 ## Design and rendering
 
-The application uses Astro static output, Tailwind CSS 4's CSS-first configuration, Ubuntu Sans Variable, local Lucide Astro icons, and semantic OKLCH tokens recreated from the current platform UI. Light and dark themes have distinct token sets. Visible prose renders standalone `moldea` references as inline code so the product name remains distinct from surrounding copy. The pre-paint initializer applies system or persisted preference before rendering, while small browser scripts own theme selection, mobile-native disclosure behavior, reduced-motion-aware route transitions, and the generated local search index. Core documentation remains ordinary static HTML when JavaScript is disabled.
+The application uses Astro static output, Tailwind CSS 4's CSS-first configuration, Ubuntu Sans Variable, and Lucide Astro icons. Website UI supplies the platform-aligned semantic OKLCH tokens, action and link states, accessible breadcrumbs, pre-paint theme initialization, theme controls, local static search, and shared responsive prose primitives. Light and dark themes have distinct token sets, reduced-motion behavior is centralized, and documentation remains ordinary static HTML when JavaScript is disabled.
 
 The sibling platform repository is a design and specification reference only. The build never imports it, links it as a workspace, fetches private files, or requires it in CI.
 

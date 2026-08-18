@@ -1,10 +1,11 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, extname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseSearchDocuments } from '@moldea.ai/website-ui/search';
+import { DEFAULT_BASE_PATH, normalizeBasePath } from '@moldea.ai/website-ui/site';
 
 import { loadWebsiteModel } from '../src/lib/generation/generation.ts';
-import { parseSearchDocuments } from '../src/lib/search/search.ts';
-import { DEFAULT_BASE_PATH, DEFAULT_SITE_URL, normalizeBasePath } from '../src/lib/site/url.ts';
+import { DEFAULT_SITE_URL } from '../src/lib/site/constants.ts';
 
 const EXCLUDED_DIRECTORY_NAMES = new Set(['_archive', '_archives', '_backup', '_backups']);
 

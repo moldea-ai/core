@@ -27,7 +27,7 @@ Core checks exact canonical paths, regular-file requirements, reference targets,
 
 Universal validation completes before package-backed adapter invocation. If universal diagnostics exist, `project` is `null`, evidence is empty, and adapters are not called. Adapter diagnostics likewise make the final result invalid and remove the project index rather than returning a partially trusted index.
 
-Operational failures—reader access, snapshot loss, cancellation, resource exhaustion, or an invalid adapter result—throw typed exceptions instead of becoming repository diagnostics. This separates malformed repository content from an operation that could not be completed reliably.
+Operational failures such as reader access, snapshot loss, cancellation, resource exhaustion, or an invalid adapter result throw typed exceptions instead of becoming repository diagnostics. This separates malformed repository content from an operation that could not be completed reliably.
 
 ## Security and source neutrality
 

@@ -1,6 +1,7 @@
 ---
+import Breadcrumbs from '@moldea.ai/website-ui/breadcrumbs';
+
 import PackageCard from '../../components/package-card.astro';
-import Breadcrumbs from '../../components/breadcrumbs.astro';
 import BaseLayout from '../../layouts/base-layout.astro';
 import { loadWebsiteModel } from '../../lib/generation/generation.ts';
 
@@ -26,8 +27,9 @@ const breadcrumbs = [{ href: '/', label: 'Home' }, { label: 'Packages' }];
       <p class="eyebrow mb-5">Public package ecosystem</p>
       <h1 class="section-title font-semibold">One foundation. Explicit responsibilities.</h1>
       <p class="mt-7 max-w-3xl text-xl leading-9 text-muted-foreground">
-        Public package identity comes from implemented first-class projects. Private workspaces and
-        planned adapter catalog entries are never promoted into this inventory by presentation code.
+        This catalog focuses on the packages developers use to inspect repositories and integrate
+        supported runtimes. Private workspaces and planned adapter entries remain outside the
+        inventory.
       </p>
     </div>
 

@@ -7,9 +7,24 @@ import type { IApiEntrypoint, IApiSymbol } from '../model/types.ts';
 
 interface IPackageExports {
   [entrypoint: string]: {
+    default?: string;
+    import?: string;
+    style?: string;
     types?: string;
   };
 }
+
+/** Returns whether an export is an explicit source Astro component or CSS entry point. */
+const isWebsiteSourceEntrypoint = (conditions: IPackageExports[string]): boolean => {
+  const targets = [conditions.default, conditions.import, conditions.style].filter(
+    (target): target is string => target !== undefined,
+  );
+
+  return (
+    targets.length > 0 &&
+    targets.every((target) => target.endsWith('.astro') || target.endsWith('.css'))
+  );
+};
 
 const EXCLUDED_DIRECTORY_NAMES = new Set(['_archive', '_archives', '_backup', '_backups']);
 const WORKSPACE_PACKAGE_DIRECTORIES = ['packages', 'projects'] as const;
@@ -317,15 +332,21 @@ export const generateApiReference = (
   packageExports: IPackageExports,
 ): IApiEntrypoint[] => {
   const sourceEntrypoints = Object.entries(packageExports)
-    .map(([name, conditions]) => {
+    .flatMap(([name, conditions]) => {
       if (!conditions.types) {
+        if (isWebsiteSourceEntrypoint(conditions)) {
+          return [];
+        }
+
         throw new Error(`Public entry point ${name} has no TypeScript declaration target.`);
       }
 
-      return {
-        name,
-        sourcePath: getSourceEntrypoint(projectDirectory, conditions.types),
-      };
+      return [
+        {
+          name,
+          sourcePath: getSourceEntrypoint(projectDirectory, conditions.types),
+        },
+      ];
     })
     .sort((left, right) => left.name.localeCompare(right.name));
 

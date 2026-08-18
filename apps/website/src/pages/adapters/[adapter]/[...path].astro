@@ -1,6 +1,7 @@
 ---
+import Breadcrumbs from '@moldea.ai/website-ui/breadcrumbs';
+
 import AdapterDetails from '../../../components/adapter-details.astro';
-import Breadcrumbs from '../../../components/breadcrumbs.astro';
 import DocumentationPage from '../../../components/documentation-page.astro';
 import StatusBadge from '../../../components/status-badge.astro';
 import BaseLayout from '../../../layouts/base-layout.astro';
@@ -114,7 +115,7 @@ const breadcrumbs = [
           <div class="space-y-10">
             <div class="rounded-xl border bg-accent p-5 text-sm leading-6 text-accent-foreground">
               This reference is generated from the package manifest and actual TypeScript exports.
-              The compatibility matrix—not the exported singleton—defines target maturity.
+              The compatibility matrix, rather than the exported singleton, defines target maturity.
             </div>
             {packageModel.api.map((entrypoint) => (
               <section aria-labelledby={createApiEntrypointAnchorId(entrypoint.name)}>

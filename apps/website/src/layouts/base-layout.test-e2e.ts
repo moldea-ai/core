@@ -1,8 +1,7 @@
 // @vitest-environment node
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-
-import { DEFAULT_BASE_PATH, withBase } from '../lib/site/url.ts';
+import { DEFAULT_BASE_PATH, withBase } from '@moldea.ai/website-ui/site';
 
 const basePath = process.env.BASE_PATH ?? DEFAULT_BASE_PATH;
 const toPublicPath = (route: string): string => withBase(route, basePath);
@@ -19,11 +18,36 @@ const REPRESENTATIVE_PATHS = [
   '/search/',
 ] as const;
 
+test('renders standalone moldea references as inline code in visible prose', async ({ page }) => {
+  await page.goto(toPublicPath('/'));
+
+  const heroCopy = page
+    .locator('main p')
+    .filter({ hasText: 'moldea is the behavioral integrity layer for AI agents.' });
+  const heroBrandName = heroCopy.locator('code');
+
+  await expect(heroBrandName).toHaveText('moldea');
+  await expect(heroCopy).toContainText(
+    'moldea is the behavioral integrity layer for AI agents. This repository provides the deterministic readers',
+  );
+
+  await page.goto(toPublicPath('/packages/core/'));
+
+  const description = page.locator('article > header > p').first();
+
+  await expect(description.locator('code')).toHaveText('moldea');
+  await expect(description).toContainText('composition for moldea repositories.');
+});
+
 test('persists an explicit theme and exposes mobile navigation from the keyboard', async ({
   page,
 }) => {
   await page.setViewportSize({ height: 740, width: 320 });
   await page.goto(toPublicPath('/'));
+
+  await expect(
+    page.getByRole('banner').getByLabel('moldea packages home').getByText('packages'),
+  ).toBeVisible();
 
   const navigationButton = page.getByLabel('Open navigation');
   await navigationButton.focus();
@@ -183,12 +207,15 @@ test('shows company marks for provider adapters and keeps the custom adapter ico
   ).not.toBe('none');
 });
 
-test('shows the same company marks in the compatibility summary table', async ({ page }) => {
+test('shows the same company marks in the compatibility summary and accordions', async ({
+  page,
+}) => {
   await page.goto(toPublicPath('/compatibility/'));
 
   const compatibilityTable = page.getByRole('table', {
     name: 'Official moldea runtime adapter compatibility summary',
   });
+  const compatibilityAccordions = page.locator('details');
 
   for (const [companyName, expectedCount] of [
     ['Anthropic', 2],
@@ -201,6 +228,9 @@ test('shows the same company marks in the compatibility summary table', async ({
     await expect(compatibilityTable.getByAltText(`${companyName} company logo`)).toHaveCount(
       expectedCount,
     );
+    await expect(compatibilityAccordions.getByAltText(`${companyName} company logo`)).toHaveCount(
+      expectedCount,
+    );
   }
 
   const customAdapterLink = compatibilityTable.getByRole('link', {
@@ -209,6 +239,9 @@ test('shows the same company marks in the compatibility summary table', async ({
 
   await expect(customAdapterLink.getByRole('img', { name: 'Custom adapter icon' })).toBeVisible();
   await expect(customAdapterLink.locator('img')).toHaveCount(0);
+  await expect(
+    compatibilityAccordions.getByRole('img', { name: 'Custom adapter icon' }),
+  ).toBeVisible();
 });
 
 test('shows company marks for runtime adapters on the packages page', async ({ page }) => {
@@ -219,6 +252,8 @@ test('shows company marks for runtime adapters on the packages page', async ({ p
   await expect(runtimeAdapters.getByAltText('Anthropic company logo')).toBeVisible();
   await expect(runtimeAdapters.getByAltText('OpenAI company logo')).toBeVisible();
   await expect(runtimeAdapters.getByRole('img', { name: 'Custom adapter icon' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Website Foundations' })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: /@moldea.ai\/website-ui/ })).toHaveCount(0);
 });
 
 test('has no page-level horizontal overflow at 320px on representative routes', async ({
@@ -256,6 +291,7 @@ test('uses branded action states in both themes and respects reduced motion', as
 
   const primaryAction = page.getByRole('link', { name: 'Explore packages' });
   const outlineAction = page.getByRole('link', { name: 'Source', exact: true });
+  const inlineAction = page.getByRole('link', { name: 'View all packages' });
   const lightPrimaryBackground = await primaryAction.evaluate(
     (element) => getComputedStyle(element).backgroundColor,
   );
@@ -289,6 +325,18 @@ test('uses branded action states in both themes and respects reduced motion', as
     .not.toBe('none');
   await page.mouse.move(0, 0);
   await page.mouse.up();
+
+  await inlineAction.hover();
+  await expect
+    .poll(() => inlineAction.evaluate((element) => getComputedStyle(element).textDecorationLine))
+    .toContain('underline');
+
+  await inlineAction.focus();
+  await page.keyboard.press('Shift+Tab');
+  await page.keyboard.press('Tab');
+  expect(await inlineAction.evaluate((element) => getComputedStyle(element).boxShadow)).not.toBe(
+    'none',
+  );
 
   await page.getByRole('button', { name: 'Use dark theme' }).click();
   await expect(page.locator('html')).toHaveClass(/dark/);

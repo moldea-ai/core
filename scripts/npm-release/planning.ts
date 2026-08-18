@@ -15,6 +15,7 @@ const NO_PREVIOUS_VERSIONS = Object.freeze({
   core: null,
   repository: null,
   'repository-fs': null,
+  'website-ui': null,
 }) satisfies Readonly<Record<INpmReleaseProject, null>>;
 
 const requireStableReleaseVersion = (
@@ -76,6 +77,8 @@ export const createNpmReleaseWorkflowOutputs = (plan: INpmReleaseWorkflowPlan) =
     repository_previous_version: plan.previousVersions.repository ?? '',
     repository_fs: String(selectedProjects.has('repository-fs')),
     repository_fs_previous_version: plan.previousVersions['repository-fs'] ?? '',
+    website_ui: String(selectedProjects.has('website-ui')),
+    website_ui_previous_version: plan.previousVersions['website-ui'] ?? '',
   };
 };
 

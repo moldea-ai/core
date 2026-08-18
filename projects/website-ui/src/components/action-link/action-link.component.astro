@@ -1,0 +1,18 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+export interface Props extends Omit<HTMLAttributes<'a'>, 'class'> {
+  class?: string;
+  size?: 'icon' | 'lg' | 'md' | 'sm';
+  variant?: 'ghost' | 'link' | 'outline' | 'primary' | 'secondary';
+}
+
+const { class: className, size = 'md', variant = 'primary', ...attributes } = Astro.props;
+---
+
+<a
+  class:list={['action-control', `action-${variant}`, `action-size-${size}`, className]}
+  {...attributes}
+>
+  <slot />
+</a>

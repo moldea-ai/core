@@ -42,9 +42,9 @@
     "test:unit": "pnpm test:root:unit && turbo run test:unit",
     "typecheck": "pnpm typecheck:root && turbo run typecheck",
     "typecheck:root": "tsc -p tsconfig.json --noEmit",
-    "website:build": "pnpm --filter @moldea.ai/packages-website build",
-    "website:check": "pnpm --filter @moldea.ai/packages-website check",
-    "website:dev": "pnpm --filter @moldea.ai/packages-website dev"
+    "website:build": "turbo run build --filter @moldea.ai/packages-website",
+    "website:check": "pnpm --filter @moldea.ai/website-ui build && pnpm --filter @moldea.ai/packages-website check",
+    "website:dev": "pnpm --filter @moldea.ai/website-ui build && pnpm --filter @moldea.ai/packages-website dev"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

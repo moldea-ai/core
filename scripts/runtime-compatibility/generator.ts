@@ -12,7 +12,7 @@ import type {
 
 const GENERATED_WARNING =
   '> **Generated file. Do not edit directly. Canonical source: `/compatibility/runtimes.yaml`.**';
-const EM_DASH = '—';
+const MISSING_VALUE = 'Not available';
 
 const formatInlineCode = (value: string): string => {
   const delimiter = value.includes('`') ? '``' : '`';
@@ -27,11 +27,11 @@ const formatTableInlineCode = (value: string): string => {
 };
 
 const formatOptionalCode = (value: string | undefined): string => {
-  return value === undefined ? EM_DASH : formatInlineCode(value);
+  return value === undefined ? MISSING_VALUE : formatInlineCode(value);
 };
 
 const formatOptionalTableCode = (value: string | undefined): string => {
-  return value === undefined ? EM_DASH : formatTableInlineCode(value);
+  return value === undefined ? MISSING_VALUE : formatTableInlineCode(value);
 };
 
 const formatProviderLimitValue = (limit: IProviderLimit): string => {
@@ -105,7 +105,7 @@ const generatePatterns = (patterns: IRuntimePattern[] | undefined): string[] => 
     '| Kind | Pattern | Support | Description | Notes |',
     '| --- | --- | --- | --- | --- |',
     ...patterns.map((pattern) => {
-      return `| ${formatTableInlineCode(pattern.kind)} | ${formatTableInlineCode(pattern.id)} | ${formatTableInlineCode(pattern.support)} | ${escapeTableText(pattern.description)} | ${pattern.notes === undefined ? EM_DASH : escapeTableText(pattern.notes)} |`;
+      return `| ${formatTableInlineCode(pattern.kind)} | ${formatTableInlineCode(pattern.id)} | ${formatTableInlineCode(pattern.support)} | ${escapeTableText(pattern.description)} | ${pattern.notes === undefined ? MISSING_VALUE : escapeTableText(pattern.notes)} |`;
     }),
     '',
   ];
@@ -122,7 +122,7 @@ const generateProviderLimits = (limits: IProviderLimit[] | undefined): string[] 
     '| Subject | Limit | Kind | Value | Description | Reference |',
     '| --- | --- | --- | --- | --- | --- |',
     ...limits.map((limit) => {
-      return `| ${formatTableInlineCode(limit.subject)} | ${formatTableInlineCode(limit.id)} | ${formatTableInlineCode(limit.kind)} | ${formatProviderLimitValue(limit)} | ${escapeTableText(limit.description)} | ${limit.reference === undefined ? EM_DASH : escapeTableText(limit.reference)} |`;
+      return `| ${formatTableInlineCode(limit.subject)} | ${formatTableInlineCode(limit.id)} | ${formatTableInlineCode(limit.kind)} | ${formatProviderLimitValue(limit)} | ${escapeTableText(limit.description)} | ${limit.reference === undefined ? MISSING_VALUE : escapeTableText(limit.reference)} |`;
     }),
     '',
   ];
@@ -135,7 +135,7 @@ const generateTarget = (target: IRuntimeTarget): string[] => {
     `- Kind: ${formatInlineCode(target.kind)}`,
     `- Support level: ${formatInlineCode(target.supportLevel)}`,
     `- Language: ${formatInlineCode(target.language)}`,
-    `- Evidence kinds: ${target.evidenceKinds?.map(formatInlineCode).join(', ') ?? EM_DASH}`,
+    `- Evidence kinds: ${target.evidenceKinds?.map(formatInlineCode).join(', ') ?? MISSING_VALUE}`,
     `- Last verified: ${formatInlineCode(target.lastVerifiedAt)}`,
     '',
     ...generatePackageRequirements(target),
@@ -163,7 +163,7 @@ const generatePublishedAdapter = (adapterId: string, adapter: IRuntimeAdapterEnt
     '',
     `- Owning package: ${formatInlineCode(adapter.implementation.package)}`,
     `- Implementation range: ${formatOptionalCode(adapter.implementation.versionRange)}`,
-    `- Supported repository-format versions: ${adapter.supportedRepositoryFormatVersions?.map(String).map(formatInlineCode).join(', ') ?? EM_DASH}`,
+    `- Supported repository-format versions: ${adapter.supportedRepositoryFormatVersions?.map(String).map(formatInlineCode).join(', ') ?? MISSING_VALUE}`,
     `- Compatible Core range: ${formatOptionalCode(adapter.compatibleCoreRange)}`,
     `- Runtime guidance: ${formatOptionalCode(adapter.runtimeGuidance?.expectation)}`,
     `- Last verified: ${formatOptionalCode(adapter.lastVerifiedAt)}`,

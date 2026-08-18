@@ -81,6 +81,7 @@ describe('npm release workflow', () => {
               'adapter-anthropic',
               'adapter-openai',
               'cli',
+              'website-ui',
             ],
             required: true,
             type: 'choice',
@@ -99,6 +100,7 @@ describe('npm release workflow', () => {
         repository_previous_version: '${{ steps.release.outputs.repository_previous_version }}',
         repository_fs_previous_version:
           '${{ steps.release.outputs.repository_fs_previous_version }}',
+        website_ui_previous_version: '${{ steps.release.outputs.website_ui_previous_version }}',
       },
       permissions: { contents: 'read' },
     });
@@ -173,6 +175,16 @@ describe('npm release workflow', () => {
     expect(publishWorkflow.jobs?.['release_cli']?.with?.['previous_version']).toBe(
       '${{ needs.plan.outputs.cli_previous_version }}',
     );
+    expect(publishWorkflow.jobs?.['release_website_ui']).toMatchObject({
+      needs: ['plan', 'verify'],
+      permissions: { contents: 'write', 'id-token': 'write' },
+      uses: './.github/workflows/publish-package.yml',
+      with: {
+        mode: '${{ needs.plan.outputs.mode }}',
+        previous_version: '${{ needs.plan.outputs.website_ui_previous_version }}',
+        project: 'website-ui',
+      },
+    });
     expect(publishWorkflow.jobs?.['release_repository_fs']?.if).toContain(
       "needs.release_repository.result == 'success'",
     );

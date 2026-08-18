@@ -1,8 +1,9 @@
 import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'astro/config';
+import { DEFAULT_BASE_PATH, normalizeBasePath } from '@moldea.ai/website-ui/site';
 
-import { DEFAULT_BASE_PATH, DEFAULT_SITE_URL, normalizeBasePath } from './src/lib/site/url.ts';
+import { DEFAULT_SITE_URL } from './src/lib/site/constants.ts';
 
 const site = process.env.SITE_URL ?? DEFAULT_SITE_URL;
 const base = normalizeBasePath(process.env.BASE_PATH ?? DEFAULT_BASE_PATH);

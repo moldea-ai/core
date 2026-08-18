@@ -1,0 +1,55 @@
+---
+import { withBase } from '../../site/index.ts';
+
+export interface Props {
+  basePath?: string;
+  compact?: boolean;
+  darkCompactLogoPath: string;
+  darkLogoPath: string;
+  homeLabel: string;
+  lightCompactLogoPath: string;
+  lightLogoPath: string;
+  suffix?: string;
+}
+
+const {
+  basePath = import.meta.env.BASE_URL,
+  compact = false,
+  darkCompactLogoPath,
+  darkLogoPath,
+  homeLabel,
+  lightCompactLogoPath,
+  lightLogoPath,
+  suffix,
+} = Astro.props;
+const darkAssetPath = compact ? darkCompactLogoPath : darkLogoPath;
+const lightAssetPath = compact ? lightCompactLogoPath : lightLogoPath;
+---
+
+<a
+  class="inline-flex min-w-0 items-center gap-3 rounded-md"
+  href={withBase('/', basePath)}
+  aria-label={homeLabel}
+>
+  <img
+    class="hidden h-8 w-auto dark:block"
+    src={withBase(darkAssetPath, basePath)}
+    width={compact ? 185 : 942}
+    height="210"
+    alt=""
+  />
+  <img
+    class="h-8 w-auto dark:hidden"
+    src={withBase(lightAssetPath, basePath)}
+    width={compact ? 185 : 942}
+    height="210"
+    alt=""
+  />
+  {
+    suffix && (
+      <span class="inline border-s border-border ps-3 text-xs font-semibold text-muted-foreground">
+        {suffix}
+      </span>
+    )
+  }
+</a>

@@ -4,6 +4,9 @@
   "description": "The private static documentation application for the open moldea packages ecosystem.",
   "private": true,
   "type": "module",
+  "dependencies": {
+    "@moldea.ai/website-ui": "workspace:*"
+  },
   "scripts": {
     "build": "node scripts/generate.ts && astro build && node scripts/verify-build.ts",
     "check:links": "node scripts/verify-build.ts",
@@ -23,7 +26,6 @@
     "@astrojs/check": "0.9.10",
     "@astrojs/sitemap": "3.7.3",
     "@axe-core/playwright": "4.13.0",
-    "@fontsource-variable/ubuntu-sans": "5.2.10",
     "@lucide/astro": "1.31.0",
     "@playwright/test": "1.62.1",
     "@shikijs/rehype": "4.4.3",

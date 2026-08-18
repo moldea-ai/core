@@ -99,6 +99,7 @@ describe('discoverPublicPackages', () => {
       '@moldea.ai/core',
       '@moldea.ai/repository',
       '@moldea.ai/repository-fs',
+      '@moldea.ai/website-ui',
     ]);
     expect(model.packages.find(({ slug }) => slug === 'adapter-openai')?.family).toBe(
       'runtime-adapters',
@@ -111,6 +112,9 @@ describe('discoverPublicPackages', () => {
         .filter(({ family }) => family === 'skill-core-tooling')
         .map(({ slug }) => slug),
     ).toStrictEqual(['cli', 'core', 'repository', 'repository-fs']);
+    expect(model.packages.find(({ slug }) => slug === 'website-ui')?.family).toBe(
+      'website-foundations',
+    );
   });
 
   test('excludes private and source-less projects before requiring public documentation', () => {

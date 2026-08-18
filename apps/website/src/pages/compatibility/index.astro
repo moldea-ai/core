@@ -1,14 +1,16 @@
 ---
+import Breadcrumbs from '@moldea.ai/website-ui/breadcrumbs';
+import { withBase } from '@moldea.ai/website-ui/site';
+
 import AdapterDetails from '../../components/adapter-details.astro';
 import AdapterCompanyLogo from '../../components/adapter-company-logo.astro';
-import Breadcrumbs from '../../components/breadcrumbs.astro';
 import StatusBadge from '../../components/status-badge.astro';
 import BaseLayout from '../../layouts/base-layout.astro';
 import { loadWebsiteModel } from '../../lib/generation/generation.ts';
-import { withBase } from '../../lib/site/url.ts';
 
 const model = loadWebsiteModel();
 const breadcrumbs = [{ href: '/', label: 'Home' }, { label: 'Runtime Compatibility' }];
+const basePath = import.meta.env.BASE_URL;
 ---
 
 <BaseLayout
@@ -49,7 +51,7 @@ const breadcrumbs = [{ href: '/', label: 'Home' }, { label: 'Runtime Compatibili
                 <th class="px-4 py-3 text-start font-mono">
                   <a
                     class="inline-flex items-center gap-3 hover:underline"
-                    href={withBase(adapter.route)}
+                    href={withBase(adapter.route, basePath)}
                   >
                     <AdapterCompanyLogo
                       adapterId={adapter.id}
@@ -69,9 +71,9 @@ const breadcrumbs = [{ href: '/', label: 'Home' }, { label: 'Runtime Compatibili
                           <StatusBadge kind={target.supportLevel} />
                         </span>
                       ))
-                    : '—'}
+                    : 'Not available'}
                 </td>
-                <td class="px-4 py-3">{adapter.entry.lastVerifiedAt ?? '—'}</td>
+                <td class="px-4 py-3">{adapter.entry.lastVerifiedAt ?? 'Not available'}</td>
               </tr>
             ))
           }
@@ -88,9 +90,17 @@ const breadcrumbs = [{ href: '/', label: 'Home' }, { label: 'Runtime Compatibili
         model.adapters.map((adapter) => (
           <details class="surface-card group">
             <summary class="flex min-h-16 list-none items-center justify-between gap-4 px-5 font-semibold [&::-webkit-details-marker]:hidden">
-              <span class="font-mono">{adapter.id}</span>
-              <span class="text-sm text-muted-foreground group-open:hidden">Show details</span>
-              <span class="hidden text-sm text-muted-foreground group-open:inline">
+              <span class="inline-flex min-w-0 items-center gap-3">
+                <AdapterCompanyLogo
+                  adapterId={adapter.id}
+                  compact
+                />
+                <span class="min-w-0 font-mono break-words">{adapter.id}</span>
+              </span>
+              <span class="shrink-0 text-sm text-muted-foreground group-open:hidden">
+                Show details
+              </span>
+              <span class="hidden shrink-0 text-sm text-muted-foreground group-open:inline">
                 Hide details
               </span>
             </summary>

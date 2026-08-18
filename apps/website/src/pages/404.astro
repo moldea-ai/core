@@ -1,8 +1,11 @@
 ---
 import { ArrowLeft } from '@lucide/astro';
+import ActionLink from '@moldea.ai/website-ui/action-link';
+import { withBase } from '@moldea.ai/website-ui/site';
 
 import BaseLayout from '../layouts/base-layout.astro';
-import { withBase } from '../lib/site/url.ts';
+
+const basePath = import.meta.env.BASE_URL;
 ---
 
 <BaseLayout
@@ -18,21 +21,22 @@ import { withBase } from '../lib/site/url.ts';
         The documentation may have moved, or the address may not identify a generated public route.
       </p>
       <div class="mt-8 flex flex-wrap gap-3">
-        <a
-          class="action-control action-primary min-h-12 gap-2 px-5 py-3 font-bold"
-          href={withBase('/')}
+        <ActionLink
+          href={withBase('/', basePath)}
+          size="lg"
         >
           <ArrowLeft
             class="size-4"
             aria-hidden="true"
           /> Back to packages
-        </a>
-        <a
-          class="action-control action-outline min-h-12 px-5 py-3 font-bold"
-          href={withBase('/search/')}
+        </ActionLink>
+        <ActionLink
+          href={withBase('/search/', basePath)}
+          size="lg"
+          variant="outline"
         >
           Search documentation
-        </a>
+        </ActionLink>
       </div>
     </div>
   </section>

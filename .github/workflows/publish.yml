@@ -17,6 +17,7 @@ on:
           - adapter-anthropic
           - adapter-openai
           - cli
+          - website-ui
       mode:
         description: Bootstrap creates the tag and artifact; trusted also publishes through OIDC.
         required: true
@@ -61,6 +62,8 @@ jobs:
       repository_previous_version: ${{ steps.release.outputs.repository_previous_version }}
       repository_fs: ${{ steps.release.outputs.repository_fs }}
       repository_fs_previous_version: ${{ steps.release.outputs.repository_fs_previous_version }}
+      website_ui: ${{ steps.release.outputs.website_ui }}
+      website_ui_previous_version: ${{ steps.release.outputs.website_ui_previous_version }}
       cli_previous_version: ${{ steps.release.outputs.cli_previous_version }}
       core_previous_version: ${{ steps.release.outputs.core_previous_version }}
     steps:
@@ -262,3 +265,18 @@ jobs:
       mode: ${{ needs.plan.outputs.mode }}
       previous_version: ${{ needs.plan.outputs.cli_previous_version }}
       project: cli
+
+  release_website_ui:
+    name: Release Website UI
+    needs:
+      - plan
+      - verify
+    if: ${{ needs.plan.outputs.website_ui == 'true' && needs.verify.result == 'success' }}
+    permissions:
+      contents: write
+      id-token: write
+    uses: ./.github/workflows/publish-package.yml
+    with:
+      mode: ${{ needs.plan.outputs.mode }}
+      previous_version: ${{ needs.plan.outputs.website_ui_previous_version }}
+      project: website-ui
