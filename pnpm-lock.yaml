@@ -260,7 +260,7 @@ importers:
         specifier: workspace:2.0.1
         version: link:../adapter-anthropic
       '@moldea.ai/adapter-google-genai':
-        specifier: workspace:1.0.0
+        specifier: workspace:1.0.1
         version: link:../adapter-google-genai
       '@moldea.ai/adapter-openai':
         specifier: workspace:2.0.3
