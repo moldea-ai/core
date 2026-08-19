@@ -103,7 +103,7 @@ jobs:
 
       - name: Pack Public Package Artifacts
         run: |
-          public_packages_directory="artifacts/public-package-tarballs"
+          public_packages_directory="$GITHUB_WORKSPACE/artifacts/public-package-tarballs"
           mkdir -p "$public_packages_directory"
           pnpm --dir projects/repository pack --pack-destination "$public_packages_directory"
           pnpm --dir projects/repository-fs pack --pack-destination "$public_packages_directory"
