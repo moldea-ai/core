@@ -142,6 +142,7 @@ export const expectPackageManifest = (
   googleGenAiAdapterVersion: string,
   openAiAdapterVersion: string,
   repositoryVersion: string,
+  repositoryFilesystemVersion: string,
 ): void => {
   expect(manifest).toMatchObject({
     bin: { moldea: './dist/moldea.js' },
@@ -151,7 +152,7 @@ export const expectPackageManifest = (
     name: '@moldea.ai/cli',
     preferUnplugged: true,
     type: 'module',
-    version: '3.1.1',
+    version: '3.1.2',
   });
   expect(manifest.dependencies).toStrictEqual({
     '@moldea.ai/adapter-anthropic': anthropicAdapterVersion,
@@ -159,7 +160,7 @@ export const expectPackageManifest = (
     '@moldea.ai/adapter-openai': openAiAdapterVersion,
     '@moldea.ai/core': coreVersion,
     '@moldea.ai/repository': repositoryVersion,
-    '@moldea.ai/repository-fs': repositoryVersion,
+    '@moldea.ai/repository-fs': repositoryFilesystemVersion,
     semver: '7.8.5',
   });
   expect(manifest).not.toHaveProperty('main');

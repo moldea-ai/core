@@ -260,7 +260,7 @@ importers:
         specifier: workspace:2.0.1
         version: link:../adapter-anthropic
       '@moldea.ai/adapter-google-genai':
-        specifier: workspace:1.0.1
+        specifier: workspace:1.0.2
         version: link:../adapter-google-genai
       '@moldea.ai/adapter-openai':
         specifier: workspace:2.0.3
@@ -272,7 +272,7 @@ importers:
         specifier: workspace:1.0.1
         version: link:../repository
       '@moldea.ai/repository-fs':
-        specifier: workspace:1.0.1
+        specifier: workspace:1.0.2
         version: link:../repository-fs
       semver:
         specifier: 7.8.5

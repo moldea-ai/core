@@ -165,7 +165,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     };
 
     assertRuntimeInvariant(cliManifest?.name === '@moldea.ai/cli', 'The CLI identity is invalid.');
-    assertRuntimeInvariant(cliManifest?.version === '3.1.1', 'The CLI version is invalid.');
+    assertRuntimeInvariant(cliManifest?.version === '3.1.2', 'The CLI version is invalid.');
     assertRuntimeInvariant(
       cliManifest?.engines?.node === '^22.11.0 || ^24.11.0',
       'The CLI runtime range is invalid.',
@@ -192,7 +192,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
 
     assertRuntimeInvariant(versionResult.status === 0, 'The installed CLI version command failed.');
     assertRuntimeInvariant(versionResult.stderr === '', 'The version command wrote stderr.');
-    assertRuntimeInvariant(versionResult.stdout === '3.1.1\n', 'The version output is invalid.');
+    assertRuntimeInvariant(versionResult.stdout === '3.1.2\n', 'The version output is invalid.');
 
     const compatibilityResult = executeCli(
       executablePath,
@@ -224,7 +224,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
       'The compatibility result is invalid.',
     );
     assertRuntimeInvariant(
-      compatibilityEnvelope.cliVersion === '3.1.1' &&
+      compatibilityEnvelope.cliVersion === '3.1.2' &&
         compatibilityEnvelope.schemaVersion === 1 &&
         compatibilityEnvelope.result?.outputSchemaVersion === 1,
       'The compatibility envelope is invalid.',
@@ -233,11 +233,11 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
       JSON.stringify(compatibilityEnvelope.result?.packages) ===
         JSON.stringify([
           { name: '@moldea.ai/adapter-anthropic', version: '2.0.1' },
-          { name: '@moldea.ai/adapter-google-genai', version: '1.0.1' },
+          { name: '@moldea.ai/adapter-google-genai', version: '1.0.2' },
           { name: '@moldea.ai/adapter-openai', version: '2.0.3' },
           { name: '@moldea.ai/core', version: '2.0.0' },
           { name: '@moldea.ai/repository', version: '1.0.1' },
-          { name: '@moldea.ai/repository-fs', version: '1.0.1' },
+          { name: '@moldea.ai/repository-fs', version: '1.0.2' },
         ]),
       'The compatibility package list is invalid.',
     );
@@ -267,7 +267,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     );
     assertRuntimeInvariant(
       googleGenAiAdapter?.active === true &&
-        googleGenAiAdapter.bundledVersion === '1.0.1' &&
+        googleGenAiAdapter.bundledVersion === '1.0.2' &&
         googleGenAiAdapter.matrix?.implementationStatus === 'available' &&
         googleGenAiAdapter.matrix?.compatibleCoreRange === '^2.0.0' &&
         googleGenAiAdapter.matrix?.runtimeGuidance?.expectation === 'optional' &&

@@ -42,11 +42,11 @@ describe('createMoldeaCliCompatibilityResult', () => {
       outputSchemaVersion: 1,
       packages: [
         { name: '@moldea.ai/adapter-anthropic', version: '2.0.1' },
-        { name: '@moldea.ai/adapter-google-genai', version: '1.0.1' },
+        { name: '@moldea.ai/adapter-google-genai', version: '1.0.2' },
         { name: '@moldea.ai/adapter-openai', version: '2.0.3' },
         { name: '@moldea.ai/core', version: '2.0.0' },
         { name: '@moldea.ai/repository', version: '1.0.1' },
-        { name: '@moldea.ai/repository-fs', version: '1.0.1' },
+        { name: '@moldea.ai/repository-fs', version: '1.0.2' },
       ],
       repositoryFormatVersions: [1],
       supportedNodeRange: '^22.11.0 || ^24.11.0',

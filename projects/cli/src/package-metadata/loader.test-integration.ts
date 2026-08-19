@@ -70,7 +70,7 @@ describe('loadMoldeaCliPackageMetadata', () => {
       dependencies: {
         '@moldea.ai/core': '2.0.0',
         '@moldea.ai/repository': '1.0.1',
-        '@moldea.ai/repository-fs': '1.0.1',
+        '@moldea.ai/repository-fs': '1.0.2',
         semver: '7.8.5',
       },
       engines: { node: '^22.11.0 || ^24.11.0' },
@@ -83,13 +83,13 @@ describe('loadMoldeaCliPackageMetadata', () => {
       dependencies: {
         '@moldea.ai/core': '2.0.0',
         '@moldea.ai/repository': '1.0.1',
-        '@moldea.ai/repository-fs': '1.0.1',
+        '@moldea.ai/repository-fs': '1.0.2',
         semver: '7.8.5',
       },
       installedPackageVersions: {
         '@moldea.ai/core': '2.0.0',
         '@moldea.ai/repository': '1.0.1',
-        '@moldea.ai/repository-fs': '1.0.1',
+        '@moldea.ai/repository-fs': '1.0.2',
       },
       supportedNodeRange: '^22.11.0 || ^24.11.0',
       version: '1.0.1',
