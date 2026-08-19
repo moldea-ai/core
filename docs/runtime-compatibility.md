@@ -15,7 +15,7 @@ The matrix publishes only the verified targets and support boundaries shown belo
 | `langchain`         | `@moldea.ai/adapter-langchain`         | `package`      | `public`     | Not available        | `planned`   | Not available    |              `0` |
 | `langgraph`         | `@moldea.ai/adapter-langgraph`         | `package`      | `public`     | Not available        | `planned`   | Not available    |              `0` |
 | `openai`            | `@moldea.ai/adapter-openai`            | `package`      | `public`     | `^2.0.0`             | `available` | `recommended`    |              `1` |
-| `openai-agents-sdk` | `@moldea.ai/adapter-openai-agents-sdk` | `package`      | `public`     | Not available        | `planned`   | Not available    |              `0` |
+| `openai-agents-sdk` | `@moldea.ai/adapter-openai-agents-sdk` | `package`      | `public`     | `^1.0.0`             | `available` | `optional`       |              `1` |
 | `vercel-ai-sdk`     | `@moldea.ai/adapter-vercel-ai-sdk`     | `package`      | `public`     | Not available        | `planned`   | Not available    |              `0` |
 
 ## Adapter: `anthropic`
@@ -211,3 +211,68 @@ Runtime guidance notes: Document project-specific model selection, tool executio
 - Only TypeScript ESM files with supported direct default and relative named imports are interpreted.
 - Package versions are classified from nearest package manifests; lockfiles and installed node_modules are not inspected.
 - Source forms outside the verified TypeScript ESM target, Realtime, Assistants, Agents SDK, streaming semantics, and provider-hosted configuration are not interpreted.
+
+## Adapter: `openai-agents-sdk`
+
+- Owning package: `@moldea.ai/adapter-openai-agents-sdk`
+- Implementation range: `^1.0.0`
+- Supported repository-format versions: `1`
+- Compatible Core range: `^2.0.0`
+- Runtime guidance: `optional`
+- Last verified: `2026-08-19`
+
+Runtime guidance notes: Project-local guidance is needed only for repository-specific wrappers, dynamic graph construction, or unsupported indirect integration patterns.
+
+### Target: `typescript-agent-handoffs-0-16`
+
+- Kind: `package`
+- Support level: `experimental`
+- Language: `typescript`
+- Evidence kinds: `agent-definition`, `handoff-registration`, `instruction-loader`, `language`, `runtime-package`, `schema`, `tool-registration`
+- Last verified: `2026-08-19`
+
+| Ecosystem | Package          | Role      | Verified range     |
+| --------- | ---------------- | --------- | ------------------ |
+| `npm`     | `@openai/agents` | `primary` | `>=0.16.1 <0.17.0` |
+
+#### Binding support
+
+| Subject               | Relationship | Symbol |
+| --------------------- | ------------ | ------ |
+| `runtime-agent`       | `full`       | `full` |
+| `output-schema`       | `full`       | `full` |
+| `instruction-loader`  | `full`       | `full` |
+| `tool-implementation` | `full`       | `full` |
+| `tool-registration`   | `full`       | `full` |
+| `tool-input-schema`   | `full`       | `full` |
+| `tool-output-schema`  | `full`       | `full` |
+
+#### Patterns
+
+| Kind                 | Pattern                             | Support       | Description                                                                                                                                         | Notes         |
+| -------------------- | ----------------------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| `agent`              | `agent-create-construction`         | `full`        | A directly exported TypeScript const constructs an Agent through Agent.create with one closed object-literal configuration.                         | Not available |
+| `agent`              | `direct-agent-construction`         | `full`        | A directly exported TypeScript const constructs an Agent through new Agent with one closed object-literal configuration.                            | Not available |
+| `agent`              | `dynamic-agent-configuration`       | `ambiguous`   | Dynamically assembled Agent configurations cannot be mapped reliably without semantic analysis.                                                     | Not available |
+| `agent`              | `realtime-and-sandbox-agents`       | `unsupported` | Realtime and sandbox agent abstractions are outside the initial Agent target.                                                                       | Not available |
+| `instruction-loader` | `direct-instruction-loader`         | `full`        | A declared instruction loader is used by direct call, direct reference, or one supported single-return dynamic-instruction wrapper.                 | Not available |
+| `routing`            | `agents-as-tools`                   | `unsupported` | Agent-as-tool delegation retains manager control and is not interpreted as a handoff by the initial target.                                         | Not available |
+| `routing`            | `configured-handoff-helper`         | `full`        | A source Agent registers a supported target through handoff with optional closed name and description overrides.                                    | Not available |
+| `routing`            | `direct-agent-handoff`              | `full`        | A source Agent registers a supported target Agent directly in its closed handoffs collection.                                                       | Not available |
+| `routing`            | `dynamic-routing-description`       | `ambiguous`   | Runtime-generated or transformed handoff descriptions and description overrides remain unestablished.                                               | Not available |
+| `routing`            | `effective-routing-description`     | `full`        | Target handoffDescription uses the canonical handoff description when present and the canonical agent-description fallback otherwise.               | Not available |
+| `routing`            | `registration-description-override` | `full`        | A non-empty static toolDescriptionOverride is authoritative for its handoff registration and must use the target effective routing description.     | Not available |
+| `schema`             | `direct-agent-output-schema`        | `full`        | A bound agent output schema is referenced directly through outputType.                                                                              | Not available |
+| `tool`               | `closed-agent-tool-array`           | `full`        | Closed inline or immutable module-local arrays register supported function tools on an Agent.                                                       | Not available |
+| `tool`               | `closed-function-tool`              | `full`        | A directly exported function tool uses the root tool helper, an explicit normalized static name, direct implementation, and direct schema bindings. | Not available |
+| `tool`               | `hosted-and-mcp-tools`              | `unsupported` | Hosted, MCP-generated, namespaced, and tool-search tools are outside the initial repository-local function-tool target.                             | Not available |
+
+#### Known limitations
+
+- Agent output, tool input, and tool output schema contents are not validated; the target establishes only direct schema wiring.
+- Arbitrary compiler resolution, path aliases, directory indexes, package exports, CommonJS, and re-export graphs are not resolved.
+- Custom Handoff objects, agents as tools, hosted tools, MCP tools, Realtime agents, sandbox agents, and dynamically assembled agent graphs are outside the initial target.
+- Function tools require an explicit static name already in the initial normalized runtime subset; omitted names and names requiring SDK normalization are outside the target rather than invalid.
+- Handoff evidence reports a runtime name only for a supported static non-empty toolNameOverride that can be represented as a valid Runtime Adapter Contract machine string. SDK-generated default names and absent, empty, dynamic, unsupported, mutation-obscured, or evidence-unrepresentable overrides are reported as null.
+- Handoff input schemas, callbacks, filters, enablement, runtime variables, guardrails, prompt templates, sessions, tracing, approvals, models, and provider behavior are not interpreted.
+- Routing-description validation supports only static inline, immutable module-local, and directly imported static strings; loaders, file reads, transformations, and runtime-generated values remain unresolved.

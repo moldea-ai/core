@@ -4,6 +4,7 @@ import { describe, expect, test } from 'vitest';
 import type { IStaticAnalysisSourceConfig } from '../types.js';
 import {
   analyzeSource,
+  analyzeTypeScriptModule,
   getCallableExportState,
   getConstExport,
   getRuntimeExport,
@@ -26,6 +27,29 @@ const SOURCE_CONFIG: IStaticAnalysisSourceConfig = {
 };
 
 describe('TypeScript source analysis', () => {
+  test('indexes a provider module without request analysis', () => {
+    const result = analyzeTypeScriptModule(
+      '/src/agent.ts',
+      new TextEncoder().encode(
+        [
+          "import { Client as ProviderClient } from 'provider';",
+          'const client = new ProviderClient();',
+          'const tools = [tool];',
+          'export const agent = client;',
+        ].join('\n'),
+      ),
+      SOURCE_CONFIG.importConfig,
+    );
+
+    if (result.kind !== 'valid') {
+      throw new TypeError('The source fixture must be valid.');
+    }
+
+    expect(result.analysis.clientNames).toStrictEqual(new Set(['client']));
+    expect(result.analysis.moduleArrays.has('tools')).toBe(true);
+    expect(result.analysis.safeModuleArrayNames).toStrictEqual(new Set());
+  });
+
   test('indexes supported imports, clients, arrays, and direct exports', () => {
     const result = analyzeSource(
       '/src/agent.ts',

@@ -136,7 +136,8 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
           dependencies: {
             '@moldea.ai/adapter-anthropic': '2.0.1',
             '@moldea.ai/adapter-google-genai': '1.0.3',
-            '@moldea.ai/adapter-openai': '2.0.3',
+            '@moldea.ai/adapter-openai': '2.0.4',
+            '@moldea.ai/adapter-openai-agents-sdk': '1.0.0',
             '@moldea.ai/core': '2.0.0',
             '@moldea.ai/repository': '1.0.1',
             '@moldea.ai/repository-fs': '1.0.2',
@@ -155,6 +156,7 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
         ...state,
         activeAdapters: [
           createTestRuntimeAdapter('openai'),
+          createTestRuntimeAdapter('openai-agents-sdk'),
           createTestRuntimeAdapter('google-genai'),
           createTestRuntimeAdapter('anthropic'),
         ],

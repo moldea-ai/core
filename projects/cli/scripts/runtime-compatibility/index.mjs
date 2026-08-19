@@ -76,8 +76,13 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     ),
     '@moldea.ai/adapter-openai': selectPackageTarball(
       tarballNames,
-      /^moldea\.ai-adapter-openai-.+\.tgz$/u,
+      /^moldea\.ai-adapter-openai-(?!agents-sdk-).+\.tgz$/u,
       '@moldea.ai/adapter-openai',
+    ),
+    '@moldea.ai/adapter-openai-agents-sdk': selectPackageTarball(
+      tarballNames,
+      /^moldea\.ai-adapter-openai-agents-sdk-.+\.tgz$/u,
+      '@moldea.ai/adapter-openai-agents-sdk',
     ),
     '@moldea.ai/cli': selectPackageTarball(
       tarballNames,
@@ -165,7 +170,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     };
 
     assertRuntimeInvariant(cliManifest?.name === '@moldea.ai/cli', 'The CLI identity is invalid.');
-    assertRuntimeInvariant(cliManifest?.version === '3.1.3', 'The CLI version is invalid.');
+    assertRuntimeInvariant(cliManifest?.version === '3.2.0', 'The CLI version is invalid.');
     assertRuntimeInvariant(
       cliManifest?.engines?.node === '^22.11.0 || ^24.11.0',
       'The CLI runtime range is invalid.',
@@ -174,6 +179,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
       '@moldea.ai/adapter-anthropic',
       '@moldea.ai/adapter-google-genai',
       '@moldea.ai/adapter-openai',
+      '@moldea.ai/adapter-openai-agents-sdk',
       '@moldea.ai/core',
       '@moldea.ai/repository',
       '@moldea.ai/repository-fs',
@@ -192,7 +198,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
 
     assertRuntimeInvariant(versionResult.status === 0, 'The installed CLI version command failed.');
     assertRuntimeInvariant(versionResult.stderr === '', 'The version command wrote stderr.');
-    assertRuntimeInvariant(versionResult.stdout === '3.1.3\n', 'The version output is invalid.');
+    assertRuntimeInvariant(versionResult.stdout === '3.2.0\n', 'The version output is invalid.');
 
     const compatibilityResult = executeCli(
       executablePath,
@@ -209,6 +215,9 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
       ({ id }) => id === 'google-genai',
     );
     const openAiAdapter = compatibilityEnvelope.result?.adapters?.find(({ id }) => id === 'openai');
+    const openAiAgentsSdkAdapter = compatibilityEnvelope.result?.adapters?.find(
+      ({ id }) => id === 'openai-agents-sdk',
+    );
 
     assertRuntimeInvariant(
       compatibilityResult.status === 0,
@@ -224,7 +233,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
       'The compatibility result is invalid.',
     );
     assertRuntimeInvariant(
-      compatibilityEnvelope.cliVersion === '3.1.3' &&
+      compatibilityEnvelope.cliVersion === '3.2.0' &&
         compatibilityEnvelope.schemaVersion === 1 &&
         compatibilityEnvelope.result?.outputSchemaVersion === 1,
       'The compatibility envelope is invalid.',
@@ -234,7 +243,8 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
         JSON.stringify([
           { name: '@moldea.ai/adapter-anthropic', version: '2.0.1' },
           { name: '@moldea.ai/adapter-google-genai', version: '1.0.3' },
-          { name: '@moldea.ai/adapter-openai', version: '2.0.3' },
+          { name: '@moldea.ai/adapter-openai', version: '2.0.4' },
+          { name: '@moldea.ai/adapter-openai-agents-sdk', version: '1.0.0' },
           { name: '@moldea.ai/core', version: '2.0.0' },
           { name: '@moldea.ai/repository', version: '1.0.1' },
           { name: '@moldea.ai/repository-fs', version: '1.0.2' },
@@ -278,7 +288,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     );
     assertRuntimeInvariant(
       openAiAdapter?.active === true &&
-        openAiAdapter.bundledVersion === '2.0.3' &&
+        openAiAdapter.bundledVersion === '2.0.4' &&
         openAiAdapter.matrix?.implementationStatus === 'available' &&
         openAiAdapter.matrix?.compatibleCoreRange === '^2.0.0' &&
         openAiAdapter.matrix?.runtimeGuidance?.expectation === 'recommended' &&
@@ -286,6 +296,18 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
         openAiAdapter.matrix?.targets?.[0]?.id === 'typescript-responses-api-7' &&
         openAiAdapter.matrix?.targets?.[0]?.supportLevel === 'experimental',
       'The OpenAI compatibility claim is invalid.',
+    );
+    assertRuntimeInvariant(
+      openAiAgentsSdkAdapter?.active === true &&
+        openAiAgentsSdkAdapter.bundledVersion === '1.0.0' &&
+        openAiAgentsSdkAdapter.matrix?.implementationStatus === 'available' &&
+        openAiAgentsSdkAdapter.matrix?.compatibleCoreRange === '^2.0.0' &&
+        openAiAgentsSdkAdapter.matrix?.runtimeGuidance?.expectation === 'optional' &&
+        JSON.stringify(openAiAgentsSdkAdapter.matrix?.supportedRepositoryFormatVersions) ===
+          '[1]' &&
+        openAiAgentsSdkAdapter.matrix?.targets?.[0]?.id === 'typescript-agent-handoffs-0-16' &&
+        openAiAgentsSdkAdapter.matrix?.targets?.[0]?.supportLevel === 'experimental',
+      'The OpenAI Agents SDK compatibility claim is invalid.',
     );
 
     executeFixtureGit(consumerDirectory, hooksDirectory, environment, ['init']);
@@ -300,7 +322,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
         'agents:',
         '  support:',
         '    runtime:',
-        '      id: openai',
+        '      id: openai-agents-sdk',
         '    bindings:',
         '      runtimeAgent:',
         '        path: /src/agent.ts',
@@ -323,9 +345,8 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     await writeFile(
       path.join(consumerDirectory, 'src', 'agent.ts'),
       [
-        "import OpenAI from 'openai';",
-        'const client = new OpenAI();',
-        "export const supportAgent = () => client.responses.create({ input: 'hello' });",
+        "import { Agent } from '@openai/agents';",
+        "export const supportAgent = new Agent({ name: 'support', instructions: 'Help users.' });",
         '',
       ].join('\n'),
       'utf8',
@@ -335,7 +356,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     );
     await writeFile(
       path.join(consumerDirectory, 'package.json'),
-      `${JSON.stringify({ ...consumerManifest, dependencies: { openai: '^7.4.0' } }, null, 2)}\n`,
+      `${JSON.stringify({ ...consumerManifest, dependencies: { '@openai/agents': '^0.16.1' } }, null, 2)}\n`,
       'utf8',
     );
     executeFixtureGit(consumerDirectory, hooksDirectory, environment, [
@@ -393,11 +414,11 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
         })),
       ) ===
         JSON.stringify([
-          { kind: 'language', source: 'openai' },
-          { kind: 'runtime-package', source: 'openai' },
-          { kind: 'runtime-pattern', source: 'openai' },
+          { kind: 'agent-definition', source: 'openai-agents-sdk' },
+          { kind: 'language', source: 'openai-agents-sdk' },
+          { kind: 'runtime-package', source: 'openai-agents-sdk' },
         ]),
-      'Inspection omitted the OpenAI adapter evidence.',
+      'Inspection omitted the OpenAI Agents SDK adapter evidence.',
     );
     assertRuntimeInvariant(
       !`${compatibilityResult.stdout}${validateResult.stdout}${inspectResult.stdout}`.includes(

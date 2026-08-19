@@ -1,0 +1,60 @@
+{
+  "name": "@moldea.ai/adapter-openai-agents-sdk",
+  "version": "1.0.0",
+  "description": "Deterministic runtime evidence and diagnostics for direct OpenAI Agents SDK integrations.",
+  "homepage": "https://github.com/moldea-ai/packages/tree/main/projects/adapter-openai-agents-sdk#readme",
+  "bugs": {
+    "url": "https://github.com/moldea-ai/packages/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/moldea-ai/packages.git",
+    "directory": "projects/adapter-openai-agents-sdk"
+  },
+  "license": "MIT",
+  "author": "Jesus Graterol",
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "cover.png",
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "engines": {
+    "node": "^22.11.0 || ^24.11.0"
+  },
+  "scripts": {
+    "build": "vite build --emptyOutDir && tsc -p tsconfig.build.json",
+    "dev": "vite build --watch",
+    "lint": "eslint .",
+    "test": "pnpm run test:unit && pnpm run test:integration",
+    "test:integration": "pnpm run build && vitest run --config vitest/test-integration.config.ts",
+    "test:unit": "vitest run --config vitest/test-unit.config.ts",
+    "typecheck": "tsc -p tsconfig.src.json --noEmit && tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@moldea.ai/core": "workspace:^2.0.0",
+    "@moldea.ai/repository": "workspace:^1.0.0",
+    "semver": "7.8.5",
+    "typescript": "6.0.3"
+  },
+  "devDependencies": {
+    "@moldea.ai/adapter-static-analysis": "workspace:*",
+    "@types/node": "22.20.1",
+    "@types/semver": "7.8.0",
+    "vite": "8.2.1",
+    "vitest": "4.1.10"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

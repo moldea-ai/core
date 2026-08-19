@@ -407,10 +407,10 @@ test('presents available runtime adapters without promoting planned inventory', 
   ).toBeVisible();
   await expect(adapterSection.getByRole('link', { name: /anthropic/ })).toBeVisible();
   await expect(adapterSection.getByRole('link', { name: /custom/ })).toBeVisible();
-  await expect(adapterSection.getByRole('link', { name: /openai/ })).toBeVisible();
+  await expect(adapterSection.getByRole('link', { name: /openai/ })).toHaveCount(2);
   await expect(adapterSection.getByAltText('Anthropic company logo')).toBeVisible();
   await expect(adapterSection.getByRole('img', { name: 'Custom adapter icon' })).toBeVisible();
-  await expect(adapterSection.getByAltText('OpenAI company logo')).toBeVisible();
+  await expect(adapterSection.getByAltText('OpenAI company logo')).toHaveCount(2);
   await expect(adapterSection.getByRole('link', { name: /claude-agent-sdk/ })).toHaveCount(0);
   await expect(adapterSection.getByRole('link', { name: 'View all adapters' })).toHaveAttribute(
     'href',
@@ -506,7 +506,7 @@ test('shows company marks for runtime adapters on the packages page', async ({ p
   const runtimeAdapters = page.locator('section[aria-labelledby="adapter-packages-title"]');
 
   await expect(runtimeAdapters.getByAltText('Anthropic company logo')).toBeVisible();
-  await expect(runtimeAdapters.getByAltText('OpenAI company logo')).toBeVisible();
+  await expect(runtimeAdapters.getByAltText('OpenAI company logo')).toHaveCount(2);
   await expect(runtimeAdapters.getByRole('img', { name: 'Custom adapter icon' })).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Website Foundations' })).toHaveCount(0);
   await expect(page.getByRole('link', { name: /@moldea.ai\/website-ui/ })).toHaveCount(0);

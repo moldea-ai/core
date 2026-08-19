@@ -6,6 +6,7 @@ import type {
   IStaticAnalysisModuleValueSourceResult,
   IStaticAnalysisSource,
   IStaticAnalysisSourceConfig,
+  IStaticAnalysisImportConfig,
 } from '../types.js';
 import { normalizeText } from '../text/index.js';
 import {
@@ -48,18 +49,18 @@ const createSyntaxProgram = (sourceFile: ts.SourceFile, text: string): ts.Progra
 };
 
 /**
- * Parses and indexes one TypeScript source without execution, emit, or typechecking.
+ * Parses and indexes one TypeScript module without provider request assumptions.
  * @param path The normalized logical source path.
  * @param bytes The exact source bytes returned by the adapter reader.
- * @param config The provider import and request analysis contract.
+ * @param importConfig The provider constructor-import contract.
  * @param signal The active inspection signal.
  * @returns A source analysis or stable invalid-text or invalid-syntax result.
  * @throws If source analysis is aborted.
  */
-export const analyzeSource = (
+export const analyzeTypeScriptModule = (
   path: string,
   bytes: Uint8Array,
-  config: IStaticAnalysisSourceConfig,
+  importConfig: IStaticAnalysisImportConfig,
   signal?: AbortSignal,
 ): IStaticAnalysisModuleValueSourceResult => {
   signal?.throwIfAborted();
@@ -96,7 +97,7 @@ export const analyzeSource = (
     });
   }
 
-  const { constructorNames, namedImports } = indexImports(sourceFile, config.importConfig);
+  const { constructorNames, namedImports } = indexImports(sourceFile, importConfig);
   signal?.throwIfAborted();
   const { clientNames, exports, moduleArrays, moduleConstDeclarations } = indexModuleDeclarations(
     sourceFile,
@@ -107,7 +108,7 @@ export const analyzeSource = (
   signal?.throwIfAborted();
   const localBindingNames = indexLocalBindingNames(sourceFile);
   signal?.throwIfAborted();
-  const preliminaryAnalysis: IStaticAnalysisModuleValueSource = Object.freeze({
+  const analysis: IStaticAnalysisModuleValueSource = Object.freeze({
     clientNames,
     constructorNames,
     exports,
@@ -121,9 +122,35 @@ export const analyzeSource = (
     sourceFile,
     text,
   });
+  signal?.throwIfAborted();
+
+  return Object.freeze({ analysis, kind: 'valid' });
+};
+
+/**
+ * Parses one TypeScript source and indexes provider request-specific array safety.
+ * @param path The normalized logical source path.
+ * @param bytes The exact source bytes returned by the adapter reader.
+ * @param config The provider import and request analysis contract.
+ * @param signal The active inspection signal.
+ * @returns A source analysis or stable invalid-text or invalid-syntax result.
+ * @throws If source analysis is aborted.
+ */
+export const analyzeSource = (
+  path: string,
+  bytes: Uint8Array,
+  config: IStaticAnalysisSourceConfig,
+  signal?: AbortSignal,
+): IStaticAnalysisModuleValueSourceResult => {
+  const moduleResult = analyzeTypeScriptModule(path, bytes, config.importConfig, signal);
+
+  if (moduleResult.kind !== 'valid') {
+    return moduleResult;
+  }
+
   const analysis: IStaticAnalysisModuleValueSource = Object.freeze({
-    ...preliminaryAnalysis,
-    safeModuleArrayNames: indexSafeModuleArrayNames(preliminaryAnalysis, config.requestConfig),
+    ...moduleResult.analysis,
+    safeModuleArrayNames: indexSafeModuleArrayNames(moduleResult.analysis, config.requestConfig),
   });
   signal?.throwIfAborted();
 

@@ -17,6 +17,7 @@ on:
           - adapter-anthropic
           - adapter-google-genai
           - adapter-openai
+          - adapter-openai-agents-sdk
           - cli
           - website-ui
       mode:
@@ -55,6 +56,8 @@ jobs:
       adapter_google_genai_previous_version: ${{ steps.release.outputs.adapter_google_genai_previous_version }}
       adapter_openai: ${{ steps.release.outputs.adapter_openai }}
       adapter_openai_previous_version: ${{ steps.release.outputs.adapter_openai_previous_version }}
+      adapter_openai_agents_sdk: ${{ steps.release.outputs.adapter_openai_agents_sdk }}
+      adapter_openai_agents_sdk_previous_version: ${{ steps.release.outputs.adapter_openai_agents_sdk_previous_version }}
       cli: ${{ steps.release.outputs.cli }}
       core: ${{ steps.release.outputs.core }}
       has_releases: ${{ steps.release.outputs.has_releases }}
@@ -269,6 +272,43 @@ jobs:
       previous_version: ${{ needs.plan.outputs.adapter_openai_previous_version }}
       project: adapter-openai
 
+  release_adapter_openai_agents_sdk:
+    name: Release OpenAI Agents SDK Adapter
+    needs:
+      - plan
+      - verify
+      - release_repository
+      - release_repository_fs
+      - release_core
+      - release_adapter_anthropic
+      - release_adapter_google_genai
+      - release_adapter_openai
+    if: >-
+      ${{
+        always() &&
+        needs.plan.outputs.adapter_openai_agents_sdk == 'true' &&
+        needs.verify.result == 'success' &&
+        (needs.release_repository.result == 'success' ||
+          needs.release_repository.result == 'skipped') &&
+        (needs.release_repository_fs.result == 'success' ||
+          needs.release_repository_fs.result == 'skipped') &&
+        (needs.release_core.result == 'success' || needs.release_core.result == 'skipped') &&
+        (needs.release_adapter_anthropic.result == 'success' ||
+          needs.release_adapter_anthropic.result == 'skipped') &&
+        (needs.release_adapter_google_genai.result == 'success' ||
+          needs.release_adapter_google_genai.result == 'skipped') &&
+        (needs.release_adapter_openai.result == 'success' ||
+          needs.release_adapter_openai.result == 'skipped')
+      }}
+    permissions:
+      contents: write
+      id-token: write
+    uses: ./.github/workflows/publish-package.yml
+    with:
+      mode: ${{ needs.plan.outputs.mode }}
+      previous_version: ${{ needs.plan.outputs.adapter_openai_agents_sdk_previous_version }}
+      project: adapter-openai-agents-sdk
+
   release_cli:
     name: Release CLI
     needs:
@@ -280,6 +320,7 @@ jobs:
       - release_adapter_anthropic
       - release_adapter_google_genai
       - release_adapter_openai
+      - release_adapter_openai_agents_sdk
     if: >-
       ${{
         always() &&
@@ -295,7 +336,9 @@ jobs:
         (needs.release_adapter_google_genai.result == 'success' ||
           needs.release_adapter_google_genai.result == 'skipped') &&
         (needs.release_adapter_openai.result == 'success' ||
-          needs.release_adapter_openai.result == 'skipped')
+          needs.release_adapter_openai.result == 'skipped') &&
+        (needs.release_adapter_openai_agents_sdk.result == 'success' ||
+          needs.release_adapter_openai_agents_sdk.result == 'skipped')
       }}
     permissions:
       contents: write

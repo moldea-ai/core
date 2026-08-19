@@ -6,6 +6,7 @@ export type INpmReleaseProject =
   | 'adapter-anthropic'
   | 'adapter-google-genai'
   | 'adapter-openai'
+  | 'adapter-openai-agents-sdk'
   | 'cli'
   | 'core'
   | 'repository'

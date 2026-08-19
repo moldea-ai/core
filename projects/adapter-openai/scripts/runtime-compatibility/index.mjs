@@ -24,7 +24,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
   const packageTarballNames = [
     selectPackageTarball(
       tarballNames,
-      /^moldea\.ai-adapter-openai-.+\.tgz$/u,
+      /^moldea\.ai-adapter-openai-(?!agents-sdk-).+\.tgz$/u,
       '@moldea.ai/adapter-openai',
     ),
     selectPackageTarball(tarballNames, /^moldea\.ai-core-.+\.tgz$/u, '@moldea.ai/core'),
