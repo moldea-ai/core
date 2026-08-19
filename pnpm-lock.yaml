@@ -294,7 +294,7 @@ importers:
         specifier: workspace:1.0.3
         version: link:../adapter-google-genai
       '@moldea.ai/adapter-openai':
-        specifier: workspace:2.0.3
+        specifier: workspace:2.0.4
         version: link:../adapter-openai
       '@moldea.ai/adapter-openai-agents-sdk':
         specifier: workspace:1.0.0

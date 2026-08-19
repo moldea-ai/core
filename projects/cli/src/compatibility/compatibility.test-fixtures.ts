@@ -14,7 +14,7 @@ export const INSTALLED_PACKAGE_METADATA: IMoldeaCliPackageMetadata = Object.free
   dependencies: Object.freeze({
     '@moldea.ai/adapter-anthropic': 'workspace:2.0.1',
     '@moldea.ai/adapter-google-genai': 'workspace:1.0.3',
-    '@moldea.ai/adapter-openai': 'workspace:2.0.3',
+    '@moldea.ai/adapter-openai': 'workspace:2.0.4',
     '@moldea.ai/adapter-openai-agents-sdk': 'workspace:1.0.0',
     '@moldea.ai/core': 'workspace:2.0.0',
     '@moldea.ai/repository': 'workspace:1.0.1',
@@ -24,7 +24,7 @@ export const INSTALLED_PACKAGE_METADATA: IMoldeaCliPackageMetadata = Object.free
   installedPackageVersions: Object.freeze({
     '@moldea.ai/adapter-anthropic': '2.0.1',
     '@moldea.ai/adapter-google-genai': '1.0.3',
-    '@moldea.ai/adapter-openai': '2.0.3',
+    '@moldea.ai/adapter-openai': '2.0.4',
     '@moldea.ai/adapter-openai-agents-sdk': '1.0.0',
     '@moldea.ai/core': '2.0.0',
     '@moldea.ai/repository': '1.0.1',

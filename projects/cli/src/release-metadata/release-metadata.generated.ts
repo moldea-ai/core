@@ -713,7 +713,7 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
     },
     {
       name: '@moldea.ai/adapter-openai',
-      version: '2.0.3',
+      version: '2.0.4',
     },
     {
       name: '@moldea.ai/adapter-openai-agents-sdk',

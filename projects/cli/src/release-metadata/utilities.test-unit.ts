@@ -54,7 +54,7 @@ describe('CLI release metadata immutability', () => {
       packages: [
         { name: '@moldea.ai/adapter-anthropic', version: '2.0.1' },
         { name: '@moldea.ai/adapter-google-genai', version: '1.0.3' },
-        { name: '@moldea.ai/adapter-openai', version: '2.0.3' },
+        { name: '@moldea.ai/adapter-openai', version: '2.0.4' },
         { name: '@moldea.ai/adapter-openai-agents-sdk', version: '1.0.0' },
         { name: '@moldea.ai/core', version: '2.0.0' },
         { name: '@moldea.ai/repository', version: '1.0.1' },

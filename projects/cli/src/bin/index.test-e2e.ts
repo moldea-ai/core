@@ -210,7 +210,7 @@ describe('published CLI package and executable', () => {
       'workspace:2.0.0',
       'workspace:2.0.1',
       'workspace:1.0.3',
-      'workspace:2.0.3',
+      'workspace:2.0.4',
       'workspace:1.0.0',
       'workspace:1.0.1',
       'workspace:1.0.2',
@@ -250,7 +250,7 @@ describe('published CLI package and executable', () => {
         '2.0.0',
         '2.0.1',
         '1.0.3',
-        '2.0.3',
+        '2.0.4',
         '1.0.0',
         '1.0.1',
         '1.0.2',
@@ -483,7 +483,7 @@ describe('published CLI package and executable', () => {
         'google-genai: active=yes, bundled=1.0.3, kind=package, package=@moldea.ai/adapter-google-genai, status=available\n',
       );
       expect(humanCompatibility.stdout).toContain(
-        'openai: active=yes, bundled=2.0.3, kind=package, package=@moldea.ai/adapter-openai, status=available\n',
+        'openai: active=yes, bundled=2.0.4, kind=package, package=@moldea.ai/adapter-openai, status=available\n',
       );
       expect(humanCompatibility.stdout).toContain(
         'openai-agents-sdk: active=yes, bundled=1.0.0, kind=package, package=@moldea.ai/adapter-openai-agents-sdk, status=available\n',
@@ -531,7 +531,7 @@ describe('published CLI package and executable', () => {
           packages: [
             { name: '@moldea.ai/adapter-anthropic', version: '2.0.1' },
             { name: '@moldea.ai/adapter-google-genai', version: '1.0.3' },
-            { name: '@moldea.ai/adapter-openai', version: '2.0.3' },
+            { name: '@moldea.ai/adapter-openai', version: '2.0.4' },
             { name: '@moldea.ai/adapter-openai-agents-sdk', version: '1.0.0' },
             { name: '@moldea.ai/core', version: '2.0.0' },
             { name: '@moldea.ai/repository', version: '1.0.1' },
@@ -595,7 +595,7 @@ describe('published CLI package and executable', () => {
       expect(compatibilityEnvelope.result.adapters.find(({ id }) => id === 'openai')).toMatchObject(
         {
           active: true,
-          bundledVersion: '2.0.3',
+          bundledVersion: '2.0.4',
           id: 'openai',
           matrix: {
             compatibleCoreRange: '^2.0.0',

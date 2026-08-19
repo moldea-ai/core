@@ -243,7 +243,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
         JSON.stringify([
           { name: '@moldea.ai/adapter-anthropic', version: '2.0.1' },
           { name: '@moldea.ai/adapter-google-genai', version: '1.0.3' },
-          { name: '@moldea.ai/adapter-openai', version: '2.0.3' },
+          { name: '@moldea.ai/adapter-openai', version: '2.0.4' },
           { name: '@moldea.ai/adapter-openai-agents-sdk', version: '1.0.0' },
           { name: '@moldea.ai/core', version: '2.0.0' },
           { name: '@moldea.ai/repository', version: '1.0.1' },
@@ -288,7 +288,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     );
     assertRuntimeInvariant(
       openAiAdapter?.active === true &&
-        openAiAdapter.bundledVersion === '2.0.3' &&
+        openAiAdapter.bundledVersion === '2.0.4' &&
         openAiAdapter.matrix?.implementationStatus === 'available' &&
         openAiAdapter.matrix?.compatibleCoreRange === '^2.0.0' &&
         openAiAdapter.matrix?.runtimeGuidance?.expectation === 'recommended' &&

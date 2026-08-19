@@ -41,7 +41,7 @@
   "dependencies": {
     "@moldea.ai/adapter-anthropic": "workspace:2.0.1",
     "@moldea.ai/adapter-google-genai": "workspace:1.0.3",
-    "@moldea.ai/adapter-openai": "workspace:2.0.3",
+    "@moldea.ai/adapter-openai": "workspace:2.0.4",
     "@moldea.ai/adapter-openai-agents-sdk": "workspace:1.0.0",
     "@moldea.ai/core": "workspace:2.0.0",
     "@moldea.ai/repository": "workspace:1.0.1",
