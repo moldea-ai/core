@@ -313,7 +313,7 @@ describe('filesystem file-capture coordination', () => {
       const secondRead = readFilesystemRepositoryFile(state, logicalPath);
 
       await Promise.resolve();
-      await writeFile(hostPath, Uint8Array.from([19, 18, 17]));
+      await writeFile(hostPath, Uint8Array.from([19, 18, 17, 16]));
       captureRelease.resolve();
 
       await Promise.all([
