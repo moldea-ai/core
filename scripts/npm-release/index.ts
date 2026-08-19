@@ -37,7 +37,11 @@ export {
 } from './validations.ts';
 
 // planning
-export { createNpmReleaseWorkflowOutputs, createNpmReleaseWorkflowPlan } from './planning.ts';
+export {
+  createNpmReleaseWorkflowOutputs,
+  createNpmReleaseWorkflowPlan,
+  selectChangedNpmReleaseProjects,
+} from './planning.ts';
 
 // project changes
 export { loadNpmReleaseProjectChanges } from './project-changes.ts';

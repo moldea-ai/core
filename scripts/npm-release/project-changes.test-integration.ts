@@ -70,6 +70,21 @@ const loadChanges = (baseCommit: string, currentCommit: string) =>
     currentCommit,
   );
 
+const createPublishedVersions = (unpublishedProjects: readonly INpmReleaseProject[] = []) => {
+  const unpublishedProjectSet = new Set(unpublishedProjects);
+
+  return {
+    'adapter-anthropic': unpublishedProjectSet.has('adapter-anthropic') ? [] : ['1.0.0'],
+    'adapter-google-genai': unpublishedProjectSet.has('adapter-google-genai') ? [] : ['1.0.0'],
+    'adapter-openai': unpublishedProjectSet.has('adapter-openai') ? [] : ['1.0.0'],
+    cli: unpublishedProjectSet.has('cli') ? [] : ['1.0.0'],
+    core: unpublishedProjectSet.has('core') ? [] : ['1.0.0'],
+    repository: unpublishedProjectSet.has('repository') ? [] : ['1.0.0'],
+    'repository-fs': unpublishedProjectSet.has('repository-fs') ? [] : ['1.0.0'],
+    'website-ui': unpublishedProjectSet.has('website-ui') ? [] : ['1.0.0'],
+  };
+};
+
 beforeEach(async () => {
   repositoryDirectory = await mkdtemp(join(tmpdir(), 'moldea-npm-release-'));
   runGit(['init', '--quiet', '--initial-branch', 'main']);
@@ -145,6 +160,7 @@ describe('npm release project changes', () => {
       mode: '',
       project: '',
       projectChanges,
+      publishedVersions: createPublishedVersions(['adapter-anthropic']),
     });
 
     expect(projectChanges['adapter-anthropic']).toStrictEqual({
@@ -241,6 +257,7 @@ describe('npm release project changes', () => {
         mode: '',
         project: '',
         projectChanges,
+        publishedVersions: createPublishedVersions(),
       }),
     ).toThrow('must declare a greater stable package version');
   });

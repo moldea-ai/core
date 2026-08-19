@@ -45,6 +45,24 @@ const createProjectChanges = (
     ]),
   ) as INpmReleaseWorkflowPlanSources['projectChanges'];
 
+const createPublishedVersions = (
+  overrides: Partial<Record<INpmReleaseProject, readonly string[]>> = {},
+): INpmReleaseWorkflowPlanSources['publishedVersions'] =>
+  Object.fromEntries(
+    (
+      [
+        'adapter-anthropic',
+        'adapter-google-genai',
+        'adapter-openai',
+        'cli',
+        'core',
+        'repository',
+        'repository-fs',
+        'website-ui',
+      ] as const
+    ).map((project) => [project, overrides[project] ?? ['1.0.0']]),
+  ) as INpmReleaseWorkflowPlanSources['publishedVersions'];
+
 describe('npm release workflow planning', () => {
   test('selects one explicit project for manual bootstrap or recovery', () => {
     expect(
@@ -53,6 +71,7 @@ describe('npm release workflow planning', () => {
         mode: 'bootstrap',
         project: 'core',
         projectChanges: createProjectChanges(),
+        publishedVersions: createPublishedVersions(),
       }),
     ).toStrictEqual({
       mode: 'bootstrap',
@@ -80,6 +99,10 @@ describe('npm release workflow planning', () => {
           repository: { currentVersion: '1.1.0', isChanged: true },
           'repository-fs': { currentVersion: '2.0.0', isChanged: true },
           'website-ui': { currentVersion: '1.0.0', isChanged: true, previousVersion: null },
+        }),
+        publishedVersions: createPublishedVersions({
+          'adapter-google-genai': [],
+          'website-ui': [],
         }),
       }),
     ).toStrictEqual({
@@ -120,6 +143,7 @@ describe('npm release workflow planning', () => {
             previousVersion: null,
           },
         }),
+        publishedVersions: createPublishedVersions({ 'adapter-anthropic': [] }),
       }),
     ).toStrictEqual({
       mode: 'trusted',
@@ -136,11 +160,81 @@ describe('npm release workflow planning', () => {
         mode: '',
         project: '',
         projectChanges: createProjectChanges(),
+        publishedVersions: createPublishedVersions(),
       }),
     ).toStrictEqual({
       mode: 'trusted',
       previousVersions: NO_PREVIOUS_VERSIONS,
       projects: [],
+      trigger: 'automatic',
+    });
+  });
+
+  test('selects safe unpublished versions that were not changed by the triggering push', () => {
+    expect(
+      createNpmReleaseWorkflowPlan({
+        eventName: 'push',
+        mode: '',
+        project: '',
+        projectChanges: createProjectChanges({
+          'adapter-google-genai': {
+            currentVersion: '1.0.2',
+            previousVersion: '1.0.2',
+          },
+          cli: { currentVersion: '3.1.2', previousVersion: '3.1.2' },
+          'website-ui': { currentVersion: '1.1.2', previousVersion: '1.1.2' },
+        }),
+        publishedVersions: createPublishedVersions({
+          'adapter-google-genai': ['1.0.0'],
+          cli: ['3.0.1', '2.0.0'],
+          'website-ui': ['1.0.0', '1.1.2'],
+        }),
+      }),
+    ).toStrictEqual({
+      mode: 'trusted',
+      previousVersions: {
+        'adapter-anthropic': null,
+        'adapter-google-genai': '1.0.0',
+        'adapter-openai': null,
+        cli: '3.0.1',
+        core: null,
+        repository: null,
+        'repository-fs': null,
+        'website-ui': null,
+      },
+      projects: ['adapter-google-genai', 'cli'],
+      trigger: 'automatic',
+    });
+  });
+
+  test('selects a changed published version for release tag validation', () => {
+    expect(
+      createNpmReleaseWorkflowPlan({
+        eventName: 'push',
+        mode: '',
+        project: '',
+        projectChanges: createProjectChanges({
+          core: {
+            currentVersion: '1.1.0',
+            isChanged: true,
+            previousVersion: '1.0.0',
+          },
+        }),
+        publishedVersions: createPublishedVersions({ core: ['1.0.0', '1.1.0'] }),
+      }),
+    ).toStrictEqual({
+      mode: 'trusted',
+      previousVersions: {
+        'adapter-anthropic': null,
+        'adapter-google-genai': null,
+        'adapter-openai': null,
+        cli: null,
+        core: '1.0.0',
+        repository: null,
+        'repository-fs': null,
+        'website-ui': null,
+      },
+      projects: ['core'],
       trigger: 'automatic',
     });
   });
@@ -154,6 +248,7 @@ describe('npm release workflow planning', () => {
         core: { currentVersion: '1.0.1', isChanged: true },
         repository: { currentVersion: '1.1.0', isChanged: true },
       }),
+      publishedVersions: createPublishedVersions(),
     });
 
     expect(createNpmReleaseWorkflowOutputs(plan)).toStrictEqual({
@@ -194,6 +289,7 @@ describe('npm release workflow planning', () => {
         projectChanges: createProjectChanges({
           core: { currentVersion, isChanged: true },
         }),
+        publishedVersions: createPublishedVersions(),
       }),
     ).toThrow('must declare a greater stable package version');
   });
@@ -210,8 +306,21 @@ describe('npm release workflow planning', () => {
         projectChanges: createProjectChanges({
           'adapter-anthropic': { currentVersion, isChanged: true, previousVersion: null },
         }),
+        publishedVersions: createPublishedVersions({ 'adapter-anthropic': [] }),
       }),
     ).toThrow('must declare a greater stable package version');
+  });
+
+  test('rejects a repository version lower than the latest published version', () => {
+    expect(() =>
+      createNpmReleaseWorkflowPlan({
+        eventName: 'push',
+        mode: '',
+        project: '',
+        projectChanges: createProjectChanges(),
+        publishedVersions: createPublishedVersions({ core: ['1.0.0', '1.1.0'] }),
+      }),
+    ).toThrow('must not be lower than its latest published version');
   });
 
   test.each([
@@ -227,6 +336,7 @@ describe('npm release workflow planning', () => {
         mode: '',
         project: '',
         projectChanges: createProjectChanges(),
+        publishedVersions: createPublishedVersions(),
         ...override,
       }),
     ).toThrow();

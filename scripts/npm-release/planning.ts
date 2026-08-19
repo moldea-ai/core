@@ -19,7 +19,13 @@ const NO_PREVIOUS_VERSIONS = Object.freeze({
   'website-ui': null,
 }) satisfies Readonly<Record<INpmReleaseProject, null>>;
 
-const requireStableReleaseVersion = (
+const requireStableReleaseVersion = (project: INpmReleaseProject, currentVersion: string): void => {
+  if (valid(currentVersion) !== currentVersion || prerelease(currentVersion) !== null) {
+    throw new TypeError(`The ${project} project must declare a canonical stable package version.`);
+  }
+};
+
+const requireChangedReleaseVersion = (
   project: INpmReleaseProject,
   previousVersion: string | null,
   currentVersion: string,
@@ -36,7 +42,48 @@ const requireStableReleaseVersion = (
   }
 };
 
-/** Binds selected automatic releases to their preceding main versions. */
+/** Returns the greatest canonical version currently published for one project. */
+const getLatestPublishedVersion = (
+  project: INpmReleaseProject,
+  publishedVersions: readonly string[],
+): string | null => {
+  let latestVersion: string | null = null;
+
+  for (const publishedVersion of publishedVersions) {
+    if (valid(publishedVersion) !== publishedVersion) {
+      throw new TypeError(`The ${project} npm registry versions are invalid.`);
+    }
+
+    if (latestVersion === null || gt(publishedVersion, latestVersion)) {
+      latestVersion = publishedVersion;
+    }
+  }
+
+  return latestVersion;
+};
+
+/**
+ * Selects changed public projects after validating their manifest version progression.
+ * @param projectChanges The package state across the exact compared Git commits.
+ * @returns The changed projects in dependency order.
+ * @throws
+ * - If a changed package does not declare a greater canonical stable version
+ */
+export const selectChangedNpmReleaseProjects = (
+  projectChanges: INpmReleaseWorkflowPlanSources['projectChanges'],
+): readonly INpmReleaseProject[] =>
+  NPM_RELEASE_PROJECT_ORDER.filter((project) => {
+    const change = projectChanges[project];
+
+    if (!change.isChanged) {
+      return false;
+    }
+
+    requireChangedReleaseVersion(project, change.previousVersion, change.currentVersion);
+    return true;
+  });
+
+/** Binds selected automatic releases to their latest published versions. */
 const createPreviousVersions = (
   sources: INpmReleaseWorkflowPlanSources,
   projects: readonly INpmReleaseProject[],
@@ -47,7 +94,13 @@ const createPreviousVersions = (
     Object.fromEntries(
       NPM_RELEASE_PROJECT_ORDER.map((project) => [
         project,
-        selectedProjects.has(project) ? sources.projectChanges[project].previousVersion : null,
+        selectedProjects.has(project)
+          ? sources.publishedVersions[project].includes(
+              sources.projectChanges[project].currentVersion,
+            )
+            ? sources.projectChanges[project].previousVersion
+            : getLatestPublishedVersion(project, sources.publishedVersions[project])
+          : null,
       ]),
     ) as Record<INpmReleaseProject, string | null>,
   );
@@ -116,15 +169,23 @@ export const createNpmReleaseWorkflowPlan = (
     throw new TypeError('The npm release workflow trigger is invalid.');
   }
 
+  selectChangedNpmReleaseProjects(sources.projectChanges);
+
   const projects = NPM_RELEASE_PROJECT_ORDER.filter((project) => {
     const change = sources.projectChanges[project];
+    const publishedVersions = sources.publishedVersions[project];
 
-    if (!change.isChanged) {
-      return false;
+    requireStableReleaseVersion(project, change.currentVersion);
+
+    const latestPublishedVersion = getLatestPublishedVersion(project, publishedVersions);
+
+    if (latestPublishedVersion !== null && gt(latestPublishedVersion, change.currentVersion)) {
+      throw new TypeError(
+        `The ${project} project version must not be lower than its latest published version.`,
+      );
     }
 
-    requireStableReleaseVersion(project, change.previousVersion, change.currentVersion);
-    return true;
+    return change.isChanged || !publishedVersions.includes(change.currentVersion);
   });
 
   return {

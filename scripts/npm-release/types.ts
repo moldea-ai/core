@@ -27,12 +27,13 @@ export interface INpmReleaseProjectChange {
   previousVersion: string | null;
 }
 
-// untrusted workflow trigger and package-change state used to select releases
+// untrusted workflow trigger, package-change, and registry state used to select releases
 export interface INpmReleaseWorkflowPlanSources {
   eventName: string;
   mode: string;
   project: string;
   projectChanges: Readonly<Record<INpmReleaseProject, INpmReleaseProjectChange>>;
+  publishedVersions: Readonly<Record<INpmReleaseProject, readonly string[]>>;
 }
 
 // validated package selection consumed by the publication workflow
