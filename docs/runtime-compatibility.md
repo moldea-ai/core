@@ -8,7 +8,7 @@ The matrix publishes only the verified targets and support boundaries shown belo
 | ------------------- | -------------------------------------- | -------------- | ------------ | -------------------- | ----------- | ---------------- | ---------------: |
 | `anthropic`         | `@moldea.ai/adapter-anthropic`         | `package`      | `public`     | `^2.0.0`             | `available` | `optional`       |              `1` |
 | `claude-agent-sdk`  | `@moldea.ai/adapter-claude-agent-sdk`  | `package`      | `public`     | `^1.0.0`             | `available` | `optional`       |              `1` |
-| `cloudflare-agents` | `@moldea.ai/adapter-cloudflare-agents` | `package`      | `public`     | Not available        | `planned`   | Not available    |              `0` |
+| `cloudflare-agents` | `@moldea.ai/adapter-cloudflare-agents` | `package`      | `public`     | `^1.0.0`             | `available` | `recommended`    |              `2` |
 | `custom`            | `@moldea.ai/core`                      | `built-in`     | `public`     | Not available        | `available` | `required`       |              `1` |
 | `eve`               | `@moldea.ai/adapter-eve`               | `package`      | `public`     | Not available        | `planned`   | Not available    |              `0` |
 | `google-genai`      | `@moldea.ai/adapter-google-genai`      | `package`      | `public`     | `^1.0.3`             | `available` | `optional`       |              `1` |
@@ -162,6 +162,96 @@ Runtime guidance notes: Project-local guidance is needed only for repository-spe
 - Tool input and query output schema contents are not validated; the target establishes only direct schema wiring.
 - Tool output schemas, agent input schemas, external MCP tools, resources, prompts, skills, plugins, hooks, sessions, permission approval, sandboxing, workflows, model selection, and provider behavior are not interpreted.
 - createSdkMcpServer instructions are tolerated but are not canonical instruction-loader evidence or semantically validated model-facing content.
+
+## Adapter: `cloudflare-agents`
+
+- Owning package: `@moldea.ai/adapter-cloudflare-agents`
+- Implementation range: `^1.0.0`
+- Supported repository-format versions: `1`
+- Compatible Core range: `^2.0.0`
+- Runtime guidance: `recommended`
+- Last verified: `2026-08-19`
+
+Runtime guidance notes: Project-local guidance should document Cloudflare bindings, Durable Object wiring, and deployment-specific behavior outside the verified static source boundary.
+
+### Target: `typescript-ai-chat-agent-0-10-ai-sdk-7`
+
+- Kind: `package`
+- Support level: `experimental`
+- Language: `typescript`
+- Evidence kinds: `agent-definition`, `handoff-registration`, `instruction-loader`, `language`, `runtime-package`, `runtime-pattern`, `schema`, `tool-registration`
+- Last verified: `2026-08-19`
+
+| Ecosystem | Package               | Role        | Verified range     |
+| --------- | --------------------- | ----------- | ------------------ |
+| `npm`     | `agents`              | `companion` | `>=0.21.0 <0.22.0` |
+| `npm`     | `ai`                  | `companion` | `>=7.0.0 <8.0.0`   |
+| `npm`     | `@cloudflare/ai-chat` | `primary`   | `>=0.10.2 <0.11.0` |
+
+#### Binding support
+
+| Subject               | Relationship | Symbol    |
+| --------------------- | ------------ | --------- |
+| `runtime-agent`       | `partial`    | `partial` |
+| `output-schema`       | `partial`    | `partial` |
+| `instruction-loader`  | `partial`    | `partial` |
+| `tool-implementation` | `partial`    | `partial` |
+| `tool-registration`   | `partial`    | `partial` |
+| `tool-input-schema`   | `partial`    | `partial` |
+| `tool-output-schema`  | `partial`    | `partial` |
+
+#### Patterns
+
+| Kind      | Pattern                                 | Support   | Description                                                                                                                                    | Notes         |
+| --------- | --------------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| `agent`   | `directly-exported-ai-chat-agent-class` | `partial` | Directly exported TypeScript classes extending an exact named AIChatAgent import with the supported onChatMessage signature.                   | Not available |
+| `runtime` | `direct-ai-sdk-generation`              | `partial` | Direct generateText or streamText calls in the onChatMessage method's own lexical body.                                                        | Not available |
+| `tool`    | `ai-chat-structured-output-and-tools`   | `partial` | Output.object agent schemas, repository-local AI SDK function tools, and Cloudflare agentTool helpers in closed generation-request tools maps. | Not available |
+
+#### Known limitations
+
+- Dynamic, provider, MCP-generated, or inline tools without exact repository registration identities are outside the target.
+- Nested or indirect generation, request variables, prepareStep instruction interpretation, and generation functions other than generateText and streamText are outside the target.
+- Output variants other than Output.object and all agent input schemas are outside the target.
+
+### Target: `typescript-think-0-16-ai-sdk-7`
+
+- Kind: `package`
+- Support level: `experimental`
+- Language: `typescript`
+- Evidence kinds: `agent-definition`, `handoff-registration`, `instruction-loader`, `language`, `runtime-package`, `schema`, `tool-registration`
+- Last verified: `2026-08-19`
+
+| Ecosystem | Package             | Role        | Verified range     |
+| --------- | ------------------- | ----------- | ------------------ |
+| `npm`     | `agents`            | `companion` | `>=0.21.0 <0.22.0` |
+| `npm`     | `ai`                | `companion` | `>=7.0.0 <8.0.0`   |
+| `npm`     | `@cloudflare/think` | `primary`   | `>=0.16.0 <0.17.0` |
+
+#### Binding support
+
+| Subject               | Relationship | Symbol    |
+| --------------------- | ------------ | --------- |
+| `runtime-agent`       | `partial`    | `partial` |
+| `instruction-loader`  | `partial`    | `partial` |
+| `tool-implementation` | `partial`    | `partial` |
+| `tool-registration`   | `partial`    | `partial` |
+| `tool-input-schema`   | `partial`    | `partial` |
+| `tool-output-schema`  | `partial`    | `partial` |
+
+#### Patterns
+
+| Kind                 | Pattern                         | Support   | Description                                                                                                  | Notes         |
+| -------------------- | ------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------ | ------------- |
+| `agent`              | `directly-exported-think-class` | `partial` | Directly exported TypeScript classes extending an exact named Think import with closed class initialization. | Not available |
+| `instruction-loader` | `think-instruction-methods`     | `partial` | Direct loader calls returned by getSystemPrompt or supported closed configureSession chaining.               | Not available |
+| `tool`               | `closed-think-tools-map`        | `partial` | Repository-local AI SDK function tools and Cloudflare agentTool helpers active in a closed getTools map.     | Not available |
+
+#### Known limitations
+
+- Agent input and output schemas are not supported for Think.
+- Bare Agent classes, factories, indirect subclasses, decorators, executable fields, static blocks, computed members, generators, and non-pass-through constructors are outside the target.
+- Dynamic session builders, onCompaction interpretation, runtime mutation, channel-provided tool replacement, and open tools maps are outside the target.
 
 ## Adapter: `custom`
 

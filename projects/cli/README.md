@@ -31,12 +31,13 @@ The package exposes the `moldea` executable and no supported JavaScript or TypeS
 - `@moldea.ai/core`
 - `@moldea.ai/adapter-anthropic`
 - `@moldea.ai/adapter-claude-agent-sdk`
+- `@moldea.ai/adapter-cloudflare-agents`
 - `@moldea.ai/adapter-google-genai`
 - `@moldea.ai/adapter-openai`
 - `@moldea.ai/adapter-openai-agents-sdk`
 - `@moldea.ai/adapter-vercel-ai-sdk`
 
-The package-backed `anthropic`, `claude-agent-sdk`, `google-genai`, `openai`, `openai-agents-sdk`, and `vercel-ai-sdk` runtime adapters are active for their experimental TypeScript SDK targets. The `custom` adapter remains built into Core and requires no separate package.
+The package-backed `anthropic`, `claude-agent-sdk`, `cloudflare-agents`, `google-genai`, `openai`, `openai-agents-sdk`, and `vercel-ai-sdk` runtime adapters are active for their experimental TypeScript SDK targets. The `custom` adapter remains built into Core and requires no separate package.
 
 The package declares `preferUnplugged: true` so Yarn Plug'n'Play materializes the executable on the physical filesystem instead of leaving the bundled ESM entry point inside ZipFS. This package-owned hint preserves root-local Yarn execution without requiring client configuration or a `node_modules` linker.
 

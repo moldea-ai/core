@@ -113,6 +113,7 @@ jobs:
           pnpm --dir projects/adapter-openai pack --pack-destination "$public_packages_directory"
           pnpm --dir projects/adapter-openai-agents-sdk pack --pack-destination "$public_packages_directory"
           pnpm --dir projects/adapter-claude-agent-sdk pack --pack-destination "$public_packages_directory"
+          pnpm --dir projects/adapter-cloudflare-agents pack --pack-destination "$public_packages_directory"
           pnpm --dir projects/adapter-vercel-ai-sdk pack --pack-destination "$public_packages_directory"
           pnpm --dir projects/cli pack --pack-destination "$public_packages_directory"
           pnpm --dir projects/website-ui pack --pack-destination "$public_packages_directory"
@@ -326,6 +327,38 @@ jobs:
       - name: Test Packed Claude Agent SDK Adapter Runtime
         run: >-
           node projects/adapter-claude-agent-sdk/scripts/runtime-compatibility/index.mjs
+          "${{ runner.temp }}/public-package-tarballs"
+
+  adapter-cloudflare-agents-runtime-compatibility:
+    name: Cloudflare Agents Adapter Runtime (Node.js ${{ matrix.node-version }})
+    needs: verify
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version:
+          - 22.11.0
+          - 22.x
+          - 24.11.0
+          - 24.x
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Download Cloudflare Agents Adapter Runtime Artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: public-package-tarballs
+          path: ${{ runner.temp }}/public-package-tarballs
+
+      - name: Test Packed Cloudflare Agents Adapter Runtime
+        run: >-
+          node projects/adapter-cloudflare-agents/scripts/runtime-compatibility/index.mjs
           "${{ runner.temp }}/public-package-tarballs"
 
   adapter-vercel-ai-sdk-runtime-compatibility:

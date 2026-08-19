@@ -104,10 +104,10 @@ describe('runtime compatibility matrix validation', () => {
     'accepts %s only without support claims',
     (status) => {
       const matrix = cloneCanonicalMatrix();
-      const adapter = matrix.adapters['cloudflare-agents'];
+      const adapter = matrix.adapters['eve'];
 
       if (adapter === undefined) {
-        throw new Error('Canonical matrix is missing the Cloudflare Agents adapter.');
+        throw new Error('Canonical matrix is missing the Eve adapter.');
       }
 
       adapter.implementationStatus = status;
@@ -425,7 +425,7 @@ describe('runtime compatibility matrix validation', () => {
     adapter.replacement = 'openai';
     expectIssue(stringify(matrix), 'cannot replace itself');
 
-    adapter.replacement = 'cloudflare-agents';
+    adapter.replacement = 'eve';
     expectIssue(stringify(matrix), 'Replacement must identify an available adapter');
   });
 

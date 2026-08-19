@@ -33,6 +33,7 @@ describe('CLI release metadata immutability', () => {
       activeAdapterIds: [
         'anthropic',
         'claude-agent-sdk',
+        'cloudflare-agents',
         'google-genai',
         'openai',
         'openai-agents-sdk',
@@ -41,7 +42,7 @@ describe('CLI release metadata immutability', () => {
       cliPackage: {
         name: '@moldea.ai/cli',
         supportedNodeRange: '^22.11.0 || ^24.11.0',
-        version: '3.3.1',
+        version: '3.3.2',
       },
       coreRecognizedAdapterIds: [
         'anthropic',
@@ -61,6 +62,7 @@ describe('CLI release metadata immutability', () => {
       packages: [
         { name: '@moldea.ai/adapter-anthropic', version: '2.0.1' },
         { name: '@moldea.ai/adapter-claude-agent-sdk', version: '1.0.0' },
+        { name: '@moldea.ai/adapter-cloudflare-agents', version: '1.0.0' },
         { name: '@moldea.ai/adapter-google-genai', version: '1.0.3' },
         { name: '@moldea.ai/adapter-openai', version: '2.0.4' },
         { name: '@moldea.ai/adapter-openai-agents-sdk', version: '1.0.2' },
@@ -152,6 +154,7 @@ describe('CLI release metadata immutability', () => {
           adapterId === 'google-genai' ||
           adapterId === 'openai' ||
           adapterId === 'openai-agents-sdk' ||
+          adapterId === 'cloudflare-agents' ||
           adapterId === 'vercel-ai-sdk' ||
           implementationStatus === 'planned',
       ),

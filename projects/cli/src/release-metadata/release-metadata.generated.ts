@@ -16,6 +16,7 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
   activeAdapterIds: [
     'anthropic',
     'claude-agent-sdk',
+    'cloudflare-agents',
     'google-genai',
     'openai',
     'openai-agents-sdk',
@@ -24,7 +25,7 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
   cliPackage: {
     name: '@moldea.ai/cli',
     supportedNodeRange: '^22.11.0 || ^24.11.0',
-    version: '3.3.1',
+    version: '3.3.2',
   },
   coreRecognizedAdapterIds: [
     'anthropic',
@@ -464,12 +465,208 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
         ],
       },
       'cloudflare-agents': {
+        compatibleCoreRange: '^2.0.0',
         implementation: {
           distribution: 'public',
           kind: 'package',
           package: '@moldea.ai/adapter-cloudflare-agents',
+          versionRange: '^1.0.0',
         },
-        implementationStatus: 'planned',
+        implementationStatus: 'available',
+        lastVerifiedAt: '2026-08-19',
+        runtimeGuidance: {
+          expectation: 'recommended',
+          notes:
+            'Project-local guidance should document Cloudflare bindings, Durable Object wiring, and deployment-specific behavior outside the verified static source boundary.',
+        },
+        supportedRepositoryFormatVersions: [1],
+        targets: [
+          {
+            bindingSupport: {
+              'instruction-loader': {
+                relationship: 'partial',
+                symbol: 'partial',
+              },
+              'output-schema': {
+                relationship: 'partial',
+                symbol: 'partial',
+              },
+              'runtime-agent': {
+                relationship: 'partial',
+                symbol: 'partial',
+              },
+              'tool-implementation': {
+                relationship: 'partial',
+                symbol: 'partial',
+              },
+              'tool-input-schema': {
+                relationship: 'partial',
+                symbol: 'partial',
+              },
+              'tool-output-schema': {
+                relationship: 'partial',
+                symbol: 'partial',
+              },
+              'tool-registration': {
+                relationship: 'partial',
+                symbol: 'partial',
+              },
+            },
+            evidenceKinds: [
+              'agent-definition',
+              'handoff-registration',
+              'instruction-loader',
+              'language',
+              'runtime-package',
+              'runtime-pattern',
+              'schema',
+              'tool-registration',
+            ],
+            id: 'typescript-ai-chat-agent-0-10-ai-sdk-7',
+            kind: 'package',
+            knownLimitations: [
+              'Dynamic, provider, MCP-generated, or inline tools without exact repository registration identities are outside the target.',
+              'Nested or indirect generation, request variables, prepareStep instruction interpretation, and generation functions other than generateText and streamText are outside the target.',
+              'Output variants other than Output.object and all agent input schemas are outside the target.',
+            ],
+            language: 'typescript',
+            lastVerifiedAt: '2026-08-19',
+            packages: [
+              {
+                ecosystem: 'npm',
+                name: 'agents',
+                role: 'companion',
+                versionRange: '>=0.21.0 <0.22.0',
+              },
+              {
+                ecosystem: 'npm',
+                name: 'ai',
+                role: 'companion',
+                versionRange: '>=7.0.0 <8.0.0',
+              },
+              {
+                ecosystem: 'npm',
+                name: '@cloudflare/ai-chat',
+                role: 'primary',
+                versionRange: '>=0.10.2 <0.11.0',
+              },
+            ],
+            patterns: [
+              {
+                description:
+                  'Directly exported TypeScript classes extending an exact named AIChatAgent import with the supported onChatMessage signature.',
+                id: 'directly-exported-ai-chat-agent-class',
+                kind: 'agent',
+                support: 'partial',
+              },
+              {
+                description:
+                  "Direct generateText or streamText calls in the onChatMessage method's own lexical body.",
+                id: 'direct-ai-sdk-generation',
+                kind: 'runtime',
+                support: 'partial',
+              },
+              {
+                description:
+                  'Output.object agent schemas, repository-local AI SDK function tools, and Cloudflare agentTool helpers in closed generation-request tools maps.',
+                id: 'ai-chat-structured-output-and-tools',
+                kind: 'tool',
+                support: 'partial',
+              },
+            ],
+            supportLevel: 'experimental',
+          },
+          {
+            bindingSupport: {
+              'instruction-loader': {
+                relationship: 'partial',
+                symbol: 'partial',
+              },
+              'runtime-agent': {
+                relationship: 'partial',
+                symbol: 'partial',
+              },
+              'tool-implementation': {
+                relationship: 'partial',
+                symbol: 'partial',
+              },
+              'tool-input-schema': {
+                relationship: 'partial',
+                symbol: 'partial',
+              },
+              'tool-output-schema': {
+                relationship: 'partial',
+                symbol: 'partial',
+              },
+              'tool-registration': {
+                relationship: 'partial',
+                symbol: 'partial',
+              },
+            },
+            evidenceKinds: [
+              'agent-definition',
+              'handoff-registration',
+              'instruction-loader',
+              'language',
+              'runtime-package',
+              'schema',
+              'tool-registration',
+            ],
+            id: 'typescript-think-0-16-ai-sdk-7',
+            kind: 'package',
+            knownLimitations: [
+              'Agent input and output schemas are not supported for Think.',
+              'Bare Agent classes, factories, indirect subclasses, decorators, executable fields, static blocks, computed members, generators, and non-pass-through constructors are outside the target.',
+              'Dynamic session builders, onCompaction interpretation, runtime mutation, channel-provided tool replacement, and open tools maps are outside the target.',
+            ],
+            language: 'typescript',
+            lastVerifiedAt: '2026-08-19',
+            packages: [
+              {
+                ecosystem: 'npm',
+                name: 'agents',
+                role: 'companion',
+                versionRange: '>=0.21.0 <0.22.0',
+              },
+              {
+                ecosystem: 'npm',
+                name: 'ai',
+                role: 'companion',
+                versionRange: '>=7.0.0 <8.0.0',
+              },
+              {
+                ecosystem: 'npm',
+                name: '@cloudflare/think',
+                role: 'primary',
+                versionRange: '>=0.16.0 <0.17.0',
+              },
+            ],
+            patterns: [
+              {
+                description:
+                  'Directly exported TypeScript classes extending an exact named Think import with closed class initialization.',
+                id: 'directly-exported-think-class',
+                kind: 'agent',
+                support: 'partial',
+              },
+              {
+                description:
+                  'Direct loader calls returned by getSystemPrompt or supported closed configureSession chaining.',
+                id: 'think-instruction-methods',
+                kind: 'instruction-loader',
+                support: 'partial',
+              },
+              {
+                description:
+                  'Repository-local AI SDK function tools and Cloudflare agentTool helpers active in a closed getTools map.',
+                id: 'closed-think-tools-map',
+                kind: 'tool',
+                support: 'partial',
+              },
+            ],
+            supportLevel: 'experimental',
+          },
+        ],
       },
       custom: {
         compatibleCoreRange: '^2.0.0',
@@ -1288,6 +1485,10 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
     },
     {
       name: '@moldea.ai/adapter-claude-agent-sdk',
+      version: '1.0.0',
+    },
+    {
+      name: '@moldea.ai/adapter-cloudflare-agents',
       version: '1.0.0',
     },
     {

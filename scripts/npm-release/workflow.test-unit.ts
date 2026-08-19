@@ -80,7 +80,10 @@ describe('npm release workflow', () => {
     expect(ciSource).toContain('name: public-package-tarballs');
     expect(ciSource).toContain('SHA256SUMS');
     expect(ciSource).not.toContain('playwright install --with-deps chromium');
-    expect(ciSource.match(/name: public-package-tarballs/gu)).toHaveLength(9);
+    expect(ciSource.match(/name: public-package-tarballs/gu)).toHaveLength(10);
+    expect(ciSource).toContain(
+      'node projects/adapter-cloudflare-agents/scripts/runtime-compatibility/index.mjs',
+    );
     expect(ciSource).toContain(
       'node projects/adapter-vercel-ai-sdk/scripts/runtime-compatibility/index.mjs',
     );
@@ -131,6 +134,7 @@ describe('npm release workflow', () => {
               'adapter-openai',
               'adapter-openai-agents-sdk',
               'adapter-claude-agent-sdk',
+              'adapter-cloudflare-agents',
               'adapter-vercel-ai-sdk',
               'cli',
               'website-ui',
