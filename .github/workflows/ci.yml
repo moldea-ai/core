@@ -119,7 +119,7 @@ jobs:
           pnpm --dir projects/website-ui pack --pack-destination "$public_packages_directory"
           pnpm release:checksums create "$public_packages_directory"
 
-          expected_tarball_count=11
+          expected_tarball_count=12
           actual_tarball_count=$(find "$public_packages_directory" -maxdepth 1 -type f -name '*.tgz' | wc -l)
           if [ "$actual_tarball_count" -ne "$expected_tarball_count" ]; then
             echo "Expected $expected_tarball_count package tarballs, found $actual_tarball_count." >&2
