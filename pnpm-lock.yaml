@@ -297,7 +297,7 @@ importers:
         specifier: workspace:2.0.4
         version: link:../adapter-openai
       '@moldea.ai/adapter-openai-agents-sdk':
-        specifier: workspace:1.0.0
+        specifier: workspace:1.0.1
         version: link:../adapter-openai-agents-sdk
       '@moldea.ai/core':
         specifier: workspace:2.0.0

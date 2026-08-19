@@ -15,7 +15,7 @@ export const INSTALLED_PACKAGE_METADATA: IMoldeaCliPackageMetadata = Object.free
     '@moldea.ai/adapter-anthropic': 'workspace:2.0.1',
     '@moldea.ai/adapter-google-genai': 'workspace:1.0.3',
     '@moldea.ai/adapter-openai': 'workspace:2.0.4',
-    '@moldea.ai/adapter-openai-agents-sdk': 'workspace:1.0.0',
+    '@moldea.ai/adapter-openai-agents-sdk': 'workspace:1.0.1',
     '@moldea.ai/core': 'workspace:2.0.0',
     '@moldea.ai/repository': 'workspace:1.0.1',
     '@moldea.ai/repository-fs': 'workspace:1.0.2',
@@ -25,13 +25,13 @@ export const INSTALLED_PACKAGE_METADATA: IMoldeaCliPackageMetadata = Object.free
     '@moldea.ai/adapter-anthropic': '2.0.1',
     '@moldea.ai/adapter-google-genai': '1.0.3',
     '@moldea.ai/adapter-openai': '2.0.4',
-    '@moldea.ai/adapter-openai-agents-sdk': '1.0.0',
+    '@moldea.ai/adapter-openai-agents-sdk': '1.0.1',
     '@moldea.ai/core': '2.0.0',
     '@moldea.ai/repository': '1.0.1',
     '@moldea.ai/repository-fs': '1.0.2',
   }),
   supportedNodeRange: '^22.11.0 || ^24.11.0',
-  version: '3.2.0',
+  version: '3.2.1',
 });
 
 const availableOpenAiMatrixEntry = MOLDEA_CLI_RELEASE_METADATA.matrix.adapters['openai'];
