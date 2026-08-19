@@ -35,7 +35,7 @@
     "release:prepare": "node scripts/npm-release/prepare.ts",
     "test": "pnpm test:unit && pnpm test:integration && pnpm test:e2e",
     "test:e2e": "turbo run test:e2e --concurrency=1",
-    "test:integration": "pnpm test:root:integration && turbo run test:integration",
+    "test:integration": "pnpm test:root:integration && turbo run test:integration --concurrency=1",
     "test:root": "pnpm test:root:unit && pnpm test:root:integration",
     "test:root:integration": "vitest run --config vitest-integration.config.ts",
     "test:root:unit": "vitest run --config vitest.config.ts",

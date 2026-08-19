@@ -35,6 +35,10 @@ interface IWebsitePackageManifest {
   devDependencies?: Record<string, string>;
 }
 
+interface IRootPackageManifest {
+  scripts?: Record<string, string>;
+}
+
 interface ITurboConfiguration {
   tasks?: Record<string, { env?: string[] }>;
 }
@@ -49,6 +53,9 @@ const publishPackageSource = readFileSync(
   new URL('.github/workflows/publish-package.yml', repositoryRoot),
   'utf8',
 );
+const rootPackageManifest = JSON.parse(
+  readFileSync(new URL('package.json', repositoryRoot), 'utf8'),
+) as IRootPackageManifest;
 const websitePackageManifest = JSON.parse(
   readFileSync(new URL('apps/website/package.json', repositoryRoot), 'utf8'),
 ) as IWebsitePackageManifest;
@@ -82,6 +89,10 @@ describe('npm release workflow', () => {
       PLAYWRIGHT_BROWSERS_PATH: '/ms-playwright',
     });
     expect(turboConfiguration.tasks?.['test:e2e']?.env).toContain('PLAYWRIGHT_BROWSERS_PATH');
+    expect(rootPackageManifest.scripts?.['test:integration']).toBe(
+      'pnpm test:root:integration && turbo run test:integration --concurrency=1',
+    );
+    expect(rootPackageManifest.scripts?.['test:e2e']).toBe('turbo run test:e2e --concurrency=1');
     expect(publishWorkflow.jobs?.['verify']).toMatchObject({
       if: "${{ github.event_name == 'push' || needs.plan.outputs.has_releases == 'true' }}",
       needs: 'plan',

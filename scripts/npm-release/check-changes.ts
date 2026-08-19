@@ -1,4 +1,4 @@
-import { createNpmReleaseWorkflowPlan } from './planning.ts';
+import { selectChangedNpmReleaseProjects } from './planning.ts';
 import { loadNpmReleaseProjectChanges } from './project-changes.ts';
 
 const repositoryRoot = new URL('../../', import.meta.url);
@@ -13,11 +13,6 @@ const projectChanges = await loadNpmReleaseProjectChanges(
   baseCommit,
   currentCommit,
 );
-const plan = createNpmReleaseWorkflowPlan({
-  eventName: 'push',
-  mode: '',
-  project: '',
-  projectChanges,
-});
+const projects = selectChangedNpmReleaseProjects(projectChanges);
 
-process.stdout.write(`${JSON.stringify({ projects: plan.projects }, null, 2)}\n`);
+process.stdout.write(`${JSON.stringify({ projects }, null, 2)}\n`);

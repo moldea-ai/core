@@ -70,6 +70,21 @@ const loadChanges = (baseCommit: string, currentCommit: string) =>
     currentCommit,
   );
 
+const createPublishedVersions = (unpublishedProjects: readonly INpmReleaseProject[] = []) => {
+  const unpublishedProjectSet = new Set(unpublishedProjects);
+
+  return {
+    'adapter-anthropic': unpublishedProjectSet.has('adapter-anthropic') ? [] : ['1.0.0'],
+    'adapter-google-genai': unpublishedProjectSet.has('adapter-google-genai') ? [] : ['1.0.0'],
+    'adapter-openai': unpublishedProjectSet.has('adapter-openai') ? [] : ['1.0.0'],
+    cli: unpublishedProjectSet.has('cli') ? [] : ['1.0.0'],
+    core: unpublishedProjectSet.has('core') ? [] : ['1.0.0'],
+    repository: unpublishedProjectSet.has('repository') ? [] : ['1.0.0'],
+    'repository-fs': unpublishedProjectSet.has('repository-fs') ? [] : ['1.0.0'],
+    'website-ui': unpublishedProjectSet.has('website-ui') ? [] : ['1.0.0'],
+  };
+};
+
 beforeEach(async () => {
   repositoryDirectory = await mkdtemp(join(tmpdir(), 'moldea-npm-release-'));
   runGit(['init', '--quiet', '--initial-branch', 'main']);
@@ -145,6 +160,7 @@ describe('npm release project changes', () => {
       mode: '',
       project: '',
       projectChanges,
+      publishedVersions: createPublishedVersions(['adapter-anthropic']),
     });
 
     expect(projectChanges['adapter-anthropic']).toStrictEqual({
@@ -196,6 +212,26 @@ describe('npm release project changes', () => {
     },
   );
 
+  test.each(NPM_RELEASE_PROJECT_ORDER)(
+    'ignores standardized package test files for %s',
+    async (project) => {
+      const baseCommit = runGit(['rev-parse', 'HEAD']);
+      const projectDirectory = NPM_RELEASE_PROJECTS[project].projectDirectory;
+
+      await Promise.all([
+        writeRepositoryFile(`${projectDirectory}/src/change.test-unit.ts`, 'export {};\n'),
+        writeRepositoryFile(`${projectDirectory}/src/change.test-integration.ts`, 'export {};\n'),
+        writeRepositoryFile(`${projectDirectory}/src/change.test-e2e.ts`, 'export {};\n'),
+        writeRepositoryFile(`${projectDirectory}/src/change.test-bench.ts`, 'export {};\n'),
+      ]);
+
+      const currentCommit = commitWorktree(`test: change ${project} package tests`);
+      const changes = await loadChanges(baseCommit, currentCommit);
+
+      expect(changes[project].isChanged).toBe(false);
+    },
+  );
+
   test.each([
     ['README.md', '# Repository\n'],
     ['package.json', null],
@@ -241,6 +277,7 @@ describe('npm release project changes', () => {
         mode: '',
         project: '',
         projectChanges,
+        publishedVersions: createPublishedVersions(),
       }),
     ).toThrow('must declare a greater stable package version');
   });

@@ -1,8 +1,14 @@
 import { appendFile } from 'node:fs/promises';
 
-import { NPM_RELEASE_GITHUB_REF } from './constants.ts';
+import {
+  NPM_RELEASE_GITHUB_REF,
+  NPM_RELEASE_PROJECT_ORDER,
+  NPM_RELEASE_PROJECTS,
+} from './constants.ts';
 import { createNpmReleaseWorkflowOutputs, createNpmReleaseWorkflowPlan } from './planning.ts';
 import { loadNpmReleaseProjectChanges } from './project-changes.ts';
+import { loadNpmRegistryVersions } from './registry.ts';
+import type { INpmReleaseWorkflowPlanSources } from './types.ts';
 
 const COMMIT_PATTERN = /^[0-9a-f]{40}$/u;
 const repositoryRoot = new URL('../../', import.meta.url);
@@ -11,6 +17,33 @@ const eventName = process.env['GITHUB_EVENT_NAME'];
 const gitRef = process.env['GITHUB_REF'];
 const commit = process.env['GITHUB_SHA'];
 const githubOutputPath = process.env['GITHUB_OUTPUT'];
+
+/**
+ * Loads current registry state for automatic recovery without contacting npm during manual planning.
+ * @returns The published versions keyed by public project.
+ */
+const loadPublishedVersions = async (): Promise<
+  INpmReleaseWorkflowPlanSources['publishedVersions']
+> =>
+  Object.fromEntries(
+    await Promise.all(
+      NPM_RELEASE_PROJECT_ORDER.map(async (releaseProject) => [
+        releaseProject,
+        await loadNpmRegistryVersions(NPM_RELEASE_PROJECTS[releaseProject].packageName),
+      ]),
+    ),
+  ) as INpmReleaseWorkflowPlanSources['publishedVersions'];
+
+const createEmptyPublishedVersions = (): INpmReleaseWorkflowPlanSources['publishedVersions'] => ({
+  'adapter-anthropic': [],
+  'adapter-google-genai': [],
+  'adapter-openai': [],
+  cli: [],
+  core: [],
+  repository: [],
+  'repository-fs': [],
+  'website-ui': [],
+});
 
 if (
   eventName === undefined ||
@@ -28,11 +61,14 @@ const projectChanges = await loadNpmReleaseProjectChanges(
   eventName === 'push' ? baseCommit : null,
   eventName === 'push' ? commit : null,
 );
+const publishedVersions =
+  eventName === 'push' ? await loadPublishedVersions() : createEmptyPublishedVersions();
 const plan = createNpmReleaseWorkflowPlan({
   eventName,
   mode,
   project,
   projectChanges,
+  publishedVersions,
 });
 const outputs = createNpmReleaseWorkflowOutputs(plan);
 
