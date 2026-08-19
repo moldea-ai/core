@@ -1,0 +1,82 @@
+[
+  {
+    "code": "CLAUDE_AGENT_SDK_AGENT_OUTPUT_SCHEMA_NOT_WIRED",
+    "message": "The declared agent output schema is not wired to the detected Claude Agent SDK query output format."
+  },
+  {
+    "code": "CLAUDE_AGENT_SDK_AGENT_OUTPUT_SCHEMA_SYMBOL_NOT_FOUND",
+    "message": "The declared agent output-schema symbol was not found."
+  },
+  {
+    "code": "CLAUDE_AGENT_SDK_HANDOFF_ROUTING_DESCRIPTION_MISSING",
+    "message": "The detected Claude Agent SDK subagent registration has no supported routing description."
+  },
+  {
+    "code": "CLAUDE_AGENT_SDK_HANDOFF_ROUTING_DESCRIPTION_NOT_WIRED",
+    "message": "The detected Claude Agent SDK subagent routing description does not use the target agent's effective routing description."
+  },
+  {
+    "code": "CLAUDE_AGENT_SDK_HANDOFF_TARGET_AMBIGUOUS",
+    "message": "The detected Claude Agent SDK subagent target matches more than one registered moldea agent."
+  },
+  {
+    "code": "CLAUDE_AGENT_SDK_INSTRUCTION_LOADER_NOT_WIRED",
+    "message": "The declared instruction loader is not wired to the detected Claude Agent SDK agent."
+  },
+  {
+    "code": "CLAUDE_AGENT_SDK_INSTRUCTION_LOADER_SYMBOL_NOT_FOUND",
+    "message": "The declared instruction-loader symbol was not found."
+  },
+  {
+    "code": "CLAUDE_AGENT_SDK_MCP_SERVER_KEY_UNSUPPORTED",
+    "message": "The detected Claude Agent SDK MCP server key cannot establish a canonical runtime-name segment."
+  },
+  {
+    "code": "CLAUDE_AGENT_SDK_PACKAGE_MANIFEST_INVALID",
+    "message": "The owning package manifest is invalid for Claude Agent SDK dependency detection."
+  },
+  {
+    "code": "CLAUDE_AGENT_SDK_RUNTIME_AGENT_SYMBOL_NOT_FOUND",
+    "message": "The declared runtime-agent symbol was not found."
+  },
+  {
+    "code": "CLAUDE_AGENT_SDK_SOURCE_SYNTAX_INVALID",
+    "message": "The referenced Claude Agent SDK source file contains invalid TypeScript syntax."
+  },
+  {
+    "code": "CLAUDE_AGENT_SDK_SOURCE_TEXT_INVALID",
+    "message": "The referenced Claude Agent SDK source file is not valid normalized text."
+  },
+  {
+    "code": "CLAUDE_AGENT_SDK_TOOL_IMPLEMENTATION_NOT_WIRED",
+    "message": "The declared tool implementation is not wired to the detected Claude Agent SDK custom tool."
+  },
+  {
+    "code": "CLAUDE_AGENT_SDK_TOOL_IMPLEMENTATION_SYMBOL_NOT_FOUND",
+    "message": "The declared tool-implementation symbol was not found."
+  },
+  {
+    "code": "CLAUDE_AGENT_SDK_TOOL_INPUT_SCHEMA_NOT_WIRED",
+    "message": "The declared tool input schema is not wired to the detected Claude Agent SDK custom tool."
+  },
+  {
+    "code": "CLAUDE_AGENT_SDK_TOOL_INPUT_SCHEMA_SYMBOL_NOT_FOUND",
+    "message": "The declared tool input-schema symbol was not found."
+  },
+  {
+    "code": "CLAUDE_AGENT_SDK_TOOL_NAME_MISMATCH",
+    "message": "The declared tool name does not match the detected Claude Agent SDK MCP tool name."
+  },
+  {
+    "code": "CLAUDE_AGENT_SDK_TOOL_REGISTRATION_NOT_WIRED",
+    "message": "The declared tool registration is not available to the detected Claude Agent SDK agent."
+  },
+  {
+    "code": "CLAUDE_AGENT_SDK_TOOL_REGISTRATION_SYMBOL_NOT_FOUND",
+    "message": "The declared tool-registration symbol was not found."
+  },
+  {
+    "code": "CLAUDE_AGENT_SDK_VERSION_UNSUPPORTED",
+    "message": "The observed Claude Agent SDK dependency range is disjoint from the supported range."
+  }
+]

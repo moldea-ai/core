@@ -35,6 +35,12 @@ export {
   isModuleValueBindingSafe,
 } from './module-values.js';
 
+// mutations
+export { analyzeModuleValueMutations } from './mutations.js';
+
+// static strings
+export { resolveStaticString } from './static-strings.js';
+
 // source analysis
 export {
   analyzeSource,

@@ -19,6 +19,7 @@ export const NPM_RELEASE_PROJECT_ORDER = [
   'adapter-google-genai',
   'adapter-openai',
   'adapter-openai-agents-sdk',
+  'adapter-claude-agent-sdk',
   'cli',
   'website-ui',
 ] as const satisfies readonly INpmReleaseProject[];
@@ -30,6 +31,12 @@ export const NPM_RELEASE_PROJECTS = {
     packageName: '@moldea.ai/adapter-anthropic',
     projectDirectory: 'projects/adapter-anthropic',
     tagPrefix: 'adapter-anthropic-v',
+  },
+  'adapter-claude-agent-sdk': {
+    artifactPrefix: 'moldea.ai-adapter-claude-agent-sdk',
+    packageName: '@moldea.ai/adapter-claude-agent-sdk',
+    projectDirectory: 'projects/adapter-claude-agent-sdk',
+    tagPrefix: 'adapter-claude-agent-sdk-v',
   },
   'adapter-google-genai': {
     artifactPrefix: 'moldea.ai-adapter-google-genai',

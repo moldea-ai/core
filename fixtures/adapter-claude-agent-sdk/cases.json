@@ -1,0 +1,70 @@
+{
+  "manifest": "version: 1\nagents:\n  billing:\n    runtime:\n      id: claude-agent-sdk\n    bindings:\n      runtimeAgent:\n        path: /src/agents.ts\n        symbol: billingAgent\n      instructionLoader:\n        path: /src/instructions.ts\n        symbol: loadBillingInstruction\n    tools:\n      find-order:\n        name: mcp__support__find_order\n        description: Retrieves one order by its identifier.\n        implementation:\n          path: /src/find-order.ts\n          symbol: findOrder\n        registration:\n          path: /src/tools.ts\n          symbol: findOrderTool\n        inputSchema:\n          path: /src/contracts.ts\n          symbol: FindOrderInputSchema\n  triage:\n    runtime:\n      id: claude-agent-sdk\n    bindings:\n      runtimeAgent:\n        path: /src/runtime.ts\n        symbol: triageAgent\n      instructionLoader:\n        path: /src/instructions.ts\n        symbol: loadTriageInstruction\n      outputSchema:\n        path: /src/contracts.ts\n        symbol: TriageOutputSchema\n    tools:\n      find-order:\n        name: mcp__support__find_order\n        description: Retrieves one order by its identifier.\n        implementation:\n          path: /src/find-order.ts\n          symbol: findOrder\n        registration:\n          path: /src/tools.ts\n          symbol: findOrderTool\n        inputSchema:\n          path: /src/contracts.ts\n          symbol: FindOrderInputSchema\n",
+  "entries": [
+    {
+      "path": "/moldea/project.md",
+      "text": "# Claude Agent SDK adapter fixture\n",
+      "type": "file"
+    },
+    {
+      "path": "/moldea/agents/billing/description.md",
+      "text": "Handles customer billing requests.\n",
+      "type": "file"
+    },
+    {
+      "path": "/moldea/agents/billing/handoff-description.md",
+      "text": "Route billing questions and payment issues here.\n",
+      "type": "file"
+    },
+    {
+      "path": "/moldea/agents/billing/instruction.md",
+      "text": "You are the `billing` agent.\n",
+      "type": "file"
+    },
+    {
+      "path": "/moldea/agents/triage/description.md",
+      "text": "Routes customer support requests.\n",
+      "type": "file"
+    },
+    {
+      "path": "/moldea/agents/triage/instruction.md",
+      "text": "You are the `triage` agent.\n",
+      "type": "file"
+    },
+    {
+      "path": "/package.json",
+      "text": "{\n  \"dependencies\": {\n    \"@anthropic-ai/claude-agent-sdk\": \"^0.3.234\"\n  }\n}\n",
+      "type": "file"
+    },
+    {
+      "path": "/src/agents.ts",
+      "text": "import { loadBillingInstruction } from './instructions.js';\n\nexport const billingAgent = {\n  description: 'Route billing questions and payment issues here.',\n  prompt: loadBillingInstruction(),\n  tools: ['mcp__support__find_order'],\n};\n",
+      "type": "file"
+    },
+    {
+      "path": "/src/contracts.ts",
+      "text": "export const TriageOutputSchema = { type: 'object' } as const;\nexport const FindOrderInputSchema = { type: 'object' } as const;\n",
+      "type": "file"
+    },
+    {
+      "path": "/src/find-order.ts",
+      "text": "export const findOrder = async (input: { orderId: string }) => ({ orderId: input.orderId });\n",
+      "type": "file"
+    },
+    {
+      "path": "/src/instructions.ts",
+      "text": "export const loadBillingInstruction = async (): Promise<string> => 'Resolve billing requests.';\nexport const loadTriageInstruction = async (): Promise<string> => 'Route the request.';\n",
+      "type": "file"
+    },
+    {
+      "path": "/src/runtime.ts",
+      "text": "import { query } from '@anthropic-ai/claude-agent-sdk';\n\nimport { billingAgent } from './agents.js';\nimport { TriageOutputSchema } from './contracts.js';\nimport { loadTriageInstruction } from './instructions.js';\nimport { supportServer } from './tools.js';\n\nexport const triageAgent = async (prompt: string) =>\n  query({\n    prompt,\n    options: {\n      systemPrompt: await loadTriageInstruction(),\n      outputFormat: { type: 'json_schema', schema: TriageOutputSchema },\n      agents: { billing: billingAgent },\n      tools: ['Agent'],\n      mcpServers: { support: supportServer },\n    },\n  });\n",
+      "type": "file"
+    },
+    {
+      "path": "/src/tools.ts",
+      "text": "import { createSdkMcpServer, tool } from '@anthropic-ai/claude-agent-sdk';\n\nimport { FindOrderInputSchema } from './contracts.js';\nimport { findOrder } from './find-order.js';\n\nexport const findOrderTool = tool(\n  'find_order',\n  'Retrieves one order by its identifier.',\n  FindOrderInputSchema,\n  findOrder,\n);\n\nexport const supportServer = createSdkMcpServer({\n  name: 'support-tools',\n  version: '1.0.0',\n  tools: [findOrderTool],\n});\n",
+      "type": "file"
+    }
+  ]
+}

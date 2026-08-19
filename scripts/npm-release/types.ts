@@ -4,6 +4,7 @@ export type INpmReleaseMode = 'bootstrap' | 'trusted';
 // public projects currently eligible for npm publication
 export type INpmReleaseProject =
   | 'adapter-anthropic'
+  | 'adapter-claude-agent-sdk'
   | 'adapter-google-genai'
   | 'adapter-openai'
   | 'adapter-openai-agents-sdk'

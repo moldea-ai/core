@@ -80,7 +80,7 @@ describe('npm release workflow', () => {
     expect(ciSource).toContain('name: public-package-tarballs');
     expect(ciSource).toContain('SHA256SUMS');
     expect(ciSource).not.toContain('playwright install --with-deps chromium');
-    expect(ciSource.match(/name: public-package-tarballs/gu)).toHaveLength(7);
+    expect(ciSource.match(/name: public-package-tarballs/gu)).toHaveLength(8);
     expect(ciWorkflow.jobs?.['verify']?.container).toStrictEqual({
       image: `mcr.microsoft.com/playwright:v${websitePackageManifest.devDependencies?.['@playwright/test']}-noble`,
       options: '--ipc=host',
@@ -127,6 +127,7 @@ describe('npm release workflow', () => {
               'adapter-google-genai',
               'adapter-openai',
               'adapter-openai-agents-sdk',
+              'adapter-claude-agent-sdk',
               'cli',
               'website-ui',
             ],
@@ -140,6 +141,8 @@ describe('npm release workflow', () => {
       outputs: {
         adapter_anthropic_previous_version:
           '${{ steps.release.outputs.adapter_anthropic_previous_version }}',
+        adapter_claude_agent_sdk_previous_version:
+          '${{ steps.release.outputs.adapter_claude_agent_sdk_previous_version }}',
         adapter_google_genai_previous_version:
           '${{ steps.release.outputs.adapter_google_genai_previous_version }}',
         adapter_openai_previous_version:
@@ -221,6 +224,17 @@ describe('npm release workflow', () => {
       'release_adapter_google_genai',
       'release_adapter_openai',
     ]);
+    expect(publishWorkflow.jobs?.['release_adapter_claude_agent_sdk']?.needs).toStrictEqual([
+      'plan',
+      'verify',
+      'release_repository',
+      'release_repository_fs',
+      'release_core',
+      'release_adapter_anthropic',
+      'release_adapter_google_genai',
+      'release_adapter_openai',
+      'release_adapter_openai_agents_sdk',
+    ]);
     expect(publishWorkflow.jobs?.['release_cli']?.needs).toStrictEqual([
       'plan',
       'verify',
@@ -231,6 +245,7 @@ describe('npm release workflow', () => {
       'release_adapter_google_genai',
       'release_adapter_openai',
       'release_adapter_openai_agents_sdk',
+      'release_adapter_claude_agent_sdk',
     ]);
     expect(publishWorkflow.jobs?.['release_repository_fs']?.with?.['previous_version']).toBe(
       '${{ needs.plan.outputs.repository_fs_previous_version }}',
@@ -250,6 +265,9 @@ describe('npm release workflow', () => {
     expect(
       publishWorkflow.jobs?.['release_adapter_openai_agents_sdk']?.with?.['previous_version'],
     ).toBe('${{ needs.plan.outputs.adapter_openai_agents_sdk_previous_version }}');
+    expect(
+      publishWorkflow.jobs?.['release_adapter_claude_agent_sdk']?.with?.['previous_version'],
+    ).toBe('${{ needs.plan.outputs.adapter_claude_agent_sdk_previous_version }}');
     expect(publishWorkflow.jobs?.['release_cli']?.with?.['previous_version']).toBe(
       '${{ needs.plan.outputs.cli_previous_version }}',
     );
@@ -281,8 +299,11 @@ describe('npm release workflow', () => {
     expect(publishWorkflow.jobs?.['release_adapter_openai_agents_sdk']?.if).toContain(
       "needs.release_adapter_openai.result == 'success'",
     );
-    expect(publishWorkflow.jobs?.['release_cli']?.if).toContain(
+    expect(publishWorkflow.jobs?.['release_adapter_claude_agent_sdk']?.if).toContain(
       "needs.release_adapter_openai_agents_sdk.result == 'success'",
+    );
+    expect(publishWorkflow.jobs?.['release_cli']?.if).toContain(
+      "needs.release_adapter_claude_agent_sdk.result == 'success'",
     );
   });
 

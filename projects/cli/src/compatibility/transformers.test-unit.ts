@@ -34,6 +34,7 @@ describe('createMoldeaCliCompatibilityResult', () => {
     const state = createTestCompatibilityState();
     const result = createMoldeaCliCompatibilityResult(state);
     const customAdapter = result.adapters.find(({ id }) => id === 'custom');
+    const claudeAgentSdkAdapter = result.adapters.find(({ id }) => id === 'claude-agent-sdk');
     const openAiAdapter = result.adapters.find(({ id }) => id === 'openai');
     const openAiAgentsSdkAdapter = result.adapters.find(({ id }) => id === 'openai-agents-sdk');
 
@@ -43,9 +44,10 @@ describe('createMoldeaCliCompatibilityResult', () => {
       outputSchemaVersion: 1,
       packages: [
         { name: '@moldea.ai/adapter-anthropic', version: '2.0.1' },
+        { name: '@moldea.ai/adapter-claude-agent-sdk', version: '1.0.0' },
         { name: '@moldea.ai/adapter-google-genai', version: '1.0.3' },
         { name: '@moldea.ai/adapter-openai', version: '2.0.4' },
-        { name: '@moldea.ai/adapter-openai-agents-sdk', version: '1.0.1' },
+        { name: '@moldea.ai/adapter-openai-agents-sdk', version: '1.0.2' },
         { name: '@moldea.ai/core', version: '2.0.0' },
         { name: '@moldea.ai/repository', version: '1.0.1' },
         { name: '@moldea.ai/repository-fs', version: '1.0.2' },
@@ -79,9 +81,18 @@ describe('createMoldeaCliCompatibilityResult', () => {
         targets: [{ id: 'typescript-responses-api-7' }],
       },
     });
+    expect(claudeAgentSdkAdapter).toMatchObject({
+      active: true,
+      bundledVersion: '1.0.0',
+      id: 'claude-agent-sdk',
+      matrix: {
+        implementationStatus: 'available',
+        targets: [{ id: 'typescript-query-subagents-0-3' }],
+      },
+    });
     expect(openAiAgentsSdkAdapter).toMatchObject({
       active: true,
-      bundledVersion: '1.0.1',
+      bundledVersion: '1.0.2',
       id: 'openai-agents-sdk',
       matrix: {
         implementationStatus: 'available',
@@ -127,9 +138,18 @@ describe('createMoldeaCliCompatibilityResult', () => {
         targets: [{ id: 'typescript-responses-api-7', lastVerifiedAt: '2026-08-17' }],
       },
     });
+    expect(result.adapters.find(({ id }) => id === 'claude-agent-sdk')).toMatchObject({
+      active: true,
+      bundledVersion: '1.0.0',
+      matrix: {
+        implementation: { versionRange: '^1.0.0' },
+        implementationStatus: 'available',
+        targets: [{ id: 'typescript-query-subagents-0-3', lastVerifiedAt: '2026-08-19' }],
+      },
+    });
     expect(result.adapters.find(({ id }) => id === 'openai-agents-sdk')).toMatchObject({
       active: true,
-      bundledVersion: '1.0.1',
+      bundledVersion: '1.0.2',
       matrix: {
         implementation: { versionRange: '^1.0.0' },
         implementationStatus: 'available',

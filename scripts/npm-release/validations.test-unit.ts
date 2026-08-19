@@ -27,6 +27,7 @@ const createManifest = (project: INpmReleaseProject): Record<string, unknown> =>
           : project === 'cli'
             ? {
                 '@moldea.ai/adapter-anthropic': 'workspace:1.0.0',
+                '@moldea.ai/adapter-claude-agent-sdk': 'workspace:1.0.0',
                 '@moldea.ai/adapter-google-genai': 'workspace:1.0.0',
                 '@moldea.ai/adapter-openai': 'workspace:1.0.0',
                 '@moldea.ai/adapter-openai-agents-sdk': 'workspace:1.0.0',
@@ -35,6 +36,7 @@ const createManifest = (project: INpmReleaseProject): Record<string, unknown> =>
                 '@moldea.ai/repository-fs': 'workspace:1.0.0',
               }
             : project === 'adapter-anthropic' ||
+                project === 'adapter-claude-agent-sdk' ||
                 project === 'adapter-google-genai' ||
                 project === 'adapter-openai' ||
                 project === 'adapter-openai-agents-sdk'
@@ -80,6 +82,11 @@ describe('npm release validation', () => {
     ['repository-fs', 'moldea.ai-repository-fs-1.0.0.tgz', 'repository-fs-v1.0.0'],
     ['core', 'moldea.ai-core-1.0.0.tgz', 'core-v1.0.0'],
     ['adapter-anthropic', 'moldea.ai-adapter-anthropic-1.0.0.tgz', 'adapter-anthropic-v1.0.0'],
+    [
+      'adapter-claude-agent-sdk',
+      'moldea.ai-adapter-claude-agent-sdk-1.0.0.tgz',
+      'adapter-claude-agent-sdk-v1.0.0',
+    ],
     [
       'adapter-google-genai',
       'moldea.ai-adapter-google-genai-1.0.0.tgz',

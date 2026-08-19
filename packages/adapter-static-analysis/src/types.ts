@@ -134,6 +134,12 @@ export interface IStaticAnalysisModuleValueSource extends IStaticAnalysisSource 
   readonly identifierUses: ReadonlyMap<string, readonly ts.Identifier[]>;
 }
 
+// conservative mutation state for one module-owned object value
+export interface IStaticAnalysisMutationAnalysis {
+  readonly hasUnknownMutation: boolean;
+  readonly mutatedMembers: ReadonlySet<string>;
+}
+
 export type IStaticAnalysisSourceResult =
   | { readonly kind: 'invalid-syntax'; readonly range: IStaticAnalysisSourceRange | null }
   | { readonly kind: 'invalid-text' }
@@ -142,6 +148,30 @@ export type IStaticAnalysisSourceResult =
 export type IStaticAnalysisModuleValueSourceResult =
   | Exclude<IStaticAnalysisSourceResult, { readonly kind: 'valid' }>
   | { readonly analysis: IStaticAnalysisModuleValueSource; readonly kind: 'valid' };
+
+// exact static source string or conservative unsupported state
+export type IStaticAnalysisStaticStringResult =
+  | { readonly expression: ts.Expression; readonly kind: 'supported'; readonly value: string }
+  | { readonly kind: 'unsupported' };
+
+// provider callbacks required to resolve static strings across relative imports
+export interface IStaticAnalysisStaticStringOptions<
+  TPath extends string,
+  TAnalysis extends IStaticAnalysisSource,
+  TEntry extends IStaticAnalysisEntry,
+> {
+  readonly analysis: TAnalysis;
+  readonly analyzeSource: (
+    path: TPath,
+  ) => Promise<
+    | Exclude<IStaticAnalysisSourceResult, { readonly kind: 'valid' }>
+    | { readonly analysis: TAnalysis; readonly kind: 'valid' }
+  >;
+  readonly expression: ts.Expression;
+  readonly getEntry: (path: TPath) => Promise<TEntry | null>;
+  readonly parsePath: (path: string) => TPath;
+  readonly signal?: AbortSignal;
+}
 
 export type IStaticAnalysisRequestRelationship =
   | { readonly kind: 'absent' }

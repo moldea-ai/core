@@ -75,6 +75,9 @@ const createPublishedVersions = (unpublishedProjects: readonly INpmReleaseProjec
 
   return {
     'adapter-anthropic': unpublishedProjectSet.has('adapter-anthropic') ? [] : ['1.0.0'],
+    'adapter-claude-agent-sdk': unpublishedProjectSet.has('adapter-claude-agent-sdk')
+      ? []
+      : ['1.0.0'],
     'adapter-google-genai': unpublishedProjectSet.has('adapter-google-genai') ? [] : ['1.0.0'],
     'adapter-openai': unpublishedProjectSet.has('adapter-openai') ? [] : ['1.0.0'],
     'adapter-openai-agents-sdk': unpublishedProjectSet.has('adapter-openai-agents-sdk')
@@ -121,6 +124,11 @@ describe('npm release project changes', () => {
         isChanged: false,
         previousVersion: '1.0.0',
       },
+      'adapter-claude-agent-sdk': {
+        currentVersion: '1.0.0',
+        isChanged: false,
+        previousVersion: '1.0.0',
+      },
       'adapter-google-genai': {
         currentVersion: '1.0.0',
         isChanged: false,
@@ -153,25 +161,25 @@ describe('npm release project changes', () => {
   });
 
   test('selects a newly introduced public project without a base package version', async () => {
-    const projectDirectory = NPM_RELEASE_PROJECTS['adapter-openai-agents-sdk'].projectDirectory;
+    const projectDirectory = NPM_RELEASE_PROJECTS['adapter-claude-agent-sdk'].projectDirectory;
 
     await rm(join(repositoryDirectory, projectDirectory), { recursive: true });
     const baseCommit = commitWorktree('test: establish the tree before the new project');
 
-    await writeProjectManifest('adapter-openai-agents-sdk', '1.0.0');
+    await writeProjectManifest('adapter-claude-agent-sdk', '1.0.0');
     await writeRepositoryFile(`${projectDirectory}/src/index.ts`, 'export const adapter = true;\n');
 
-    const currentCommit = commitWorktree('feat(adapter-openai-agents-sdk): introduce the project');
+    const currentCommit = commitWorktree('feat(adapter-claude-agent-sdk): introduce the project');
     const projectChanges = await loadChanges(baseCommit, currentCommit);
     const plan = createNpmReleaseWorkflowPlan({
       eventName: 'push',
       mode: '',
       project: '',
       projectChanges,
-      publishedVersions: createPublishedVersions(['adapter-openai-agents-sdk']),
+      publishedVersions: createPublishedVersions(['adapter-claude-agent-sdk']),
     });
 
-    expect(projectChanges['adapter-openai-agents-sdk']).toStrictEqual({
+    expect(projectChanges['adapter-claude-agent-sdk']).toStrictEqual({
       currentVersion: '1.0.0',
       isChanged: true,
       previousVersion: null,
@@ -180,6 +188,7 @@ describe('npm release project changes', () => {
       mode: 'trusted',
       previousVersions: {
         'adapter-anthropic': null,
+        'adapter-claude-agent-sdk': null,
         'adapter-google-genai': null,
         'adapter-openai': null,
         'adapter-openai-agents-sdk': null,
@@ -189,7 +198,7 @@ describe('npm release project changes', () => {
         'repository-fs': null,
         'website-ui': null,
       },
-      projects: ['adapter-openai-agents-sdk'],
+      projects: ['adapter-claude-agent-sdk'],
       trigger: 'automatic',
     });
   });

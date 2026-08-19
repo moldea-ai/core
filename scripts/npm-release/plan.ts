@@ -36,6 +36,7 @@ const loadPublishedVersions = async (): Promise<
 
 const createEmptyPublishedVersions = (): INpmReleaseWorkflowPlanSources['publishedVersions'] => ({
   'adapter-anthropic': [],
+  'adapter-claude-agent-sdk': [],
   'adapter-google-genai': [],
   'adapter-openai': [],
   'adapter-openai-agents-sdk': [],
