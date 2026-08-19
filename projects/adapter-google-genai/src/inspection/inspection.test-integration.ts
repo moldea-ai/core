@@ -230,6 +230,80 @@ describe('googleGenAiAdapter Core integration', () => {
     ]);
   });
 
+  test('classifies omitted input schemas through existential and ambiguity rules', async () => {
+    const registrationWithoutSchema = getFixtureText('/src/find-order.ts').replace(
+      '  parametersJsonSchema: FindOrderInput,\n',
+      '',
+    );
+    const manifestWithoutInputSchema = fixture.manifest.replace(
+      '        inputSchema:\n          path: /src/contracts.ts\n          symbol: FindOrderInput\n',
+      '',
+    );
+    const withoutManifestSchema = await inspect({
+      '/moldea/moldea.yaml': manifestWithoutInputSchema,
+      '/src/find-order.ts': registrationWithoutSchema,
+    });
+    const closedOmission = await inspect({
+      '/src/find-order.ts': registrationWithoutSchema,
+    });
+    const wiredAlongsideOmission = await inspect({
+      '/src/agent.ts': getFixtureText('/src/agent.ts').replace(
+        'functionDeclarations: [registeredFindOrder]',
+        "functionDeclarations: [registeredFindOrder, { name: 'without_parameters' }]",
+      ),
+    });
+    const omittedAlongsideDynamicCandidate = await inspect({
+      '/src/agent.ts': getFixtureText('/src/agent.ts').replace(
+        'functionDeclarations: [registeredFindOrder]',
+        'functionDeclarations: [registeredFindOrder, createDynamicDeclaration()]',
+      ),
+      '/src/find-order.ts': registrationWithoutSchema,
+    });
+
+    expect(withoutManifestSchema.diagnostics).toStrictEqual([]);
+    expect(withoutManifestSchema.evidence.some(({ kind }) => kind === 'tool-registration')).toBe(
+      true,
+    );
+    expect(withoutManifestSchema.evidence.some(({ kind }) => kind === 'schema')).toBe(false);
+    expect(closedOmission.diagnostics.map(({ code }) => code)).toStrictEqual([
+      'GOOGLE_GENAI_TOOL_INPUT_SCHEMA_NOT_WIRED',
+    ]);
+    expect(closedOmission.evidence.some(({ kind }) => kind === 'schema')).toBe(false);
+    expect(wiredAlongsideOmission.diagnostics).toStrictEqual([]);
+    expect(wiredAlongsideOmission.evidence.some(({ kind }) => kind === 'schema')).toBe(true);
+    expect(omittedAlongsideDynamicCandidate.diagnostics).toStrictEqual([]);
+    expect(
+      omittedAlongsideDynamicCandidate.evidence.some(({ kind }) => kind === 'tool-registration'),
+    ).toBe(true);
+    expect(omittedAlongsideDynamicCandidate.evidence.some(({ kind }) => kind === 'schema')).toBe(
+      false,
+    );
+  });
+
+  test('distinguishes different static and unresolved dynamic schema values', async () => {
+    const differentStaticSchema = await inspect({
+      '/src/find-order.ts': getFixtureText('/src/find-order.ts').replace(
+        'parametersJsonSchema: FindOrderInput',
+        "parametersJsonSchema: { type: 'object' }",
+      ),
+    });
+    const dynamicSchema = await inspect({
+      '/src/find-order.ts': getFixtureText('/src/find-order.ts').replace(
+        'parametersJsonSchema: FindOrderInput',
+        'parametersJsonSchema: createSchema()',
+      ),
+    });
+
+    expect(differentStaticSchema.diagnostics.map(({ code }) => code)).toStrictEqual([
+      'GOOGLE_GENAI_TOOL_INPUT_SCHEMA_NOT_WIRED',
+    ]);
+    expect(differentStaticSchema.evidence.some(({ kind }) => kind === 'schema')).toBe(false);
+    expect(dynamicSchema.diagnostics).toStrictEqual([]);
+    expect(
+      dynamicSchema.evidence.some(({ kind }) => kind === 'schema' || kind === 'tool-registration'),
+    ).toBe(false);
+  });
+
   test('recognizes safe module-local tool, container, and declaration collections', async () => {
     const result = await inspect({
       '/src/agent.ts': [

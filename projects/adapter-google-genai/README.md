@@ -8,7 +8,7 @@ The package implements the official `google-genai` runtime adapter for `@moldea.
 
 ## Supported target
 
-Version `1.0.2` experimentally supports:
+Version `1.0.3` experimentally supports:
 
 - Repository Format version `1`
 - `@moldea.ai/core ^2.0.0`

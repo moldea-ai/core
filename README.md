@@ -16,8 +16,11 @@ The product and package specifications are currently maintained in the `platform
 - [`@moldea.ai/core`](https://github.com/moldea-ai/platform/blob/main/moldea/context/core-package.md): deterministic repository-format interpretation and indexing.
 - [`@moldea.ai/cli`](https://github.com/moldea-ai/platform/blob/main/moldea/context/cli-package.md): read-only Git working-tree composition and executable contract.
 - [`@moldea.ai/adapter-anthropic`](https://github.com/moldea-ai/platform/blob/main/moldea/context/adapter-anthropic-package.md): experimental TypeScript Anthropic Messages API inspection target.
+- [`@moldea.ai/adapter-claude-agent-sdk`](https://github.com/moldea-ai/platform/blob/main/moldea/context/adapter-claude-agent-sdk-package.md): proposed TypeScript Claude Agent SDK query and programmatic-subagent inspection target.
 - [`@moldea.ai/adapter-google-genai`](https://github.com/moldea-ai/platform/blob/main/moldea/context/adapter-google-genai-package.md): experimental TypeScript Google Gen AI SDK inspection target.
 - [`@moldea.ai/adapter-openai`](https://github.com/moldea-ai/platform/blob/main/moldea/context/adapter-openai-package.md): experimental TypeScript OpenAI Responses API inspection target.
+- [`@moldea.ai/adapter-openai-agents-sdk`](https://github.com/moldea-ai/platform/blob/main/moldea/context/adapter-openai-agents-sdk-package.md): proposed TypeScript OpenAI Agents SDK agent and handoff inspection target.
+- [`@moldea.ai/adapter-vercel-ai-sdk`](https://github.com/moldea-ai/platform/blob/main/moldea/context/adapter-vercel-ai-sdk-package.md): proposed TypeScript Vercel AI SDK agent and generation inspection targets.
 - [Runtime Adapter Contract](https://github.com/moldea-ai/platform/blob/main/moldea/context/runtime-adapter-contract.md): deterministic extension contract for official adapters.
 - [Runtime Compatibility Matrix](https://github.com/moldea-ai/platform/blob/main/moldea/context/runtime-compatibility-matrix.md): canonical compatibility-data contract and initial adapter inventory.
 

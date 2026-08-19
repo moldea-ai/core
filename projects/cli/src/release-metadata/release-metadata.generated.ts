@@ -17,7 +17,7 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
   cliPackage: {
     name: '@moldea.ai/cli',
     supportedNodeRange: '^22.11.0 || ^24.11.0',
-    version: '3.1.2',
+    version: '3.1.3',
   },
   coreRecognizedAdapterIds: [
     'anthropic',
@@ -218,10 +218,10 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
           distribution: 'public',
           kind: 'package',
           package: '@moldea.ai/adapter-google-genai',
-          versionRange: '^1.0.0',
+          versionRange: '^1.0.3',
         },
         implementationStatus: 'available',
-        lastVerifiedAt: '2026-08-18',
+        lastVerifiedAt: '2026-08-19',
         runtimeGuidance: {
           expectation: 'optional',
           notes:
@@ -267,7 +267,7 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
               'Source forms outside the verified TypeScript ESM target, legacy @google/generative-ai, alternative parameters schemas, output schemas, runtime variables, and handoffs are outside the initial target.',
             ],
             language: 'typescript',
-            lastVerifiedAt: '2026-08-18',
+            lastVerifiedAt: '2026-08-19',
             packages: [
               {
                 ecosystem: 'npm',
@@ -528,7 +528,7 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
     },
     {
       name: '@moldea.ai/adapter-google-genai',
-      version: '1.0.2',
+      version: '1.0.3',
     },
     {
       name: '@moldea.ai/adapter-openai',
