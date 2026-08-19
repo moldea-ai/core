@@ -106,6 +106,10 @@ export const hasGitProjectChanges = (
       `:(exclude)${projectDirectory}/**/_backups/**`,
       `:(exclude)${projectDirectory}/docs`,
       `:(exclude)${projectDirectory}/docs/**`,
+      `:(exclude)${projectDirectory}/**/*.test-unit.*`,
+      `:(exclude)${projectDirectory}/**/*.test-integration.*`,
+      `:(exclude)${projectDirectory}/**/*.test-e2e.*`,
+      `:(exclude)${projectDirectory}/**/*.test-bench.*`,
     ],
     { cwd: repositoryRoot, encoding: 'utf8' },
   );
