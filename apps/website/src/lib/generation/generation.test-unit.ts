@@ -98,6 +98,7 @@ describe('discoverPublicPackages', () => {
       '@moldea.ai/adapter-google-genai',
       '@moldea.ai/adapter-openai',
       '@moldea.ai/adapter-openai-agents-sdk',
+      '@moldea.ai/adapter-vercel-ai-sdk',
       '@moldea.ai/cli',
       '@moldea.ai/core',
       '@moldea.ai/repository',
@@ -111,6 +112,9 @@ describe('discoverPublicPackages', () => {
       'runtime-adapters',
     );
     expect(model.packages.find(({ slug }) => slug === 'adapter-openai-agents-sdk')?.family).toBe(
+      'runtime-adapters',
+    );
+    expect(model.packages.find(({ slug }) => slug === 'adapter-vercel-ai-sdk')?.family).toBe(
       'runtime-adapters',
     );
     expect(model.packages.find(({ slug }) => slug === 'adapter-anthropic')?.family).toBe(

@@ -19,11 +19,12 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
     'google-genai',
     'openai',
     'openai-agents-sdk',
+    'vercel-ai-sdk',
   ],
   cliPackage: {
     name: '@moldea.ai/cli',
     supportedNodeRange: '^22.11.0 || ^24.11.0',
-    version: '3.3.0',
+    version: '3.3.1',
   },
   coreRecognizedAdapterIds: [
     'anthropic',
@@ -989,12 +990,291 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
         ],
       },
       'vercel-ai-sdk': {
+        compatibleCoreRange: '^2.0.0',
         implementation: {
           distribution: 'public',
           kind: 'package',
           package: '@moldea.ai/adapter-vercel-ai-sdk',
+          versionRange: '^1.0.0',
         },
-        implementationStatus: 'planned',
+        implementationStatus: 'available',
+        lastVerifiedAt: '2026-08-19',
+        runtimeGuidance: {
+          expectation: 'optional',
+          notes:
+            'Project-local guidance is needed only for repository-specific wrappers or unsupported dynamic integration patterns.',
+        },
+        supportedRepositoryFormatVersions: [1],
+        targets: [
+          {
+            bindingSupport: {
+              'instruction-loader': {
+                relationship: 'partial',
+                symbol: 'partial',
+              },
+              'output-schema': {
+                relationship: 'partial',
+                symbol: 'partial',
+              },
+              'runtime-agent': {
+                relationship: 'partial',
+                symbol: 'partial',
+              },
+              'tool-implementation': {
+                relationship: 'partial',
+                symbol: 'partial',
+              },
+              'tool-input-schema': {
+                relationship: 'partial',
+                symbol: 'partial',
+              },
+              'tool-output-schema': {
+                relationship: 'partial',
+                symbol: 'partial',
+              },
+              'tool-registration': {
+                relationship: 'partial',
+                symbol: 'partial',
+              },
+            },
+            evidenceKinds: [
+              'instruction-loader',
+              'language',
+              'runtime-package',
+              'runtime-pattern',
+              'schema',
+              'tool-registration',
+            ],
+            id: 'typescript-generate-stream-text-7',
+            kind: 'package',
+            knownLimitations: [
+              'Lockfiles and installed package versions are not inspected.',
+              'Only Output.object establishes an agent output-schema relationship.',
+              'Only TypeScript ESM source and documented direct relative imports are interpreted.',
+              "Only direct generateText and streamText calls in the bound function's own lexical body are interpreted.",
+              'The target does not infer providers, models, routing targets, handoffs, or subagent control transfer.',
+              'prepareStep function bodies are not interpreted.',
+            ],
+            language: 'typescript',
+            lastVerifiedAt: '2026-08-19',
+            packages: [
+              {
+                ecosystem: 'npm',
+                name: 'ai',
+                role: 'primary',
+                versionRange: '>=7.0.66 <8.0.0',
+              },
+            ],
+            patterns: [
+              {
+                description:
+                  'A directly exported function containing a direct generateText object-literal call is recognized as the runtime pattern.',
+                id: 'direct-generate-text-wrapper',
+                kind: 'agent',
+                support: 'full',
+              },
+              {
+                description:
+                  'A directly exported function containing a direct streamText object-literal call is recognized as the runtime pattern.',
+                id: 'direct-stream-text-wrapper',
+                kind: 'agent',
+                support: 'full',
+              },
+              {
+                description:
+                  'Direct loader calls are supported when prepareStep cannot replace the instructions.',
+                id: 'direct-generation-instruction-loader',
+                kind: 'instruction-loader',
+                support: 'partial',
+              },
+              {
+                description:
+                  'instructions is authoritative and deprecated system is used only through the supported absence fallback.',
+                id: 'instructions-system-precedence',
+                kind: 'instruction-loader',
+                support: 'full',
+              },
+              {
+                description:
+                  'prepareStep may replace per-step instructions and is not interpreted by the initial target.',
+                id: 'prepare-step-instruction-overrides',
+                kind: 'instruction-loader',
+                support: 'ambiguous',
+              },
+              {
+                description:
+                  'Calls routed through arbitrary wrappers, factories, callbacks, or request builders are outside the initial target.',
+                id: 'indirect-generation-wrapper',
+                kind: 'runtime',
+                support: 'unsupported',
+              },
+              {
+                description:
+                  'The initial direct-generation target publishes no agent input-schema relationship.',
+                id: 'direct-agent-input-schema',
+                kind: 'schema',
+                support: 'unsupported',
+              },
+              {
+                description:
+                  'Direct Output.object schema binding establishes the agent output-schema relationship.',
+                id: 'object-output-schema',
+                kind: 'schema',
+                support: 'partial',
+              },
+              {
+                description:
+                  'Closed object-map registration supports repository-local function tools created through tool.',
+                id: 'closed-tools-map',
+                kind: 'tool',
+                support: 'partial',
+              },
+              {
+                description:
+                  'Direct execute, inputSchema, and outputSchema bindings are interpreted without executing the tool.',
+                id: 'direct-function-tool-bindings',
+                kind: 'tool',
+                support: 'partial',
+              },
+            ],
+            supportLevel: 'experimental',
+          },
+          {
+            bindingSupport: {
+              'input-schema': {
+                relationship: 'partial',
+                symbol: 'partial',
+              },
+              'instruction-loader': {
+                relationship: 'partial',
+                symbol: 'partial',
+              },
+              'output-schema': {
+                relationship: 'partial',
+                symbol: 'partial',
+              },
+              'runtime-agent': {
+                relationship: 'partial',
+                symbol: 'partial',
+              },
+              'tool-implementation': {
+                relationship: 'partial',
+                symbol: 'partial',
+              },
+              'tool-input-schema': {
+                relationship: 'partial',
+                symbol: 'partial',
+              },
+              'tool-output-schema': {
+                relationship: 'partial',
+                symbol: 'partial',
+              },
+              'tool-registration': {
+                relationship: 'partial',
+                symbol: 'partial',
+              },
+            },
+            evidenceKinds: [
+              'agent-definition',
+              'instruction-loader',
+              'language',
+              'runtime-package',
+              'schema',
+              'tool-registration',
+            ],
+            id: 'typescript-tool-loop-agent-7',
+            kind: 'package',
+            knownLimitations: [
+              'Lockfiles and installed package versions are not inspected.',
+              'Only Output.object establishes an agent output-schema relationship.',
+              'Only TypeScript ESM source and documented direct relative imports are interpreted.',
+              'The target does not infer providers, models, routing targets, handoffs, or subagent control transfer.',
+              'prepareCall and prepareStep function bodies are not interpreted; prepareCall therefore leaves instruction, tool, and output-schema wiring unresolved.',
+            ],
+            language: 'typescript',
+            lastVerifiedAt: '2026-08-19',
+            packages: [
+              {
+                ecosystem: 'npm',
+                name: 'ai',
+                role: 'primary',
+                versionRange: '>=7.0.66 <8.0.0',
+              },
+            ],
+            patterns: [
+              {
+                description:
+                  'Directly exported ToolLoopAgent construction through one closed object-literal settings value.',
+                id: 'direct-tool-loop-agent-construction',
+                kind: 'agent',
+                support: 'full',
+              },
+              {
+                description:
+                  'prepareCall may replace instructions and tools or omit the construction-time output, and is not interpreted by the initial target.',
+                id: 'prepare-call-overrides',
+                kind: 'agent',
+                support: 'ambiguous',
+              },
+              {
+                description: 'WorkflowAgent and @ai-sdk/workflow are outside the initial target.',
+                id: 'workflow-agent',
+                kind: 'agent',
+                support: 'unsupported',
+              },
+              {
+                description:
+                  'Direct loader calls in instructions are supported when prepareCall and prepareStep cannot replace them.',
+                id: 'direct-agent-instruction-loader',
+                kind: 'instruction-loader',
+                support: 'partial',
+              },
+              {
+                description:
+                  'prepareStep may replace per-step instructions and is not interpreted by the initial target.',
+                id: 'prepare-step-instruction-overrides',
+                kind: 'instruction-loader',
+                support: 'ambiguous',
+              },
+              {
+                description:
+                  'A function tool that calls another agent does not establish a target or handoff relationship in the initial target.',
+                id: 'subagent-handoff-inference',
+                kind: 'routing',
+                support: 'unsupported',
+              },
+              {
+                description:
+                  'Direct callOptionsSchema binding establishes the agent input-schema relationship.',
+                id: 'call-options-input-schema',
+                kind: 'schema',
+                support: 'full',
+              },
+              {
+                description:
+                  'Direct Output.object schema binding establishes the agent output-schema relationship when no uninterpreted prepareCall can remove it.',
+                id: 'object-output-schema',
+                kind: 'schema',
+                support: 'partial',
+              },
+              {
+                description:
+                  'Closed object-map registration supports repository-local function tools created through tool.',
+                id: 'closed-tools-map',
+                kind: 'tool',
+                support: 'partial',
+              },
+              {
+                description:
+                  'Direct execute, inputSchema, and outputSchema bindings are interpreted without executing the tool.',
+                id: 'direct-function-tool-bindings',
+                kind: 'tool',
+                support: 'partial',
+              },
+            ],
+            supportLevel: 'experimental',
+          },
+        ],
       },
     },
     version: 1,
@@ -1021,6 +1301,10 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
     {
       name: '@moldea.ai/adapter-openai-agents-sdk',
       version: '1.0.2',
+    },
+    {
+      name: '@moldea.ai/adapter-vercel-ai-sdk',
+      version: '1.0.0',
     },
     {
       name: '@moldea.ai/core',

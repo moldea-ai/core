@@ -20,6 +20,7 @@ export const NPM_RELEASE_PROJECT_ORDER = [
   'adapter-openai',
   'adapter-openai-agents-sdk',
   'adapter-claude-agent-sdk',
+  'adapter-vercel-ai-sdk',
   'cli',
   'website-ui',
 ] as const satisfies readonly INpmReleaseProject[];
@@ -55,6 +56,12 @@ export const NPM_RELEASE_PROJECTS = {
     packageName: '@moldea.ai/adapter-openai-agents-sdk',
     projectDirectory: 'projects/adapter-openai-agents-sdk',
     tagPrefix: 'adapter-openai-agents-sdk-v',
+  },
+  'adapter-vercel-ai-sdk': {
+    artifactPrefix: 'moldea.ai-adapter-vercel-ai-sdk',
+    packageName: '@moldea.ai/adapter-vercel-ai-sdk',
+    projectDirectory: 'projects/adapter-vercel-ai-sdk',
+    tagPrefix: 'adapter-vercel-ai-sdk-v',
   },
   cli: {
     artifactPrefix: 'moldea.ai-cli',

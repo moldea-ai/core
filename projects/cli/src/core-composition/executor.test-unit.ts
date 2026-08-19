@@ -81,6 +81,7 @@ describe('createMoldeaCliCoreInspectionExecutor', () => {
       'google-genai',
       'openai',
       'openai-agents-sdk',
+      'vercel-ai-sdk',
     ]);
     expect(coreFactoryInput.adapters[0]).toBe(ACTIVE_RUNTIME_ADAPTERS[0]);
     expect(coreFactoryInput.limits).toStrictEqual({
@@ -107,6 +108,7 @@ describe('createMoldeaCliCoreInspectionExecutor', () => {
       'google-genai',
       'openai',
       'openai-agents-sdk',
+      'vercel-ai-sdk',
     ]);
     expect(Object.isFrozen(ACTIVE_RUNTIME_ADAPTERS)).toBe(true);
     expect(ACTIVE_RUNTIME_ADAPTER_RELEASE_DEFINITIONS).toStrictEqual(

@@ -1,0 +1,82 @@
+[
+  {
+    "code": "VERCEL_AI_SDK_AGENT_INPUT_SCHEMA_NOT_WIRED",
+    "message": "The declared agent input schema is not wired to the detected ToolLoopAgent call-options schema."
+  },
+  {
+    "code": "VERCEL_AI_SDK_AGENT_INPUT_SCHEMA_SYMBOL_NOT_FOUND",
+    "message": "The declared agent input-schema symbol was not found."
+  },
+  {
+    "code": "VERCEL_AI_SDK_AGENT_OUTPUT_SCHEMA_NOT_WIRED",
+    "message": "The declared agent output schema is not wired to the detected Vercel AI SDK structured output."
+  },
+  {
+    "code": "VERCEL_AI_SDK_AGENT_OUTPUT_SCHEMA_SYMBOL_NOT_FOUND",
+    "message": "The declared agent output-schema symbol was not found."
+  },
+  {
+    "code": "VERCEL_AI_SDK_INSTRUCTION_LOADER_NOT_WIRED",
+    "message": "The declared instruction loader is not wired to the detected Vercel AI SDK instructions."
+  },
+  {
+    "code": "VERCEL_AI_SDK_INSTRUCTION_LOADER_SYMBOL_NOT_FOUND",
+    "message": "The declared instruction-loader symbol was not found."
+  },
+  {
+    "code": "VERCEL_AI_SDK_PACKAGE_MANIFEST_INVALID",
+    "message": "The owning package manifest is invalid for Vercel AI SDK dependency detection."
+  },
+  {
+    "code": "VERCEL_AI_SDK_RUNTIME_AGENT_SYMBOL_NOT_FOUND",
+    "message": "The declared runtime-agent symbol was not found."
+  },
+  {
+    "code": "VERCEL_AI_SDK_SOURCE_SYNTAX_INVALID",
+    "message": "The referenced Vercel AI SDK source file contains invalid TypeScript syntax."
+  },
+  {
+    "code": "VERCEL_AI_SDK_SOURCE_TEXT_INVALID",
+    "message": "The referenced Vercel AI SDK source file is not valid normalized text."
+  },
+  {
+    "code": "VERCEL_AI_SDK_TOOL_IMPLEMENTATION_NOT_WIRED",
+    "message": "The declared tool implementation is not wired to the detected Vercel AI SDK function tool."
+  },
+  {
+    "code": "VERCEL_AI_SDK_TOOL_IMPLEMENTATION_SYMBOL_NOT_FOUND",
+    "message": "The declared tool-implementation symbol was not found."
+  },
+  {
+    "code": "VERCEL_AI_SDK_TOOL_INPUT_SCHEMA_NOT_WIRED",
+    "message": "The declared tool input schema is not wired to the detected Vercel AI SDK function tool."
+  },
+  {
+    "code": "VERCEL_AI_SDK_TOOL_INPUT_SCHEMA_SYMBOL_NOT_FOUND",
+    "message": "The declared tool input-schema symbol was not found."
+  },
+  {
+    "code": "VERCEL_AI_SDK_TOOL_NAME_MISMATCH",
+    "message": "The declared tool name does not match the detected Vercel AI SDK tools-map key."
+  },
+  {
+    "code": "VERCEL_AI_SDK_TOOL_OUTPUT_SCHEMA_NOT_WIRED",
+    "message": "The declared tool output schema is not wired to the detected Vercel AI SDK function tool."
+  },
+  {
+    "code": "VERCEL_AI_SDK_TOOL_OUTPUT_SCHEMA_SYMBOL_NOT_FOUND",
+    "message": "The declared tool output-schema symbol was not found."
+  },
+  {
+    "code": "VERCEL_AI_SDK_TOOL_REGISTRATION_NOT_WIRED",
+    "message": "The declared tool registration is not wired to the detected Vercel AI SDK tools map."
+  },
+  {
+    "code": "VERCEL_AI_SDK_TOOL_REGISTRATION_SYMBOL_NOT_FOUND",
+    "message": "The declared tool-registration symbol was not found."
+  },
+  {
+    "code": "VERCEL_AI_SDK_VERSION_UNSUPPORTED",
+    "message": "The observed Vercel AI SDK dependency range is disjoint from the supported range."
+  }
+]

@@ -89,6 +89,11 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
       /^moldea\.ai-adapter-openai-agents-sdk-.+\.tgz$/u,
       '@moldea.ai/adapter-openai-agents-sdk',
     ),
+    '@moldea.ai/adapter-vercel-ai-sdk': selectPackageTarball(
+      tarballNames,
+      /^moldea\.ai-adapter-vercel-ai-sdk-.+\.tgz$/u,
+      '@moldea.ai/adapter-vercel-ai-sdk',
+    ),
     '@moldea.ai/cli': selectPackageTarball(
       tarballNames,
       /^moldea\.ai-cli-.+\.tgz$/u,
@@ -175,7 +180,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     };
 
     assertRuntimeInvariant(cliManifest?.name === '@moldea.ai/cli', 'The CLI identity is invalid.');
-    assertRuntimeInvariant(cliManifest?.version === '3.3.0', 'The CLI version is invalid.');
+    assertRuntimeInvariant(cliManifest?.version === '3.3.1', 'The CLI version is invalid.');
     assertRuntimeInvariant(
       cliManifest?.engines?.node === '^22.11.0 || ^24.11.0',
       'The CLI runtime range is invalid.',
@@ -186,6 +191,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
       '@moldea.ai/adapter-google-genai',
       '@moldea.ai/adapter-openai',
       '@moldea.ai/adapter-openai-agents-sdk',
+      '@moldea.ai/adapter-vercel-ai-sdk',
       '@moldea.ai/core',
       '@moldea.ai/repository',
       '@moldea.ai/repository-fs',
@@ -204,7 +210,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
 
     assertRuntimeInvariant(versionResult.status === 0, 'The installed CLI version command failed.');
     assertRuntimeInvariant(versionResult.stderr === '', 'The version command wrote stderr.');
-    assertRuntimeInvariant(versionResult.stdout === '3.3.0\n', 'The version output is invalid.');
+    assertRuntimeInvariant(versionResult.stdout === '3.3.1\n', 'The version output is invalid.');
 
     const compatibilityResult = executeCli(
       executablePath,
@@ -227,6 +233,9 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     const openAiAgentsSdkAdapter = compatibilityEnvelope.result?.adapters?.find(
       ({ id }) => id === 'openai-agents-sdk',
     );
+    const vercelAiSdkAdapter = compatibilityEnvelope.result?.adapters?.find(
+      ({ id }) => id === 'vercel-ai-sdk',
+    );
 
     assertRuntimeInvariant(
       compatibilityResult.status === 0,
@@ -242,7 +251,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
       'The compatibility result is invalid.',
     );
     assertRuntimeInvariant(
-      compatibilityEnvelope.cliVersion === '3.3.0' &&
+      compatibilityEnvelope.cliVersion === '3.3.1' &&
         compatibilityEnvelope.schemaVersion === 1 &&
         compatibilityEnvelope.result?.outputSchemaVersion === 1,
       'The compatibility envelope is invalid.',
@@ -255,6 +264,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
           { name: '@moldea.ai/adapter-google-genai', version: '1.0.3' },
           { name: '@moldea.ai/adapter-openai', version: '2.0.4' },
           { name: '@moldea.ai/adapter-openai-agents-sdk', version: '1.0.2' },
+          { name: '@moldea.ai/adapter-vercel-ai-sdk', version: '1.0.0' },
           { name: '@moldea.ai/core', version: '2.0.0' },
           { name: '@moldea.ai/repository', version: '1.0.1' },
           { name: '@moldea.ai/repository-fs', version: '1.0.2' },
@@ -329,6 +339,20 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
         openAiAgentsSdkAdapter.matrix?.targets?.[0]?.id === 'typescript-agent-handoffs-0-16' &&
         openAiAgentsSdkAdapter.matrix?.targets?.[0]?.supportLevel === 'experimental',
       'The OpenAI Agents SDK compatibility claim is invalid.',
+    );
+    assertRuntimeInvariant(
+      vercelAiSdkAdapter?.active === true &&
+        vercelAiSdkAdapter.bundledVersion === '1.0.0' &&
+        vercelAiSdkAdapter.matrix?.implementationStatus === 'available' &&
+        vercelAiSdkAdapter.matrix?.compatibleCoreRange === '^2.0.0' &&
+        vercelAiSdkAdapter.matrix?.runtimeGuidance?.expectation === 'optional' &&
+        JSON.stringify(vercelAiSdkAdapter.matrix?.supportedRepositoryFormatVersions) === '[1]' &&
+        vercelAiSdkAdapter.matrix?.targets?.[0]?.id === 'typescript-generate-stream-text-7' &&
+        vercelAiSdkAdapter.matrix?.targets?.[1]?.id === 'typescript-tool-loop-agent-7' &&
+        vercelAiSdkAdapter.matrix?.targets?.every(
+          ({ supportLevel }) => supportLevel === 'experimental',
+        ),
+      'The Vercel AI SDK compatibility claim is invalid.',
     );
 
     executeFixtureGit(consumerDirectory, hooksDirectory, environment, ['init']);

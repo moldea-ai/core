@@ -36,11 +36,12 @@ describe('CLI release metadata immutability', () => {
         'google-genai',
         'openai',
         'openai-agents-sdk',
+        'vercel-ai-sdk',
       ],
       cliPackage: {
         name: '@moldea.ai/cli',
         supportedNodeRange: '^22.11.0 || ^24.11.0',
-        version: '3.3.0',
+        version: '3.3.1',
       },
       coreRecognizedAdapterIds: [
         'anthropic',
@@ -63,6 +64,7 @@ describe('CLI release metadata immutability', () => {
         { name: '@moldea.ai/adapter-google-genai', version: '1.0.3' },
         { name: '@moldea.ai/adapter-openai', version: '2.0.4' },
         { name: '@moldea.ai/adapter-openai-agents-sdk', version: '1.0.2' },
+        { name: '@moldea.ai/adapter-vercel-ai-sdk', version: '1.0.0' },
         { name: '@moldea.ai/core', version: '2.0.0' },
         { name: '@moldea.ai/repository', version: '1.0.1' },
         { name: '@moldea.ai/repository-fs', version: '1.0.2' },
@@ -127,6 +129,20 @@ describe('CLI release metadata immutability', () => {
       supportedRepositoryFormatVersions: [1],
       targets: [{ id: 'typescript-agent-handoffs-0-16', supportLevel: 'experimental' }],
     });
+    expect(MOLDEA_CLI_RELEASE_METADATA.matrix.adapters['vercel-ai-sdk']).toMatchObject({
+      compatibleCoreRange: '^2.0.0',
+      implementation: {
+        package: '@moldea.ai/adapter-vercel-ai-sdk',
+        versionRange: '^1.0.0',
+      },
+      implementationStatus: 'available',
+      runtimeGuidance: { expectation: 'optional' },
+      supportedRepositoryFormatVersions: [1],
+      targets: [
+        { id: 'typescript-generate-stream-text-7', supportLevel: 'experimental' },
+        { id: 'typescript-tool-loop-agent-7', supportLevel: 'experimental' },
+      ],
+    });
     expect(
       Object.entries(MOLDEA_CLI_RELEASE_METADATA.matrix.adapters).every(
         ([adapterId, { implementationStatus }]) =>
@@ -136,6 +152,7 @@ describe('CLI release metadata immutability', () => {
           adapterId === 'google-genai' ||
           adapterId === 'openai' ||
           adapterId === 'openai-agents-sdk' ||
+          adapterId === 'vercel-ai-sdk' ||
           implementationStatus === 'planned',
       ),
     ).toBe(true);

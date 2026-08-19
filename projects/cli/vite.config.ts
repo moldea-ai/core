@@ -12,6 +12,7 @@ const libraryConfig = createLibraryConfig({
     '@moldea.ai/adapter-google-genai',
     '@moldea.ai/adapter-openai',
     '@moldea.ai/adapter-openai-agents-sdk',
+    '@moldea.ai/adapter-vercel-ai-sdk',
     '@moldea.ai/core',
     '@moldea.ai/repository',
     '@moldea.ai/repository-fs',

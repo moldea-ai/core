@@ -1,0 +1,223 @@
+[
+  {
+    "agentId": "support",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": { "targetId": "typescript-tool-loop-agent-7" },
+    "kind": "agent-definition",
+    "references": [{ "path": "/src/agents.ts", "symbol": "supportAgent" }],
+    "runtimeName": "support-runtime",
+    "source": "vercel-ai-sdk"
+  },
+  {
+    "agentId": "summary",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": { "targetId": "typescript-generate-stream-text-7" },
+    "kind": "instruction-loader",
+    "references": [
+      { "path": "/src/agents.ts" },
+      { "path": "/src/instructions.ts", "symbol": "loadSummaryInstruction" }
+    ],
+    "runtimeName": "loadSummaryInstruction",
+    "source": "vercel-ai-sdk"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": { "targetId": "typescript-tool-loop-agent-7" },
+    "kind": "instruction-loader",
+    "references": [
+      { "path": "/src/agents.ts" },
+      { "path": "/src/instructions.ts", "symbol": "loadSupportInstruction" }
+    ],
+    "runtimeName": "loadSupportInstruction",
+    "source": "vercel-ai-sdk"
+  },
+  {
+    "agentId": "summary",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": { "language": "typescript" },
+    "kind": "language",
+    "references": [{ "path": "/src/agents.ts", "symbol": "summaryAgent" }],
+    "runtimeName": null,
+    "source": "vercel-ai-sdk"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": { "language": "typescript" },
+    "kind": "language",
+    "references": [{ "path": "/src/agents.ts", "symbol": "supportAgent" }],
+    "runtimeName": null,
+    "source": "vercel-ai-sdk"
+  },
+  {
+    "agentId": "summary",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "compatibility": "supported",
+      "declaredRange": "^7.0.66",
+      "dependencyKind": "dependencies"
+    },
+    "kind": "runtime-package",
+    "references": [{ "path": "/package.json" }],
+    "runtimeName": "ai",
+    "source": "vercel-ai-sdk"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "compatibility": "supported",
+      "declaredRange": "^7.0.66",
+      "dependencyKind": "dependencies"
+    },
+    "kind": "runtime-package",
+    "references": [{ "path": "/package.json" }],
+    "runtimeName": "ai",
+    "source": "vercel-ai-sdk"
+  },
+  {
+    "agentId": "summary",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": { "calls": "streamText", "targetId": "typescript-generate-stream-text-7" },
+    "kind": "runtime-pattern",
+    "references": [{ "path": "/src/agents.ts", "symbol": "summaryAgent" }],
+    "runtimeName": "summaryAgent",
+    "source": "vercel-ai-sdk"
+  },
+  {
+    "agentId": "summary",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": { "schemaRole": "agent-output", "targetId": "typescript-generate-stream-text-7" },
+    "kind": "schema",
+    "references": [
+      { "path": "/src/agents.ts" },
+      { "path": "/src/contracts.ts", "symbol": "SummaryOutputSchema" }
+    ],
+    "runtimeName": "SummaryOutputSchema",
+    "source": "vercel-ai-sdk"
+  },
+  {
+    "agentId": "summary",
+    "capabilityId": "find-order",
+    "capabilityKind": "tool",
+    "details": { "configurationProperty": "inputSchema", "schemaRole": "tool-input" },
+    "kind": "schema",
+    "references": [
+      { "path": "/src/contracts.ts", "symbol": "FindOrderInputSchema" },
+      { "path": "/src/tools.ts" }
+    ],
+    "runtimeName": "FindOrderInputSchema",
+    "source": "vercel-ai-sdk"
+  },
+  {
+    "agentId": "summary",
+    "capabilityId": "find-order",
+    "capabilityKind": "tool",
+    "details": { "configurationProperty": "outputSchema", "schemaRole": "tool-output" },
+    "kind": "schema",
+    "references": [
+      { "path": "/src/contracts.ts", "symbol": "FindOrderOutputSchema" },
+      { "path": "/src/tools.ts" }
+    ],
+    "runtimeName": "FindOrderOutputSchema",
+    "source": "vercel-ai-sdk"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "configurationProperty": "callOptionsSchema",
+      "schemaRole": "agent-input",
+      "targetId": "typescript-tool-loop-agent-7"
+    },
+    "kind": "schema",
+    "references": [
+      { "path": "/src/agents.ts" },
+      { "path": "/src/contracts.ts", "symbol": "SupportInputSchema" }
+    ],
+    "runtimeName": "SupportInputSchema",
+    "source": "vercel-ai-sdk"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": { "schemaRole": "agent-output", "targetId": "typescript-tool-loop-agent-7" },
+    "kind": "schema",
+    "references": [
+      { "path": "/src/agents.ts" },
+      { "path": "/src/contracts.ts", "symbol": "SupportOutputSchema" }
+    ],
+    "runtimeName": "SupportOutputSchema",
+    "source": "vercel-ai-sdk"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": "find-order",
+    "capabilityKind": "tool",
+    "details": { "configurationProperty": "inputSchema", "schemaRole": "tool-input" },
+    "kind": "schema",
+    "references": [
+      { "path": "/src/contracts.ts", "symbol": "FindOrderInputSchema" },
+      { "path": "/src/tools.ts" }
+    ],
+    "runtimeName": "FindOrderInputSchema",
+    "source": "vercel-ai-sdk"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": "find-order",
+    "capabilityKind": "tool",
+    "details": { "configurationProperty": "outputSchema", "schemaRole": "tool-output" },
+    "kind": "schema",
+    "references": [
+      { "path": "/src/contracts.ts", "symbol": "FindOrderOutputSchema" },
+      { "path": "/src/tools.ts" }
+    ],
+    "runtimeName": "FindOrderOutputSchema",
+    "source": "vercel-ai-sdk"
+  },
+  {
+    "agentId": "summary",
+    "capabilityId": "find-order",
+    "capabilityKind": "tool",
+    "details": { "targetId": "typescript-generate-stream-text-7", "toolType": "function" },
+    "kind": "tool-registration",
+    "references": [
+      { "path": "/src/agents.ts" },
+      { "path": "/src/contracts.ts", "symbol": "FindOrderInputSchema" },
+      { "path": "/src/contracts.ts", "symbol": "FindOrderOutputSchema" },
+      { "path": "/src/implementations.ts", "symbol": "findOrder" },
+      { "path": "/src/tools.ts", "symbol": "findOrderTool" }
+    ],
+    "runtimeName": "find_order",
+    "source": "vercel-ai-sdk"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": "find-order",
+    "capabilityKind": "tool",
+    "details": { "targetId": "typescript-tool-loop-agent-7", "toolType": "function" },
+    "kind": "tool-registration",
+    "references": [
+      { "path": "/src/agents.ts" },
+      { "path": "/src/contracts.ts", "symbol": "FindOrderInputSchema" },
+      { "path": "/src/contracts.ts", "symbol": "FindOrderOutputSchema" },
+      { "path": "/src/implementations.ts", "symbol": "findOrder" },
+      { "path": "/src/tools.ts", "symbol": "findOrderTool" }
+    ],
+    "runtimeName": "find_order",
+    "source": "vercel-ai-sdk"
+  }
+]

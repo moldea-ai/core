@@ -37,6 +37,7 @@ describe('createMoldeaCliCompatibilityResult', () => {
     const claudeAgentSdkAdapter = result.adapters.find(({ id }) => id === 'claude-agent-sdk');
     const openAiAdapter = result.adapters.find(({ id }) => id === 'openai');
     const openAiAgentsSdkAdapter = result.adapters.find(({ id }) => id === 'openai-agents-sdk');
+    const vercelAiSdkAdapter = result.adapters.find(({ id }) => id === 'vercel-ai-sdk');
 
     expect(result).toMatchObject({
       matrixVersion: 1,
@@ -48,6 +49,7 @@ describe('createMoldeaCliCompatibilityResult', () => {
         { name: '@moldea.ai/adapter-google-genai', version: '1.0.3' },
         { name: '@moldea.ai/adapter-openai', version: '2.0.4' },
         { name: '@moldea.ai/adapter-openai-agents-sdk', version: '1.0.2' },
+        { name: '@moldea.ai/adapter-vercel-ai-sdk', version: '1.0.0' },
         { name: '@moldea.ai/core', version: '2.0.0' },
         { name: '@moldea.ai/repository', version: '1.0.1' },
         { name: '@moldea.ai/repository-fs', version: '1.0.2' },
@@ -97,6 +99,18 @@ describe('createMoldeaCliCompatibilityResult', () => {
       matrix: {
         implementationStatus: 'available',
         targets: [{ id: 'typescript-agent-handoffs-0-16' }],
+      },
+    });
+    expect(vercelAiSdkAdapter).toMatchObject({
+      active: true,
+      bundledVersion: '1.0.0',
+      id: 'vercel-ai-sdk',
+      matrix: {
+        implementationStatus: 'available',
+        targets: [
+          { id: 'typescript-generate-stream-text-7' },
+          { id: 'typescript-tool-loop-agent-7' },
+        ],
       },
     });
     expect(customAdapter?.matrix).not.toBe(state.releaseMetadata.matrix.adapters['custom']);
@@ -154,6 +168,18 @@ describe('createMoldeaCliCompatibilityResult', () => {
         implementation: { versionRange: '^1.0.0' },
         implementationStatus: 'available',
         targets: [{ id: 'typescript-agent-handoffs-0-16', lastVerifiedAt: '2026-08-19' }],
+      },
+    });
+    expect(result.adapters.find(({ id }) => id === 'vercel-ai-sdk')).toMatchObject({
+      active: true,
+      bundledVersion: '1.0.0',
+      matrix: {
+        implementation: { versionRange: '^1.0.0' },
+        implementationStatus: 'available',
+        targets: [
+          { id: 'typescript-generate-stream-text-7', lastVerifiedAt: '2026-08-19' },
+          { id: 'typescript-tool-loop-agent-7', lastVerifiedAt: '2026-08-19' },
+        ],
       },
     });
     expectDeeplyFrozen(result);

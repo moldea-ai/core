@@ -14,15 +14,15 @@ Reusable website foundations come from the public `@moldea.ai/website-ui` worksp
 
 Run these from the repository root:
 
-| Command                                                        | Purpose                                                                                  |
-| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `pnpm website:dev`                                             | Generate the content model and run Astro locally.                                        |
-| `pnpm docs:generate`                                           | Write the ignored deterministic content model.                                           |
-| `pnpm docs:check`                                              | Validate discovery, docs, exports, adapters, and routes without writing source.          |
-| `pnpm website:build`                                           | Generate, build static HTML and the local search index, then validate artifact links.    |
-| `pnpm website:check`                                           | Run the complete non-browser website verification sequence.                              |
-| `pnpm turbo run test:e2e --filter @moldea.ai/packages-website` | Run focused browser accessibility, theme, navigation, search, and 320px overflow checks. |
-| `pnpm --filter @moldea.ai/packages-website check:links`        | Revalidate an existing production artifact.                                              |
+| Command                                                        | Purpose                                                                                                                             |
+| -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm website:dev`                                             | Generate the content model and run Astro locally.                                                                                   |
+| `pnpm docs:generate`                                           | Write the ignored deterministic content model.                                                                                      |
+| `pnpm docs:check`                                              | Validate discovery, docs, exports, adapters, and routes without writing source.                                                     |
+| `pnpm website:build`                                           | Generate, build static HTML and the local search index, then validate artifact links.                                               |
+| `pnpm website:check`                                           | Run the complete non-browser website verification sequence.                                                                         |
+| `pnpm turbo run test:e2e --filter @moldea.ai/packages-website` | Run focused browser accessibility, theme, navigation, search, and 320px overflow checks on an automatically selected loopback port. |
+| `pnpm --filter @moldea.ai/packages-website check:links`        | Revalidate an existing production artifact.                                                                                         |
 
 The default build inputs are `SITE_URL=https://packages.moldea.ai` and `BASE_PATH=/`, matching the established custom-domain deployment. Set both values explicitly to build for another mount point, such as `SITE_URL=https://moldea-ai.github.io BASE_PATH=/packages/` for the GitHub project-site URL. Internal links, assets, canonical metadata, Open Graph images, sitemap URLs, search results, robots, and `llms.txt` are all derived from these inputs.
 

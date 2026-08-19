@@ -14,6 +14,7 @@ const NO_PREVIOUS_VERSIONS = Object.freeze({
   'adapter-google-genai': null,
   'adapter-openai': null,
   'adapter-openai-agents-sdk': null,
+  'adapter-vercel-ai-sdk': null,
   cli: null,
   core: null,
   repository: null,
@@ -129,6 +130,8 @@ export const createNpmReleaseWorkflowOutputs = (plan: INpmReleaseWorkflowPlan) =
     adapter_openai_agents_sdk: String(selectedProjects.has('adapter-openai-agents-sdk')),
     adapter_openai_agents_sdk_previous_version:
       plan.previousVersions['adapter-openai-agents-sdk'] ?? '',
+    adapter_vercel_ai_sdk: String(selectedProjects.has('adapter-vercel-ai-sdk')),
+    adapter_vercel_ai_sdk_previous_version: plan.previousVersions['adapter-vercel-ai-sdk'] ?? '',
     cli: String(selectedProjects.has('cli')),
     cli_previous_version: plan.previousVersions.cli ?? '',
     core: String(selectedProjects.has('core')),

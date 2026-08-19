@@ -1,0 +1,60 @@
+{
+  "manifest": "version: 1\nagents:\n  support:\n    runtime:\n      id: vercel-ai-sdk\n    bindings:\n      runtimeAgent:\n        path: /src/agents.ts\n        symbol: supportAgent\n      instructionLoader:\n        path: /src/instructions.ts\n        symbol: loadSupportInstruction\n      inputSchema:\n        path: /src/contracts.ts\n        symbol: SupportInputSchema\n      outputSchema:\n        path: /src/contracts.ts\n        symbol: SupportOutputSchema\n    tools:\n      find-order:\n        name: find_order\n        description: Finds an order.\n        implementation:\n          path: /src/implementations.ts\n          symbol: findOrder\n        registration:\n          path: /src/tools.ts\n          symbol: findOrderTool\n        inputSchema:\n          path: /src/contracts.ts\n          symbol: FindOrderInputSchema\n        outputSchema:\n          path: /src/contracts.ts\n          symbol: FindOrderOutputSchema\n  summary:\n    runtime:\n      id: vercel-ai-sdk\n    bindings:\n      runtimeAgent:\n        path: /src/agents.ts\n        symbol: summaryAgent\n      instructionLoader:\n        path: /src/instructions.ts\n        symbol: loadSummaryInstruction\n      outputSchema:\n        path: /src/contracts.ts\n        symbol: SummaryOutputSchema\n    tools:\n      find-order:\n        name: find_order\n        description: Finds an order.\n        implementation:\n          path: /src/implementations.ts\n          symbol: findOrder\n        registration:\n          path: /src/tools.ts\n          symbol: findOrderTool\n        inputSchema:\n          path: /src/contracts.ts\n          symbol: FindOrderInputSchema\n        outputSchema:\n          path: /src/contracts.ts\n          symbol: FindOrderOutputSchema\n",
+  "entries": [
+    {
+      "path": "/package.json",
+      "text": "{\"dependencies\":{\"ai\":\"^7.0.66\"}}",
+      "type": "file"
+    },
+    {
+      "path": "/moldea/project.md",
+      "text": "# Fixture project\n",
+      "type": "file"
+    },
+    {
+      "path": "/moldea/agents/support/description.md",
+      "text": "Supports customers.\n",
+      "type": "file"
+    },
+    {
+      "path": "/moldea/agents/support/instruction.md",
+      "text": "You are the `support` agent.\n",
+      "type": "file"
+    },
+    {
+      "path": "/moldea/agents/summary/description.md",
+      "text": "Summarizes requests.\n",
+      "type": "file"
+    },
+    {
+      "path": "/moldea/agents/summary/instruction.md",
+      "text": "You are the `summary` agent.\n",
+      "type": "file"
+    },
+    {
+      "path": "/src/contracts.ts",
+      "text": "export const SupportInputSchema = {};\nexport const SupportOutputSchema = {};\nexport const SummaryOutputSchema = {};\nexport const FindOrderInputSchema = {};\nexport const FindOrderOutputSchema = {};\n",
+      "type": "file"
+    },
+    {
+      "path": "/src/instructions.ts",
+      "text": "export const loadSupportInstruction = () => 'support';\nexport const loadSummaryInstruction = () => 'summary';\n",
+      "type": "file"
+    },
+    {
+      "path": "/src/implementations.ts",
+      "text": "export const findOrder = async () => ({ id: '1' });\n",
+      "type": "file"
+    },
+    {
+      "path": "/src/tools.ts",
+      "text": "import { tool } from 'ai';\nimport { FindOrderInputSchema, FindOrderOutputSchema } from './contracts.js';\nimport { findOrder } from './implementations.js';\nexport const findOrderTool = tool({ inputSchema: FindOrderInputSchema, outputSchema: FindOrderOutputSchema, execute: findOrder });\n",
+      "type": "file"
+    },
+    {
+      "path": "/src/agents.ts",
+      "text": "import { generateText, Output, streamText, ToolLoopAgent } from 'ai';\nimport { FindOrderInputSchema, SupportInputSchema, SupportOutputSchema, SummaryOutputSchema } from './contracts.js';\nimport { loadSummaryInstruction, loadSupportInstruction } from './instructions.js';\nimport { findOrderTool } from './tools.js';\nexport const supportAgent = new ToolLoopAgent({ id: 'support-runtime', instructions: loadSupportInstruction(), callOptionsSchema: SupportInputSchema, output: Output.object({ schema: SupportOutputSchema }), tools: { find_order: findOrderTool } });\nexport const summaryAgent = async () => streamText({ instructions: await loadSummaryInstruction(), output: Output.object({ schema: SummaryOutputSchema }), tools: { find_order: findOrderTool } });\nvoid generateText;\nvoid FindOrderInputSchema;\n",
+      "type": "file"
+    }
+  ]
+}

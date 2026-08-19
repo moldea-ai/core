@@ -16,7 +16,7 @@ The matrix publishes only the verified targets and support boundaries shown belo
 | `langgraph`         | `@moldea.ai/adapter-langgraph`         | `package`      | `public`     | Not available        | `planned`   | Not available    |              `0` |
 | `openai`            | `@moldea.ai/adapter-openai`            | `package`      | `public`     | `^2.0.0`             | `available` | `recommended`    |              `1` |
 | `openai-agents-sdk` | `@moldea.ai/adapter-openai-agents-sdk` | `package`      | `public`     | `^1.0.0`             | `available` | `optional`       |              `1` |
-| `vercel-ai-sdk`     | `@moldea.ai/adapter-vercel-ai-sdk`     | `package`      | `public`     | Not available        | `planned`   | Not available    |              `0` |
+| `vercel-ai-sdk`     | `@moldea.ai/adapter-vercel-ai-sdk`     | `package`      | `public`     | `^1.0.0`             | `available` | `optional`       |              `2` |
 
 ## Adapter: `anthropic`
 
@@ -365,3 +365,110 @@ Runtime guidance notes: Project-local guidance is needed only for repository-spe
 - Handoff evidence reports a runtime name only for a supported static non-empty toolNameOverride that can be represented as a valid Runtime Adapter Contract machine string. SDK-generated default names and absent, empty, dynamic, unsupported, mutation-obscured, or evidence-unrepresentable overrides are reported as null.
 - Handoff input schemas, callbacks, filters, enablement, runtime variables, guardrails, prompt templates, sessions, tracing, approvals, models, and provider behavior are not interpreted.
 - Routing-description validation supports only static inline, immutable module-local, and directly imported static strings; loaders, file reads, transformations, and runtime-generated values remain unresolved.
+
+## Adapter: `vercel-ai-sdk`
+
+- Owning package: `@moldea.ai/adapter-vercel-ai-sdk`
+- Implementation range: `^1.0.0`
+- Supported repository-format versions: `1`
+- Compatible Core range: `^2.0.0`
+- Runtime guidance: `optional`
+- Last verified: `2026-08-19`
+
+Runtime guidance notes: Project-local guidance is needed only for repository-specific wrappers or unsupported dynamic integration patterns.
+
+### Target: `typescript-generate-stream-text-7`
+
+- Kind: `package`
+- Support level: `experimental`
+- Language: `typescript`
+- Evidence kinds: `instruction-loader`, `language`, `runtime-package`, `runtime-pattern`, `schema`, `tool-registration`
+- Last verified: `2026-08-19`
+
+| Ecosystem | Package | Role      | Verified range    |
+| --------- | ------- | --------- | ----------------- |
+| `npm`     | `ai`    | `primary` | `>=7.0.66 <8.0.0` |
+
+#### Binding support
+
+| Subject               | Relationship | Symbol    |
+| --------------------- | ------------ | --------- |
+| `runtime-agent`       | `partial`    | `partial` |
+| `output-schema`       | `partial`    | `partial` |
+| `instruction-loader`  | `partial`    | `partial` |
+| `tool-implementation` | `partial`    | `partial` |
+| `tool-registration`   | `partial`    | `partial` |
+| `tool-input-schema`   | `partial`    | `partial` |
+| `tool-output-schema`  | `partial`    | `partial` |
+
+#### Patterns
+
+| Kind                 | Pattern                                | Support       | Description                                                                                                             | Notes         |
+| -------------------- | -------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------- | ------------- |
+| `agent`              | `direct-generate-text-wrapper`         | `full`        | A directly exported function containing a direct generateText object-literal call is recognized as the runtime pattern. | Not available |
+| `agent`              | `direct-stream-text-wrapper`           | `full`        | A directly exported function containing a direct streamText object-literal call is recognized as the runtime pattern.   | Not available |
+| `instruction-loader` | `direct-generation-instruction-loader` | `partial`     | Direct loader calls are supported when prepareStep cannot replace the instructions.                                     | Not available |
+| `instruction-loader` | `instructions-system-precedence`       | `full`        | instructions is authoritative and deprecated system is used only through the supported absence fallback.                | Not available |
+| `instruction-loader` | `prepare-step-instruction-overrides`   | `ambiguous`   | prepareStep may replace per-step instructions and is not interpreted by the initial target.                             | Not available |
+| `runtime`            | `indirect-generation-wrapper`          | `unsupported` | Calls routed through arbitrary wrappers, factories, callbacks, or request builders are outside the initial target.      | Not available |
+| `schema`             | `direct-agent-input-schema`            | `unsupported` | The initial direct-generation target publishes no agent input-schema relationship.                                      | Not available |
+| `schema`             | `object-output-schema`                 | `partial`     | Direct Output.object schema binding establishes the agent output-schema relationship.                                   | Not available |
+| `tool`               | `closed-tools-map`                     | `partial`     | Closed object-map registration supports repository-local function tools created through tool.                           | Not available |
+| `tool`               | `direct-function-tool-bindings`        | `partial`     | Direct execute, inputSchema, and outputSchema bindings are interpreted without executing the tool.                      | Not available |
+
+#### Known limitations
+
+- Lockfiles and installed package versions are not inspected.
+- Only Output.object establishes an agent output-schema relationship.
+- Only TypeScript ESM source and documented direct relative imports are interpreted.
+- Only direct generateText and streamText calls in the bound function's own lexical body are interpreted.
+- The target does not infer providers, models, routing targets, handoffs, or subagent control transfer.
+- prepareStep function bodies are not interpreted.
+
+### Target: `typescript-tool-loop-agent-7`
+
+- Kind: `package`
+- Support level: `experimental`
+- Language: `typescript`
+- Evidence kinds: `agent-definition`, `instruction-loader`, `language`, `runtime-package`, `schema`, `tool-registration`
+- Last verified: `2026-08-19`
+
+| Ecosystem | Package | Role      | Verified range    |
+| --------- | ------- | --------- | ----------------- |
+| `npm`     | `ai`    | `primary` | `>=7.0.66 <8.0.0` |
+
+#### Binding support
+
+| Subject               | Relationship | Symbol    |
+| --------------------- | ------------ | --------- |
+| `runtime-agent`       | `partial`    | `partial` |
+| `input-schema`        | `partial`    | `partial` |
+| `output-schema`       | `partial`    | `partial` |
+| `instruction-loader`  | `partial`    | `partial` |
+| `tool-implementation` | `partial`    | `partial` |
+| `tool-registration`   | `partial`    | `partial` |
+| `tool-input-schema`   | `partial`    | `partial` |
+| `tool-output-schema`  | `partial`    | `partial` |
+
+#### Patterns
+
+| Kind                 | Pattern                               | Support       | Description                                                                                                                           | Notes         |
+| -------------------- | ------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| `agent`              | `direct-tool-loop-agent-construction` | `full`        | Directly exported ToolLoopAgent construction through one closed object-literal settings value.                                        | Not available |
+| `agent`              | `prepare-call-overrides`              | `ambiguous`   | prepareCall may replace instructions and tools or omit the construction-time output, and is not interpreted by the initial target.    | Not available |
+| `agent`              | `workflow-agent`                      | `unsupported` | WorkflowAgent and @ai-sdk/workflow are outside the initial target.                                                                    | Not available |
+| `instruction-loader` | `direct-agent-instruction-loader`     | `partial`     | Direct loader calls in instructions are supported when prepareCall and prepareStep cannot replace them.                               | Not available |
+| `instruction-loader` | `prepare-step-instruction-overrides`  | `ambiguous`   | prepareStep may replace per-step instructions and is not interpreted by the initial target.                                           | Not available |
+| `routing`            | `subagent-handoff-inference`          | `unsupported` | A function tool that calls another agent does not establish a target or handoff relationship in the initial target.                   | Not available |
+| `schema`             | `call-options-input-schema`           | `full`        | Direct callOptionsSchema binding establishes the agent input-schema relationship.                                                     | Not available |
+| `schema`             | `object-output-schema`                | `partial`     | Direct Output.object schema binding establishes the agent output-schema relationship when no uninterpreted prepareCall can remove it. | Not available |
+| `tool`               | `closed-tools-map`                    | `partial`     | Closed object-map registration supports repository-local function tools created through tool.                                         | Not available |
+| `tool`               | `direct-function-tool-bindings`       | `partial`     | Direct execute, inputSchema, and outputSchema bindings are interpreted without executing the tool.                                    | Not available |
+
+#### Known limitations
+
+- Lockfiles and installed package versions are not inspected.
+- Only Output.object establishes an agent output-schema relationship.
+- Only TypeScript ESM source and documented direct relative imports are interpreted.
+- The target does not infer providers, models, routing targets, handoffs, or subagent control transfer.
+- prepareCall and prepareStep function bodies are not interpreted; prepareCall therefore leaves instruction, tool, and output-schema wiring unresolved.

@@ -66,9 +66,11 @@ const basePath = import.meta.env.BASE_URL;
                 <td class="px-4 py-3">{adapter.entry.implementation.kind}</td>
                 <td class="px-4 py-3">
                   {adapter.entry.targets?.length
-                    ? adapter.entry.targets.map((target) => (
+                    ? [
+                        ...new Set(adapter.entry.targets.map(({ supportLevel }) => supportLevel)),
+                      ].map((supportLevel) => (
                         <span class="me-2 inline-flex">
-                          <StatusBadge kind={target.supportLevel} />
+                          <StatusBadge kind={supportLevel} />
                         </span>
                       ))
                     : 'Not available'}

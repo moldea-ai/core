@@ -83,6 +83,7 @@ const createPublishedVersions = (unpublishedProjects: readonly INpmReleaseProjec
     'adapter-openai-agents-sdk': unpublishedProjectSet.has('adapter-openai-agents-sdk')
       ? []
       : ['1.0.0'],
+    'adapter-vercel-ai-sdk': unpublishedProjectSet.has('adapter-vercel-ai-sdk') ? [] : ['1.0.0'],
     cli: unpublishedProjectSet.has('cli') ? [] : ['1.0.0'],
     core: unpublishedProjectSet.has('core') ? [] : ['1.0.0'],
     repository: unpublishedProjectSet.has('repository') ? [] : ['1.0.0'],
@@ -144,6 +145,11 @@ describe('npm release project changes', () => {
         isChanged: false,
         previousVersion: '1.0.0',
       },
+      'adapter-vercel-ai-sdk': {
+        currentVersion: '1.0.0',
+        isChanged: false,
+        previousVersion: '1.0.0',
+      },
       cli: { currentVersion: '1.0.0', isChanged: false, previousVersion: '1.0.0' },
       core: { currentVersion: '1.0.1', isChanged: true, previousVersion: '1.0.0' },
       repository: { currentVersion: '1.0.0', isChanged: false, previousVersion: '1.0.0' },
@@ -192,6 +198,7 @@ describe('npm release project changes', () => {
         'adapter-google-genai': null,
         'adapter-openai': null,
         'adapter-openai-agents-sdk': null,
+        'adapter-vercel-ai-sdk': null,
         cli: null,
         core: null,
         repository: null,
