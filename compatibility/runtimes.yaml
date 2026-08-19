@@ -129,7 +129,7 @@ adapters:
       kind: package
       package: '@moldea.ai/adapter-google-genai'
       distribution: public
-      versionRange: '^1.0.0'
+      versionRange: '^1.0.3'
     implementationStatus: available
     supportedRepositoryFormatVersions:
       - 1
@@ -230,8 +230,8 @@ adapters:
           - Dynamic configuration, callable tools, MCP helpers, provider/server tools, automatic function execution, streaming, chats, live sessions, and Interactions API calls are outside the initial target.
           - Function input-schema contents, including top-level object shape and parameter-name restrictions, are not validated; the target establishes only direct parametersJsonSchema wiring.
           - Source forms outside the verified TypeScript ESM target, legacy @google/generative-ai, alternative parameters schemas, output schemas, runtime variables, and handoffs are outside the initial target.
-        lastVerifiedAt: '2026-08-18'
-    lastVerifiedAt: '2026-08-18'
+        lastVerifiedAt: '2026-08-19'
+    lastVerifiedAt: '2026-08-19'
   langchain:
     implementation:
       kind: package

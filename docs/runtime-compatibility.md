@@ -11,7 +11,7 @@ The matrix publishes only the verified targets and support boundaries shown belo
 | `cloudflare-agents` | `@moldea.ai/adapter-cloudflare-agents` | `package`      | `public`     | Not available        | `planned`   | Not available    |              `0` |
 | `custom`            | `@moldea.ai/core`                      | `built-in`     | `public`     | Not available        | `available` | `required`       |              `1` |
 | `eve`               | `@moldea.ai/adapter-eve`               | `package`      | `public`     | Not available        | `planned`   | Not available    |              `0` |
-| `google-genai`      | `@moldea.ai/adapter-google-genai`      | `package`      | `public`     | `^1.0.0`             | `available` | `optional`       |              `1` |
+| `google-genai`      | `@moldea.ai/adapter-google-genai`      | `package`      | `public`     | `^1.0.3`             | `available` | `optional`       |              `1` |
 | `langchain`         | `@moldea.ai/adapter-langchain`         | `package`      | `public`     | Not available        | `planned`   | Not available    |              `0` |
 | `langgraph`         | `@moldea.ai/adapter-langgraph`         | `package`      | `public`     | Not available        | `planned`   | Not available    |              `0` |
 | `openai`            | `@moldea.ai/adapter-openai`            | `package`      | `public`     | `^2.0.0`             | `available` | `recommended`    |              `1` |
@@ -102,11 +102,11 @@ Runtime guidance notes: Project-local guidance defines the custom runtime integr
 ## Adapter: `google-genai`
 
 - Owning package: `@moldea.ai/adapter-google-genai`
-- Implementation range: `^1.0.0`
+- Implementation range: `^1.0.3`
 - Supported repository-format versions: `1`
 - Compatible Core range: `^2.0.0`
 - Runtime guidance: `optional`
-- Last verified: `2026-08-18`
+- Last verified: `2026-08-19`
 
 Runtime guidance notes: Project-local guidance is needed only for repository-specific wrappers or unsupported indirect integration patterns.
 
@@ -116,7 +116,7 @@ Runtime guidance notes: Project-local guidance is needed only for repository-spe
 - Support level: `experimental`
 - Language: `typescript`
 - Evidence kinds: `instruction-loader`, `language`, `runtime-package`, `runtime-pattern`, `schema`, `tool-registration`
-- Last verified: `2026-08-18`
+- Last verified: `2026-08-19`
 
 | Ecosystem | Package         | Role      | Verified range    |
 | --------- | --------------- | --------- | ----------------- |

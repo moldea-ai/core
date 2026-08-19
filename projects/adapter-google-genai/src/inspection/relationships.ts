@@ -57,6 +57,7 @@ const inspectInputSchema = async (
   reference: IRepositoryReference,
   registrationAnalysis: IGoogleGenAiSourceAnalysis,
   parametersJsonSchema: ts.Expression | null | undefined,
+  hasAmbiguousCandidate: boolean,
   evidence: IRuntimeAdapterEvidence[],
   diagnostics: IAdapterDiagnostic[],
 ): Promise<void> => {
@@ -91,7 +92,11 @@ const inspectInputSchema = async (
   }
 
   if (schema.kind !== 'present-supported' || parametersJsonSchema === null) {
-    if (schema.kind === 'present-supported' && parametersJsonSchema === null) {
+    if (
+      schema.kind === 'present-supported' &&
+      parametersJsonSchema === null &&
+      !hasAmbiguousCandidate
+    ) {
       addGoogleGenAiDiagnostic(
         diagnostics,
         'GOOGLE_GENAI_TOOL_INPUT_SCHEMA_NOT_WIRED',
@@ -131,7 +136,7 @@ const inspectInputSchema = async (
         source: GOOGLE_GENAI_ADAPTER_ID,
       }),
     );
-  } else if (relationship.kind === 'absent') {
+  } else if (relationship.kind === 'absent' && !hasAmbiguousCandidate) {
     addGoogleGenAiDiagnostic(
       diagnostics,
       'GOOGLE_GENAI_TOOL_INPUT_SCHEMA_NOT_WIRED',
@@ -205,6 +210,7 @@ const inspectRegistration = async (
         tool.inputSchema,
         registrationAnalysis,
         undefined,
+        true,
         evidence,
         diagnostics,
       );
@@ -235,19 +241,6 @@ const inspectRegistration = async (
       agent.id,
       getExpressionRange(registrationAnalysis, shape.name),
       capabilityId,
-    );
-  }
-
-  if (tool.inputSchema !== undefined) {
-    await inspectInputSchema(
-      session,
-      agent,
-      capabilityId,
-      tool.inputSchema,
-      registrationAnalysis,
-      shape.parametersJsonSchema,
-      evidence,
-      diagnostics,
     );
   }
 
@@ -385,6 +378,24 @@ const inspectToolRelationships = async (
     session,
     generateContent.hasAmbiguousCandidate,
   );
+
+  for (const registration of registrations) {
+    if (registration.inputSchema === undefined) {
+      continue;
+    }
+
+    await inspectInputSchema(
+      session,
+      agent,
+      registration.capabilityId,
+      registration.inputSchema,
+      registration.analysis,
+      registration.shape.parametersJsonSchema,
+      collections.hasAmbiguousCandidate,
+      evidence,
+      diagnostics,
+    );
+  }
 
   for (const expression of collections.limitViolationExpressions) {
     addGoogleGenAiDiagnostic(

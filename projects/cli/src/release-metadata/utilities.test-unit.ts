@@ -34,7 +34,7 @@ describe('CLI release metadata immutability', () => {
       cliPackage: {
         name: '@moldea.ai/cli',
         supportedNodeRange: '^22.11.0 || ^24.11.0',
-        version: '3.1.2',
+        version: '3.1.3',
       },
       coreRecognizedAdapterIds: [
         'anthropic',
@@ -53,7 +53,7 @@ describe('CLI release metadata immutability', () => {
       outputSchemaVersion: 1,
       packages: [
         { name: '@moldea.ai/adapter-anthropic', version: '2.0.1' },
-        { name: '@moldea.ai/adapter-google-genai', version: '1.0.2' },
+        { name: '@moldea.ai/adapter-google-genai', version: '1.0.3' },
         { name: '@moldea.ai/adapter-openai', version: '2.0.3' },
         { name: '@moldea.ai/core', version: '2.0.0' },
         { name: '@moldea.ai/repository', version: '1.0.1' },
@@ -91,7 +91,7 @@ describe('CLI release metadata immutability', () => {
     });
     expect(MOLDEA_CLI_RELEASE_METADATA.matrix.adapters['google-genai']).toMatchObject({
       compatibleCoreRange: '^2.0.0',
-      implementation: { package: '@moldea.ai/adapter-google-genai', versionRange: '^1.0.0' },
+      implementation: { package: '@moldea.ai/adapter-google-genai', versionRange: '^1.0.3' },
       implementationStatus: 'available',
       runtimeGuidance: { expectation: 'optional' },
       supportedRepositoryFormatVersions: [1],
