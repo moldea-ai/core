@@ -1,0 +1,70 @@
+{
+  "manifest": "version: 1\nagents:\n  billing:\n    runtime:\n      id: openai-agents-sdk\n    bindings:\n      runtimeAgent:\n        path: /src/agents.ts\n        symbol: billingAgent\n  triage:\n    runtime:\n      id: openai-agents-sdk\n    bindings:\n      runtimeAgent:\n        path: /src/agents.ts\n        symbol: triageAgent\n      instructionLoader:\n        path: /src/instructions.ts\n        symbol: loadTriageInstruction\n      outputSchema:\n        path: /src/contracts.ts\n        symbol: TriageOutputSchema\n    tools:\n      find-order:\n        name: find_order\n        description: Retrieves one order by its identifier.\n        implementation:\n          path: /src/find-order.ts\n          symbol: findOrder\n        registration:\n          path: /src/tools.ts\n          symbol: findOrderTool\n        inputSchema:\n          path: /src/contracts.ts\n          symbol: FindOrderInputSchema\n        outputSchema:\n          path: /src/contracts.ts\n          symbol: FindOrderOutputSchema\n",
+  "entries": [
+    {
+      "path": "/moldea/project.md",
+      "text": "# OpenAI Agents SDK adapter fixture\n",
+      "type": "file"
+    },
+    {
+      "path": "/moldea/agents/billing/description.md",
+      "text": "Handles customer billing requests.\n",
+      "type": "file"
+    },
+    {
+      "path": "/moldea/agents/billing/handoff-description.md",
+      "text": "Route billing questions and payment issues here.\n",
+      "type": "file"
+    },
+    {
+      "path": "/moldea/agents/billing/instruction.md",
+      "text": "You are the `billing` agent.\n",
+      "type": "file"
+    },
+    {
+      "path": "/moldea/agents/triage/description.md",
+      "text": "Routes customer support requests.\n",
+      "type": "file"
+    },
+    {
+      "path": "/moldea/agents/triage/instruction.md",
+      "text": "You are the `triage` agent.\n",
+      "type": "file"
+    },
+    {
+      "path": "/package.json",
+      "text": "{\n  \"dependencies\": {\n    \"@openai/agents\": \"^0.16.1\"\n  }\n}\n",
+      "type": "file"
+    },
+    {
+      "path": "/src/agents.ts",
+      "text": "import { Agent, handoff } from '@openai/agents';\n\nimport { TriageOutputSchema } from './contracts.js';\nimport { loadTriageInstruction } from './instructions.js';\nimport { billingRoutingDescription } from './metadata.js';\nimport { findOrderTool } from './tools.js';\n\nexport const billingAgent = new Agent({\n  name: 'billing',\n  instructions: 'Resolve billing requests.',\n  handoffDescription: billingRoutingDescription,\n});\n\nconst configuredBillingHandoff = handoff(billingAgent, {\n  toolNameOverride: 'route_billing',\n  toolDescriptionOverride: billingRoutingDescription,\n});\nconst triageTools = [findOrderTool];\nconst triageHandoffs = [billingAgent, configuredBillingHandoff];\n\nexport const triageAgent = Agent.create({\n  name: 'triage',\n  instructions: async (context) => {\n    return await loadTriageInstruction(context);\n  },\n  outputType: TriageOutputSchema,\n  tools: triageTools,\n  handoffs: triageHandoffs,\n});\n",
+      "type": "file"
+    },
+    {
+      "path": "/src/contracts.ts",
+      "text": "export const TriageOutputSchema = { type: 'object' } as const;\nexport const FindOrderInputSchema = { type: 'object' } as const;\nexport const FindOrderOutputSchema = { type: 'object' } as const;\n",
+      "type": "file"
+    },
+    {
+      "path": "/src/find-order.ts",
+      "text": "export const findOrder = async (input: { orderId: string }) => ({ orderId: input.orderId });\n",
+      "type": "file"
+    },
+    {
+      "path": "/src/instructions.ts",
+      "text": "export const loadTriageInstruction = async (): Promise<string> => 'Route the request.';\n",
+      "type": "file"
+    },
+    {
+      "path": "/src/metadata.ts",
+      "text": "export const billingRoutingDescription = 'Route billing questions and payment issues here.';\n",
+      "type": "file"
+    },
+    {
+      "path": "/src/tools.ts",
+      "text": "import { tool } from '@openai/agents';\n\nimport { FindOrderInputSchema, FindOrderOutputSchema } from './contracts.js';\nimport { findOrder } from './find-order.js';\n\nexport const findOrderTool = tool({\n  name: 'find_order',\n  description: 'Retrieves one order by its identifier.',\n  parameters: FindOrderInputSchema,\n  outputSchema: FindOrderOutputSchema,\n  execute: findOrder,\n});\n",
+      "type": "file"
+    }
+  ]
+}

@@ -21,6 +21,10 @@ export const ADAPTER_GOOGLE_GENAI_PROJECT_DIRECTORY = path.join(
   'adapter-google-genai',
 );
 export const ADAPTER_OPENAI_PROJECT_DIRECTORY = path.join(projectsDirectory, 'adapter-openai');
+export const ADAPTER_OPENAI_AGENTS_SDK_PROJECT_DIRECTORY = path.join(
+  projectsDirectory,
+  'adapter-openai-agents-sdk',
+);
 export const CORE_PROJECT_DIRECTORY = path.join(projectsDirectory, 'core');
 export const REPOSITORY_PROJECT_DIRECTORY = path.join(projectsDirectory, 'repository');
 export const REPOSITORY_FILESYSTEM_PROJECT_DIRECTORY = path.join(
@@ -141,6 +145,7 @@ export const expectPackageManifest = (
   anthropicAdapterVersion: string,
   googleGenAiAdapterVersion: string,
   openAiAdapterVersion: string,
+  openAiAgentsSdkAdapterVersion: string,
   repositoryVersion: string,
   repositoryFilesystemVersion: string,
 ): void => {
@@ -152,12 +157,13 @@ export const expectPackageManifest = (
     name: '@moldea.ai/cli',
     preferUnplugged: true,
     type: 'module',
-    version: '3.1.3',
+    version: '3.2.0',
   });
   expect(manifest.dependencies).toStrictEqual({
     '@moldea.ai/adapter-anthropic': anthropicAdapterVersion,
     '@moldea.ai/adapter-google-genai': googleGenAiAdapterVersion,
     '@moldea.ai/adapter-openai': openAiAdapterVersion,
+    '@moldea.ai/adapter-openai-agents-sdk': openAiAgentsSdkAdapterVersion,
     '@moldea.ai/core': coreVersion,
     '@moldea.ai/repository': repositoryVersion,
     '@moldea.ai/repository-fs': repositoryFilesystemVersion,

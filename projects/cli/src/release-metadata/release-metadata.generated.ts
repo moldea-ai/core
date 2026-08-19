@@ -13,11 +13,11 @@ import { freezeMoldeaCliReleaseMetadata } from './utilities.js';
 
 // immutable compatibility and package composition bundled into this CLI release
 export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
-  activeAdapterIds: ['anthropic', 'google-genai', 'openai'],
+  activeAdapterIds: ['anthropic', 'google-genai', 'openai', 'openai-agents-sdk'],
   cliPackage: {
     name: '@moldea.ai/cli',
     supportedNodeRange: '^22.11.0 || ^24.11.0',
-    version: '3.1.3',
+    version: '3.2.0',
   },
   coreRecognizedAdapterIds: [
     'anthropic',
@@ -501,12 +501,193 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
         ],
       },
       'openai-agents-sdk': {
+        compatibleCoreRange: '^2.0.0',
         implementation: {
           distribution: 'public',
           kind: 'package',
           package: '@moldea.ai/adapter-openai-agents-sdk',
+          versionRange: '^1.0.0',
         },
-        implementationStatus: 'planned',
+        implementationStatus: 'available',
+        lastVerifiedAt: '2026-08-19',
+        runtimeGuidance: {
+          expectation: 'optional',
+          notes:
+            'Project-local guidance is needed only for repository-specific wrappers, dynamic graph construction, or unsupported indirect integration patterns.',
+        },
+        supportedRepositoryFormatVersions: [1],
+        targets: [
+          {
+            bindingSupport: {
+              'instruction-loader': {
+                relationship: 'full',
+                symbol: 'full',
+              },
+              'output-schema': {
+                relationship: 'full',
+                symbol: 'full',
+              },
+              'runtime-agent': {
+                relationship: 'full',
+                symbol: 'full',
+              },
+              'tool-implementation': {
+                relationship: 'full',
+                symbol: 'full',
+              },
+              'tool-input-schema': {
+                relationship: 'full',
+                symbol: 'full',
+              },
+              'tool-output-schema': {
+                relationship: 'full',
+                symbol: 'full',
+              },
+              'tool-registration': {
+                relationship: 'full',
+                symbol: 'full',
+              },
+            },
+            evidenceKinds: [
+              'agent-definition',
+              'handoff-registration',
+              'instruction-loader',
+              'language',
+              'runtime-package',
+              'schema',
+              'tool-registration',
+            ],
+            id: 'typescript-agent-handoffs-0-16',
+            kind: 'package',
+            knownLimitations: [
+              'Agent output, tool input, and tool output schema contents are not validated; the target establishes only direct schema wiring.',
+              'Arbitrary compiler resolution, path aliases, directory indexes, package exports, CommonJS, and re-export graphs are not resolved.',
+              'Custom Handoff objects, agents as tools, hosted tools, MCP tools, Realtime agents, sandbox agents, and dynamically assembled agent graphs are outside the initial target.',
+              'Function tools require an explicit static name already in the initial normalized runtime subset; omitted names and names requiring SDK normalization are outside the target rather than invalid.',
+              'Handoff evidence reports a runtime name only for a supported static non-empty toolNameOverride that can be represented as a valid Runtime Adapter Contract machine string. SDK-generated default names and absent, empty, dynamic, unsupported, mutation-obscured, or evidence-unrepresentable overrides are reported as null.',
+              'Handoff input schemas, callbacks, filters, enablement, runtime variables, guardrails, prompt templates, sessions, tracing, approvals, models, and provider behavior are not interpreted.',
+              'Routing-description validation supports only static inline, immutable module-local, and directly imported static strings; loaders, file reads, transformations, and runtime-generated values remain unresolved.',
+            ],
+            language: 'typescript',
+            lastVerifiedAt: '2026-08-19',
+            packages: [
+              {
+                ecosystem: 'npm',
+                name: '@openai/agents',
+                role: 'primary',
+                versionRange: '>=0.16.1 <0.17.0',
+              },
+            ],
+            patterns: [
+              {
+                description:
+                  'A directly exported TypeScript const constructs an Agent through Agent.create with one closed object-literal configuration.',
+                id: 'agent-create-construction',
+                kind: 'agent',
+                support: 'full',
+              },
+              {
+                description:
+                  'A directly exported TypeScript const constructs an Agent through new Agent with one closed object-literal configuration.',
+                id: 'direct-agent-construction',
+                kind: 'agent',
+                support: 'full',
+              },
+              {
+                description:
+                  'Dynamically assembled Agent configurations cannot be mapped reliably without semantic analysis.',
+                id: 'dynamic-agent-configuration',
+                kind: 'agent',
+                support: 'ambiguous',
+              },
+              {
+                description:
+                  'Realtime and sandbox agent abstractions are outside the initial Agent target.',
+                id: 'realtime-and-sandbox-agents',
+                kind: 'agent',
+                support: 'unsupported',
+              },
+              {
+                description:
+                  'A declared instruction loader is used by direct call, direct reference, or one supported single-return dynamic-instruction wrapper.',
+                id: 'direct-instruction-loader',
+                kind: 'instruction-loader',
+                support: 'full',
+              },
+              {
+                description:
+                  'Agent-as-tool delegation retains manager control and is not interpreted as a handoff by the initial target.',
+                id: 'agents-as-tools',
+                kind: 'routing',
+                support: 'unsupported',
+              },
+              {
+                description:
+                  'A source Agent registers a supported target through handoff with optional closed name and description overrides.',
+                id: 'configured-handoff-helper',
+                kind: 'routing',
+                support: 'full',
+              },
+              {
+                description:
+                  'A source Agent registers a supported target Agent directly in its closed handoffs collection.',
+                id: 'direct-agent-handoff',
+                kind: 'routing',
+                support: 'full',
+              },
+              {
+                description:
+                  'Runtime-generated or transformed handoff descriptions and description overrides remain unestablished.',
+                id: 'dynamic-routing-description',
+                kind: 'routing',
+                support: 'ambiguous',
+              },
+              {
+                description:
+                  'Target handoffDescription uses the canonical handoff description when present and the canonical agent-description fallback otherwise.',
+                id: 'effective-routing-description',
+                kind: 'routing',
+                support: 'full',
+              },
+              {
+                description:
+                  'A non-empty static toolDescriptionOverride is authoritative for its handoff registration and must use the target effective routing description.',
+                id: 'registration-description-override',
+                kind: 'routing',
+                support: 'full',
+              },
+              {
+                description:
+                  'A bound agent output schema is referenced directly through outputType.',
+                id: 'direct-agent-output-schema',
+                kind: 'schema',
+                support: 'full',
+              },
+              {
+                description:
+                  'Closed inline or immutable module-local arrays register supported function tools on an Agent.',
+                id: 'closed-agent-tool-array',
+                kind: 'tool',
+                support: 'full',
+              },
+              {
+                description:
+                  'A directly exported function tool uses the root tool helper, an explicit normalized static name, direct implementation, and direct schema bindings.',
+                id: 'closed-function-tool',
+                kind: 'tool',
+                support: 'full',
+              },
+              {
+                description:
+                  'Hosted, MCP-generated, namespaced, and tool-search tools are outside the initial repository-local function-tool target.',
+                id: 'hosted-and-mcp-tools',
+                kind: 'tool',
+                support: 'unsupported',
+              },
+            ],
+            supportLevel: 'experimental',
+          },
+        ],
       },
       'vercel-ai-sdk': {
         implementation: {
@@ -533,6 +714,10 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
     {
       name: '@moldea.ai/adapter-openai',
       version: '2.0.3',
+    },
+    {
+      name: '@moldea.ai/adapter-openai-agents-sdk',
+      version: '1.0.0',
     },
     {
       name: '@moldea.ai/core',

@@ -30,11 +30,11 @@ const expectDeeplyFrozen = (root: object): void => {
 describe('CLI release metadata immutability', () => {
   test('deeply freezes generated release metadata with exact current composition', () => {
     expect(MOLDEA_CLI_RELEASE_METADATA).toMatchObject({
-      activeAdapterIds: ['anthropic', 'google-genai', 'openai'],
+      activeAdapterIds: ['anthropic', 'google-genai', 'openai', 'openai-agents-sdk'],
       cliPackage: {
         name: '@moldea.ai/cli',
         supportedNodeRange: '^22.11.0 || ^24.11.0',
-        version: '3.1.3',
+        version: '3.2.0',
       },
       coreRecognizedAdapterIds: [
         'anthropic',
@@ -55,6 +55,7 @@ describe('CLI release metadata immutability', () => {
         { name: '@moldea.ai/adapter-anthropic', version: '2.0.1' },
         { name: '@moldea.ai/adapter-google-genai', version: '1.0.3' },
         { name: '@moldea.ai/adapter-openai', version: '2.0.3' },
+        { name: '@moldea.ai/adapter-openai-agents-sdk', version: '1.0.0' },
         { name: '@moldea.ai/core', version: '2.0.0' },
         { name: '@moldea.ai/repository', version: '1.0.1' },
         { name: '@moldea.ai/repository-fs', version: '1.0.2' },
@@ -97,6 +98,17 @@ describe('CLI release metadata immutability', () => {
       supportedRepositoryFormatVersions: [1],
       targets: [{ id: 'typescript-models-generate-content-2', supportLevel: 'experimental' }],
     });
+    expect(MOLDEA_CLI_RELEASE_METADATA.matrix.adapters['openai-agents-sdk']).toMatchObject({
+      compatibleCoreRange: '^2.0.0',
+      implementation: {
+        package: '@moldea.ai/adapter-openai-agents-sdk',
+        versionRange: '^1.0.0',
+      },
+      implementationStatus: 'available',
+      runtimeGuidance: { expectation: 'optional' },
+      supportedRepositoryFormatVersions: [1],
+      targets: [{ id: 'typescript-agent-handoffs-0-16', supportLevel: 'experimental' }],
+    });
     expect(
       Object.entries(MOLDEA_CLI_RELEASE_METADATA.matrix.adapters).every(
         ([adapterId, { implementationStatus }]) =>
@@ -104,6 +116,7 @@ describe('CLI release metadata immutability', () => {
           adapterId === 'custom' ||
           adapterId === 'google-genai' ||
           adapterId === 'openai' ||
+          adapterId === 'openai-agents-sdk' ||
           implementationStatus === 'planned',
       ),
     ).toBe(true);

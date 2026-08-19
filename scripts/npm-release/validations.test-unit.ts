@@ -29,13 +29,15 @@ const createManifest = (project: INpmReleaseProject): Record<string, unknown> =>
                 '@moldea.ai/adapter-anthropic': 'workspace:1.0.0',
                 '@moldea.ai/adapter-google-genai': 'workspace:1.0.0',
                 '@moldea.ai/adapter-openai': 'workspace:1.0.0',
+                '@moldea.ai/adapter-openai-agents-sdk': 'workspace:1.0.0',
                 '@moldea.ai/core': 'workspace:1.0.0',
                 '@moldea.ai/repository': 'workspace:1.0.0',
                 '@moldea.ai/repository-fs': 'workspace:1.0.0',
               }
             : project === 'adapter-anthropic' ||
                 project === 'adapter-google-genai' ||
-                project === 'adapter-openai'
+                project === 'adapter-openai' ||
+                project === 'adapter-openai-agents-sdk'
               ? {
                   '@moldea.ai/core': 'workspace:^1.0.0',
                   '@moldea.ai/repository': 'workspace:^1.0.0',
@@ -84,6 +86,11 @@ describe('npm release validation', () => {
       'adapter-google-genai-v1.0.0',
     ],
     ['adapter-openai', 'moldea.ai-adapter-openai-1.0.0.tgz', 'adapter-openai-v1.0.0'],
+    [
+      'adapter-openai-agents-sdk',
+      'moldea.ai-adapter-openai-agents-sdk-1.0.0.tgz',
+      'adapter-openai-agents-sdk-v1.0.0',
+    ],
     ['cli', 'moldea.ai-cli-1.0.0.tgz', 'cli-v1.0.0'],
     ['website-ui', 'moldea.ai-website-ui-1.0.0.tgz', 'website-ui-v1.0.0'],
   ] as const)('createNpmReleaseIdentity(%s) -> %s and %s', (project, artifactName, tag) => {

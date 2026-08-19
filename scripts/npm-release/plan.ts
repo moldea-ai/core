@@ -38,6 +38,7 @@ const createEmptyPublishedVersions = (): INpmReleaseWorkflowPlanSources['publish
   'adapter-anthropic': [],
   'adapter-google-genai': [],
   'adapter-openai': [],
+  'adapter-openai-agents-sdk': [],
   cli: [],
   core: [],
   repository: [],

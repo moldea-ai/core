@@ -96,6 +96,7 @@ describe('discoverPublicPackages', () => {
       '@moldea.ai/adapter-anthropic',
       '@moldea.ai/adapter-google-genai',
       '@moldea.ai/adapter-openai',
+      '@moldea.ai/adapter-openai-agents-sdk',
       '@moldea.ai/cli',
       '@moldea.ai/core',
       '@moldea.ai/repository',
@@ -103,6 +104,9 @@ describe('discoverPublicPackages', () => {
       '@moldea.ai/website-ui',
     ]);
     expect(model.packages.find(({ slug }) => slug === 'adapter-openai')?.family).toBe(
+      'runtime-adapters',
+    );
+    expect(model.packages.find(({ slug }) => slug === 'adapter-openai-agents-sdk')?.family).toBe(
       'runtime-adapters',
     );
     expect(model.packages.find(({ slug }) => slug === 'adapter-anthropic')?.family).toBe(

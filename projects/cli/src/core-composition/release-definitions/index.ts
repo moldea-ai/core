@@ -12,6 +12,10 @@ export const ACTIVE_RUNTIME_ADAPTER_RELEASE_DEFINITIONS = Object.freeze([
     id: 'openai',
     supportedRepositoryFormatVersions: [1],
   },
+  {
+    id: 'openai-agents-sdk',
+    supportedRepositoryFormatVersions: [1],
+  },
 ] satisfies readonly {
   id: string;
   supportedRepositoryFormatVersions: readonly number[];

@@ -38,6 +38,7 @@ export {
 // source analysis
 export {
   analyzeSource,
+  analyzeTypeScriptModule,
   getCallableExportState,
   getConstExport,
   getRuntimeExport,

@@ -55,6 +55,7 @@ export {
   analyzeClientRequests,
   analyzeObjectRelationships,
   analyzeSource,
+  analyzeTypeScriptModule,
   getCallableExportState,
   getClosedArrayIdentifiers,
   getClosedObjectProperties,

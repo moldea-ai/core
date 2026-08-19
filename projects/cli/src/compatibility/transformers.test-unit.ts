@@ -35,6 +35,7 @@ describe('createMoldeaCliCompatibilityResult', () => {
     const result = createMoldeaCliCompatibilityResult(state);
     const customAdapter = result.adapters.find(({ id }) => id === 'custom');
     const openAiAdapter = result.adapters.find(({ id }) => id === 'openai');
+    const openAiAgentsSdkAdapter = result.adapters.find(({ id }) => id === 'openai-agents-sdk');
 
     expect(result).toMatchObject({
       matrixVersion: 1,
@@ -44,6 +45,7 @@ describe('createMoldeaCliCompatibilityResult', () => {
         { name: '@moldea.ai/adapter-anthropic', version: '2.0.1' },
         { name: '@moldea.ai/adapter-google-genai', version: '1.0.3' },
         { name: '@moldea.ai/adapter-openai', version: '2.0.3' },
+        { name: '@moldea.ai/adapter-openai-agents-sdk', version: '1.0.0' },
         { name: '@moldea.ai/core', version: '2.0.0' },
         { name: '@moldea.ai/repository', version: '1.0.1' },
         { name: '@moldea.ai/repository-fs', version: '1.0.2' },
@@ -75,6 +77,15 @@ describe('createMoldeaCliCompatibilityResult', () => {
       matrix: {
         implementationStatus: 'available',
         targets: [{ id: 'typescript-responses-api-7' }],
+      },
+    });
+    expect(openAiAgentsSdkAdapter).toMatchObject({
+      active: true,
+      bundledVersion: '1.0.0',
+      id: 'openai-agents-sdk',
+      matrix: {
+        implementationStatus: 'available',
+        targets: [{ id: 'typescript-agent-handoffs-0-16' }],
       },
     });
     expect(customAdapter?.matrix).not.toBe(state.releaseMetadata.matrix.adapters['custom']);
@@ -114,6 +125,15 @@ describe('createMoldeaCliCompatibilityResult', () => {
         implementation: { versionRange: '^2.0.0' },
         implementationStatus: 'available',
         targets: [{ id: 'typescript-responses-api-7', lastVerifiedAt: '2026-08-17' }],
+      },
+    });
+    expect(result.adapters.find(({ id }) => id === 'openai-agents-sdk')).toMatchObject({
+      active: true,
+      bundledVersion: '1.0.0',
+      matrix: {
+        implementation: { versionRange: '^1.0.0' },
+        implementationStatus: 'available',
+        targets: [{ id: 'typescript-agent-handoffs-0-16', lastVerifiedAt: '2026-08-19' }],
       },
     });
     expectDeeplyFrozen(result);
