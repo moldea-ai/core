@@ -8,6 +8,7 @@ export type {
   IStaticAnalysisModuleArray,
   IStaticAnalysisModuleValueSource,
   IStaticAnalysisModuleValueSourceResult,
+  IStaticAnalysisMutationAnalysis,
   IStaticAnalysisNamedImport,
   IStaticAnalysisPackageCompatibility,
   IStaticAnalysisPackageDeclaration,
@@ -28,6 +29,8 @@ export type {
   IStaticAnalysisSourcePosition,
   IStaticAnalysisSourceRange,
   IStaticAnalysisSourceResult,
+  IStaticAnalysisStaticStringOptions,
+  IStaticAnalysisStaticStringResult,
   IStaticAnalysisTextResult,
   IStaticAnalysisToolRegistration,
   IStaticAnalysisToolRelationship,
@@ -53,6 +56,7 @@ export {
 // TypeScript analysis
 export {
   analyzeClientRequests,
+  analyzeModuleValueMutations,
   analyzeObjectRelationships,
   analyzeSource,
   analyzeTypeScriptModule,
@@ -78,5 +82,6 @@ export {
   isSupportedTypeScriptSourcePath,
   resolveBindingReferences,
   resolveImportCandidatePaths,
+  resolveStaticString,
   unwrapExpression,
 } from './typescript-analysis/index.js';

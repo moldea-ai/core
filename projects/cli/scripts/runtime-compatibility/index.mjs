@@ -69,6 +69,11 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
       /^moldea\.ai-adapter-anthropic-.+\.tgz$/u,
       '@moldea.ai/adapter-anthropic',
     ),
+    '@moldea.ai/adapter-claude-agent-sdk': selectPackageTarball(
+      tarballNames,
+      /^moldea\.ai-adapter-claude-agent-sdk-.+\.tgz$/u,
+      '@moldea.ai/adapter-claude-agent-sdk',
+    ),
     '@moldea.ai/adapter-google-genai': selectPackageTarball(
       tarballNames,
       /^moldea\.ai-adapter-google-genai-.+\.tgz$/u,
@@ -170,13 +175,14 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     };
 
     assertRuntimeInvariant(cliManifest?.name === '@moldea.ai/cli', 'The CLI identity is invalid.');
-    assertRuntimeInvariant(cliManifest?.version === '3.2.1', 'The CLI version is invalid.');
+    assertRuntimeInvariant(cliManifest?.version === '3.3.0', 'The CLI version is invalid.');
     assertRuntimeInvariant(
       cliManifest?.engines?.node === '^22.11.0 || ^24.11.0',
       'The CLI runtime range is invalid.',
     );
     for (const packageName of [
       '@moldea.ai/adapter-anthropic',
+      '@moldea.ai/adapter-claude-agent-sdk',
       '@moldea.ai/adapter-google-genai',
       '@moldea.ai/adapter-openai',
       '@moldea.ai/adapter-openai-agents-sdk',
@@ -198,7 +204,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
 
     assertRuntimeInvariant(versionResult.status === 0, 'The installed CLI version command failed.');
     assertRuntimeInvariant(versionResult.stderr === '', 'The version command wrote stderr.');
-    assertRuntimeInvariant(versionResult.stdout === '3.2.1\n', 'The version output is invalid.');
+    assertRuntimeInvariant(versionResult.stdout === '3.3.0\n', 'The version output is invalid.');
 
     const compatibilityResult = executeCli(
       executablePath,
@@ -209,6 +215,9 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     const compatibilityEnvelope = JSON.parse(compatibilityResult.stdout);
     const anthropicAdapter = compatibilityEnvelope.result?.adapters?.find(
       ({ id }) => id === 'anthropic',
+    );
+    const claudeAgentSdkAdapter = compatibilityEnvelope.result?.adapters?.find(
+      ({ id }) => id === 'claude-agent-sdk',
     );
     const customAdapter = compatibilityEnvelope.result?.adapters?.find(({ id }) => id === 'custom');
     const googleGenAiAdapter = compatibilityEnvelope.result?.adapters?.find(
@@ -233,7 +242,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
       'The compatibility result is invalid.',
     );
     assertRuntimeInvariant(
-      compatibilityEnvelope.cliVersion === '3.2.1' &&
+      compatibilityEnvelope.cliVersion === '3.3.0' &&
         compatibilityEnvelope.schemaVersion === 1 &&
         compatibilityEnvelope.result?.outputSchemaVersion === 1,
       'The compatibility envelope is invalid.',
@@ -242,9 +251,10 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
       JSON.stringify(compatibilityEnvelope.result?.packages) ===
         JSON.stringify([
           { name: '@moldea.ai/adapter-anthropic', version: '2.0.1' },
+          { name: '@moldea.ai/adapter-claude-agent-sdk', version: '1.0.0' },
           { name: '@moldea.ai/adapter-google-genai', version: '1.0.3' },
           { name: '@moldea.ai/adapter-openai', version: '2.0.4' },
-          { name: '@moldea.ai/adapter-openai-agents-sdk', version: '1.0.1' },
+          { name: '@moldea.ai/adapter-openai-agents-sdk', version: '1.0.2' },
           { name: '@moldea.ai/core', version: '2.0.0' },
           { name: '@moldea.ai/repository', version: '1.0.1' },
           { name: '@moldea.ai/repository-fs', version: '1.0.2' },
@@ -276,6 +286,17 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
       'The Anthropic compatibility claim is invalid.',
     );
     assertRuntimeInvariant(
+      claudeAgentSdkAdapter?.active === true &&
+        claudeAgentSdkAdapter.bundledVersion === '1.0.0' &&
+        claudeAgentSdkAdapter.matrix?.implementationStatus === 'available' &&
+        claudeAgentSdkAdapter.matrix?.compatibleCoreRange === '^2.0.0' &&
+        claudeAgentSdkAdapter.matrix?.runtimeGuidance?.expectation === 'optional' &&
+        JSON.stringify(claudeAgentSdkAdapter.matrix?.supportedRepositoryFormatVersions) === '[1]' &&
+        claudeAgentSdkAdapter.matrix?.targets?.[0]?.id === 'typescript-query-subagents-0-3' &&
+        claudeAgentSdkAdapter.matrix?.targets?.[0]?.supportLevel === 'experimental',
+      'The Claude Agent SDK compatibility claim is invalid.',
+    );
+    assertRuntimeInvariant(
       googleGenAiAdapter?.active === true &&
         googleGenAiAdapter.bundledVersion === '1.0.3' &&
         googleGenAiAdapter.matrix?.implementationStatus === 'available' &&
@@ -299,7 +320,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     );
     assertRuntimeInvariant(
       openAiAgentsSdkAdapter?.active === true &&
-        openAiAgentsSdkAdapter.bundledVersion === '1.0.1' &&
+        openAiAgentsSdkAdapter.bundledVersion === '1.0.2' &&
         openAiAgentsSdkAdapter.matrix?.implementationStatus === 'available' &&
         openAiAgentsSdkAdapter.matrix?.compatibleCoreRange === '^2.0.0' &&
         openAiAgentsSdkAdapter.matrix?.runtimeGuidance?.expectation === 'optional' &&
@@ -322,7 +343,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
         'agents:',
         '  support:',
         '    runtime:',
-        '      id: openai-agents-sdk',
+        '      id: claude-agent-sdk',
         '    bindings:',
         '      runtimeAgent:',
         '        path: /src/agent.ts',
@@ -345,8 +366,8 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     await writeFile(
       path.join(consumerDirectory, 'src', 'agent.ts'),
       [
-        "import { Agent } from '@openai/agents';",
-        "export const supportAgent = new Agent({ name: 'support', instructions: 'Help users.' });",
+        "import { query } from '@anthropic-ai/claude-agent-sdk';",
+        "export const supportAgent = async () => query({ prompt: 'Help users.', options: {} });",
         '',
       ].join('\n'),
       'utf8',
@@ -356,7 +377,14 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     );
     await writeFile(
       path.join(consumerDirectory, 'package.json'),
-      `${JSON.stringify({ ...consumerManifest, dependencies: { '@openai/agents': '^0.16.1' } }, null, 2)}\n`,
+      `${JSON.stringify(
+        {
+          ...consumerManifest,
+          dependencies: { '@anthropic-ai/claude-agent-sdk': '^0.3.234' },
+        },
+        null,
+        2,
+      )}\n`,
       'utf8',
     );
     executeFixtureGit(consumerDirectory, hooksDirectory, environment, [
@@ -414,11 +442,11 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
         })),
       ) ===
         JSON.stringify([
-          { kind: 'agent-definition', source: 'openai-agents-sdk' },
-          { kind: 'language', source: 'openai-agents-sdk' },
-          { kind: 'runtime-package', source: 'openai-agents-sdk' },
+          { kind: 'language', source: 'claude-agent-sdk' },
+          { kind: 'runtime-package', source: 'claude-agent-sdk' },
+          { kind: 'runtime-pattern', source: 'claude-agent-sdk' },
         ]),
-      'Inspection omitted the OpenAI Agents SDK adapter evidence.',
+      'Inspection omitted the Claude Agent SDK adapter evidence.',
     );
     assertRuntimeInvariant(
       !`${compatibilityResult.stdout}${validateResult.stdout}${inspectResult.stdout}`.includes(

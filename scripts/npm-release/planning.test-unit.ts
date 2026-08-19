@@ -10,6 +10,7 @@ import { createNpmReleaseWorkflowOutputs, createNpmReleaseWorkflowPlan } from '.
 
 const NO_PREVIOUS_VERSIONS = {
   'adapter-anthropic': null,
+  'adapter-claude-agent-sdk': null,
   'adapter-google-genai': null,
   'adapter-openai': null,
   'adapter-openai-agents-sdk': null,
@@ -27,6 +28,7 @@ const createProjectChanges = (
     (
       [
         'adapter-anthropic',
+        'adapter-claude-agent-sdk',
         'adapter-google-genai',
         'adapter-openai',
         'adapter-openai-agents-sdk',
@@ -54,6 +56,7 @@ const createPublishedVersions = (
     (
       [
         'adapter-anthropic',
+        'adapter-claude-agent-sdk',
         'adapter-google-genai',
         'adapter-openai',
         'adapter-openai-agents-sdk',
@@ -92,6 +95,11 @@ describe('npm release workflow planning', () => {
         project: '',
         projectChanges: createProjectChanges({
           'adapter-anthropic': { currentVersion: '1.0.1', isChanged: true },
+          'adapter-claude-agent-sdk': {
+            currentVersion: '1.0.0',
+            isChanged: true,
+            previousVersion: null,
+          },
           'adapter-google-genai': {
             currentVersion: '1.0.0',
             isChanged: true,
@@ -110,6 +118,7 @@ describe('npm release workflow planning', () => {
         }),
         publishedVersions: createPublishedVersions({
           'adapter-google-genai': [],
+          'adapter-claude-agent-sdk': [],
           'adapter-openai-agents-sdk': [],
           'website-ui': [],
         }),
@@ -118,6 +127,7 @@ describe('npm release workflow planning', () => {
       mode: 'trusted',
       previousVersions: {
         'adapter-anthropic': '1.0.0',
+        'adapter-claude-agent-sdk': null,
         'adapter-google-genai': null,
         'adapter-openai': '1.0.0',
         'adapter-openai-agents-sdk': null,
@@ -134,6 +144,7 @@ describe('npm release workflow planning', () => {
         'adapter-google-genai',
         'adapter-openai',
         'adapter-openai-agents-sdk',
+        'adapter-claude-agent-sdk',
         'cli',
         'website-ui',
       ],
@@ -205,6 +216,7 @@ describe('npm release workflow planning', () => {
       mode: 'trusted',
       previousVersions: {
         'adapter-anthropic': null,
+        'adapter-claude-agent-sdk': null,
         'adapter-google-genai': '1.0.0',
         'adapter-openai': null,
         'adapter-openai-agents-sdk': null,
@@ -238,6 +250,7 @@ describe('npm release workflow planning', () => {
       mode: 'trusted',
       previousVersions: {
         'adapter-anthropic': null,
+        'adapter-claude-agent-sdk': null,
         'adapter-google-genai': null,
         'adapter-openai': null,
         'adapter-openai-agents-sdk': null,
@@ -267,6 +280,8 @@ describe('npm release workflow planning', () => {
     expect(createNpmReleaseWorkflowOutputs(plan)).toStrictEqual({
       adapter_anthropic: 'false',
       adapter_anthropic_previous_version: '',
+      adapter_claude_agent_sdk: 'false',
+      adapter_claude_agent_sdk_previous_version: '',
       adapter_google_genai: 'false',
       adapter_google_genai_previous_version: '',
       adapter_openai: 'false',

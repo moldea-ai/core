@@ -14,6 +14,7 @@ Package-owned full documentation under `projects/<project>/docs/**` is repositor
 | `repository-fs`             | `@moldea.ai/repository-fs`             | `repository-fs-v<version>`             |
 | `core`                      | `@moldea.ai/core`                      | `core-v<version>`                      |
 | `adapter-anthropic`         | `@moldea.ai/adapter-anthropic`         | `adapter-anthropic-v<version>`         |
+| `adapter-claude-agent-sdk`  | `@moldea.ai/adapter-claude-agent-sdk`  | `adapter-claude-agent-sdk-v<version>`  |
 | `adapter-google-genai`      | `@moldea.ai/adapter-google-genai`      | `adapter-google-genai-v<version>`      |
 | `adapter-openai`            | `@moldea.ai/adapter-openai`            | `adapter-openai-v<version>`            |
 | `adapter-openai-agents-sdk` | `@moldea.ai/adapter-openai-agents-sdk` | `adapter-openai-agents-sdk-v<version>` |
@@ -47,7 +48,7 @@ The workflow uses npm OIDC and contains no npm publication token. The publicatio
 
 Pull-request CI compares every public project directory with the target commit and rejects a changed existing project with an unchanged, lower, prerelease, or noncanonical version. A new project absent from the target commit is selected with no predecessor version and must still declare a canonical stable version. The resulting push to `main` repeats the comparison against the exact pushed commits, loads the published versions for every public package, and selects changed projects plus each current repository version absent from npm. An unpublished candidate uses the latest published version as its predecessor, so a safe skipped version can recover automatically while downgrades remain prohibited. A changed version already present on npm retains its base-commit predecessor so the reusable release boundary still validates its tag identity. The publish orchestrator verifies that commit once rather than starting a parallel standalone CI run. Selected projects pass one complete repository, supported-Node, cross-platform, packed-artifact, checksum, and runtime verification boundary before any tag or publication is attempted.
 
-Repository publishes first, followed by Repository FS, Core, the Anthropic adapter, the Google Gen AI adapter, the OpenAI adapter, the OpenAI Agents SDK adapter, and the CLI. Website UI is independent of that runtime dependency chain and may publish after the shared verification boundary without waiting for those package jobs. An unselected package is skipped without blocking later selected packages. A failed package blocks every dependent downstream release, while a rerun or manual trusted dispatch can resume from a matching tag without republishing completed versions.
+Repository publishes first, followed by Repository FS, Core, the Anthropic adapter, the Google Gen AI adapter, the OpenAI adapter, the OpenAI Agents SDK adapter, the Claude Agent SDK adapter, and the CLI. Website UI is independent of that runtime dependency chain and may publish after the shared verification boundary without waiting for those package jobs. An unselected package is skipped without blocking later selected packages. A failed package blocks every dependent downstream release, while a rerun or manual trusted dispatch can resume from a matching tag without republishing completed versions.
 
 The workflow accepts stable semantic versions only. Prerelease versions and alternate npm distribution tags require a separately designed release path.
 
@@ -80,10 +81,11 @@ npm requires a package to exist before it can be connected to a trusted publishe
    5. `@moldea.ai/adapter-google-genai`
    6. `@moldea.ai/adapter-openai`
    7. `@moldea.ai/adapter-openai-agents-sdk`
-   8. `@moldea.ai/cli`
-   9. `@moldea.ai/website-ui`
+   8. `@moldea.ai/adapter-claude-agent-sdk`
+   9. `@moldea.ai/cli`
+   10. `@moldea.ai/website-ui`
 
-Repository FS and Core require a compatible Repository version to exist on npm. The Anthropic, Google Gen AI, OpenAI, and OpenAI Agents SDK adapters require compatible Repository and Core versions. The CLI requires the exact Repository, Repository FS, Core, and active adapter versions declared by its release.
+Repository FS and Core require a compatible Repository version to exist on npm. The Anthropic, Claude Agent SDK, Google Gen AI, OpenAI, and OpenAI Agents SDK adapters require compatible Repository and Core versions. The CLI requires the exact Repository, Repository FS, Core, and active adapter versions declared by its release.
 
 Website UI has no dependency on the runtime package chain, so its first publication may be bootstrapped independently after its own artifact passes the shared release verification boundary.
 

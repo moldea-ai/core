@@ -5,6 +5,10 @@ export const ACTIVE_RUNTIME_ADAPTER_RELEASE_DEFINITIONS = Object.freeze([
     supportedRepositoryFormatVersions: [1],
   },
   {
+    id: 'claude-agent-sdk',
+    supportedRepositoryFormatVersions: [1],
+  },
+  {
     id: 'google-genai',
     supportedRepositoryFormatVersions: [1],
   },

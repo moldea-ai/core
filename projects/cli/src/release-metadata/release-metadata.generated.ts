@@ -13,11 +13,17 @@ import { freezeMoldeaCliReleaseMetadata } from './utilities.js';
 
 // immutable compatibility and package composition bundled into this CLI release
 export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
-  activeAdapterIds: ['anthropic', 'google-genai', 'openai', 'openai-agents-sdk'],
+  activeAdapterIds: [
+    'anthropic',
+    'claude-agent-sdk',
+    'google-genai',
+    'openai',
+    'openai-agents-sdk',
+  ],
   cliPackage: {
     name: '@moldea.ai/cli',
     supportedNodeRange: '^22.11.0 || ^24.11.0',
-    version: '3.2.1',
+    version: '3.3.0',
   },
   coreRecognizedAdapterIds: [
     'anthropic',
@@ -156,12 +162,305 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
         ],
       },
       'claude-agent-sdk': {
+        compatibleCoreRange: '^2.0.0',
         implementation: {
           distribution: 'public',
           kind: 'package',
           package: '@moldea.ai/adapter-claude-agent-sdk',
+          versionRange: '^1.0.0',
         },
-        implementationStatus: 'planned',
+        implementationStatus: 'available',
+        lastVerifiedAt: '2026-08-19',
+        runtimeGuidance: {
+          expectation: 'optional',
+          notes:
+            'Project-local guidance is needed only for repository-specific wrappers, main-thread agent selection, tool aliases, string-array prompts, filesystem-defined agents, dynamic agent construction, observer behavior, external MCP configuration, or other unsupported indirect integration patterns.',
+        },
+        supportedRepositoryFormatVersions: [1],
+        targets: [
+          {
+            bindingSupport: {
+              'instruction-loader': {
+                relationship: 'full',
+                symbol: 'full',
+              },
+              'output-schema': {
+                relationship: 'partial',
+                symbol: 'partial',
+              },
+              'runtime-agent': {
+                relationship: 'full',
+                symbol: 'full',
+              },
+              'tool-implementation': {
+                relationship: 'full',
+                symbol: 'full',
+              },
+              'tool-input-schema': {
+                relationship: 'full',
+                symbol: 'full',
+              },
+              'tool-registration': {
+                relationship: 'full',
+                symbol: 'full',
+              },
+            },
+            evidenceKinds: [
+              'agent-definition',
+              'handoff-registration',
+              'instruction-loader',
+              'language',
+              'runtime-package',
+              'runtime-pattern',
+              'schema',
+              'tool-registration',
+            ],
+            id: 'typescript-query-subagents-0-3',
+            kind: 'package',
+            knownLimitations: [
+              'A configured agents map becomes active delegation evidence only when supported static query tools and bare tool-name deny-pattern analysis classify query-configured Agent availability as available; tools arrays that omit Agent, tools: [], and any supported deny pattern matching Agent make it unavailable.',
+              "A supported query-level mcpServers key must match ^[A-Za-z0-9_-]+$ exactly. Empty or normalization-requiring keys produce CLAUDE_AGENT_SDK_MCP_SERVER_KEY_UNSUPPORTED and keep only the affected mount's runtime-name and tool-availability relationships unresolved; the adapter does not reproduce SDK normalization or infer normalized-key collisions.",
+              'Agent output-schema support applies only to query-wrapper agents through outputFormat; programmatic AgentDefinitions have no initial output-schema relationship.',
+              'AgentDefinition observer, observerMessage, and criticalSystemReminder_EXPERIMENTAL semantics are outside the target, although their presence does not erase independently proved prompt, description, tool, or active-registration relationships.',
+              'Arbitrary compiler resolution, path aliases, directory indexes, package exports, CommonJS, JavaScript, re-export graphs, and generated source are not resolved.',
+              'Dynamic availability, scoped Agent or Task permission expressions, unsupported non-* glob syntax, and legacy Task aliases remain unresolved. Static bare * globs are matched against the complete tool name. allowedTools controls preapproval rather than availability and neither creates nor restores the Agent tool.',
+              'Establishing query-configured Agent or SDK MCP tool availability does not prove that filesystem-loaded settings, managed policy, hooks, later session state, allowedTools, canUseTool, permission mode, or user approval preserve or permit a particular invocation, and no evidence claims that Claude will actually invoke the subagent or tool.',
+              'Programmatic subagents require directly exported immutable object-literal AgentDefinitions; dynamic factories and filesystem-defined agents remain outside the target.',
+              'Query and subagent tool-registration evidence requires an available relationship-local state after supported exact-name, server-selector, and complete-name * glob deny analysis. Dynamic or unsupported restrictions that could match the tool remain unresolved and produce neither optimistic evidence nor a false negative diagnostic.',
+              'Query wrappers require a directly exported function and direct query calls with object-literal input and options forms.',
+              'Query-level agent selection, toolAliases, string-array system prompts, and built-in-tool preset expansion remain outside the initial target and keep only the relationships they can change unresolved.',
+              'Routing-description validation supports only static inline, immutable module-local, and directly imported static strings in an active delegation context; loaders, file reads, transformations, and runtime-generated values remain unresolved.',
+              'SDK MCP tool support is limited to repository-local tool and createSdkMcpServer definitions mounted through query-level mcpServers maps.',
+              'The fully qualified manifest tool name is derived from the canonical query mcpServers key and tool name; the createSdkMcpServer name does not replace that key.',
+              'Tool input and query output schema contents are not validated; the target establishes only direct schema wiring.',
+              'Tool output schemas, agent input schemas, external MCP tools, resources, prompts, skills, plugins, hooks, sessions, permission approval, sandboxing, workflows, model selection, and provider behavior are not interpreted.',
+              'createSdkMcpServer instructions are tolerated but are not canonical instruction-loader evidence or semantically validated model-facing content.',
+            ],
+            language: 'typescript',
+            lastVerifiedAt: '2026-08-19',
+            packages: [
+              {
+                ecosystem: 'npm',
+                name: '@anthropic-ai/claude-agent-sdk',
+                role: 'primary',
+                versionRange: '>=0.3.234 <0.4.0',
+              },
+            ],
+            patterns: [
+              {
+                description:
+                  'Runtime-generated, factory-produced, conditional, spread-based, or mutated programmatic agent definitions remain unestablished.',
+                id: 'dynamic-agent-definition',
+                kind: 'agent',
+                support: 'ambiguous',
+              },
+              {
+                description:
+                  'Subagents defined through .claude/agents files are outside the initial repository-owned programmatic target.',
+                id: 'filesystem-subagents',
+                kind: 'agent',
+                support: 'unsupported',
+              },
+              {
+                description:
+                  'A directly exported immutable object-literal AgentDefinition supplies independently analyzable prompt, routing-description, and tool-restriction relationships.',
+                id: 'programmatic-agent-definition',
+                kind: 'agent',
+                support: 'full',
+              },
+              {
+                description:
+                  "Query-level agent selection can apply another definition's prompt and tool restrictions to the main thread and keeps affected instruction, delegation, and tool relationships unresolved.",
+                id: 'query-main-thread-agent-selection',
+                kind: 'agent',
+                support: 'unsupported',
+              },
+              {
+                description:
+                  'AgentDefinition criticalSystemReminder_EXPERIMENTAL is additional model-facing content and is not interpreted as canonical subagent instruction wiring.',
+                id: 'experimental-critical-system-reminder',
+                kind: 'instruction-loader',
+                support: 'unsupported',
+              },
+              {
+                description:
+                  'A query-wrapper agent wires the declared instruction loader through a direct custom systemPrompt call.',
+                id: 'query-custom-system-prompt',
+                kind: 'instruction-loader',
+                support: 'full',
+              },
+              {
+                description:
+                  'A query-wrapper agent uses the claude_code system-prompt preset and appends the declared canonical instruction loader directly.',
+                id: 'query-preset-append',
+                kind: 'instruction-loader',
+                support: 'full',
+              },
+              {
+                description:
+                  'String-array system prompts and dynamic prompt-cache boundaries do not establish canonical query-wrapper instruction-loader wiring in the initial target.',
+                id: 'query-system-prompt-block-array',
+                kind: 'instruction-loader',
+                support: 'unsupported',
+              },
+              {
+                description:
+                  'createSdkMcpServer instructions may coexist with supported tool relationships but are not canonical agent instruction-loader evidence or semantically validated content.',
+                id: 'sdk-mcp-server-instructions',
+                kind: 'instruction-loader',
+                support: 'unsupported',
+              },
+              {
+                description:
+                  'The built-in general-purpose subagent and runtime Agent tool decisions are not mapped to registered moldea agents.',
+                id: 'built-in-subagents',
+                kind: 'routing',
+                support: 'unsupported',
+              },
+              {
+                description:
+                  'A closed query agents map exposes supported programmatic subagent definitions under deterministic runtime names only when supported query-local rules classify query-configured Agent availability as available.',
+                id: 'closed-programmatic-agents-map',
+                kind: 'routing',
+                support: 'full',
+              },
+              {
+                description:
+                  'Dynamic query tools or disallowedTools values, legacy Task aliases, scoped Agent or Task permission expressions, and unsupported non-* glob syntax do not establish whether a configured agents map is an active delegation surface.',
+                id: 'dynamic-agent-delegation-availability',
+                kind: 'routing',
+                support: 'ambiguous',
+              },
+              {
+                description:
+                  'Runtime-generated, transformed, or indirectly loaded AgentDefinition descriptions remain unestablished.',
+                id: 'dynamic-routing-description',
+                kind: 'routing',
+                support: 'ambiguous',
+              },
+              {
+                description:
+                  'For an active programmatic subagent registration, AgentDefinition.description uses the target canonical handoff description when present and the canonical agent-description fallback otherwise.',
+                id: 'effective-routing-description',
+                kind: 'routing',
+                support: 'full',
+              },
+              {
+                description:
+                  'AgentDefinition observer and observerMessage semantics do not create ordinary moldea agent, handoff, routing-description, or instruction-loader relationships in the initial target.',
+                id: 'observer-agent-fields',
+                kind: 'routing',
+                support: 'unsupported',
+              },
+              {
+                description:
+                  'Supported closed query tools and static bare disallowedTools patterns, including complete-name * globs, classify query-configured Agent availability; dynamic, scoped, legacy-alias, and unsupported non-* forms remain ambiguous.',
+                id: 'query-agent-delegation-availability',
+                kind: 'routing',
+                support: 'full',
+              },
+              {
+                description:
+                  'The claude_code tools preset is not expanded to establish built-in Agent availability in the initial target.',
+                id: 'query-built-in-tools-preset',
+                kind: 'routing',
+                support: 'unsupported',
+              },
+              {
+                description:
+                  'A directly exported TypeScript function contains one or more direct query calls in its own lexical body.',
+                id: 'direct-query-wrapper',
+                kind: 'runtime',
+                support: 'full',
+              },
+              {
+                description:
+                  'Query inputs or options assembled through variables, factories, spreads, mutation, or arbitrary wrappers cannot be mapped reliably without semantic analysis.',
+                id: 'dynamic-query-options',
+                kind: 'runtime',
+                support: 'ambiguous',
+              },
+              {
+                description:
+                  'Skills, plugins, hooks, settings, CLAUDE.md loading, and other filesystem features are outside the initial deterministic relationship target.',
+                id: 'skills-plugins-and-hooks',
+                kind: 'runtime',
+                support: 'unsupported',
+              },
+              {
+                description:
+                  'A query-wrapper agent wires a bound output schema through outputFormat with the json_schema type.',
+                id: 'query-json-schema-output',
+                kind: 'schema',
+                support: 'full',
+              },
+              {
+                description:
+                  'Dynamic or unsupported query or AgentDefinition tool restrictions that could match an SDK MCP tool establish neither positive registration evidence nor a closed negative registration conclusion.',
+                id: 'dynamic-tool-availability',
+                kind: 'tool',
+                support: 'ambiguous',
+              },
+              {
+                description:
+                  'An actively delegable programmatic subagent has a closed AgentDefinition tools array containing the exact fully qualified SDK MCP tool name, and supported static deny-pattern analysis leaves the exact tool available.',
+                id: 'explicit-subagent-tools',
+                kind: 'tool',
+                support: 'full',
+              },
+              {
+                description:
+                  'Stdio, SSE, HTTP, remote, proxy, and other external MCP configurations do not establish repository-local manifest tool relationships in the initial target.',
+                id: 'external-mcp-servers',
+                kind: 'tool',
+                support: 'unsupported',
+              },
+              {
+                description:
+                  'An actively delegable programmatic subagent with omitted tools inherits a query-available SDK MCP tool when supported subagent deny-pattern analysis also leaves the exact tool available.',
+                id: 'inherited-subagent-tools',
+                kind: 'tool',
+                support: 'full',
+              },
+              {
+                description:
+                  'AgentDefinition-level MCP server configuration is outside the initial query-level SDK MCP target.',
+                id: 'per-agent-mcp-servers',
+                kind: 'tool',
+                support: 'unsupported',
+              },
+              {
+                description:
+                  'Query-level toolAliases can redirect model-emitted tool names and keep affected delegation and SDK MCP tool relationships unresolved.',
+                id: 'query-tool-aliases',
+                kind: 'tool',
+                support: 'unsupported',
+              },
+              {
+                description:
+                  'An empty query mcpServers key cannot establish a supported canonical runtime-name segment, while a key containing characters outside [A-Za-z0-9_-] requires SDK normalization; either form produces the stable unsupported-key diagnostic and establishes no runtime-name or tool-availability conclusion for that mount.',
+                id: 'sdk-mcp-server-key-normalization',
+                kind: 'tool',
+                support: 'unsupported',
+              },
+              {
+                description:
+                  'A closed SDK MCP server mounted under a canonical query mcpServers key matching ^[A-Za-z0-9_-]+$ exposes declared tools under fully qualified runtime names only when relationship-local query tool availability remains available after supported static deny-pattern analysis; optional server instructions remain outside canonical instruction validation.',
+                id: 'sdk-mcp-server-registration',
+                kind: 'tool',
+                support: 'full',
+              },
+              {
+                description:
+                  'A directly exported SDK tool uses a static name, direct implementation binding, and direct input-schema binding.',
+                id: 'sdk-mcp-tool-declaration',
+                kind: 'tool',
+                support: 'full',
+              },
+            ],
+            supportLevel: 'experimental',
+          },
+        ],
       },
       'cloudflare-agents': {
         implementation: {
@@ -708,6 +1007,10 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
       version: '2.0.1',
     },
     {
+      name: '@moldea.ai/adapter-claude-agent-sdk',
+      version: '1.0.0',
+    },
+    {
       name: '@moldea.ai/adapter-google-genai',
       version: '1.0.3',
     },
@@ -717,7 +1020,7 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
     },
     {
       name: '@moldea.ai/adapter-openai-agents-sdk',
-      version: '1.0.1',
+      version: '1.0.2',
     },
     {
       name: '@moldea.ai/core',

@@ -104,10 +104,10 @@ describe('runtime compatibility matrix validation', () => {
     'accepts %s only without support claims',
     (status) => {
       const matrix = cloneCanonicalMatrix();
-      const adapter = matrix.adapters['claude-agent-sdk'];
+      const adapter = matrix.adapters['cloudflare-agents'];
 
       if (adapter === undefined) {
-        throw new Error('Canonical matrix is missing the Claude Agent SDK adapter.');
+        throw new Error('Canonical matrix is missing the Cloudflare Agents adapter.');
       }
 
       adapter.implementationStatus = status;
@@ -425,7 +425,7 @@ describe('runtime compatibility matrix validation', () => {
     adapter.replacement = 'openai';
     expectIssue(stringify(matrix), 'cannot replace itself');
 
-    adapter.replacement = 'claude-agent-sdk';
+    adapter.replacement = 'cloudflare-agents';
     expectIssue(stringify(matrix), 'Replacement must identify an available adapter');
   });
 

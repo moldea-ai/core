@@ -8,6 +8,7 @@ const libraryConfig = createLibraryConfig({
   },
   externalPackages: [
     '@moldea.ai/adapter-anthropic',
+    '@moldea.ai/adapter-claude-agent-sdk',
     '@moldea.ai/adapter-google-genai',
     '@moldea.ai/adapter-openai',
     '@moldea.ai/adapter-openai-agents-sdk',

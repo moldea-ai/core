@@ -30,11 +30,17 @@ const expectDeeplyFrozen = (root: object): void => {
 describe('CLI release metadata immutability', () => {
   test('deeply freezes generated release metadata with exact current composition', () => {
     expect(MOLDEA_CLI_RELEASE_METADATA).toMatchObject({
-      activeAdapterIds: ['anthropic', 'google-genai', 'openai', 'openai-agents-sdk'],
+      activeAdapterIds: [
+        'anthropic',
+        'claude-agent-sdk',
+        'google-genai',
+        'openai',
+        'openai-agents-sdk',
+      ],
       cliPackage: {
         name: '@moldea.ai/cli',
         supportedNodeRange: '^22.11.0 || ^24.11.0',
-        version: '3.2.1',
+        version: '3.3.0',
       },
       coreRecognizedAdapterIds: [
         'anthropic',
@@ -53,9 +59,10 @@ describe('CLI release metadata immutability', () => {
       outputSchemaVersion: 1,
       packages: [
         { name: '@moldea.ai/adapter-anthropic', version: '2.0.1' },
+        { name: '@moldea.ai/adapter-claude-agent-sdk', version: '1.0.0' },
         { name: '@moldea.ai/adapter-google-genai', version: '1.0.3' },
         { name: '@moldea.ai/adapter-openai', version: '2.0.4' },
-        { name: '@moldea.ai/adapter-openai-agents-sdk', version: '1.0.1' },
+        { name: '@moldea.ai/adapter-openai-agents-sdk', version: '1.0.2' },
         { name: '@moldea.ai/core', version: '2.0.0' },
         { name: '@moldea.ai/repository', version: '1.0.1' },
         { name: '@moldea.ai/repository-fs', version: '1.0.2' },
@@ -90,6 +97,17 @@ describe('CLI release metadata immutability', () => {
       supportedRepositoryFormatVersions: [1],
       targets: [{ id: 'typescript-responses-api-7', supportLevel: 'experimental' }],
     });
+    expect(MOLDEA_CLI_RELEASE_METADATA.matrix.adapters['claude-agent-sdk']).toMatchObject({
+      compatibleCoreRange: '^2.0.0',
+      implementation: {
+        package: '@moldea.ai/adapter-claude-agent-sdk',
+        versionRange: '^1.0.0',
+      },
+      implementationStatus: 'available',
+      runtimeGuidance: { expectation: 'optional' },
+      supportedRepositoryFormatVersions: [1],
+      targets: [{ id: 'typescript-query-subagents-0-3', supportLevel: 'experimental' }],
+    });
     expect(MOLDEA_CLI_RELEASE_METADATA.matrix.adapters['google-genai']).toMatchObject({
       compatibleCoreRange: '^2.0.0',
       implementation: { package: '@moldea.ai/adapter-google-genai', versionRange: '^1.0.3' },
@@ -113,6 +131,7 @@ describe('CLI release metadata immutability', () => {
       Object.entries(MOLDEA_CLI_RELEASE_METADATA.matrix.adapters).every(
         ([adapterId, { implementationStatus }]) =>
           adapterId === 'anthropic' ||
+          adapterId === 'claude-agent-sdk' ||
           adapterId === 'custom' ||
           adapterId === 'google-genai' ||
           adapterId === 'openai' ||

@@ -135,9 +135,10 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
           ...state.packageMetadata,
           dependencies: {
             '@moldea.ai/adapter-anthropic': '2.0.1',
+            '@moldea.ai/adapter-claude-agent-sdk': '1.0.0',
             '@moldea.ai/adapter-google-genai': '1.0.3',
             '@moldea.ai/adapter-openai': '2.0.4',
-            '@moldea.ai/adapter-openai-agents-sdk': '1.0.1',
+            '@moldea.ai/adapter-openai-agents-sdk': '1.0.2',
             '@moldea.ai/core': '2.0.0',
             '@moldea.ai/repository': '1.0.1',
             '@moldea.ai/repository-fs': '1.0.2',
@@ -158,6 +159,7 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
           createTestRuntimeAdapter('openai'),
           createTestRuntimeAdapter('openai-agents-sdk'),
           createTestRuntimeAdapter('google-genai'),
+          createTestRuntimeAdapter('claude-agent-sdk'),
           createTestRuntimeAdapter('anthropic'),
         ],
       }),
@@ -170,7 +172,7 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
       [createTestRuntimeAdapter('openai'), createTestRuntimeAdapter('openai')],
     ],
     ['the built-in custom ID', [createTestRuntimeAdapter('custom')]],
-    ['a planned adapter', [createTestRuntimeAdapter('claude-agent-sdk')]],
+    ['a planned adapter', [createTestRuntimeAdapter('cloudflare-agents')]],
   ])('rejects active registration containing %s', (_description, activeAdapters) => {
     const state = createTestCompatibilityState();
 
@@ -348,10 +350,10 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
     ],
   ])('rejects a planned entry carrying prohibited %s', (_description, mutate) => {
     const state = createTestCompatibilityState();
-    const plannedEntry = state.releaseMetadata.matrix.adapters['claude-agent-sdk'];
+    const plannedEntry = state.releaseMetadata.matrix.adapters['cloudflare-agents'];
 
     if (plannedEntry === undefined) {
-      throw new TypeError('The planned Claude Agent SDK matrix entry is required.');
+      throw new TypeError('The planned Cloudflare Agents matrix entry is required.');
     }
 
     expect(
@@ -363,7 +365,7 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
             ...state.releaseMetadata.matrix,
             adapters: {
               ...state.releaseMetadata.matrix.adapters,
-              'claude-agent-sdk': mutate(plannedEntry),
+              'cloudflare-agents': mutate(plannedEntry),
             },
           },
         },

@@ -192,6 +192,37 @@ importers:
         specifier: 4.1.10
         version: 4.1.10(@types/node@22.20.1)(vite@8.2.1(@types/node@22.20.1)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0))
 
+  projects/adapter-claude-agent-sdk:
+    dependencies:
+      '@moldea.ai/core':
+        specifier: workspace:^2.0.0
+        version: link:../core
+      '@moldea.ai/repository':
+        specifier: workspace:^1.0.0
+        version: link:../repository
+      semver:
+        specifier: 7.8.5
+        version: 7.8.5
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+    devDependencies:
+      '@moldea.ai/adapter-static-analysis':
+        specifier: workspace:*
+        version: link:../../packages/adapter-static-analysis
+      '@types/node':
+        specifier: 22.20.1
+        version: 22.20.1
+      '@types/semver':
+        specifier: 7.8.0
+        version: 7.8.0
+      vite:
+        specifier: 8.2.1
+        version: 8.2.1(@types/node@22.20.1)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0)
+      vitest:
+        specifier: 4.1.10
+        version: 4.1.10(@types/node@22.20.1)(vite@8.2.1(@types/node@22.20.1)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0))
+
   projects/adapter-google-genai:
     dependencies:
       '@moldea.ai/core':
@@ -290,6 +321,9 @@ importers:
       '@moldea.ai/adapter-anthropic':
         specifier: workspace:2.0.1
         version: link:../adapter-anthropic
+      '@moldea.ai/adapter-claude-agent-sdk':
+        specifier: workspace:1.0.0
+        version: link:../adapter-claude-agent-sdk
       '@moldea.ai/adapter-google-genai':
         specifier: workspace:1.0.3
         version: link:../adapter-google-genai
@@ -297,7 +331,7 @@ importers:
         specifier: workspace:2.0.4
         version: link:../adapter-openai
       '@moldea.ai/adapter-openai-agents-sdk':
-        specifier: workspace:1.0.1
+        specifier: workspace:1.0.2
         version: link:../adapter-openai-agents-sdk
       '@moldea.ai/core':
         specifier: workspace:2.0.0

@@ -16,6 +16,10 @@ export const ADAPTER_ANTHROPIC_PROJECT_DIRECTORY = path.join(
   projectsDirectory,
   'adapter-anthropic',
 );
+export const ADAPTER_CLAUDE_AGENT_SDK_PROJECT_DIRECTORY = path.join(
+  projectsDirectory,
+  'adapter-claude-agent-sdk',
+);
 export const ADAPTER_GOOGLE_GENAI_PROJECT_DIRECTORY = path.join(
   projectsDirectory,
   'adapter-google-genai',
@@ -143,6 +147,7 @@ export const expectPackageManifest = (
   manifest: IMoldeaCliPackageManifest,
   coreVersion: string,
   anthropicAdapterVersion: string,
+  claudeAgentSdkAdapterVersion: string,
   googleGenAiAdapterVersion: string,
   openAiAdapterVersion: string,
   openAiAgentsSdkAdapterVersion: string,
@@ -157,10 +162,11 @@ export const expectPackageManifest = (
     name: '@moldea.ai/cli',
     preferUnplugged: true,
     type: 'module',
-    version: '3.2.1',
+    version: '3.3.0',
   });
   expect(manifest.dependencies).toStrictEqual({
     '@moldea.ai/adapter-anthropic': anthropicAdapterVersion,
+    '@moldea.ai/adapter-claude-agent-sdk': claudeAgentSdkAdapterVersion,
     '@moldea.ai/adapter-google-genai': googleGenAiAdapterVersion,
     '@moldea.ai/adapter-openai': openAiAdapterVersion,
     '@moldea.ai/adapter-openai-agents-sdk': openAiAgentsSdkAdapterVersion,
