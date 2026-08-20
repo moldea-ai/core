@@ -4,6 +4,7 @@ import { claudeAgentSdkAdapter } from '@moldea.ai/adapter-claude-agent-sdk';
 import { cloudflareAgentsAdapter } from '@moldea.ai/adapter-cloudflare-agents';
 import { eveAdapter } from '@moldea.ai/adapter-eve';
 import { googleGenAiAdapter } from '@moldea.ai/adapter-google-genai';
+import { langChainAdapter } from '@moldea.ai/adapter-langchain';
 import { openAiAdapter } from '@moldea.ai/adapter-openai';
 import { openAiAgentsSdkAdapter } from '@moldea.ai/adapter-openai-agents-sdk';
 import { vercelAiSdkAdapter } from '@moldea.ai/adapter-vercel-ai-sdk';
@@ -15,6 +16,7 @@ export const ACTIVE_RUNTIME_ADAPTERS: readonly IRuntimeAdapter[] = Object.freeze
   cloudflareAgentsAdapter,
   eveAdapter,
   googleGenAiAdapter,
+  langChainAdapter,
   openAiAdapter,
   openAiAgentsSdkAdapter,
   vercelAiSdkAdapter,

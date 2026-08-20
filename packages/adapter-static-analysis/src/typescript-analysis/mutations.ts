@@ -155,12 +155,14 @@ const analyzeMutationCall = (
  * @param analysis The indexed source containing the binding.
  * @param declaration The module-local constant declaration.
  * @param allowedReferences Bare identifier uses proven to be supported registrations or targets.
+ * @param safeMethodCalls Read-only method calls that preserve the value's runtime configuration.
  * @returns Member-specific mutations and whether an unknown use can affect every relationship.
  */
 export const analyzeModuleValueMutations = (
   analysis: IStaticAnalysisModuleValueSource,
   declaration: ts.VariableDeclaration,
   allowedReferences: ReadonlySet<ts.Identifier>,
+  safeMethodCalls: ReadonlySet<string> = new Set(),
 ): IStaticAnalysisMutationAnalysis => {
   if (!ts.isIdentifier(declaration.name)) {
     return Object.freeze({ hasUnknownMutation: true, mutatedMembers: new Set<string>() });
@@ -208,7 +210,9 @@ export const analyzeModuleValueMutations = (
           ts.isCallExpression(memberParent) &&
           memberParent.expression === memberExpression
         ) {
-          mutatedMembers.add(memberName);
+          if (!safeMethodCalls.has(memberName)) {
+            mutatedMembers.add(memberName);
+          }
         }
       }
 

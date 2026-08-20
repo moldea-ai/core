@@ -7,6 +7,8 @@ import type {
   IStaticAnalysisPackageDependencyKind,
   IStaticAnalysisPackageDiscoveryOptions,
   IStaticAnalysisPackageDiscoveryResult,
+  IStaticAnalysisPackagesDiscoveryOptions,
+  IStaticAnalysisPackagesDiscoveryResult,
 } from '../types.js';
 import { normalizeText } from '../text/index.js';
 
@@ -123,17 +125,18 @@ const classifyPackageDeclarations = (
   return 'ambiguous';
 };
 
-/**
- * Discovers the nearest package declaration without repository enumeration.
- * @param options The package target, repository callbacks, path, range, and signal.
- * @returns The first observed declaration, invalid manifest, or absence result.
- * @throws If repository reading or the active inspection is aborted.
- */
-export const discoverPackage = async (
-  options: IStaticAnalysisPackageDiscoveryOptions,
-): Promise<IStaticAnalysisPackageDiscoveryResult> => {
-  const { includeManifestPackageName, packageName, reader, signal, sourcePath, supportedRange } =
-    options;
+const readOwningManifest = async (
+  options: Pick<IStaticAnalysisPackagesDiscoveryOptions, 'reader' | 'signal' | 'sourcePath'>,
+): Promise<
+  | { readonly kind: 'absent' }
+  | { readonly kind: 'invalid'; readonly path: string }
+  | {
+      readonly kind: 'present';
+      readonly manifest: Readonly<Record<string, unknown>>;
+      readonly path: string;
+    }
+> => {
+  const { reader, signal, sourcePath } = options;
 
   for (const manifestPath of createPackageManifestCandidatePaths(sourcePath)) {
     signal?.throwIfAborted();
@@ -167,32 +170,105 @@ export const discoverPackage = async (
 
     signal?.throwIfAborted();
 
-    if (!isRecord(parsed)) {
-      return Object.freeze({ kind: 'invalid', path: manifestPath });
-    }
-
-    const declarations = extractPackageDeclarations(parsed, packageName);
-
-    if (declarations === null) {
-      return Object.freeze({ kind: 'invalid', path: manifestPath });
-    }
-
-    if (declarations.length === 0) {
-      return Object.freeze({ kind: 'absent' });
-    }
-
-    return Object.freeze({
-      kind: 'observed',
-      observation: Object.freeze({
-        compatibility: classifyPackageDeclarations(declarations, supportedRange),
-        declarations: Object.freeze(declarations),
-        ...(includeManifestPackageName === true
-          ? { manifestPackageName: typeof parsed['name'] === 'string' ? parsed['name'] : null }
-          : {}),
-        path: manifestPath,
-      }),
-    });
+    return isRecord(parsed)
+      ? Object.freeze({ kind: 'present', manifest: parsed, path: manifestPath })
+      : Object.freeze({ kind: 'invalid', path: manifestPath });
   }
 
   return Object.freeze({ kind: 'absent' });
+};
+
+/**
+ * Discovers multiple package declarations from one nearest owning manifest read.
+ * @param options The package targets, repository callbacks, source path, and signal.
+ * @returns The owning manifest's package observations, invalid state, or absence.
+ * @throws If repository reading or the active inspection is aborted.
+ */
+export const discoverPackages = async (
+  options: IStaticAnalysisPackagesDiscoveryOptions,
+): Promise<IStaticAnalysisPackagesDiscoveryResult> => {
+  const owningManifest = await readOwningManifest(options);
+
+  if (owningManifest.kind !== 'present') {
+    return owningManifest;
+  }
+
+  const packages = [];
+
+  for (const target of options.packages) {
+    const declarations = extractPackageDeclarations(owningManifest.manifest, target.packageName);
+
+    if (declarations === null) {
+      return Object.freeze({ kind: 'invalid', path: owningManifest.path });
+    }
+
+    packages.push(
+      Object.freeze({
+        compatibility:
+          declarations.length === 0
+            ? ('absent' as const)
+            : classifyPackageDeclarations(declarations, target.supportedRange),
+        declarations: Object.freeze(declarations),
+        packageName: target.packageName,
+      }),
+    );
+  }
+
+  return Object.freeze({
+    kind: 'observed',
+    observation: Object.freeze({
+      packages: Object.freeze(packages),
+      path: owningManifest.path,
+    }),
+  });
+};
+
+/**
+ * Discovers the nearest package declaration without repository enumeration.
+ * @param options The package target, repository callbacks, path, range, and signal.
+ * @returns The first observed declaration, invalid manifest, or absence result.
+ * @throws If repository reading or the active inspection is aborted.
+ */
+export const discoverPackage = async (
+  options: IStaticAnalysisPackageDiscoveryOptions,
+): Promise<IStaticAnalysisPackageDiscoveryResult> => {
+  const { includeManifestPackageName, packageName, reader, signal, sourcePath, supportedRange } =
+    options;
+
+  const owningManifest = await readOwningManifest({
+    reader,
+    ...(signal === undefined ? {} : { signal }),
+    sourcePath,
+  });
+
+  if (owningManifest.kind !== 'present') {
+    return owningManifest;
+  }
+
+  const declarations = extractPackageDeclarations(owningManifest.manifest, packageName);
+
+  if (declarations === null) {
+    return Object.freeze({ kind: 'invalid', path: owningManifest.path });
+  }
+
+  if (declarations.length === 0) {
+    return Object.freeze({ kind: 'absent' });
+  }
+
+  return Object.freeze({
+    kind: 'observed',
+    observation: Object.freeze({
+      compatibility: classifyPackageDeclarations(declarations, supportedRange),
+      declarations: Object.freeze(declarations),
+      ...(includeManifestPackageName === true
+        ? {
+            manifestPackageName:
+              typeof owningManifest.manifest['name'] === 'string'
+                ? owningManifest.manifest['name']
+                : null,
+          }
+        : {}),
+      path: owningManifest.path,
+    }),
+  });
 };

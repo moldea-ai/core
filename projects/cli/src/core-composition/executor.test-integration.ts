@@ -185,6 +185,61 @@ describe('CLI Core composition with the memory repository reader', () => {
     });
   });
 
+  test('runs the active LangChain adapter through CLI composition', async () => {
+    const reader = createMemoryRepositoryReader([
+      {
+        content: [
+          'version: 1',
+          'agents:',
+          '  alpha:',
+          '    runtime:',
+          '      id: langchain',
+          '    bindings:',
+          '      runtimeAgent:',
+          '        path: /src/agent.ts',
+          '        symbol: alphaAgent',
+          '',
+        ].join('\n'),
+        path: '/moldea/moldea.yaml',
+        type: 'file',
+      },
+      { content: '# Project\n', path: '/moldea/project.md', type: 'file' },
+      ...createAgentEntries('alpha'),
+      {
+        content:
+          '{"name":"alpha-app","dependencies":{"@langchain/core":"~1.2.8","langchain":"~1.5.9"}}\n',
+        path: '/package.json',
+        type: 'file',
+      },
+      {
+        content: [
+          "import { createAgent } from 'langchain';",
+          "export const alphaAgent = createAgent({ model: 'provider:model' });",
+          '',
+        ].join('\n'),
+        path: '/src/agent.ts',
+        type: 'file',
+      },
+    ]);
+
+    const result = await executeMoldeaCliCoreInspection({
+      repository: reader,
+      resourceLimits: RESOURCE_LIMITS,
+    });
+
+    expect(result).toMatchObject({
+      diagnostics: [],
+      evidence: [
+        { agentId: 'alpha', kind: 'agent-definition', source: 'langchain' },
+        { agentId: 'alpha', kind: 'language', source: 'langchain' },
+        { kind: 'runtime-package', runtimeName: '@langchain/core', source: 'langchain' },
+        { kind: 'runtime-package', runtimeName: 'langchain', source: 'langchain' },
+      ],
+      project: { agents: [{ id: 'alpha' }] },
+      valid: true,
+    });
+  });
+
   test('runs the active Google Gen AI adapter through CLI composition', async () => {
     const reader = createMemoryRepositoryReader([
       {

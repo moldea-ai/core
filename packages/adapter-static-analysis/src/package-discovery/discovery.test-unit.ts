@@ -2,7 +2,11 @@
 import { describe, expect, test } from 'vitest';
 
 import type { IStaticAnalysisEntry, IStaticAnalysisPackageReader } from '../types.js';
-import { createPackageManifestCandidatePaths, discoverPackage } from './discovery.js';
+import {
+  createPackageManifestCandidatePaths,
+  discoverPackage,
+  discoverPackages,
+} from './discovery.js';
 
 const createReader = (entries: Readonly<Record<string, string | IStaticAnalysisEntry>>) => {
   const reader: IStaticAnalysisPackageReader = {
@@ -148,5 +152,60 @@ describe('discoverPackage', () => {
 
   test('reports absence when no package manifest exists', async () => {
     await expect(discover({})).resolves.toStrictEqual({ kind: 'absent' });
+  });
+});
+
+describe('discoverPackages', () => {
+  test('classifies multiple declarations from one owning manifest', async () => {
+    await expect(
+      discoverPackages({
+        packages: [
+          { packageName: 'provider-sdk', supportedRange: '>=2.0.0 <3.0.0' },
+          { packageName: 'provider-core', supportedRange: '>=1.0.0 <2.0.0' },
+          { packageName: 'optional-package', supportedRange: '>=1.0.0 <2.0.0' },
+        ],
+        reader: createReader({
+          '/package.json': JSON.stringify({
+            dependencies: { 'provider-core': '^1.2.0', 'provider-sdk': '^2.1.0' },
+          }),
+        }),
+        sourcePath: '/src/agent.ts',
+      }),
+    ).resolves.toStrictEqual({
+      kind: 'observed',
+      observation: {
+        packages: [
+          {
+            compatibility: 'supported',
+            declarations: [{ declaredRange: '^2.1.0', dependencyKind: 'dependencies' }],
+            packageName: 'provider-sdk',
+          },
+          {
+            compatibility: 'supported',
+            declarations: [{ declaredRange: '^1.2.0', dependencyKind: 'dependencies' }],
+            packageName: 'provider-core',
+          },
+          {
+            compatibility: 'absent',
+            declarations: [],
+            packageName: 'optional-package',
+          },
+        ],
+        path: '/package.json',
+      },
+    });
+  });
+
+  test('rejects a malformed dependency section before classifying targets', async () => {
+    await expect(
+      discoverPackages({
+        packages: [
+          { packageName: 'provider-sdk', supportedRange: '>=2.0.0 <3.0.0' },
+          { packageName: 'provider-core', supportedRange: '>=1.0.0 <2.0.0' },
+        ],
+        reader: createReader({ '/package.json': JSON.stringify({ dependencies: [] }) }),
+        sourcePath: '/src/agent.ts',
+      }),
+    ).resolves.toStrictEqual({ kind: 'invalid', path: '/package.json' });
   });
 });

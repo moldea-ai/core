@@ -19,6 +19,7 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
     'cloudflare-agents',
     'eve',
     'google-genai',
+    'langchain',
     'openai',
     'openai-agents-sdk',
     'vercel-ai-sdk',
@@ -26,7 +27,7 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
   cliPackage: {
     name: '@moldea.ai/cli',
     supportedNodeRange: '^22.11.0 || ^24.11.0',
-    version: '3.3.3',
+    version: '3.3.4',
   },
   coreRecognizedAdapterIds: [
     'anthropic',
@@ -1139,12 +1140,189 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
         ],
       },
       langchain: {
+        compatibleCoreRange: '^2.0.0',
         implementation: {
           distribution: 'public',
           kind: 'package',
           package: '@moldea.ai/adapter-langchain',
+          versionRange: '^1.0.0',
         },
-        implementationStatus: 'planned',
+        implementationStatus: 'available',
+        lastVerifiedAt: '2026-08-20',
+        runtimeGuidance: {
+          expectation: 'optional',
+          notes:
+            'Project-local guidance is needed only for repository-specific wrappers, middleware-driven relationships, supervisor composition around a supported LangChain boundary, headless tools, dynamic tool collections, or other unsupported indirect LangChain integration patterns.',
+        },
+        supportedRepositoryFormatVersions: [1],
+        targets: [
+          {
+            bindingSupport: {
+              'instruction-loader': {
+                relationship: 'partial',
+                symbol: 'partial',
+              },
+              'output-schema': {
+                relationship: 'partial',
+                symbol: 'partial',
+              },
+              'runtime-agent': {
+                relationship: 'partial',
+                symbol: 'partial',
+              },
+              'tool-implementation': {
+                relationship: 'partial',
+                symbol: 'partial',
+              },
+              'tool-input-schema': {
+                relationship: 'partial',
+                symbol: 'partial',
+              },
+              'tool-registration': {
+                relationship: 'partial',
+                symbol: 'partial',
+              },
+            },
+            evidenceKinds: [
+              'agent-definition',
+              'instruction-loader',
+              'language',
+              'runtime-package',
+              'schema',
+              'tool-registration',
+            ],
+            id: 'typescript-create-agent-1-5',
+            kind: 'package',
+            knownLimitations: [
+              'Developer-authored and statically resolved multi-format arrays are not mapped to the single canonical agent output-schema binding; a single-schema toolStrategy call remains supported despite its array-shaped helper return.',
+              'Direct LangGraph applications remain outside this adapter target.',
+              'Lockfiles and installed package versions are not inspected.',
+              'Non-empty or unresolved middleware suppresses prompt, tool-registration, and output-schema relationship conclusions.',
+              'Only TypeScript ESM source and documented direct relative imports are interpreted.',
+              'Only directly exported package-root createAgent definitions are recognized.',
+              'The target does not infer agent input schemas from stateSchema or contextSchema.',
+              'The target does not infer supervisors, routing targets, handoffs, or subagent control transfer.',
+              'The target does not interpret headless tools, provider tools, server tools, toolkits, MCP tools, or tool output schemas.',
+            ],
+            language: 'typescript',
+            lastVerifiedAt: '2026-08-20',
+            packages: [
+              {
+                ecosystem: 'npm',
+                name: '@langchain/core',
+                role: 'companion',
+                versionRange: '>=1.2.8 <1.3.0',
+              },
+              {
+                ecosystem: 'npm',
+                name: 'langchain',
+                role: 'primary',
+                versionRange: '>=1.5.9 <1.6.0',
+              },
+            ],
+            patterns: [
+              {
+                description:
+                  'A directly exported TypeScript const initialized through the package-root createAgent helper with one closed object-literal configuration is recognized as the agent definition.',
+                id: 'direct-create-agent',
+                kind: 'agent',
+                support: 'full',
+              },
+              {
+                description:
+                  'Direct StateGraph, Functional API, graph, and compiled-graph applications belong to the separate LangGraph adapter.',
+                id: 'direct-langgraph-graphs',
+                kind: 'agent',
+                support: 'unsupported',
+              },
+              {
+                description:
+                  'Legacy agent executors and deprecated agent helper surfaces are outside the initial target.',
+                id: 'legacy-langchain-agents',
+                kind: 'agent',
+                support: 'unsupported',
+              },
+              {
+                description:
+                  'Non-empty or unresolved middleware may alter prompts, tools, and structured runtime behavior and is not interpreted by the initial target.',
+                id: 'middleware-relationship-effects',
+                kind: 'agent',
+                support: 'ambiguous',
+              },
+              {
+                description:
+                  'Direct loader calls and direct SystemMessage construction are supported when middleware is statically inactive.',
+                id: 'direct-system-prompt-loader',
+                kind: 'instruction-loader',
+                support: 'partial',
+              },
+              {
+                description:
+                  'Agent description fields do not establish source-to-target routing or handoff relationships without a verified supervisor registration target.',
+                id: 'supervisor-routing',
+                kind: 'routing',
+                support: 'unsupported',
+              },
+              {
+                description:
+                  'A supported createAgent definition remains LangChain even though LangChain compiles the agent on top of LangGraph.',
+                id: 'langchain-primary-boundary',
+                kind: 'runtime',
+                support: 'full',
+              },
+              {
+                description:
+                  'One directly bound responseFormat schema establishes the agent output-schema relationship when middleware is statically inactive.',
+                id: 'direct-response-format-schema',
+                kind: 'schema',
+                support: 'partial',
+              },
+              {
+                description:
+                  'Developer-authored or statically bound multiple response schemas or strategies cannot be mapped uniquely to the single Repository Format agent output-schema binding.',
+                id: 'response-format-arrays',
+                kind: 'schema',
+                support: 'ambiguous',
+              },
+              {
+                description:
+                  'stateSchema and contextSchema are not collapsed into the Repository Format agent input-schema relationship.',
+                id: 'state-and-context-input-schema',
+                kind: 'schema',
+                support: 'unsupported',
+              },
+              {
+                description:
+                  'Direct toolStrategy and providerStrategy wrappers around one bound schema are supported; the helper-produced array shape of a single-schema toolStrategy call is not treated as an authored multi-format collection.',
+                id: 'structured-output-strategies',
+                kind: 'schema',
+                support: 'partial',
+              },
+              {
+                description:
+                  'Closed inline and immutable module-local tool arrays establish agent registration when middleware is statically inactive.',
+                id: 'closed-tool-collections',
+                kind: 'tool',
+                support: 'partial',
+              },
+              {
+                description:
+                  'One-argument headless tools do not establish a repository-local server implementation relationship in the initial target.',
+                id: 'headless-client-tools',
+                kind: 'tool',
+                support: 'unsupported',
+              },
+              {
+                description:
+                  'Direct normal two-argument tool helper declarations support implementation, runtime-name, and input-schema relationships.',
+                id: 'normal-function-tools',
+                kind: 'tool',
+                support: 'partial',
+              },
+            ],
+            supportLevel: 'experimental',
+          },
+        ],
       },
       langgraph: {
         implementation: {
@@ -1765,6 +1943,10 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
     {
       name: '@moldea.ai/adapter-google-genai',
       version: '1.0.3',
+    },
+    {
+      name: '@moldea.ai/adapter-langchain',
+      version: '1.0.0',
     },
     {
       name: '@moldea.ai/adapter-openai',

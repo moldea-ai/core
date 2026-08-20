@@ -12,6 +12,7 @@ const libraryConfig = createLibraryConfig({
     '@moldea.ai/adapter-cloudflare-agents',
     '@moldea.ai/adapter-eve',
     '@moldea.ai/adapter-google-genai',
+    '@moldea.ai/adapter-langchain',
     '@moldea.ai/adapter-openai',
     '@moldea.ai/adapter-openai-agents-sdk',
     '@moldea.ai/adapter-vercel-ai-sdk',

@@ -12,7 +12,7 @@ The matrix publishes only the verified targets and support boundaries shown belo
 | `custom`            | `@moldea.ai/core`                      | `built-in`     | `public`     | Not available        | `available` | `required`       |              `1` |
 | `eve`               | `@moldea.ai/adapter-eve`               | `package`      | `public`     | `^1.0.0`             | `available` | `optional`       |              `1` |
 | `google-genai`      | `@moldea.ai/adapter-google-genai`      | `package`      | `public`     | `^1.0.3`             | `available` | `optional`       |              `1` |
-| `langchain`         | `@moldea.ai/adapter-langchain`         | `package`      | `public`     | Not available        | `planned`   | Not available    |              `0` |
+| `langchain`         | `@moldea.ai/adapter-langchain`         | `package`      | `public`     | `^1.0.0`             | `available` | `optional`       |              `1` |
 | `langgraph`         | `@moldea.ai/adapter-langgraph`         | `package`      | `public`     | Not available        | `planned`   | Not available    |              `0` |
 | `openai`            | `@moldea.ai/adapter-openai`            | `package`      | `public`     | `^2.0.0`             | `available` | `recommended`    |              `1` |
 | `openai-agents-sdk` | `@moldea.ai/adapter-openai-agents-sdk` | `package`      | `public`     | `^1.0.0`             | `available` | `optional`       |              `1` |
@@ -428,6 +428,72 @@ Runtime guidance notes: Project-local guidance is needed only for repository-spe
 - Dynamic configuration, callable tools, MCP helpers, provider/server tools, automatic function execution, streaming, chats, live sessions, and Interactions API calls are outside the initial target.
 - Function input-schema contents, including top-level object shape and parameter-name restrictions, are not validated; the target establishes only direct parametersJsonSchema wiring.
 - Source forms outside the verified TypeScript ESM target, legacy @google/generative-ai, alternative parameters schemas, output schemas, runtime variables, and handoffs are outside the initial target.
+
+## Adapter: `langchain`
+
+- Owning package: `@moldea.ai/adapter-langchain`
+- Implementation range: `^1.0.0`
+- Supported repository-format versions: `1`
+- Compatible Core range: `^2.0.0`
+- Runtime guidance: `optional`
+- Last verified: `2026-08-20`
+
+Runtime guidance notes: Project-local guidance is needed only for repository-specific wrappers, middleware-driven relationships, supervisor composition around a supported LangChain boundary, headless tools, dynamic tool collections, or other unsupported indirect LangChain integration patterns.
+
+### Target: `typescript-create-agent-1-5`
+
+- Kind: `package`
+- Support level: `experimental`
+- Language: `typescript`
+- Evidence kinds: `agent-definition`, `instruction-loader`, `language`, `runtime-package`, `schema`, `tool-registration`
+- Last verified: `2026-08-20`
+
+| Ecosystem | Package           | Role        | Verified range   |
+| --------- | ----------------- | ----------- | ---------------- |
+| `npm`     | `@langchain/core` | `companion` | `>=1.2.8 <1.3.0` |
+| `npm`     | `langchain`       | `primary`   | `>=1.5.9 <1.6.0` |
+
+#### Binding support
+
+| Subject               | Relationship | Symbol    |
+| --------------------- | ------------ | --------- |
+| `runtime-agent`       | `partial`    | `partial` |
+| `output-schema`       | `partial`    | `partial` |
+| `instruction-loader`  | `partial`    | `partial` |
+| `tool-implementation` | `partial`    | `partial` |
+| `tool-registration`   | `partial`    | `partial` |
+| `tool-input-schema`   | `partial`    | `partial` |
+
+#### Patterns
+
+| Kind                 | Pattern                           | Support       | Description                                                                                                                                                                                                          | Notes         |
+| -------------------- | --------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| `agent`              | `direct-create-agent`             | `full`        | A directly exported TypeScript const initialized through the package-root createAgent helper with one closed object-literal configuration is recognized as the agent definition.                                     | Not available |
+| `agent`              | `direct-langgraph-graphs`         | `unsupported` | Direct StateGraph, Functional API, graph, and compiled-graph applications belong to the separate LangGraph adapter.                                                                                                  | Not available |
+| `agent`              | `legacy-langchain-agents`         | `unsupported` | Legacy agent executors and deprecated agent helper surfaces are outside the initial target.                                                                                                                          | Not available |
+| `agent`              | `middleware-relationship-effects` | `ambiguous`   | Non-empty or unresolved middleware may alter prompts, tools, and structured runtime behavior and is not interpreted by the initial target.                                                                           | Not available |
+| `instruction-loader` | `direct-system-prompt-loader`     | `partial`     | Direct loader calls and direct SystemMessage construction are supported when middleware is statically inactive.                                                                                                      | Not available |
+| `routing`            | `supervisor-routing`              | `unsupported` | Agent description fields do not establish source-to-target routing or handoff relationships without a verified supervisor registration target.                                                                       | Not available |
+| `runtime`            | `langchain-primary-boundary`      | `full`        | A supported createAgent definition remains LangChain even though LangChain compiles the agent on top of LangGraph.                                                                                                   | Not available |
+| `schema`             | `direct-response-format-schema`   | `partial`     | One directly bound responseFormat schema establishes the agent output-schema relationship when middleware is statically inactive.                                                                                    | Not available |
+| `schema`             | `response-format-arrays`          | `ambiguous`   | Developer-authored or statically bound multiple response schemas or strategies cannot be mapped uniquely to the single Repository Format agent output-schema binding.                                                | Not available |
+| `schema`             | `state-and-context-input-schema`  | `unsupported` | stateSchema and contextSchema are not collapsed into the Repository Format agent input-schema relationship.                                                                                                          | Not available |
+| `schema`             | `structured-output-strategies`    | `partial`     | Direct toolStrategy and providerStrategy wrappers around one bound schema are supported; the helper-produced array shape of a single-schema toolStrategy call is not treated as an authored multi-format collection. | Not available |
+| `tool`               | `closed-tool-collections`         | `partial`     | Closed inline and immutable module-local tool arrays establish agent registration when middleware is statically inactive.                                                                                            | Not available |
+| `tool`               | `headless-client-tools`           | `unsupported` | One-argument headless tools do not establish a repository-local server implementation relationship in the initial target.                                                                                            | Not available |
+| `tool`               | `normal-function-tools`           | `partial`     | Direct normal two-argument tool helper declarations support implementation, runtime-name, and input-schema relationships.                                                                                            | Not available |
+
+#### Known limitations
+
+- Developer-authored and statically resolved multi-format arrays are not mapped to the single canonical agent output-schema binding; a single-schema toolStrategy call remains supported despite its array-shaped helper return.
+- Direct LangGraph applications remain outside this adapter target.
+- Lockfiles and installed package versions are not inspected.
+- Non-empty or unresolved middleware suppresses prompt, tool-registration, and output-schema relationship conclusions.
+- Only TypeScript ESM source and documented direct relative imports are interpreted.
+- Only directly exported package-root createAgent definitions are recognized.
+- The target does not infer agent input schemas from stateSchema or contextSchema.
+- The target does not infer supervisors, routing targets, handoffs, or subagent control transfer.
+- The target does not interpret headless tools, provider tools, server tools, toolkits, MCP tools, or tool output schemas.
 
 ## Adapter: `openai`
 

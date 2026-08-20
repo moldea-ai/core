@@ -139,6 +139,7 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
             '@moldea.ai/adapter-cloudflare-agents': '1.0.0',
             '@moldea.ai/adapter-eve': '1.0.0',
             '@moldea.ai/adapter-google-genai': '1.0.3',
+            '@moldea.ai/adapter-langchain': '1.0.0',
             '@moldea.ai/adapter-openai': '2.0.4',
             '@moldea.ai/adapter-openai-agents-sdk': '1.0.2',
             '@moldea.ai/adapter-vercel-ai-sdk': '1.0.0',
@@ -162,6 +163,7 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
           createTestRuntimeAdapter('openai'),
           createTestRuntimeAdapter('openai-agents-sdk'),
           createTestRuntimeAdapter('vercel-ai-sdk'),
+          createTestRuntimeAdapter('langchain'),
           createTestRuntimeAdapter('google-genai'),
           createTestRuntimeAdapter('eve'),
           createTestRuntimeAdapter('cloudflare-agents'),
@@ -178,7 +180,7 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
       [createTestRuntimeAdapter('openai'), createTestRuntimeAdapter('openai')],
     ],
     ['the built-in custom ID', [createTestRuntimeAdapter('custom')]],
-    ['a planned adapter', [createTestRuntimeAdapter('langchain')]],
+    ['a planned adapter', [createTestRuntimeAdapter('langgraph')]],
   ])('rejects active registration containing %s', (_description, activeAdapters) => {
     const state = createTestCompatibilityState();
 
@@ -356,10 +358,10 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
     ],
   ])('rejects a planned entry carrying prohibited %s', (_description, mutate) => {
     const state = createTestCompatibilityState();
-    const plannedEntry = state.releaseMetadata.matrix.adapters['langchain'];
+    const plannedEntry = state.releaseMetadata.matrix.adapters['langgraph'];
 
     if (plannedEntry === undefined) {
-      throw new TypeError('The planned LangChain matrix entry is required.');
+      throw new TypeError('The planned LangGraph matrix entry is required.');
     }
 
     expect(
@@ -371,7 +373,7 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
             ...state.releaseMetadata.matrix,
             adapters: {
               ...state.releaseMetadata.matrix.adapters,
-              langchain: mutate(plannedEntry),
+              langgraph: mutate(plannedEntry),
             },
           },
         },

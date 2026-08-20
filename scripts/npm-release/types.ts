@@ -7,6 +7,7 @@ export type INpmReleaseProject =
   | 'adapter-claude-agent-sdk'
   | 'adapter-cloudflare-agents'
   | 'adapter-eve'
+  | 'adapter-langchain'
   | 'adapter-google-genai'
   | 'adapter-openai'
   | 'adapter-openai-agents-sdk'

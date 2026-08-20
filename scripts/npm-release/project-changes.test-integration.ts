@@ -87,6 +87,7 @@ const createPublishedVersions = (unpublishedProjects: readonly INpmReleaseProjec
       ? []
       : ['1.0.0'],
     'adapter-eve': unpublishedProjectSet.has('adapter-eve') ? [] : ['1.0.0'],
+    'adapter-langchain': unpublishedProjectSet.has('adapter-langchain') ? [] : ['1.0.0'],
     'adapter-vercel-ai-sdk': unpublishedProjectSet.has('adapter-vercel-ai-sdk') ? [] : ['1.0.0'],
     cli: unpublishedProjectSet.has('cli') ? [] : ['1.0.0'],
     core: unpublishedProjectSet.has('core') ? [] : ['1.0.0'],
@@ -159,6 +160,11 @@ describe('npm release project changes', () => {
         isChanged: false,
         previousVersion: '1.0.0',
       },
+      'adapter-langchain': {
+        currentVersion: '1.0.0',
+        isChanged: false,
+        previousVersion: '1.0.0',
+      },
       'adapter-vercel-ai-sdk': {
         currentVersion: '1.0.0',
         isChanged: false,
@@ -214,6 +220,7 @@ describe('npm release project changes', () => {
         'adapter-openai-agents-sdk': null,
         'adapter-cloudflare-agents': null,
         'adapter-eve': null,
+        'adapter-langchain': null,
         'adapter-vercel-ai-sdk': null,
         cli: null,
         core: null,
