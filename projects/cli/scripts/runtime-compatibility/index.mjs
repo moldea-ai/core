@@ -94,6 +94,11 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
       /^moldea\.ai-adapter-cloudflare-agents-.+\.tgz$/u,
       '@moldea.ai/adapter-cloudflare-agents',
     ),
+    '@moldea.ai/adapter-eve': selectPackageTarball(
+      tarballNames,
+      /^moldea\.ai-adapter-eve-.+\.tgz$/u,
+      '@moldea.ai/adapter-eve',
+    ),
     '@moldea.ai/adapter-vercel-ai-sdk': selectPackageTarball(
       tarballNames,
       /^moldea\.ai-adapter-vercel-ai-sdk-.+\.tgz$/u,
@@ -185,7 +190,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     };
 
     assertRuntimeInvariant(cliManifest?.name === '@moldea.ai/cli', 'The CLI identity is invalid.');
-    assertRuntimeInvariant(cliManifest?.version === '3.3.2', 'The CLI version is invalid.');
+    assertRuntimeInvariant(cliManifest?.version === '3.3.3', 'The CLI version is invalid.');
     assertRuntimeInvariant(
       cliManifest?.engines?.node === '^22.11.0 || ^24.11.0',
       'The CLI runtime range is invalid.',
@@ -197,6 +202,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
       '@moldea.ai/adapter-openai',
       '@moldea.ai/adapter-openai-agents-sdk',
       '@moldea.ai/adapter-cloudflare-agents',
+      '@moldea.ai/adapter-eve',
       '@moldea.ai/adapter-vercel-ai-sdk',
       '@moldea.ai/core',
       '@moldea.ai/repository',
@@ -216,7 +222,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
 
     assertRuntimeInvariant(versionResult.status === 0, 'The installed CLI version command failed.');
     assertRuntimeInvariant(versionResult.stderr === '', 'The version command wrote stderr.');
-    assertRuntimeInvariant(versionResult.stdout === '3.3.2\n', 'The version output is invalid.');
+    assertRuntimeInvariant(versionResult.stdout === '3.3.3\n', 'The version output is invalid.');
 
     const compatibilityResult = executeCli(
       executablePath,
@@ -242,6 +248,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     const cloudflareAgentsAdapter = compatibilityEnvelope.result?.adapters?.find(
       ({ id }) => id === 'cloudflare-agents',
     );
+    const eveAdapter = compatibilityEnvelope.result?.adapters?.find(({ id }) => id === 'eve');
     const vercelAiSdkAdapter = compatibilityEnvelope.result?.adapters?.find(
       ({ id }) => id === 'vercel-ai-sdk',
     );
@@ -260,7 +267,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
       'The compatibility result is invalid.',
     );
     assertRuntimeInvariant(
-      compatibilityEnvelope.cliVersion === '3.3.2' &&
+      compatibilityEnvelope.cliVersion === '3.3.3' &&
         compatibilityEnvelope.schemaVersion === 1 &&
         compatibilityEnvelope.result?.outputSchemaVersion === 1,
       'The compatibility envelope is invalid.',
@@ -271,6 +278,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
           { name: '@moldea.ai/adapter-anthropic', version: '2.0.1' },
           { name: '@moldea.ai/adapter-claude-agent-sdk', version: '1.0.0' },
           { name: '@moldea.ai/adapter-cloudflare-agents', version: '1.0.0' },
+          { name: '@moldea.ai/adapter-eve', version: '1.0.0' },
           { name: '@moldea.ai/adapter-google-genai', version: '1.0.3' },
           { name: '@moldea.ai/adapter-openai', version: '2.0.4' },
           { name: '@moldea.ai/adapter-openai-agents-sdk', version: '1.0.2' },
@@ -368,6 +376,17 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
             id === 'typescript-ai-chat-agent-0-10-ai-sdk-7' && supportLevel === 'experimental',
         ),
       'The Cloudflare Agents adapter is not active with its expected compatibility metadata.',
+    );
+    assertRuntimeInvariant(
+      eveAdapter?.active === true &&
+        eveAdapter.bundledVersion === '1.0.0' &&
+        eveAdapter.matrix?.implementationStatus === 'available' &&
+        eveAdapter.matrix?.compatibleCoreRange === '^2.0.0' &&
+        eveAdapter.matrix?.runtimeGuidance?.expectation === 'optional' &&
+        JSON.stringify(eveAdapter.matrix?.supportedRepositoryFormatVersions) === '[1]' &&
+        eveAdapter.matrix?.targets?.[0]?.id === 'typescript-filesystem-agent-0-39' &&
+        eveAdapter.matrix?.targets?.[0]?.supportLevel === 'experimental',
+      'The Eve compatibility claim is invalid.',
     );
     assertRuntimeInvariant(
       vercelAiSdkAdapter?.active === true &&

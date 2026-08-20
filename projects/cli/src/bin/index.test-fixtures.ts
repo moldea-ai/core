@@ -33,6 +33,7 @@ export const ADAPTER_CLOUDFLARE_AGENTS_PROJECT_DIRECTORY = path.join(
   projectsDirectory,
   'adapter-cloudflare-agents',
 );
+export const ADAPTER_EVE_PROJECT_DIRECTORY = path.join(projectsDirectory, 'adapter-eve');
 export const ADAPTER_VERCEL_AI_SDK_PROJECT_DIRECTORY = path.join(
   projectsDirectory,
   'adapter-vercel-ai-sdk',
@@ -160,6 +161,7 @@ export const expectPackageManifest = (
   openAiAdapterVersion: string,
   openAiAgentsSdkAdapterVersion: string,
   cloudflareAgentsAdapterVersion: string,
+  eveAdapterVersion: string,
   vercelAiSdkAdapterVersion: string,
   repositoryVersion: string,
   repositoryFilesystemVersion: string,
@@ -172,7 +174,7 @@ export const expectPackageManifest = (
     name: '@moldea.ai/cli',
     preferUnplugged: true,
     type: 'module',
-    version: '3.3.2',
+    version: '3.3.3',
   });
   expect(manifest.dependencies).toStrictEqual({
     '@moldea.ai/adapter-anthropic': anthropicAdapterVersion,
@@ -181,6 +183,7 @@ export const expectPackageManifest = (
     '@moldea.ai/adapter-openai': openAiAdapterVersion,
     '@moldea.ai/adapter-openai-agents-sdk': openAiAgentsSdkAdapterVersion,
     '@moldea.ai/adapter-cloudflare-agents': cloudflareAgentsAdapterVersion,
+    '@moldea.ai/adapter-eve': eveAdapterVersion,
     '@moldea.ai/adapter-vercel-ai-sdk': vercelAiSdkAdapterVersion,
     '@moldea.ai/core': coreVersion,
     '@moldea.ai/repository': repositoryVersion,

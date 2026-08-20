@@ -93,6 +93,26 @@ describe('discoverPackage', () => {
     });
   });
 
+  test('preserves a top-level manifest package name when provider-specific identity is requested', async () => {
+    await expect(
+      discoverPackage({
+        includeManifestPackageName: true,
+        packageName: 'provider-sdk',
+        reader: createReader({
+          '/package.json': JSON.stringify({
+            dependencies: { 'provider-sdk': '^2.0.0' },
+            name: '@scope/example-agent',
+          }),
+        }),
+        sourcePath: '/src/agent.ts',
+        supportedRange: '>=2.0.0 <3.0.0',
+      }),
+    ).resolves.toMatchObject({
+      kind: 'observed',
+      observation: { manifestPackageName: '@scope/example-agent' },
+    });
+  });
+
   test('stops at the nearest existing manifest without a declaration', async () => {
     await expect(
       discoverPackage({

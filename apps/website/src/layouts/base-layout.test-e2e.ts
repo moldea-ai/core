@@ -413,8 +413,9 @@ test('presents available runtime adapters without promoting planned inventory', 
   await expect(adapterSection.getByAltText('OpenAI company logo')).toHaveCount(2);
   await expect(adapterSection.getByRole('link', { name: /claude-agent-sdk/ })).toBeVisible();
   await expect(adapterSection.getByRole('link', { name: /cloudflare-agents/ })).toBeVisible();
+  await expect(adapterSection.getByRole('link', { name: /eve/ })).toBeVisible();
   await expect(adapterSection.getByRole('link', { name: /vercel-ai-sdk/ })).toBeVisible();
-  await expect(adapterSection.getByAltText('Vercel company logo')).toHaveCount(1);
+  await expect(adapterSection.getByAltText('Vercel company logo')).toHaveCount(2);
   await expect(adapterSection.getByRole('link', { name: 'View all adapters' })).toHaveAttribute(
     'href',
     toPublicPath('/adapters/'),

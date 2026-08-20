@@ -10,7 +10,7 @@ The matrix publishes only the verified targets and support boundaries shown belo
 | `claude-agent-sdk`  | `@moldea.ai/adapter-claude-agent-sdk`  | `package`      | `public`     | `^1.0.0`             | `available` | `optional`       |              `1` |
 | `cloudflare-agents` | `@moldea.ai/adapter-cloudflare-agents` | `package`      | `public`     | `^1.0.0`             | `available` | `recommended`    |              `2` |
 | `custom`            | `@moldea.ai/core`                      | `built-in`     | `public`     | Not available        | `available` | `required`       |              `1` |
-| `eve`               | `@moldea.ai/adapter-eve`               | `package`      | `public`     | Not available        | `planned`   | Not available    |              `0` |
+| `eve`               | `@moldea.ai/adapter-eve`               | `package`      | `public`     | `^1.0.0`             | `available` | `optional`       |              `1` |
 | `google-genai`      | `@moldea.ai/adapter-google-genai`      | `package`      | `public`     | `^1.0.3`             | `available` | `optional`       |              `1` |
 | `langchain`         | `@moldea.ai/adapter-langchain`         | `package`      | `public`     | Not available        | `planned`   | Not available    |              `0` |
 | `langgraph`         | `@moldea.ai/adapter-langgraph`         | `package`      | `public`     | Not available        | `planned`   | Not available    |              `0` |
@@ -277,6 +277,94 @@ Runtime guidance notes: Project-local guidance defines the custom runtime integr
 | Kind      | Pattern                             | Support | Description                                                                                        | Notes         |
 | --------- | ----------------------------------- | ------- | -------------------------------------------------------------------------------------------------- | ------------- |
 | `runtime` | `explicit-repository-relationships` | `full`  | Universal Core validation of explicit repository relationships without runtime-specific inference. | Not available |
+
+## Adapter: `eve`
+
+- Owning package: `@moldea.ai/adapter-eve`
+- Implementation range: `^1.0.0`
+- Supported repository-format versions: `1`
+- Compatible Core range: `^2.0.0`
+- Runtime guidance: `optional`
+- Last verified: `2026-08-19`
+
+Runtime guidance notes: Project-local guidance is needed only for unsupported dynamic capabilities, extensions, remote agents, non-canonical or composed instructions, positive single-file subagent analysis, Markdown skill registration, framework-tool overrides, or other repository-specific Eve patterns outside the verified static filesystem target.
+
+### Target: `typescript-filesystem-agent-0-39`
+
+- Kind: `package`
+- Support level: `experimental`
+- Language: `typescript`
+- Evidence kinds: `agent-definition`, `handoff-registration`, `instruction-loader`, `language`, `runtime-package`, `schema`, `skill-registration`, `tool-registration`
+- Last verified: `2026-08-19`
+
+| Ecosystem | Package | Role      | Verified range     |
+| --------- | ------- | --------- | ------------------ |
+| `npm`     | `eve`   | `primary` | `>=0.39.1 <0.40.0` |
+
+#### Binding support
+
+| Subject                | Relationship | Symbol    |
+| ---------------------- | ------------ | --------- |
+| `runtime-agent`        | `full`       | `partial` |
+| `output-schema`        | `full`       | `full`    |
+| `instruction-loader`   | `partial`    | `partial` |
+| `tool-implementation`  | `full`       | `partial` |
+| `tool-registration`    | `full`       | `partial` |
+| `tool-input-schema`    | `full`       | `full`    |
+| `tool-output-schema`   | `full`       | `full`    |
+| `skill-implementation` | `partial`    | `partial` |
+| `skill-registration`   | `partial`    | `partial` |
+
+#### Patterns
+
+| Kind                 | Pattern                                   | Support       | Description                                                                                                                                                                                                                                                                                                                                                                 | Notes         |
+| -------------------- | ----------------------------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| `agent`              | `flat-root-agent`                         | `full`        | An uncollided bound package-root agent.ts directly default-exports one defineAgent configuration using the positive key subset and a supported static model string.                                                                                                                                                                                                         | Not available |
+| `agent`              | `nested-root-agent`                       | `full`        | An uncollided bound package-relative agent/agent.ts directly default-exports one defineAgent configuration using the positive key subset and a supported static model string.                                                                                                                                                                                               | Not available |
+| `instruction-loader` | `case-varied-markdown-instruction`        | `partial`     | Case-varied instructions.md and system.md candidates participate in Eve precedence and collision analysis but do not produce positive complete-instruction evidence.                                                                                                                                                                                                        | Not available |
+| `instruction-loader` | `directory-instruction-composition`       | `ambiguous`   | Root-plus-directory, directory-only, multiple-entry, user-role, or dynamic instruction composition is outside the complete initial instruction target.                                                                                                                                                                                                                      | Not available |
+| `instruction-loader` | `exact-lowercase-markdown-instruction`    | `full`        | One uncollided exact-lowercase root instructions.md file is the exclusive modern Eve system-instruction slot and is identified by the declared instruction relationship.                                                                                                                                                                                                    | Not available |
+| `instruction-loader` | `exclusive-typescript-instruction-loader` | `full`        | One uncollided root instructions.ts directly default-exports exact-shape defineInstructions whose system content comes from the declared loader call.                                                                                                                                                                                                                       | Not available |
+| `instruction-loader` | `legacy-system-instruction`               | `partial`     | Deprecated system.* fallback is recognized to suppress false absence conclusions but does not produce positive canonical instruction evidence.                                                                                                                                                                                                                              | Not available |
+| `routing`            | `directory-local-subagent`                | `full`        | A unique direct subagents/<name>/agent.ts package registers one immediate local subagent only when both parent and target use the positive static agent-definition subset, the target has a statically proved non-empty string description, and the mapping and runtime tool namespace are unambiguous; an omitted or exact empty description produces no handoff evidence. | Not available |
+| `routing`            | `effective-routing-description`           | `full`        | A supported non-empty static local-subagent description is compared with the canonical handoff description when present and the canonical agent-description fallback otherwise; an omitted or exact empty value is classified as missing and suppresses handoff evidence.                                                                                                   | Not available |
+| `routing`            | `local-subagent-tool-namespace`           | `full`        | Static local subagents produce handoff evidence only when their names are unique among the supported static candidates and do not collide with mechanically established prepared authored, active framework, or reserved load_skill tool names; unresolved same-name static candidates suppress the claim.                                                                  | Not available |
+| `routing`            | `remote-agents`                           | `unsupported` | Remote Eve subagents, remote authentication, URLs, and cross-repository target identity are outside the initial target.                                                                                                                                                                                                                                                     | Not available |
+| `routing`            | `single-file-local-subagent`              | `partial`     | Single-file subagent candidates participate in name and namespace preflight but do not produce positive agent-definition or handoff-registration evidence in the initial target.                                                                                                                                                                                            | Not available |
+| `runtime`            | `dynamic-capabilities`                    | `ambiguous`   | Dynamic or non-string model definitions and runtime-resolved agents, instructions, tools, and skills cannot be mapped to one static effective surface by the initial target.                                                                                                                                                                                                | Not available |
+| `runtime`            | `extension-contributions`                 | `unsupported` | Extension-mounted agents, tools, skills, connections, hooks, and namespaced overrides are outside positive target interpretation.                                                                                                                                                                                                                                           | Not available |
+| `runtime`            | `filesystem-slot-collisions`              | `ambiguous`   | Competing Eve-authored agent, instruction, tool, skill, or local-subagent sources and root contributions using an observably claimed mounted-extension namespace prefix prevent the initial target from selecting one effective source unless the focused target defines a deterministic collision diagnostic.                                                              | Not available |
+| `skill`              | `flat-markdown-skill`                     | `partial`     | A direct skills/<name>.md file may establish an implementation-path relationship, but Markdown acceptance and Eve registration are not claimed by the initial target.                                                                                                                                                                                                       | Not available |
+| `skill`              | `packaged-skill`                          | `partial`     | A direct skills/<name>/SKILL.md file may establish an implementation-path relationship, but frontmatter acceptance, sibling resources, and Eve registration are not claimed by the initial target.                                                                                                                                                                          | Not available |
+| `skill`              | `typescript-skill`                        | `full`        | An uncollided direct skills/<name>.ts module default-exports one exact closed static-string defineSkill package and may establish registration.                                                                                                                                                                                                                             | Not available |
+| `tool`               | `connections-and-framework-tools`         | `partial`     | Connection-provided, provider-managed, framework opt-in, disabled, and Workflow tools are not exposed as manifest capabilities. The target models the prepared static framework namespace needed for registration evidence but makes no turn-time dynamic-tool availability claim.                                                                                          | Not available |
+| `tool`               | `flattened-tool-runtime-name`             | `full`        | Eve tool runtime names are derived by removing the authored extension and replacing relative path separators beneath tools/ with hyphens.                                                                                                                                                                                                                                   | Not available |
+| `tool`               | `recursive-filesystem-tool`               | `full`        | An uncollided direct or nested tools/**/*.ts module with valid path segments and one unique non-reserved flattened name default-exports one registration-eligible defineTool configuration with supported implementation and schema relationships.                                                                                                                          | Not available |
+| `tool`               | `tool-runtime-name-collision`             | `full`        | Distinct authored tool paths that flatten to one runtime name are diagnosed and do not produce effective registration evidence.                                                                                                                                                                                                                                             | Not available |
+
+#### Provider limits
+
+| Subject     | Limit                                  | Kind      | Value                           | Description                                                                                                                                                                                                           | Reference                     |
+| ----------- | -------------------------------------- | --------- | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| `tool-name` | `filesystem-tool-path-segment-pattern` | `pattern` | `^[A-Za-z][A-Za-z0-9_-]{0,63}$` | Every authored filesystem segment beneath tools/, including the module basename, must contain 1 to 64 ASCII letters, digits, underscores, or hyphens and start with an ASCII letter before Eve flattens nested paths. | eve@0.39.1 TOOL_SLUG_PATTERN  |
+| `tool-name` | `filesystem-tool-reserved-name`        | `other`   | `Workflow`                      | Eve reserves exact Workflow for its runtime workflow tool and rejects an authored tool with that flattened name.                                                                                                      | eve@0.39.1 WORKFLOW_TOOL_NAME |
+
+#### Known limitations
+
+- Agent output, tool input, and tool output schema contents are not validated; the target establishes only direct binding relationships.
+- Complete positive instruction evidence requires one exclusive exact-lowercase modern Markdown or exact-shape TypeScript system source. Eve directory composition, case-varied Markdown, unsupported module extensions, deprecated system.* fallback, the deprecated markdown definition branch, user-role entries, and dynamic instruction sources remain outside positive target evidence.
+- Dynamic capabilities, remote agents, extensions, connections, channels, schedules, hooks, sandboxes, approvals, auth, state, sessions, compaction, task orchestration, and runtime-variable providers are not interpreted.
+- Eve 0.39.x requires Node.js 24 or newer for the inspected application runtime. The adapter records but does not validate that application prerequisite and may itself run on another adapter-supported Node.js line.
+- Extension declarations and contributions are not interpreted. Observable extension mount names participate only in conservative namespace-prefix preflight so root contributions cannot receive false registration evidence under a prefix Eve reserves for a mounted extension.
+- Flat and packaged Markdown skill paths may establish implementation-path relationships, but the target emits no Markdown skill-registration evidence because it does not reproduce Eve frontmatter acceptance and collision resolution.
+- Only direct TypeScript default exports, exact Eve helper imports, and limited relative named-import resolution are supported; path aliases, package exports, directory indexes, CommonJS, re-exports, wrappers, and arbitrary compiler resolution remain unresolved.
+- Positive agent-definition evidence requires the closed defineAgent object to use only model, optional description, and optional outputSchema, with a supported static model string. Every other verified Eve agent option remains present-unsupported until a future target validates its nested runtime shape; dynamic models and sibling overrides therefore cannot produce optimistic evidence.
+- Recursive static tools are supported. Static prepared-name effects from supported authored tools, framework defaults, and unresolved same-name override candidates participate in registration preflight; dynamic, extension, connection, provider, disable-sentinel, and Workflow execution semantics otherwise remain outside the target.
+- The adapter analyzes only a root or directory-backed local subagent with an exact bound static agent.ts; a configuration-free Eve root or single-file local subagent produces no positive target-specific definition or handoff evidence.
+- The adapter parses only .ts authored modules. It inspects .cts, .mts, .cjs, .mjs, .ts, and .js entry names only to prevent false positive evidence when an Eve filesystem slot or local-subagent identity is collided.
+- Tool and skill descriptions are required to be statically provable strings for positive registration evidence but are not compared byte for byte with manifest capability descriptions; semantic alignment remains with the skill, evaluate, and PR Assurance.
+- Tool approval and toModelOutput behavior is not interpreted beyond the static value shape required to avoid false registration claims.
+- TypeScript skill metadata and files are supported only as closed static string-valued records; Eve-valid Uint8Array skill files and dynamic package content remain outside positive registration evidence.
 
 ## Adapter: `google-genai`
 

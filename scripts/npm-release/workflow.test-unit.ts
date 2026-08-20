@@ -80,10 +80,11 @@ describe('npm release workflow', () => {
     expect(ciSource).toContain('name: public-package-tarballs');
     expect(ciSource).toContain('SHA256SUMS');
     expect(ciSource).not.toContain('playwright install --with-deps chromium');
-    expect(ciSource.match(/name: public-package-tarballs/gu)).toHaveLength(10);
+    expect(ciSource.match(/name: public-package-tarballs/gu)).toHaveLength(11);
     expect(ciSource).toContain(
       'node projects/adapter-cloudflare-agents/scripts/runtime-compatibility/index.mjs',
     );
+    expect(ciSource).toContain('node projects/adapter-eve/scripts/runtime-compatibility/index.mjs');
     expect(ciSource).toContain(
       'node projects/adapter-vercel-ai-sdk/scripts/runtime-compatibility/index.mjs',
     );
@@ -135,6 +136,7 @@ describe('npm release workflow', () => {
               'adapter-openai-agents-sdk',
               'adapter-claude-agent-sdk',
               'adapter-cloudflare-agents',
+              'adapter-eve',
               'adapter-vercel-ai-sdk',
               'cli',
               'website-ui',
@@ -151,6 +153,9 @@ describe('npm release workflow', () => {
           '${{ steps.release.outputs.adapter_anthropic_previous_version }}',
         adapter_claude_agent_sdk_previous_version:
           '${{ steps.release.outputs.adapter_claude_agent_sdk_previous_version }}',
+        adapter_cloudflare_agents_previous_version:
+          '${{ steps.release.outputs.adapter_cloudflare_agents_previous_version }}',
+        adapter_eve_previous_version: '${{ steps.release.outputs.adapter_eve_previous_version }}',
         adapter_google_genai_previous_version:
           '${{ steps.release.outputs.adapter_google_genai_previous_version }}',
         adapter_openai_previous_version:
@@ -256,6 +261,8 @@ describe('npm release workflow', () => {
       'release_adapter_openai',
       'release_adapter_openai_agents_sdk',
       'release_adapter_claude_agent_sdk',
+      'release_adapter_cloudflare_agents',
+      'release_adapter_eve',
       'release_adapter_vercel_ai_sdk',
     ]);
     expect(publishWorkflow.jobs?.['release_adapter_vercel_ai_sdk']?.needs).toStrictEqual([
@@ -269,6 +276,21 @@ describe('npm release workflow', () => {
       'release_adapter_openai',
       'release_adapter_openai_agents_sdk',
       'release_adapter_claude_agent_sdk',
+      'release_adapter_cloudflare_agents',
+      'release_adapter_eve',
+    ]);
+    expect(publishWorkflow.jobs?.['release_adapter_eve']?.needs).toStrictEqual([
+      'plan',
+      'verify',
+      'release_repository',
+      'release_repository_fs',
+      'release_core',
+      'release_adapter_anthropic',
+      'release_adapter_google_genai',
+      'release_adapter_openai',
+      'release_adapter_openai_agents_sdk',
+      'release_adapter_claude_agent_sdk',
+      'release_adapter_cloudflare_agents',
     ]);
     expect(publishWorkflow.jobs?.['release_repository_fs']?.with?.['previous_version']).toBe(
       '${{ needs.plan.outputs.repository_fs_previous_version }}',
@@ -294,6 +316,9 @@ describe('npm release workflow', () => {
     expect(
       publishWorkflow.jobs?.['release_adapter_vercel_ai_sdk']?.with?.['previous_version'],
     ).toBe('${{ needs.plan.outputs.adapter_vercel_ai_sdk_previous_version }}');
+    expect(publishWorkflow.jobs?.['release_adapter_eve']?.with?.['previous_version']).toBe(
+      '${{ needs.plan.outputs.adapter_eve_previous_version }}',
+    );
     expect(publishWorkflow.jobs?.['release_cli']?.with?.['previous_version']).toBe(
       '${{ needs.plan.outputs.cli_previous_version }}',
     );
@@ -332,7 +357,10 @@ describe('npm release workflow', () => {
       "needs.release_adapter_vercel_ai_sdk.result == 'success'",
     );
     expect(publishWorkflow.jobs?.['release_adapter_vercel_ai_sdk']?.if).toContain(
-      "needs.release_adapter_claude_agent_sdk.result == 'success'",
+      "needs.release_adapter_eve.result == 'success'",
+    );
+    expect(publishWorkflow.jobs?.['release_adapter_eve']?.if).toContain(
+      "needs.release_adapter_cloudflare_agents.result == 'success'",
     );
   });
 

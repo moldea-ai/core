@@ -21,6 +21,7 @@ export const NPM_RELEASE_PROJECT_ORDER = [
   'adapter-openai-agents-sdk',
   'adapter-claude-agent-sdk',
   'adapter-cloudflare-agents',
+  'adapter-eve',
   'adapter-vercel-ai-sdk',
   'cli',
   'website-ui',
@@ -69,6 +70,12 @@ export const NPM_RELEASE_PROJECTS = {
     packageName: '@moldea.ai/adapter-cloudflare-agents',
     projectDirectory: 'projects/adapter-cloudflare-agents',
     tagPrefix: 'adapter-cloudflare-agents-v',
+  },
+  'adapter-eve': {
+    artifactPrefix: 'moldea.ai-adapter-eve',
+    packageName: '@moldea.ai/adapter-eve',
+    projectDirectory: 'projects/adapter-eve',
+    tagPrefix: 'adapter-eve-v',
   },
   cli: {
     artifactPrefix: 'moldea.ai-cli',

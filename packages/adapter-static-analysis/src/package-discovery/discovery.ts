@@ -132,7 +132,8 @@ const classifyPackageDeclarations = (
 export const discoverPackage = async (
   options: IStaticAnalysisPackageDiscoveryOptions,
 ): Promise<IStaticAnalysisPackageDiscoveryResult> => {
-  const { packageName, reader, signal, sourcePath, supportedRange } = options;
+  const { includeManifestPackageName, packageName, reader, signal, sourcePath, supportedRange } =
+    options;
 
   for (const manifestPath of createPackageManifestCandidatePaths(sourcePath)) {
     signal?.throwIfAborted();
@@ -185,6 +186,9 @@ export const discoverPackage = async (
       observation: Object.freeze({
         compatibility: classifyPackageDeclarations(declarations, supportedRange),
         declarations: Object.freeze(declarations),
+        ...(includeManifestPackageName === true
+          ? { manifestPackageName: typeof parsed['name'] === 'string' ? parsed['name'] : null }
+          : {}),
         path: manifestPath,
       }),
     });
