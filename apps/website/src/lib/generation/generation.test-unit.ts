@@ -7,6 +7,7 @@ import { afterEach, beforeAll, describe, expect, test } from 'vitest';
 
 import type { IRuntimeCompatibilityMatrix } from '../../../../../scripts/runtime-compatibility/types.ts';
 import type { IWebsiteModel } from '../model/types.ts';
+import { REPOSITORY_FORMAT_GUIDE_URL } from '../site/constants.ts';
 
 import {
   buildAdapterPages,
@@ -382,6 +383,7 @@ describe('createLlmsText', () => {
     expect(text).toContain('available; built into @moldea.ai/core; custom: supported');
     expect(text).toContain('typescript-messages-api-0-117: experimental');
     expect(text).toContain('typescript-responses-api-7: experimental');
+    expect(text.split(REPOSITORY_FORMAT_GUIDE_URL)).toHaveLength(2);
   });
 });
 

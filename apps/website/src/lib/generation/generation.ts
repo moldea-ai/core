@@ -17,6 +17,7 @@ import type {
   ISearchRecord,
   IWebsiteModel,
 } from '../model/types.ts';
+import { REPOSITORY_FORMAT_GUIDE_URL } from '../site/constants.ts';
 
 const REPOSITORY_URL = 'https://github.com/moldea-ai/packages';
 const EXCLUDED_DIRECTORY_NAMES = new Set(['_archive', '_archives', '_backup', '_backups']);
@@ -477,6 +478,7 @@ export const createLlmsText = (packages: IPublicPackage[], adapters: IAdapterPag
     '',
     '## Canonical references',
     '',
+    `- [Repository Format guide](${REPOSITORY_FORMAT_GUIDE_URL})`,
     '- [Complete runtime compatibility matrix](/compatibility/)',
     `- [Source repository](${REPOSITORY_URL})`,
     '',

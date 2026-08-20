@@ -1,5 +1,5 @@
 ---
-import { ArrowRight, GitFork, Layers, ShieldCheck, Workflow } from '@lucide/astro';
+import { ArrowRight, ArrowUpRight, GitFork, Layers, ShieldCheck, Workflow } from '@lucide/astro';
 import ActionLink from '@moldea.ai/website-ui/action-link';
 import InlineBrandText from '@moldea.ai/website-ui/inline-brand-text';
 import { withBase } from '@moldea.ai/website-ui/site';
@@ -8,6 +8,7 @@ import AdapterCard from '../components/adapter-card.astro';
 import PackageCard from '../components/package-card.astro';
 import BaseLayout from '../layouts/base-layout.astro';
 import { loadWebsiteModel } from '../lib/generation/generation.ts';
+import { REPOSITORY_FORMAT_GUIDE_URL } from '../lib/site/constants.ts';
 
 const model = loadWebsiteModel();
 const toolingPackages = model.packages.filter(({ family }) => family === 'skill-core-tooling');
@@ -81,12 +82,27 @@ const basePath = import.meta.env.BASE_URL;
           From source bytes to trusted structure.
         </h2>
       </div>
-      <p class="max-w-xl leading-7 text-muted-foreground lg:justify-self-end">
-        Repository readers preserve exact source state, Core turns it into deterministic project
-        structure, and runtime adapters add source-grounded evidence. The Agent Skill consumes that
-        foundation as its semantic operating layer; package contracts never depend back on the skill
-        or this website.
-      </p>
+      <div class="max-w-xl lg:justify-self-end">
+        <p class="leading-7 text-muted-foreground">
+          Repository readers preserve exact source state, Core turns it into deterministic project
+          structure, and runtime adapters add source-grounded evidence. The Agent Skill consumes
+          that foundation as its semantic operating layer; package contracts never depend back on
+          the skill or this website.
+        </p>
+        <ActionLink
+          class="mt-5 font-bold"
+          href={REPOSITORY_FORMAT_GUIDE_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          variant="link"
+        >
+          Explore the Repository Format
+          <ArrowUpRight
+            class="size-4"
+            aria-hidden="true"
+          />
+        </ActionLink>
+      </div>
     </div>
 
     <div class="surface-card overflow-hidden p-4 sm:p-6 lg:p-8">

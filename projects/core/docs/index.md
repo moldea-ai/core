@@ -11,6 +11,10 @@ order: 0
 
 Core never discovers or reads a filesystem, Git provider, or network on its own. This boundary keeps repository acquisition in reader packages and local composition in the CLI.
 
+## Repository Format
+
+Core is the deterministic reference implementation of Repository Format version `1`. The [Repository Format guide](https://skill.moldea.ai/docs/repository-format/) explains how a project starts with a small Git-owned foundation and grows through focused context, decisions, runtime guidance, agents, and explicit implementation relationships. This package documentation covers the parsing, validation, indexing, diagnostics, and adapter behavior that implements that format.
+
 ## Available now
 
 - strict text normalization and normalized SHA-256 content digests

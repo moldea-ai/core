@@ -3,6 +3,8 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import { DEFAULT_BASE_PATH, withBase } from '@moldea.ai/website-ui/site';
 
+import { REPOSITORY_FORMAT_GUIDE_URL } from '../lib/site/constants.ts';
+
 const basePath = process.env.BASE_PATH ?? DEFAULT_BASE_PATH;
 const toPublicPath = (route: string): string => withBase(route, basePath);
 const REPRESENTATIVE_PATHS = [
@@ -78,6 +80,32 @@ test('renders standalone moldea references as inline code in visible prose', asy
 
   await expect(description.locator('code')).toHaveText('moldea');
   await expect(description).toContainText('composition for moldea repositories.');
+});
+
+test('connects the package architecture to the public Repository Format guide', async ({
+  page,
+}) => {
+  await page.goto(toPublicPath('/'));
+
+  const architecture = page.getByRole('region', {
+    name: 'From source bytes to trusted structure.',
+  });
+  const architectureLink = architecture.getByRole('link', {
+    name: 'Explore the Repository Format',
+  });
+
+  await expect(architectureLink).toHaveAttribute('href', REPOSITORY_FORMAT_GUIDE_URL);
+  await expect(architectureLink).toHaveAttribute('target', '_blank');
+  await expect(architectureLink).toHaveAttribute('rel', 'noopener noreferrer');
+
+  const documentationNavigation = page.getByRole('navigation', { name: 'Documentation' });
+  const footerLink = documentationNavigation.getByRole('link', {
+    name: 'Repository Format',
+  });
+
+  await expect(footerLink).toHaveAttribute('href', REPOSITORY_FORMAT_GUIDE_URL);
+  await expect(footerLink).toHaveAttribute('target', '_blank');
+  await expect(footerLink).toHaveAttribute('rel', 'noopener noreferrer');
 });
 
 test('persists an explicit theme and exposes mobile navigation from the keyboard', async ({
