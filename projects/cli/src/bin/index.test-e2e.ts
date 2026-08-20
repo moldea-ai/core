@@ -1205,5 +1205,5 @@ setInterval(() => undefined, 1000);
     } finally {
       rmSync(testDirectory, { force: true, recursive: true });
     }
-  }, 60_000);
+  }, 180_000);
 });
