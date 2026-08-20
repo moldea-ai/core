@@ -83,7 +83,6 @@ An arrow means that the package on the left depends on the package on the right.
 
 ```text
 repository-fs       → repository
-repository-github   → repository
 core                → repository
 adapter-*           → core
 cli                 → repository + repository-fs + core + active adapter packages
@@ -94,24 +93,23 @@ Shared internal packages may support first-class projects but never depend on th
 
 ## Package catalog
 
-| Project                     | Package                                | Distribution      |
-| --------------------------- | -------------------------------------- | ----------------- |
-| `repository`                | `@moldea.ai/repository`                | Public            |
-| `repository-fs`             | `@moldea.ai/repository-fs`             | Public            |
-| `repository-github`         | `@moldea.ai/repository-github`         | Private initially |
-| `core`                      | `@moldea.ai/core`                      | Public            |
-| `cli`                       | `@moldea.ai/cli`                       | Public            |
-| `adapter-anthropic`         | `@moldea.ai/adapter-anthropic`         | Public            |
-| `adapter-claude-agent-sdk`  | `@moldea.ai/adapter-claude-agent-sdk`  | Public            |
-| `adapter-cloudflare-agents` | `@moldea.ai/adapter-cloudflare-agents` | Public            |
-| `adapter-eve`               | `@moldea.ai/adapter-eve`               | Public            |
-| `adapter-google-genai`      | `@moldea.ai/adapter-google-genai`      | Public            |
-| `adapter-langchain`         | `@moldea.ai/adapter-langchain`         | Public            |
-| `adapter-langgraph`         | `@moldea.ai/adapter-langgraph`         | Public            |
-| `adapter-openai`            | `@moldea.ai/adapter-openai`            | Public            |
-| `adapter-openai-agents-sdk` | `@moldea.ai/adapter-openai-agents-sdk` | Public            |
-| `adapter-vercel-ai-sdk`     | `@moldea.ai/adapter-vercel-ai-sdk`     | Public            |
-| `website-ui`                | `@moldea.ai/website-ui`                | Public            |
+| Project                     | Package                                | Distribution |
+| --------------------------- | -------------------------------------- | ------------ |
+| `repository`                | `@moldea.ai/repository`                | Public       |
+| `repository-fs`             | `@moldea.ai/repository-fs`             | Public       |
+| `core`                      | `@moldea.ai/core`                      | Public       |
+| `cli`                       | `@moldea.ai/cli`                       | Public       |
+| `adapter-anthropic`         | `@moldea.ai/adapter-anthropic`         | Public       |
+| `adapter-claude-agent-sdk`  | `@moldea.ai/adapter-claude-agent-sdk`  | Public       |
+| `adapter-cloudflare-agents` | `@moldea.ai/adapter-cloudflare-agents` | Public       |
+| `adapter-eve`               | `@moldea.ai/adapter-eve`               | Public       |
+| `adapter-google-genai`      | `@moldea.ai/adapter-google-genai`      | Public       |
+| `adapter-langchain`         | `@moldea.ai/adapter-langchain`         | Public       |
+| `adapter-langgraph`         | `@moldea.ai/adapter-langgraph`         | Public       |
+| `adapter-openai`            | `@moldea.ai/adapter-openai`            | Public       |
+| `adapter-openai-agents-sdk` | `@moldea.ai/adapter-openai-agents-sdk` | Public       |
+| `adapter-vercel-ai-sdk`     | `@moldea.ai/adapter-vercel-ai-sdk`     | Public       |
+| `website-ui`                | `@moldea.ai/website-ui`                | Public       |
 
 The catalog records approved architecture, not implementation or release status. The `custom` adapter remains built into `@moldea.ai/core` and has no separate package project.
 
