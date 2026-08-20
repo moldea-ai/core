@@ -13,6 +13,10 @@ export const ACTIVE_RUNTIME_ADAPTER_RELEASE_DEFINITIONS = Object.freeze([
     supportedRepositoryFormatVersions: [1],
   },
   {
+    id: 'eve',
+    supportedRepositoryFormatVersions: [1],
+  },
+  {
     id: 'google-genai',
     supportedRepositoryFormatVersions: [1],
   },

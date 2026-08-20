@@ -20,6 +20,7 @@ on:
           - adapter-openai-agents-sdk
           - adapter-claude-agent-sdk
           - adapter-cloudflare-agents
+          - adapter-eve
           - adapter-vercel-ai-sdk
           - cli
           - website-ui
@@ -57,6 +58,10 @@ jobs:
       adapter_anthropic_previous_version: ${{ steps.release.outputs.adapter_anthropic_previous_version }}
       adapter_claude_agent_sdk: ${{ steps.release.outputs.adapter_claude_agent_sdk }}
       adapter_claude_agent_sdk_previous_version: ${{ steps.release.outputs.adapter_claude_agent_sdk_previous_version }}
+      adapter_cloudflare_agents: ${{ steps.release.outputs.adapter_cloudflare_agents }}
+      adapter_cloudflare_agents_previous_version: ${{ steps.release.outputs.adapter_cloudflare_agents_previous_version }}
+      adapter_eve: ${{ steps.release.outputs.adapter_eve }}
+      adapter_eve_previous_version: ${{ steps.release.outputs.adapter_eve_previous_version }}
       adapter_google_genai: ${{ steps.release.outputs.adapter_google_genai }}
       adapter_google_genai_previous_version: ${{ steps.release.outputs.adapter_google_genai_previous_version }}
       adapter_openai: ${{ steps.release.outputs.adapter_openai }}
@@ -412,6 +417,8 @@ jobs:
       - release_adapter_openai
       - release_adapter_openai_agents_sdk
       - release_adapter_claude_agent_sdk
+      - release_adapter_cloudflare_agents
+      - release_adapter_eve
     if: >-
       ${{
         always() &&
@@ -431,7 +438,11 @@ jobs:
         (needs.release_adapter_openai_agents_sdk.result == 'success' ||
           needs.release_adapter_openai_agents_sdk.result == 'skipped') &&
         (needs.release_adapter_claude_agent_sdk.result == 'success' ||
-          needs.release_adapter_claude_agent_sdk.result == 'skipped')
+          needs.release_adapter_claude_agent_sdk.result == 'skipped') &&
+        (needs.release_adapter_cloudflare_agents.result == 'success' ||
+          needs.release_adapter_cloudflare_agents.result == 'skipped') &&
+        (needs.release_adapter_eve.result == 'success' ||
+          needs.release_adapter_eve.result == 'skipped')
       }}
     permissions:
       contents: write
@@ -441,6 +452,52 @@ jobs:
       mode: ${{ needs.plan.outputs.mode }}
       previous_version: ${{ needs.plan.outputs.adapter_vercel_ai_sdk_previous_version }}
       project: adapter-vercel-ai-sdk
+
+  release_adapter_eve:
+    name: Release Eve Adapter
+    needs:
+      - plan
+      - verify
+      - release_repository
+      - release_repository_fs
+      - release_core
+      - release_adapter_anthropic
+      - release_adapter_google_genai
+      - release_adapter_openai
+      - release_adapter_openai_agents_sdk
+      - release_adapter_claude_agent_sdk
+      - release_adapter_cloudflare_agents
+    if: >-
+      ${{
+        always() &&
+        needs.plan.outputs.adapter_eve == 'true' &&
+        needs.verify.result == 'success' &&
+        (needs.release_repository.result == 'success' ||
+          needs.release_repository.result == 'skipped') &&
+        (needs.release_repository_fs.result == 'success' ||
+          needs.release_repository_fs.result == 'skipped') &&
+        (needs.release_core.result == 'success' || needs.release_core.result == 'skipped') &&
+        (needs.release_adapter_anthropic.result == 'success' ||
+          needs.release_adapter_anthropic.result == 'skipped') &&
+        (needs.release_adapter_google_genai.result == 'success' ||
+          needs.release_adapter_google_genai.result == 'skipped') &&
+        (needs.release_adapter_openai.result == 'success' ||
+          needs.release_adapter_openai.result == 'skipped') &&
+        (needs.release_adapter_openai_agents_sdk.result == 'success' ||
+          needs.release_adapter_openai_agents_sdk.result == 'skipped') &&
+        (needs.release_adapter_claude_agent_sdk.result == 'success' ||
+          needs.release_adapter_claude_agent_sdk.result == 'skipped') &&
+        (needs.release_adapter_cloudflare_agents.result == 'success' ||
+          needs.release_adapter_cloudflare_agents.result == 'skipped')
+      }}
+    permissions:
+      contents: write
+      id-token: write
+    uses: ./.github/workflows/publish-package.yml
+    with:
+      mode: ${{ needs.plan.outputs.mode }}
+      previous_version: ${{ needs.plan.outputs.adapter_eve_previous_version }}
+      project: adapter-eve
 
   release_cli:
     name: Release CLI
@@ -455,6 +512,8 @@ jobs:
       - release_adapter_openai
       - release_adapter_openai_agents_sdk
       - release_adapter_claude_agent_sdk
+      - release_adapter_cloudflare_agents
+      - release_adapter_eve
       - release_adapter_vercel_ai_sdk
     if: >-
       ${{
@@ -476,6 +535,10 @@ jobs:
           needs.release_adapter_openai_agents_sdk.result == 'skipped') &&
         (needs.release_adapter_claude_agent_sdk.result == 'success' ||
           needs.release_adapter_claude_agent_sdk.result == 'skipped') &&
+        (needs.release_adapter_cloudflare_agents.result == 'success' ||
+          needs.release_adapter_cloudflare_agents.result == 'skipped') &&
+        (needs.release_adapter_eve.result == 'success' ||
+          needs.release_adapter_eve.result == 'skipped') &&
         (needs.release_adapter_vercel_ai_sdk.result == 'success' ||
           needs.release_adapter_vercel_ai_sdk.result == 'skipped')
       }}

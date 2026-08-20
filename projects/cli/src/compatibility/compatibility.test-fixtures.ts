@@ -15,6 +15,7 @@ export const INSTALLED_PACKAGE_METADATA: IMoldeaCliPackageMetadata = Object.free
     '@moldea.ai/adapter-anthropic': 'workspace:2.0.1',
     '@moldea.ai/adapter-claude-agent-sdk': 'workspace:1.0.0',
     '@moldea.ai/adapter-cloudflare-agents': 'workspace:1.0.0',
+    '@moldea.ai/adapter-eve': 'workspace:1.0.0',
     '@moldea.ai/adapter-google-genai': 'workspace:1.0.3',
     '@moldea.ai/adapter-openai': 'workspace:2.0.4',
     '@moldea.ai/adapter-openai-agents-sdk': 'workspace:1.0.2',
@@ -28,6 +29,7 @@ export const INSTALLED_PACKAGE_METADATA: IMoldeaCliPackageMetadata = Object.free
     '@moldea.ai/adapter-anthropic': '2.0.1',
     '@moldea.ai/adapter-claude-agent-sdk': '1.0.0',
     '@moldea.ai/adapter-cloudflare-agents': '1.0.0',
+    '@moldea.ai/adapter-eve': '1.0.0',
     '@moldea.ai/adapter-google-genai': '1.0.3',
     '@moldea.ai/adapter-openai': '2.0.4',
     '@moldea.ai/adapter-openai-agents-sdk': '1.0.2',
@@ -37,7 +39,7 @@ export const INSTALLED_PACKAGE_METADATA: IMoldeaCliPackageMetadata = Object.free
     '@moldea.ai/repository-fs': '1.0.2',
   }),
   supportedNodeRange: '^22.11.0 || ^24.11.0',
-  version: '3.3.2',
+  version: '3.3.3',
 });
 
 const availableOpenAiMatrixEntry = MOLDEA_CLI_RELEASE_METADATA.matrix.adapters['openai'];
@@ -73,6 +75,7 @@ export const createTestCompatibilityState = (): IMoldeaCliCompatibilityStateInpu
       createTestRuntimeAdapter('anthropic'),
       createTestRuntimeAdapter('claude-agent-sdk'),
       createTestRuntimeAdapter('cloudflare-agents'),
+      createTestRuntimeAdapter('eve'),
       createTestRuntimeAdapter('google-genai'),
       createTestRuntimeAdapter('openai'),
       createTestRuntimeAdapter('openai-agents-sdk'),

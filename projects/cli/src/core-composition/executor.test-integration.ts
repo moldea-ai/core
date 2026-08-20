@@ -129,6 +129,62 @@ describe('CLI Core composition with the memory repository reader', () => {
     });
   });
 
+  test('runs the active Eve adapter through CLI composition', async () => {
+    const reader = createMemoryRepositoryReader([
+      {
+        content: [
+          'version: 1',
+          'agents:',
+          '  alpha:',
+          '    runtime:',
+          '      id: eve',
+          '    bindings:',
+          '      runtimeAgent:',
+          '        path: /agent/agent.ts',
+          '        symbol: default',
+          '',
+        ].join('\n'),
+        path: '/moldea/moldea.yaml',
+        type: 'file',
+      },
+      { content: '# Project\n', path: '/moldea/project.md', type: 'file' },
+      ...createAgentEntries('alpha'),
+      {
+        content: '{"name":"alpha-app","dependencies":{"eve":"0.39.1"}}\n',
+        path: '/package.json',
+        type: 'file',
+      },
+      {
+        content: [
+          "import { defineAgent } from 'eve';",
+          'export default defineAgent({',
+          "  description: 'Alpha agent.',",
+          "  model: 'openai/gpt-5-mini',",
+          '});',
+          '',
+        ].join('\n'),
+        path: '/agent/agent.ts',
+        type: 'file',
+      },
+    ]);
+
+    const result = await executeMoldeaCliCoreInspection({
+      repository: reader,
+      resourceLimits: RESOURCE_LIMITS,
+    });
+
+    expect(result).toMatchObject({
+      diagnostics: [],
+      evidence: [
+        { agentId: 'alpha', kind: 'agent-definition', source: 'eve' },
+        { agentId: 'alpha', kind: 'language', source: 'eve' },
+        { kind: 'runtime-package', source: 'eve' },
+      ],
+      project: { agents: [{ id: 'alpha' }] },
+      valid: true,
+    });
+  });
+
   test('runs the active Google Gen AI adapter through CLI composition', async () => {
     const reader = createMemoryRepositoryReader([
       {

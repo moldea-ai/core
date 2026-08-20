@@ -1,0 +1,76 @@
+{
+  "manifest": "version: 1\nagents:\n  support:\n    runtime:\n      id: eve\n    bindings:\n      runtimeAgent:\n        path: /agent/agent.ts\n        symbol: default\n      instructionLoader:\n        path: /agent/loaders.ts\n        symbol: loadInstruction\n      outputSchema:\n        path: /agent/contracts.ts\n        symbol: SupportOutputSchema\n    tools:\n      search:\n        name: search\n        description: Searches the knowledge base.\n        implementation:\n          path: /agent/implementations.ts\n          symbol: searchKnowledge\n        registration:\n          path: /agent/tools/search.ts\n          symbol: default\n        inputSchema:\n          path: /agent/contracts.ts\n          symbol: SearchInputSchema\n        outputSchema:\n          path: /agent/contracts.ts\n          symbol: SearchOutputSchema\n    skills:\n      analyze:\n        name: analyze\n        description: Analyzes source material.\n        implementation:\n          path: /agent/skills/analyze.ts\n          symbol: default\n        registration:\n          path: /agent/skills/analyze.ts\n          symbol: default\n  summary:\n    runtime:\n      id: eve\n    bindings:\n      runtimeAgent:\n        path: /agent/subagents/summary/agent.ts\n        symbol: default\n",
+  "entries": [
+    {
+      "path": "/package.json",
+      "text": "{\"name\":\"@acme/support-app\",\"dependencies\":{\"eve\":\"^0.39.1\"}}",
+      "type": "file"
+    },
+    { "path": "/moldea/project.md", "text": "# Fixture project\n", "type": "file" },
+    {
+      "path": "/moldea/agents/support/description.md",
+      "text": "Supports customers.\n",
+      "type": "file"
+    },
+    {
+      "path": "/moldea/agents/support/instruction.md",
+      "text": "You are the `support` agent.\n",
+      "type": "file"
+    },
+    {
+      "path": "/moldea/agents/summary/description.md",
+      "text": "Summarizes support requests.\n",
+      "type": "file"
+    },
+    {
+      "path": "/moldea/agents/summary/handoff-description.md",
+      "text": "Summarizes a support request.\n",
+      "type": "file"
+    },
+    {
+      "path": "/moldea/agents/summary/instruction.md",
+      "text": "You are the `summary` agent.\n",
+      "type": "file"
+    },
+    {
+      "path": "/agent/agent.ts",
+      "text": "import { defineAgent } from 'eve';\nimport { SupportOutputSchema } from './contracts.js';\nconst MODEL = 'provider/model';\nexport default defineAgent({ description: 'Supports customers.', model: MODEL, outputSchema: SupportOutputSchema });\n",
+      "type": "file"
+    },
+    {
+      "path": "/agent/contracts.ts",
+      "text": "export const SupportOutputSchema = {};\nexport const SearchInputSchema = {};\nexport const SearchOutputSchema = {};\n",
+      "type": "file"
+    },
+    {
+      "path": "/agent/loaders.ts",
+      "text": "export const loadInstruction = () => 'Support customers.';\n",
+      "type": "file"
+    },
+    {
+      "path": "/agent/instructions.ts",
+      "text": "import { defineInstructions } from 'eve/instructions';\nimport { loadInstruction } from './loaders.js';\nexport default defineInstructions({ content: loadInstruction(), role: 'system' });\n",
+      "type": "file"
+    },
+    {
+      "path": "/agent/implementations.ts",
+      "text": "export const searchKnowledge = async () => ({ matches: [] });\n",
+      "type": "file"
+    },
+    {
+      "path": "/agent/tools/search.ts",
+      "text": "import { defineTool } from 'eve/tools';\nimport { SearchInputSchema, SearchOutputSchema } from '../contracts.js';\nimport { searchKnowledge } from '../implementations.js';\nexport default defineTool({ description: 'Searches the knowledge base.', inputSchema: SearchInputSchema, outputSchema: SearchOutputSchema, execute: searchKnowledge });\n",
+      "type": "file"
+    },
+    {
+      "path": "/agent/skills/analyze.ts",
+      "text": "import { defineSkill } from 'eve/skills';\nexport default defineSkill({ description: 'Analyzes source material.', markdown: '# Analyze\\n', license: 'MIT', metadata: { owner: 'support' }, files: { 'reference.md': '# Reference\\n' } });\n",
+      "type": "file"
+    },
+    {
+      "path": "/agent/subagents/summary/agent.ts",
+      "text": "import { defineAgent } from 'eve';\nexport default defineAgent({ description: 'Summarizes a support request.', model: 'provider/model' });\n",
+      "type": "file"
+    }
+  ]
+}

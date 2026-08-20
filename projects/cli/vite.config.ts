@@ -10,6 +10,7 @@ const libraryConfig = createLibraryConfig({
     '@moldea.ai/adapter-anthropic',
     '@moldea.ai/adapter-claude-agent-sdk',
     '@moldea.ai/adapter-cloudflare-agents',
+    '@moldea.ai/adapter-eve',
     '@moldea.ai/adapter-google-genai',
     '@moldea.ai/adapter-openai',
     '@moldea.ai/adapter-openai-agents-sdk',

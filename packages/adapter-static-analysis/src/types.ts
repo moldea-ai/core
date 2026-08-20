@@ -43,6 +43,7 @@ export type IStaticAnalysisPackageCompatibility = 'ambiguous' | 'supported' | 'u
 export interface IStaticAnalysisPackageObservation {
   readonly compatibility: IStaticAnalysisPackageCompatibility;
   readonly declarations: readonly IStaticAnalysisPackageDeclaration[];
+  readonly manifestPackageName?: string | null;
   readonly path: string;
 }
 
@@ -65,6 +66,7 @@ export interface IStaticAnalysisPackageReader {
 
 // configuration for nearest-manifest dependency discovery
 export interface IStaticAnalysisPackageDiscoveryOptions {
+  readonly includeManifestPackageName?: boolean;
   readonly packageName: string;
   readonly reader: IStaticAnalysisPackageReader;
   readonly signal?: AbortSignal;

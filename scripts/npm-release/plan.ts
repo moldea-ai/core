@@ -41,6 +41,7 @@ const createEmptyPublishedVersions = (): INpmReleaseWorkflowPlanSources['publish
   'adapter-openai': [],
   'adapter-openai-agents-sdk': [],
   'adapter-cloudflare-agents': [],
+  'adapter-eve': [],
   'adapter-vercel-ai-sdk': [],
   cli: [],
   core: [],
