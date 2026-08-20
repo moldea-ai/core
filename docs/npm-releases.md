@@ -18,6 +18,7 @@ Package-owned full documentation under `projects/<project>/docs/**` is repositor
 | `adapter-google-genai`      | `@moldea.ai/adapter-google-genai`      | `adapter-google-genai-v<version>`      |
 | `adapter-openai`            | `@moldea.ai/adapter-openai`            | `adapter-openai-v<version>`            |
 | `adapter-openai-agents-sdk` | `@moldea.ai/adapter-openai-agents-sdk` | `adapter-openai-agents-sdk-v<version>` |
+| `adapter-cloudflare-agents` | `@moldea.ai/adapter-cloudflare-agents` | `adapter-cloudflare-agents-v<version>` |
 | `adapter-vercel-ai-sdk`     | `@moldea.ai/adapter-vercel-ai-sdk`     | `adapter-vercel-ai-sdk-v<version>`     |
 | `cli`                       | `@moldea.ai/cli`                       | `cli-v<version>`                       |
 | `website-ui`                | `@moldea.ai/website-ui`                | `website-ui-v<version>`                |
@@ -83,9 +84,10 @@ npm requires a package to exist before it can be connected to a trusted publishe
    6. `@moldea.ai/adapter-openai`
    7. `@moldea.ai/adapter-openai-agents-sdk`
    8. `@moldea.ai/adapter-claude-agent-sdk`
-   9. `@moldea.ai/adapter-vercel-ai-sdk`
-   10. `@moldea.ai/cli`
-   11. `@moldea.ai/website-ui`
+   9. `@moldea.ai/adapter-cloudflare-agents`
+   10. `@moldea.ai/adapter-vercel-ai-sdk`
+   11. `@moldea.ai/cli`
+   12. `@moldea.ai/website-ui`
 
 Repository FS and Core require a compatible Repository version to exist on npm. Every package-backed runtime adapter requires compatible Repository and Core versions. The CLI requires the exact Repository, Repository FS, Core, and active adapter versions declared by its release.
 

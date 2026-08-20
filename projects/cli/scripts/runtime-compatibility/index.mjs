@@ -89,6 +89,11 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
       /^moldea\.ai-adapter-openai-agents-sdk-.+\.tgz$/u,
       '@moldea.ai/adapter-openai-agents-sdk',
     ),
+    '@moldea.ai/adapter-cloudflare-agents': selectPackageTarball(
+      tarballNames,
+      /^moldea\.ai-adapter-cloudflare-agents-.+\.tgz$/u,
+      '@moldea.ai/adapter-cloudflare-agents',
+    ),
     '@moldea.ai/adapter-vercel-ai-sdk': selectPackageTarball(
       tarballNames,
       /^moldea\.ai-adapter-vercel-ai-sdk-.+\.tgz$/u,
@@ -180,7 +185,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     };
 
     assertRuntimeInvariant(cliManifest?.name === '@moldea.ai/cli', 'The CLI identity is invalid.');
-    assertRuntimeInvariant(cliManifest?.version === '3.3.1', 'The CLI version is invalid.');
+    assertRuntimeInvariant(cliManifest?.version === '3.3.2', 'The CLI version is invalid.');
     assertRuntimeInvariant(
       cliManifest?.engines?.node === '^22.11.0 || ^24.11.0',
       'The CLI runtime range is invalid.',
@@ -191,6 +196,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
       '@moldea.ai/adapter-google-genai',
       '@moldea.ai/adapter-openai',
       '@moldea.ai/adapter-openai-agents-sdk',
+      '@moldea.ai/adapter-cloudflare-agents',
       '@moldea.ai/adapter-vercel-ai-sdk',
       '@moldea.ai/core',
       '@moldea.ai/repository',
@@ -210,7 +216,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
 
     assertRuntimeInvariant(versionResult.status === 0, 'The installed CLI version command failed.');
     assertRuntimeInvariant(versionResult.stderr === '', 'The version command wrote stderr.');
-    assertRuntimeInvariant(versionResult.stdout === '3.3.1\n', 'The version output is invalid.');
+    assertRuntimeInvariant(versionResult.stdout === '3.3.2\n', 'The version output is invalid.');
 
     const compatibilityResult = executeCli(
       executablePath,
@@ -233,6 +239,9 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     const openAiAgentsSdkAdapter = compatibilityEnvelope.result?.adapters?.find(
       ({ id }) => id === 'openai-agents-sdk',
     );
+    const cloudflareAgentsAdapter = compatibilityEnvelope.result?.adapters?.find(
+      ({ id }) => id === 'cloudflare-agents',
+    );
     const vercelAiSdkAdapter = compatibilityEnvelope.result?.adapters?.find(
       ({ id }) => id === 'vercel-ai-sdk',
     );
@@ -251,7 +260,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
       'The compatibility result is invalid.',
     );
     assertRuntimeInvariant(
-      compatibilityEnvelope.cliVersion === '3.3.1' &&
+      compatibilityEnvelope.cliVersion === '3.3.2' &&
         compatibilityEnvelope.schemaVersion === 1 &&
         compatibilityEnvelope.result?.outputSchemaVersion === 1,
       'The compatibility envelope is invalid.',
@@ -261,6 +270,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
         JSON.stringify([
           { name: '@moldea.ai/adapter-anthropic', version: '2.0.1' },
           { name: '@moldea.ai/adapter-claude-agent-sdk', version: '1.0.0' },
+          { name: '@moldea.ai/adapter-cloudflare-agents', version: '1.0.0' },
           { name: '@moldea.ai/adapter-google-genai', version: '1.0.3' },
           { name: '@moldea.ai/adapter-openai', version: '2.0.4' },
           { name: '@moldea.ai/adapter-openai-agents-sdk', version: '1.0.2' },
@@ -339,6 +349,25 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
         openAiAgentsSdkAdapter.matrix?.targets?.[0]?.id === 'typescript-agent-handoffs-0-16' &&
         openAiAgentsSdkAdapter.matrix?.targets?.[0]?.supportLevel === 'experimental',
       'The OpenAI Agents SDK compatibility claim is invalid.',
+    );
+    assertRuntimeInvariant(
+      cloudflareAgentsAdapter?.active === true &&
+        cloudflareAgentsAdapter.bundledVersion === '1.0.0' &&
+        cloudflareAgentsAdapter.matrix?.implementationStatus === 'available' &&
+        cloudflareAgentsAdapter.matrix?.compatibleCoreRange === '^2.0.0' &&
+        cloudflareAgentsAdapter.matrix?.runtimeGuidance?.expectation === 'recommended' &&
+        JSON.stringify(cloudflareAgentsAdapter.matrix?.supportedRepositoryFormatVersions) ===
+          '[1]' &&
+        cloudflareAgentsAdapter.matrix?.targets?.length === 2 &&
+        cloudflareAgentsAdapter.matrix.targets.some(
+          ({ id, supportLevel }) =>
+            id === 'typescript-think-0-16-ai-sdk-7' && supportLevel === 'experimental',
+        ) &&
+        cloudflareAgentsAdapter.matrix.targets.some(
+          ({ id, supportLevel }) =>
+            id === 'typescript-ai-chat-agent-0-10-ai-sdk-7' && supportLevel === 'experimental',
+        ),
+      'The Cloudflare Agents adapter is not active with its expected compatibility metadata.',
     );
     assertRuntimeInvariant(
       vercelAiSdkAdapter?.active === true &&

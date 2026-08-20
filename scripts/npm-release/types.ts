@@ -5,6 +5,7 @@ export type INpmReleaseMode = 'bootstrap' | 'trusted';
 export type INpmReleaseProject =
   | 'adapter-anthropic'
   | 'adapter-claude-agent-sdk'
+  | 'adapter-cloudflare-agents'
   | 'adapter-google-genai'
   | 'adapter-openai'
   | 'adapter-openai-agents-sdk'

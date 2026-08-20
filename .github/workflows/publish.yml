@@ -19,6 +19,7 @@ on:
           - adapter-openai
           - adapter-openai-agents-sdk
           - adapter-claude-agent-sdk
+          - adapter-cloudflare-agents
           - adapter-vercel-ai-sdk
           - cli
           - website-ui
@@ -354,6 +355,49 @@ jobs:
       mode: ${{ needs.plan.outputs.mode }}
       previous_version: ${{ needs.plan.outputs.adapter_claude_agent_sdk_previous_version }}
       project: adapter-claude-agent-sdk
+
+  release_adapter_cloudflare_agents:
+    name: Release Cloudflare Agents Adapter
+    needs:
+      - plan
+      - verify
+      - release_repository
+      - release_repository_fs
+      - release_core
+      - release_adapter_anthropic
+      - release_adapter_google_genai
+      - release_adapter_openai
+      - release_adapter_openai_agents_sdk
+      - release_adapter_claude_agent_sdk
+    if: >-
+      ${{
+        always() &&
+        needs.plan.outputs.adapter_cloudflare_agents == 'true' &&
+        needs.verify.result == 'success' &&
+        (needs.release_repository.result == 'success' ||
+          needs.release_repository.result == 'skipped') &&
+        (needs.release_repository_fs.result == 'success' ||
+          needs.release_repository_fs.result == 'skipped') &&
+        (needs.release_core.result == 'success' || needs.release_core.result == 'skipped') &&
+        (needs.release_adapter_anthropic.result == 'success' ||
+          needs.release_adapter_anthropic.result == 'skipped') &&
+        (needs.release_adapter_google_genai.result == 'success' ||
+          needs.release_adapter_google_genai.result == 'skipped') &&
+        (needs.release_adapter_openai.result == 'success' ||
+          needs.release_adapter_openai.result == 'skipped') &&
+        (needs.release_adapter_openai_agents_sdk.result == 'success' ||
+          needs.release_adapter_openai_agents_sdk.result == 'skipped') &&
+        (needs.release_adapter_claude_agent_sdk.result == 'success' ||
+          needs.release_adapter_claude_agent_sdk.result == 'skipped')
+      }}
+    permissions:
+      contents: write
+      id-token: write
+    uses: ./.github/workflows/publish-package.yml
+    with:
+      mode: ${{ needs.plan.outputs.mode }}
+      previous_version: ${{ needs.plan.outputs.adapter_cloudflare_agents_previous_version }}
+      project: adapter-cloudflare-agents
 
   release_adapter_vercel_ai_sdk:
     name: Release Vercel AI SDK Adapter

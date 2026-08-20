@@ -296,7 +296,144 @@ adapters:
       kind: package
       package: '@moldea.ai/adapter-cloudflare-agents'
       distribution: public
-    implementationStatus: planned
+      versionRange: '^1.0.0'
+    implementationStatus: available
+    supportedRepositoryFormatVersions:
+      - 1
+    compatibleCoreRange: '^2.0.0'
+    runtimeGuidance:
+      expectation: recommended
+      notes: Project-local guidance should document Cloudflare bindings, Durable Object wiring, and deployment-specific behavior outside the verified static source boundary.
+    targets:
+      - id: typescript-think-0-16-ai-sdk-7
+        kind: package
+        supportLevel: experimental
+        language: typescript
+        packages:
+          - ecosystem: npm
+            name: '@cloudflare/think'
+            role: primary
+            versionRange: '>=0.16.0 <0.17.0'
+          - ecosystem: npm
+            name: agents
+            role: companion
+            versionRange: '>=0.21.0 <0.22.0'
+          - ecosystem: npm
+            name: ai
+            role: companion
+            versionRange: '>=7.0.0 <8.0.0'
+        evidenceKinds:
+          - agent-definition
+          - handoff-registration
+          - instruction-loader
+          - language
+          - runtime-package
+          - schema
+          - tool-registration
+        bindingSupport:
+          runtime-agent:
+            relationship: partial
+            symbol: partial
+          instruction-loader:
+            relationship: partial
+            symbol: partial
+          tool-implementation:
+            relationship: partial
+            symbol: partial
+          tool-registration:
+            relationship: partial
+            symbol: partial
+          tool-input-schema:
+            relationship: partial
+            symbol: partial
+          tool-output-schema:
+            relationship: partial
+            symbol: partial
+        patterns:
+          - id: directly-exported-think-class
+            kind: agent
+            support: partial
+            description: Directly exported TypeScript classes extending an exact named Think import with closed class initialization.
+          - id: think-instruction-methods
+            kind: instruction-loader
+            support: partial
+            description: Direct loader calls returned by getSystemPrompt or supported closed configureSession chaining.
+          - id: closed-think-tools-map
+            kind: tool
+            support: partial
+            description: Repository-local AI SDK function tools and Cloudflare agentTool helpers active in a closed getTools map.
+        knownLimitations:
+          - Bare Agent classes, factories, indirect subclasses, decorators, executable fields, static blocks, computed members, generators, and non-pass-through constructors are outside the target.
+          - Dynamic session builders, onCompaction interpretation, runtime mutation, channel-provided tool replacement, and open tools maps are outside the target.
+          - Agent input and output schemas are not supported for Think.
+        lastVerifiedAt: '2026-08-19'
+      - id: typescript-ai-chat-agent-0-10-ai-sdk-7
+        kind: package
+        supportLevel: experimental
+        language: typescript
+        packages:
+          - ecosystem: npm
+            name: '@cloudflare/ai-chat'
+            role: primary
+            versionRange: '>=0.10.2 <0.11.0'
+          - ecosystem: npm
+            name: agents
+            role: companion
+            versionRange: '>=0.21.0 <0.22.0'
+          - ecosystem: npm
+            name: ai
+            role: companion
+            versionRange: '>=7.0.0 <8.0.0'
+        evidenceKinds:
+          - agent-definition
+          - handoff-registration
+          - instruction-loader
+          - language
+          - runtime-package
+          - runtime-pattern
+          - schema
+          - tool-registration
+        bindingSupport:
+          runtime-agent:
+            relationship: partial
+            symbol: partial
+          instruction-loader:
+            relationship: partial
+            symbol: partial
+          output-schema:
+            relationship: partial
+            symbol: partial
+          tool-implementation:
+            relationship: partial
+            symbol: partial
+          tool-registration:
+            relationship: partial
+            symbol: partial
+          tool-input-schema:
+            relationship: partial
+            symbol: partial
+          tool-output-schema:
+            relationship: partial
+            symbol: partial
+        patterns:
+          - id: directly-exported-ai-chat-agent-class
+            kind: agent
+            support: partial
+            description: Directly exported TypeScript classes extending an exact named AIChatAgent import with the supported onChatMessage signature.
+          - id: direct-ai-sdk-generation
+            kind: runtime
+            support: partial
+            description: Direct generateText or streamText calls in the onChatMessage method's own lexical body.
+          - id: ai-chat-structured-output-and-tools
+            kind: tool
+            support: partial
+            description: Output.object agent schemas, repository-local AI SDK function tools, and Cloudflare agentTool helpers in closed generation-request tools maps.
+        knownLimitations:
+          - Nested or indirect generation, request variables, prepareStep instruction interpretation, and generation functions other than generateText and streamText are outside the target.
+          - Output variants other than Output.object and all agent input schemas are outside the target.
+          - Dynamic, provider, MCP-generated, or inline tools without exact repository registration identities are outside the target.
+        lastVerifiedAt: '2026-08-19'
+    lastVerifiedAt: '2026-08-19'
   custom:
     implementation:
       kind: built-in

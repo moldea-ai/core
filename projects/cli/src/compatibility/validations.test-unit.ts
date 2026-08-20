@@ -136,6 +136,7 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
           dependencies: {
             '@moldea.ai/adapter-anthropic': '2.0.1',
             '@moldea.ai/adapter-claude-agent-sdk': '1.0.0',
+            '@moldea.ai/adapter-cloudflare-agents': '1.0.0',
             '@moldea.ai/adapter-google-genai': '1.0.3',
             '@moldea.ai/adapter-openai': '2.0.4',
             '@moldea.ai/adapter-openai-agents-sdk': '1.0.2',
@@ -161,6 +162,7 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
           createTestRuntimeAdapter('openai-agents-sdk'),
           createTestRuntimeAdapter('vercel-ai-sdk'),
           createTestRuntimeAdapter('google-genai'),
+          createTestRuntimeAdapter('cloudflare-agents'),
           createTestRuntimeAdapter('claude-agent-sdk'),
           createTestRuntimeAdapter('anthropic'),
         ],
@@ -174,7 +176,7 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
       [createTestRuntimeAdapter('openai'), createTestRuntimeAdapter('openai')],
     ],
     ['the built-in custom ID', [createTestRuntimeAdapter('custom')]],
-    ['a planned adapter', [createTestRuntimeAdapter('cloudflare-agents')]],
+    ['a planned adapter', [createTestRuntimeAdapter('eve')]],
   ])('rejects active registration containing %s', (_description, activeAdapters) => {
     const state = createTestCompatibilityState();
 
@@ -352,10 +354,10 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
     ],
   ])('rejects a planned entry carrying prohibited %s', (_description, mutate) => {
     const state = createTestCompatibilityState();
-    const plannedEntry = state.releaseMetadata.matrix.adapters['cloudflare-agents'];
+    const plannedEntry = state.releaseMetadata.matrix.adapters['eve'];
 
     if (plannedEntry === undefined) {
-      throw new TypeError('The planned Cloudflare Agents matrix entry is required.');
+      throw new TypeError('The planned Eve matrix entry is required.');
     }
 
     expect(
@@ -367,7 +369,7 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
             ...state.releaseMetadata.matrix,
             adapters: {
               ...state.releaseMetadata.matrix.adapters,
-              'cloudflare-agents': mutate(plannedEntry),
+              eve: mutate(plannedEntry),
             },
           },
         },

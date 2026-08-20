@@ -78,6 +78,7 @@ describe('createMoldeaCliCoreInspectionExecutor', () => {
     expect(coreFactoryInput.adapters.map(({ id }) => id)).toStrictEqual([
       'anthropic',
       'claude-agent-sdk',
+      'cloudflare-agents',
       'google-genai',
       'openai',
       'openai-agents-sdk',
@@ -105,6 +106,7 @@ describe('createMoldeaCliCoreInspectionExecutor', () => {
     expect(ACTIVE_RUNTIME_ADAPTERS.map(({ id }) => id)).toStrictEqual([
       'anthropic',
       'claude-agent-sdk',
+      'cloudflare-agents',
       'google-genai',
       'openai',
       'openai-agents-sdk',

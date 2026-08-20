@@ -1,0 +1,380 @@
+[
+  {
+    "agentId": "summary",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "targetId": "typescript-ai-chat-agent-0-10-ai-sdk-7"
+    },
+    "kind": "agent-definition",
+    "references": [
+      {
+        "path": "/src/agents.ts",
+        "symbol": "SummaryAgent"
+      }
+    ],
+    "runtimeName": "SummaryAgent",
+    "source": "cloudflare-agents"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "targetId": "typescript-think-0-16-ai-sdk-7"
+    },
+    "kind": "agent-definition",
+    "references": [
+      {
+        "path": "/src/agents.ts",
+        "symbol": "SupportAgent"
+      }
+    ],
+    "runtimeName": "SupportAgent",
+    "source": "cloudflare-agents"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "targetAgentId": "summary",
+      "toolName": "summarize"
+    },
+    "kind": "handoff-registration",
+    "references": [
+      {
+        "path": "/src/agents.ts",
+        "symbol": "SummaryAgent"
+      },
+      {
+        "path": "/src/tools.ts",
+        "symbol": "summaryHandoffTool"
+      }
+    ],
+    "runtimeName": "summarize",
+    "source": "cloudflare-agents"
+  },
+  {
+    "agentId": "summary",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {},
+    "kind": "instruction-loader",
+    "references": [
+      {
+        "path": "/src/instructions.ts",
+        "symbol": "loadSummaryInstruction"
+      }
+    ],
+    "runtimeName": "loadSummaryInstruction",
+    "source": "cloudflare-agents"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {},
+    "kind": "instruction-loader",
+    "references": [
+      {
+        "path": "/src/instructions.ts",
+        "symbol": "loadSupportInstruction"
+      }
+    ],
+    "runtimeName": "loadSupportInstruction",
+    "source": "cloudflare-agents"
+  },
+  {
+    "agentId": "summary",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "language": "typescript"
+    },
+    "kind": "language",
+    "references": [
+      {
+        "path": "/src/agents.ts",
+        "symbol": "SummaryAgent"
+      }
+    ],
+    "runtimeName": null,
+    "source": "cloudflare-agents"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "language": "typescript"
+    },
+    "kind": "language",
+    "references": [
+      {
+        "path": "/src/agents.ts",
+        "symbol": "SupportAgent"
+      }
+    ],
+    "runtimeName": null,
+    "source": "cloudflare-agents"
+  },
+  {
+    "agentId": "summary",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "compatibility": "supported",
+      "declaredRange": "^0.10.2",
+      "dependencyKind": "dependencies",
+      "targetId": "typescript-ai-chat-agent-0-10-ai-sdk-7"
+    },
+    "kind": "runtime-package",
+    "references": [
+      {
+        "path": "/package.json"
+      }
+    ],
+    "runtimeName": "@cloudflare/ai-chat",
+    "source": "cloudflare-agents"
+  },
+  {
+    "agentId": "summary",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "compatibility": "supported",
+      "declaredRange": "^0.21.0",
+      "dependencyKind": "dependencies",
+      "targetId": "typescript-ai-chat-agent-0-10-ai-sdk-7"
+    },
+    "kind": "runtime-package",
+    "references": [
+      {
+        "path": "/package.json"
+      }
+    ],
+    "runtimeName": "agents",
+    "source": "cloudflare-agents"
+  },
+  {
+    "agentId": "summary",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "compatibility": "supported",
+      "declaredRange": "^7.0.0",
+      "dependencyKind": "dependencies",
+      "targetId": "typescript-ai-chat-agent-0-10-ai-sdk-7"
+    },
+    "kind": "runtime-package",
+    "references": [
+      {
+        "path": "/package.json"
+      }
+    ],
+    "runtimeName": "ai",
+    "source": "cloudflare-agents"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "compatibility": "supported",
+      "declaredRange": "^0.16.0",
+      "dependencyKind": "dependencies",
+      "targetId": "typescript-think-0-16-ai-sdk-7"
+    },
+    "kind": "runtime-package",
+    "references": [
+      {
+        "path": "/package.json"
+      }
+    ],
+    "runtimeName": "@cloudflare/think",
+    "source": "cloudflare-agents"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "compatibility": "supported",
+      "declaredRange": "^0.21.0",
+      "dependencyKind": "dependencies",
+      "targetId": "typescript-think-0-16-ai-sdk-7"
+    },
+    "kind": "runtime-package",
+    "references": [
+      {
+        "path": "/package.json"
+      }
+    ],
+    "runtimeName": "agents",
+    "source": "cloudflare-agents"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "compatibility": "supported",
+      "declaredRange": "^7.0.0",
+      "dependencyKind": "dependencies",
+      "targetId": "typescript-think-0-16-ai-sdk-7"
+    },
+    "kind": "runtime-package",
+    "references": [
+      {
+        "path": "/package.json"
+      }
+    ],
+    "runtimeName": "ai",
+    "source": "cloudflare-agents"
+  },
+  {
+    "agentId": "summary",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "calls": "streamText"
+    },
+    "kind": "runtime-pattern",
+    "references": [
+      {
+        "path": "/src/agents.ts",
+        "symbol": "SummaryAgent"
+      }
+    ],
+    "runtimeName": "SummaryAgent",
+    "source": "cloudflare-agents"
+  },
+  {
+    "agentId": "summary",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "schemaRole": "agent-output"
+    },
+    "kind": "schema",
+    "references": [
+      {
+        "path": "/src/contracts.ts",
+        "symbol": "SummaryOutputSchema"
+      }
+    ],
+    "runtimeName": "SummaryOutputSchema",
+    "source": "cloudflare-agents"
+  },
+  {
+    "agentId": "summary",
+    "capabilityId": "find-order",
+    "capabilityKind": "tool",
+    "details": {
+      "schemaRole": "tool-input"
+    },
+    "kind": "schema",
+    "references": [
+      {
+        "path": "/src/contracts.ts",
+        "symbol": "FindOrderInputSchema"
+      }
+    ],
+    "runtimeName": "FindOrderInputSchema",
+    "source": "cloudflare-agents"
+  },
+  {
+    "agentId": "summary",
+    "capabilityId": "find-order",
+    "capabilityKind": "tool",
+    "details": {
+      "schemaRole": "tool-output"
+    },
+    "kind": "schema",
+    "references": [
+      {
+        "path": "/src/contracts.ts",
+        "symbol": "FindOrderOutputSchema"
+      }
+    ],
+    "runtimeName": "FindOrderOutputSchema",
+    "source": "cloudflare-agents"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": "find-order",
+    "capabilityKind": "tool",
+    "details": {
+      "schemaRole": "tool-input"
+    },
+    "kind": "schema",
+    "references": [
+      {
+        "path": "/src/contracts.ts",
+        "symbol": "FindOrderInputSchema"
+      }
+    ],
+    "runtimeName": "FindOrderInputSchema",
+    "source": "cloudflare-agents"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": "find-order",
+    "capabilityKind": "tool",
+    "details": {
+      "schemaRole": "tool-output"
+    },
+    "kind": "schema",
+    "references": [
+      {
+        "path": "/src/contracts.ts",
+        "symbol": "FindOrderOutputSchema"
+      }
+    ],
+    "runtimeName": "FindOrderOutputSchema",
+    "source": "cloudflare-agents"
+  },
+  {
+    "agentId": "summary",
+    "capabilityId": "find-order",
+    "capabilityKind": "tool",
+    "details": {
+      "toolName": "find_order"
+    },
+    "kind": "tool-registration",
+    "references": [
+      {
+        "path": "/src/implementations.ts",
+        "symbol": "findOrder"
+      },
+      {
+        "path": "/src/tools.ts",
+        "symbol": "findOrderTool"
+      }
+    ],
+    "runtimeName": "find_order",
+    "source": "cloudflare-agents"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": "find-order",
+    "capabilityKind": "tool",
+    "details": {
+      "toolName": "find_order"
+    },
+    "kind": "tool-registration",
+    "references": [
+      {
+        "path": "/src/implementations.ts",
+        "symbol": "findOrder"
+      },
+      {
+        "path": "/src/tools.ts",
+        "symbol": "findOrderTool"
+      }
+    ],
+    "runtimeName": "find_order",
+    "source": "cloudflare-agents"
+  }
+]

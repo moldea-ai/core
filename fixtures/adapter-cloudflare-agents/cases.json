@@ -1,0 +1,61 @@
+{
+  "manifest": "version: 1\nagents:\n  support:\n    runtime:\n      id: cloudflare-agents\n    bindings:\n      runtimeAgent:\n        path: /src/agents.ts\n        symbol: SupportAgent\n      instructionLoader:\n        path: /src/instructions.ts\n        symbol: loadSupportInstruction\n    tools:\n      find-order:\n        name: find_order\n        description: Finds an order.\n        implementation:\n          path: /src/implementations.ts\n          symbol: findOrder\n        registration:\n          path: /src/tools.ts\n          symbol: findOrderTool\n        inputSchema:\n          path: /src/contracts.ts\n          symbol: FindOrderInputSchema\n        outputSchema:\n          path: /src/contracts.ts\n          symbol: FindOrderOutputSchema\n  summary:\n    runtime:\n      id: cloudflare-agents\n    bindings:\n      runtimeAgent:\n        path: /src/agents.ts\n        symbol: SummaryAgent\n      instructionLoader:\n        path: /src/instructions.ts\n        symbol: loadSummaryInstruction\n      outputSchema:\n        path: /src/contracts.ts\n        symbol: SummaryOutputSchema\n    tools:\n      find-order:\n        name: find_order\n        description: Finds an order.\n        implementation:\n          path: /src/implementations.ts\n          symbol: findOrder\n        registration:\n          path: /src/tools.ts\n          symbol: findOrderTool\n        inputSchema:\n          path: /src/contracts.ts\n          symbol: FindOrderInputSchema\n        outputSchema:\n          path: /src/contracts.ts\n          symbol: FindOrderOutputSchema\n",
+  "entries": [
+    {
+      "path": "/package.json",
+      "text": "{\"dependencies\":{\"@cloudflare/think\":\"^0.16.0\",\"@cloudflare/ai-chat\":\"^0.10.2\",\"agents\":\"^0.21.0\",\"ai\":\"^7.0.0\"}}",
+      "type": "file"
+    },
+    { "path": "/moldea/project.md", "text": "# Fixture project\n", "type": "file" },
+    {
+      "path": "/moldea/agents/support/description.md",
+      "text": "Supports customers.\n",
+      "type": "file"
+    },
+    {
+      "path": "/moldea/agents/support/instruction.md",
+      "text": "You are the `support` agent.\n",
+      "type": "file"
+    },
+    {
+      "path": "/moldea/agents/summary/description.md",
+      "text": "Summarizes requests.\n",
+      "type": "file"
+    },
+    {
+      "path": "/moldea/agents/summary/handoff-description.md",
+      "text": "Summarizes a support request.\n",
+      "type": "file"
+    },
+    {
+      "path": "/moldea/agents/summary/instruction.md",
+      "text": "You are the `summary` agent.\n",
+      "type": "file"
+    },
+    {
+      "path": "/src/contracts.ts",
+      "text": "export const SummaryOutputSchema = {};\nexport const FindOrderInputSchema = {};\nexport const FindOrderOutputSchema = {};\n",
+      "type": "file"
+    },
+    {
+      "path": "/src/instructions.ts",
+      "text": "export const loadSupportInstruction = () => 'support';\nexport const loadSummaryInstruction = () => 'summary';\n",
+      "type": "file"
+    },
+    {
+      "path": "/src/implementations.ts",
+      "text": "export const findOrder = async () => ({ id: '1' });\n",
+      "type": "file"
+    },
+    {
+      "path": "/src/tools.ts",
+      "text": "import { agentTool } from 'agents/agent-tools';\nimport { tool } from 'ai';\nimport { SummaryAgent } from './agents.js';\nimport { FindOrderInputSchema, FindOrderOutputSchema } from './contracts.js';\nimport { findOrder } from './implementations.js';\nexport const findOrderTool = tool({ inputSchema: FindOrderInputSchema, outputSchema: FindOrderOutputSchema, execute: findOrder });\nexport const summaryHandoffTool = agentTool(SummaryAgent, { description: 'Summarizes a support request.' });\n",
+      "type": "file"
+    },
+    {
+      "path": "/src/agents.ts",
+      "text": "import { AIChatAgent } from '@cloudflare/ai-chat';\nimport { Think } from '@cloudflare/think';\nimport { Output, streamText } from 'ai';\nimport { SummaryOutputSchema } from './contracts.js';\nimport { loadSummaryInstruction, loadSupportInstruction } from './instructions.js';\nimport { findOrderTool, summaryHandoffTool } from './tools.js';\nexport class SupportAgent extends Think { getSystemPrompt() { return loadSupportInstruction(); } getTools() { return { find_order: findOrderTool, summarize: summaryHandoffTool }; } }\nexport class SummaryAgent extends AIChatAgent { onChatMessage(onFinish, options?) { return streamText({ instructions: loadSummaryInstruction(), output: Output.object({ schema: SummaryOutputSchema }), tools: { find_order: findOrderTool } }); } }\n",
+      "type": "file"
+    }
+  ]
+}
