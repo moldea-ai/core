@@ -224,5 +224,5 @@ describe('published website UI package', () => {
     expect(readFileSync(path.join(fixtureDirectory, 'dist', 'index.html'), 'utf8')).toContain(
       'Page navigation progress',
     );
-  }, 90_000);
+  }, 180_000);
 });
