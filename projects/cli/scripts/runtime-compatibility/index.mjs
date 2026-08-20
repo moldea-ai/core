@@ -270,10 +270,10 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
         JSON.stringify([
           { name: '@moldea.ai/adapter-anthropic', version: '2.0.1' },
           { name: '@moldea.ai/adapter-claude-agent-sdk', version: '1.0.0' },
+          { name: '@moldea.ai/adapter-cloudflare-agents', version: '1.0.0' },
           { name: '@moldea.ai/adapter-google-genai', version: '1.0.3' },
           { name: '@moldea.ai/adapter-openai', version: '2.0.4' },
           { name: '@moldea.ai/adapter-openai-agents-sdk', version: '1.0.2' },
-          { name: '@moldea.ai/adapter-cloudflare-agents', version: '1.0.0' },
           { name: '@moldea.ai/adapter-vercel-ai-sdk', version: '1.0.0' },
           { name: '@moldea.ai/core', version: '2.0.0' },
           { name: '@moldea.ai/repository', version: '1.0.1' },
