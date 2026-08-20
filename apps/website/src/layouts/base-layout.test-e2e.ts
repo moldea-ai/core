@@ -477,9 +477,11 @@ test('shows the same company marks in the compatibility summary and accordions',
     name: 'Official moldea runtime adapter compatibility summary',
   });
   const compatibilityAccordions = page.locator('details');
-  const vercelAiSdkRow = compatibilityTable.getByRole('row', { name: /vercel-ai-sdk/ });
-
-  await expect(vercelAiSdkRow.getByText('experimental', { exact: true })).toHaveCount(1);
+  await expect(
+    compatibilityTable.getByRole('link', {
+      name: /typescript-(?:generate-stream-text|tool-loop-agent)-7, experimental/u,
+    }),
+  ).toHaveCount(2);
 
   for (const [companyName, expectedCount] of [
     ['Anthropic', 2],
