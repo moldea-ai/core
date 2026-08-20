@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, test } from 'vitest';
 
-import type { IStaticAnalysisModuleValueSource } from '../types.js';
+import type { IStaticAnalysisModuleValueSource, IStaticAnalysisSourceResult } from '../types.js';
 import { analyzeTypeScriptModule } from './source-analysis.js';
 import { resolveStaticString } from './static-strings.js';
 
@@ -90,6 +90,59 @@ describe('resolveStaticString', () => {
       await expect(
         resolveStaticString({ ...options, expression: interpolated }),
       ).resolves.toStrictEqual({ kind: 'unsupported' });
+    }
+  });
+
+  test.each([
+    [{ kind: 'invalid-text' as const }, '/src/metadata.ts', null],
+    [
+      {
+        kind: 'invalid-syntax' as const,
+        range: {
+          end: { column: 2, line: 1, offset: 1 },
+          start: { column: 1, line: 1, offset: 0 },
+        },
+      },
+      '/src/metadata.ts',
+      {
+        end: { column: 2, line: 1, offset: 1 },
+        start: { column: 1, line: 1, offset: 0 },
+      },
+    ],
+  ])('reports imported $kind sources', async (sourceFailure, expectedPath, expectedRange) => {
+    const analysis = createAnalysis(
+      '/src/runtime.ts',
+      "import { routingName } from './metadata.js';\nexport const localName = routingName;\n",
+    );
+    const expression = analysis.moduleConstDeclarations.get('localName')?.initializer;
+    const observedFailures: Array<{
+      readonly path: string;
+      readonly result: Exclude<IStaticAnalysisSourceResult, { readonly kind: 'valid' }>;
+    }> = [];
+
+    expect(expression).toBeDefined();
+
+    if (expression !== undefined) {
+      await expect(
+        resolveStaticString({
+          analysis,
+          analyzeSource: () => Promise.resolve(sourceFailure),
+          expression,
+          getEntry: (path) =>
+            Promise.resolve(path === '/src/metadata.ts' ? { path, type: 'file' } : null),
+          onSourceFailure: (path, result) => observedFailures.push({ path, result }),
+          parsePath: (path) => path,
+        }),
+      ).resolves.toStrictEqual({ kind: 'unsupported' });
+      expect(observedFailures).toStrictEqual([
+        {
+          path: expectedPath,
+          result:
+            expectedRange === null
+              ? { kind: 'invalid-text' }
+              : { kind: 'invalid-syntax', range: expectedRange },
+        },
+      ]);
     }
   });
 });

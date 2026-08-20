@@ -17,6 +17,11 @@ export type {
   IStaticAnalysisPackageDiscoveryResult,
   IStaticAnalysisPackageObservation,
   IStaticAnalysisPackageReader,
+  IStaticAnalysisPackagesDiscoveryOptions,
+  IStaticAnalysisPackagesDiscoveryResult,
+  IStaticAnalysisPackagesObservation,
+  IStaticAnalysisPackageTarget,
+  IStaticAnalysisDiscoveredPackage,
   IStaticAnalysisReference,
   IStaticAnalysisRelationshipResult,
   IStaticAnalysisRequest,
@@ -41,7 +46,11 @@ export type {
 export { createInspectionSession } from './inspection-session/index.js';
 
 // package discovery
-export { createPackageManifestCandidatePaths, discoverPackage } from './package-discovery/index.js';
+export {
+  createPackageManifestCandidatePaths,
+  discoverPackage,
+  discoverPackages,
+} from './package-discovery/index.js';
 
 // text
 export { createSourceLocator, getUnicodeScalarLength, normalizeText } from './text/index.js';

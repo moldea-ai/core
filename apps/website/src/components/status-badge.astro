@@ -2,13 +2,15 @@
 interface Props {
   kind: 'available' | 'deprecated' | 'experimental' | 'in-development' | 'planned' | 'supported';
   label?: string;
+  truncate?: boolean;
 }
 
-const { kind, label = kind } = Astro.props;
+const { kind, label = kind, truncate = false } = Astro.props;
 const styles = {
   available: 'border-foreground/25 bg-secondary text-foreground',
-  deprecated: 'border-destructive/40 bg-destructive/10 text-foreground',
-  experimental: 'border-warning/60 bg-warning/15 text-warning-foreground dark:text-foreground',
+  deprecated: 'border-dotted border-destructive/40 bg-destructive/10 text-foreground',
+  experimental:
+    'border-dashed border-warning/60 bg-warning/15 text-warning-foreground dark:text-foreground',
   'in-development': 'border-info/40 bg-info/10 text-foreground',
   planned: 'border-border bg-muted text-muted-foreground',
   supported: 'border-foreground/25 bg-secondary text-foreground',
@@ -17,7 +19,8 @@ const styles = {
 
 <span
   class:list={[
-    'inline-flex min-h-6 items-center rounded-full border px-2.5 py-1 text-[0.68rem] font-bold tracking-[0.08em] uppercase',
+    'min-h-6 max-w-full rounded-full border px-2.5 py-1 text-start text-[0.68rem] font-bold tracking-[0.08em] uppercase',
+    truncate ? 'block min-w-0 truncate' : 'inline-flex items-center break-words whitespace-normal',
     styles[kind],
   ]}
 >

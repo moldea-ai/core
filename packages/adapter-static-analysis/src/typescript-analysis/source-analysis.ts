@@ -18,6 +18,9 @@ import {
 import { unwrapExpression } from './expressions.js';
 import { indexSafeModuleArrayNames } from './requests.js';
 
+const TYPESCRIPT_DECLARATION_EXTENSIONS = ['.d.ts', '.d.tsx', '.d.mts', '.d.cts'] as const;
+const TYPESCRIPT_SOURCE_EXTENSIONS = ['.ts', '.tsx', '.mts'] as const;
+
 const getScriptKind = (path: string): ts.ScriptKind =>
   path.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
 
@@ -163,7 +166,8 @@ export const analyzeSource = (
  * @returns Whether its extension is supported.
  */
 export const isSupportedTypeScriptSourcePath = (path: string): boolean =>
-  ['.ts', '.tsx', '.mts'].some((extension) => path.endsWith(extension));
+  !TYPESCRIPT_DECLARATION_EXTENSIONS.some((extension) => path.endsWith(extension)) &&
+  TYPESCRIPT_SOURCE_EXTENSIONS.some((extension) => path.endsWith(extension));
 
 /**
  * Classifies a direct exported runtime-agent function and exposes its body.

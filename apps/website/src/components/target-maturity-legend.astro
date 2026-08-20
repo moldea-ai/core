@@ -1,0 +1,29 @@
+---
+import StatusBadge from './status-badge.astro';
+---
+
+<section
+  class="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2"
+  aria-labelledby="target-maturity-legend-title"
+>
+  <h2
+    id="target-maturity-legend-title"
+    class="text-xs font-bold tracking-[0.12em] text-muted-foreground uppercase"
+  >
+    Target maturity
+  </h2>
+  <ul
+    class="flex flex-wrap gap-2"
+    aria-label="Target maturity legend"
+  >
+    <li title="Production-ready within its exact published scope.">
+      <StatusBadge kind="supported" />
+    </li>
+    <li title="Verified and fixture-backed, but not production-ready.">
+      <StatusBadge kind="experimental" />
+    </li>
+    <li title="Documented for existing users; new adoption is discouraged.">
+      <StatusBadge kind="deprecated" />
+    </li>
+  </ul>
+</section>

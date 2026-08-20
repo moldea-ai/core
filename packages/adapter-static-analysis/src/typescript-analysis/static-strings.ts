@@ -101,6 +101,7 @@ const resolveStaticStringExpression = async <
   const importedResult = await options.analyzeSource(importedPath);
 
   if (importedResult.kind !== 'valid') {
+    options.onSourceFailure?.(importedPath, importedResult);
     visited.delete(key);
     return Object.freeze({ kind: 'unsupported' });
   }

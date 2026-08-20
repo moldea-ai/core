@@ -74,6 +74,38 @@ export interface IStaticAnalysisPackageDiscoveryOptions {
   readonly supportedRange: string;
 }
 
+// one package target inspected from the nearest owning manifest
+export interface IStaticAnalysisPackageTarget {
+  readonly packageName: string;
+  readonly supportedRange: string;
+}
+
+// one package's declarations and collective compatibility in an owning manifest
+export interface IStaticAnalysisDiscoveredPackage {
+  readonly compatibility: IStaticAnalysisPackageCompatibility | 'absent';
+  readonly declarations: readonly IStaticAnalysisPackageDeclaration[];
+  readonly packageName: string;
+}
+
+// nearest owning manifest observation for multiple package targets
+export interface IStaticAnalysisPackagesObservation {
+  readonly packages: readonly IStaticAnalysisDiscoveredPackage[];
+  readonly path: string;
+}
+
+export type IStaticAnalysisPackagesDiscoveryResult =
+  | { readonly kind: 'absent' }
+  | { readonly kind: 'invalid'; readonly path: string }
+  | { readonly kind: 'observed'; readonly observation: IStaticAnalysisPackagesObservation };
+
+// configuration for one nearest-manifest read covering multiple packages
+export interface IStaticAnalysisPackagesDiscoveryOptions {
+  readonly packages: readonly IStaticAnalysisPackageTarget[];
+  readonly reader: IStaticAnalysisPackageReader;
+  readonly signal?: AbortSignal;
+  readonly sourcePath: string;
+}
+
 // static ESM named import resolved within one source file
 export interface IStaticAnalysisNamedImport {
   readonly importedName: string;
@@ -171,6 +203,10 @@ export interface IStaticAnalysisStaticStringOptions<
   >;
   readonly expression: ts.Expression;
   readonly getEntry: (path: TPath) => Promise<TEntry | null>;
+  readonly onSourceFailure?: (
+    path: TPath,
+    result: Exclude<IStaticAnalysisSourceResult, { readonly kind: 'valid' }>,
+  ) => void;
   readonly parsePath: (path: string) => TPath;
   readonly signal?: AbortSignal;
 }

@@ -21,6 +21,10 @@ export const ACTIVE_RUNTIME_ADAPTER_RELEASE_DEFINITIONS = Object.freeze([
     supportedRepositoryFormatVersions: [1],
   },
   {
+    id: 'langchain',
+    supportedRepositoryFormatVersions: [1],
+  },
+  {
     id: 'openai',
     supportedRepositoryFormatVersions: [1],
   },

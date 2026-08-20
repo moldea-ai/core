@@ -1,0 +1,50 @@
+{
+  "manifest": "version: 1\nagents:\n  support:\n    runtime:\n      id: langchain\n    bindings:\n      runtimeAgent:\n        path: /src/agent.ts\n        symbol: supportAgent\n      instructionLoader:\n        path: /src/instructions.ts\n        symbol: loadSupportInstruction\n      outputSchema:\n        path: /src/contracts.ts\n        symbol: SupportOutputSchema\n    tools:\n      find-order:\n        name: find_order\n        description: Finds an order.\n        implementation:\n          path: /src/implementations.ts\n          symbol: findOrder\n        registration:\n          path: /src/tools.ts\n          symbol: findOrderTool\n        inputSchema:\n          path: /src/contracts.ts\n          symbol: FindOrderInputSchema\n",
+  "entries": [
+    {
+      "path": "/package.json",
+      "text": "{\"dependencies\":{\"@langchain/core\":\"~1.2.8\",\"langchain\":\"~1.5.9\"}}",
+      "type": "file"
+    },
+    {
+      "path": "/moldea/project.md",
+      "text": "# Fixture project\n",
+      "type": "file"
+    },
+    {
+      "path": "/moldea/agents/support/description.md",
+      "text": "Supports customers.\n",
+      "type": "file"
+    },
+    {
+      "path": "/moldea/agents/support/instruction.md",
+      "text": "You are the `support` agent.\n",
+      "type": "file"
+    },
+    {
+      "path": "/src/contracts.ts",
+      "text": "export const SupportOutputSchema = {};\nexport const FindOrderInputSchema = {};\n",
+      "type": "file"
+    },
+    {
+      "path": "/src/instructions.ts",
+      "text": "export const loadSupportInstruction = () => 'support';\n",
+      "type": "file"
+    },
+    {
+      "path": "/src/implementations.ts",
+      "text": "export const findOrder = async () => ({ id: '1' });\n",
+      "type": "file"
+    },
+    {
+      "path": "/src/tools.ts",
+      "text": "import { tool } from '@langchain/core/tools';\nimport { FindOrderInputSchema } from './contracts.js';\nimport { findOrder } from './implementations.js';\nexport const findOrderTool = tool(findOrder, { name: 'find_order', description: 'Finds an order.', schema: FindOrderInputSchema });\n",
+      "type": "file"
+    },
+    {
+      "path": "/src/agent.ts",
+      "text": "import { createAgent, providerStrategy, SystemMessage } from 'langchain';\nimport { SupportOutputSchema } from './contracts.js';\nimport { loadSupportInstruction } from './instructions.js';\nimport { findOrderTool } from './tools.js';\nconst MIDDLEWARE = [];\nconst TOOLS = [findOrderTool];\nexport const supportAgent = createAgent({ model: 'openai:gpt-4o', name: 'support-runtime', systemPrompt: new SystemMessage(loadSupportInstruction()), responseFormat: providerStrategy({ schema: SupportOutputSchema, strict: true }), middleware: MIDDLEWARE, tools: TOOLS });\n",
+      "type": "file"
+    }
+  ]
+}

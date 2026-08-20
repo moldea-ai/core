@@ -4,7 +4,7 @@ The `packages` project is the open-source package monorepo for `moldea`. It deve
 
 The repository is intentionally separate from the hosted [`platform`](https://github.com/moldea-ai/platform) monorepo. It contains reusable package products and their shared development infrastructure, not Cloud applications, hosted APIs, runtime infrastructure, or deployment configuration.
 
-`@moldea.ai/repository`, `@moldea.ai/repository-fs`, `@moldea.ai/core`, `@moldea.ai/adapter-anthropic`, `@moldea.ai/adapter-claude-agent-sdk`, `@moldea.ai/adapter-cloudflare-agents`, `@moldea.ai/adapter-eve`, `@moldea.ai/adapter-google-genai`, `@moldea.ai/adapter-openai`, `@moldea.ai/adapter-openai-agents-sdk`, `@moldea.ai/adapter-vercel-ai-sdk`, `@moldea.ai/cli`, and `@moldea.ai/website-ui` form the available package set. Repository and Core provide the source-neutral reader and universal interpretation foundations, Repository FS supplies the coherent local-filesystem reader, the provider and agent-SDK adapters contribute static evidence for their experimental targets, the CLI composes them into the complete version `1` read-only executable, and Website UI provides the shared Astro and Tailwind foundations for moldea public websites. The built-in `custom` runtime and package-backed `anthropic`, `claude-agent-sdk`, `cloudflare-agents`, `eve`, `google-genai`, `openai`, `openai-agents-sdk`, and `vercel-ai-sdk` runtimes are verified as available; the remaining package-backed adapters stay `planned`. Real tarball installation and execution remain the release boundary for every package version.
+`@moldea.ai/repository`, `@moldea.ai/repository-fs`, `@moldea.ai/core`, `@moldea.ai/adapter-anthropic`, `@moldea.ai/adapter-claude-agent-sdk`, `@moldea.ai/adapter-cloudflare-agents`, `@moldea.ai/adapter-eve`, `@moldea.ai/adapter-google-genai`, `@moldea.ai/adapter-langchain`, `@moldea.ai/adapter-openai`, `@moldea.ai/adapter-openai-agents-sdk`, `@moldea.ai/adapter-vercel-ai-sdk`, `@moldea.ai/cli`, and `@moldea.ai/website-ui` form the available package set. Repository and Core provide the source-neutral reader and universal interpretation foundations, Repository FS supplies the coherent local-filesystem reader, the provider and agent-SDK adapters contribute static evidence for their experimental targets, the CLI composes them into the complete version `1` read-only executable, and Website UI provides the shared Astro and Tailwind foundations for moldea public websites. The built-in `custom` runtime and package-backed `anthropic`, `claude-agent-sdk`, `cloudflare-agents`, `eve`, `google-genai`, `langchain`, `openai`, `openai-agents-sdk`, and `vercel-ai-sdk` runtimes are verified as available; the LangGraph adapter stays `planned`. Real tarball installation and execution remain the release boundary for every package version.
 
 ## Specifications
 
@@ -20,6 +20,7 @@ The product and package specifications are currently maintained in the `platform
 - [`@moldea.ai/adapter-cloudflare-agents`](https://github.com/moldea-ai/platform/blob/main/moldea/context/adapter-cloudflare-agents-package.md): experimental TypeScript Cloudflare Think and AIChatAgent inspection targets.
 - [`@moldea.ai/adapter-eve`](https://github.com/moldea-ai/platform/blob/main/moldea/context/adapter-eve-package.md): experimental TypeScript Eve filesystem-agent inspection target.
 - [`@moldea.ai/adapter-google-genai`](https://github.com/moldea-ai/platform/blob/main/moldea/context/adapter-google-genai-package.md): experimental TypeScript Google Gen AI SDK inspection target.
+- [`@moldea.ai/adapter-langchain`](https://github.com/moldea-ai/platform/blob/main/moldea/context/adapter-langchain-package.md): experimental TypeScript LangChain `createAgent` inspection target.
 - [`@moldea.ai/adapter-openai`](https://github.com/moldea-ai/platform/blob/main/moldea/context/adapter-openai-package.md): experimental TypeScript OpenAI Responses API inspection target.
 - [`@moldea.ai/adapter-openai-agents-sdk`](https://github.com/moldea-ai/platform/blob/main/moldea/context/adapter-openai-agents-sdk-package.md): experimental TypeScript OpenAI Agents SDK agent and handoff inspection target.
 - [`@moldea.ai/adapter-vercel-ai-sdk`](https://github.com/moldea-ai/platform/blob/main/moldea/context/adapter-vercel-ai-sdk-package.md): experimental TypeScript Vercel AI SDK agent and generation inspection targets.
@@ -53,6 +54,7 @@ projects/
   adapter-cloudflare-agents/  # Cloudflare Think and AIChatAgent runtime adapter
   adapter-eve/                # Eve filesystem-agent runtime adapter
   adapter-google-genai/        # Google Gen AI generate-content runtime adapter
+  adapter-langchain/           # LangChain createAgent runtime adapter
   adapter-openai/              # OpenAI Responses API runtime adapter
   adapter-openai-agents-sdk/   # OpenAI Agents SDK runtime adapter
   adapter-vercel-ai-sdk/       # Vercel AI SDK runtime adapter
@@ -81,7 +83,6 @@ An arrow means that the package on the left depends on the package on the right.
 
 ```text
 repository-fs       → repository
-repository-github   → repository
 core                → repository
 adapter-*           → core
 cli                 → repository + repository-fs + core + active adapter packages
@@ -92,24 +93,23 @@ Shared internal packages may support first-class projects but never depend on th
 
 ## Package catalog
 
-| Project                     | Package                                | Distribution      |
-| --------------------------- | -------------------------------------- | ----------------- |
-| `repository`                | `@moldea.ai/repository`                | Public            |
-| `repository-fs`             | `@moldea.ai/repository-fs`             | Public            |
-| `repository-github`         | `@moldea.ai/repository-github`         | Private initially |
-| `core`                      | `@moldea.ai/core`                      | Public            |
-| `cli`                       | `@moldea.ai/cli`                       | Public            |
-| `adapter-anthropic`         | `@moldea.ai/adapter-anthropic`         | Public            |
-| `adapter-claude-agent-sdk`  | `@moldea.ai/adapter-claude-agent-sdk`  | Public            |
-| `adapter-cloudflare-agents` | `@moldea.ai/adapter-cloudflare-agents` | Public            |
-| `adapter-eve`               | `@moldea.ai/adapter-eve`               | Public            |
-| `adapter-google-genai`      | `@moldea.ai/adapter-google-genai`      | Public            |
-| `adapter-langchain`         | `@moldea.ai/adapter-langchain`         | Public            |
-| `adapter-langgraph`         | `@moldea.ai/adapter-langgraph`         | Public            |
-| `adapter-openai`            | `@moldea.ai/adapter-openai`            | Public            |
-| `adapter-openai-agents-sdk` | `@moldea.ai/adapter-openai-agents-sdk` | Public            |
-| `adapter-vercel-ai-sdk`     | `@moldea.ai/adapter-vercel-ai-sdk`     | Public            |
-| `website-ui`                | `@moldea.ai/website-ui`                | Public            |
+| Project                     | Package                                | Distribution |
+| --------------------------- | -------------------------------------- | ------------ |
+| `repository`                | `@moldea.ai/repository`                | Public       |
+| `repository-fs`             | `@moldea.ai/repository-fs`             | Public       |
+| `core`                      | `@moldea.ai/core`                      | Public       |
+| `cli`                       | `@moldea.ai/cli`                       | Public       |
+| `adapter-anthropic`         | `@moldea.ai/adapter-anthropic`         | Public       |
+| `adapter-claude-agent-sdk`  | `@moldea.ai/adapter-claude-agent-sdk`  | Public       |
+| `adapter-cloudflare-agents` | `@moldea.ai/adapter-cloudflare-agents` | Public       |
+| `adapter-eve`               | `@moldea.ai/adapter-eve`               | Public       |
+| `adapter-google-genai`      | `@moldea.ai/adapter-google-genai`      | Public       |
+| `adapter-langchain`         | `@moldea.ai/adapter-langchain`         | Public       |
+| `adapter-langgraph`         | `@moldea.ai/adapter-langgraph`         | Public       |
+| `adapter-openai`            | `@moldea.ai/adapter-openai`            | Public       |
+| `adapter-openai-agents-sdk` | `@moldea.ai/adapter-openai-agents-sdk` | Public       |
+| `adapter-vercel-ai-sdk`     | `@moldea.ai/adapter-vercel-ai-sdk`     | Public       |
+| `website-ui`                | `@moldea.ai/website-ui`                | Public       |
 
 The catalog records approved architecture, not implementation or release status. The `custom` adapter remains built into `@moldea.ai/core` and has no separate package project.
 
@@ -199,4 +199,4 @@ A push to `main` automatically selects every release-relevant changed public pro
 
 ## Initial implementation sequence
 
-The first implementation project was `@moldea.ai/repository`, followed by its in-memory reader and shared conformance suite. Core's universal behavior was then completed through that memory-reader boundary, followed by Repository FS, the CLI's installed-tarball runtime boundary, and the first official package-backed adapters. The Anthropic, Claude Agent SDK, Google Gen AI, OpenAI, OpenAI Agents SDK, and Vercel AI SDK adapters now own experimental TypeScript Messages, query/subagent, generate-content, Responses API, agent-handoff, and ToolLoopAgent/direct-generation targets with deterministic fixtures, diagnostics, evidence, package metadata, and packed-runtime verification. Their provider-neutral source analysis, relationship classification, and operation-local inspection caches live in the private `@moldea.ai/adapter-static-analysis` package and are bundled into each public adapter artifact. Website UI now owns the reusable public-website foundation independently of the runtime package chain. Package publication remains an explicit independently versioned release operation; the remaining official package-backed adapters stay `planned` until their implementations and fixtures support verified compatibility claims.
+The first implementation project was `@moldea.ai/repository`, followed by its in-memory reader and shared conformance suite. Core's universal behavior was then completed through that memory-reader boundary, followed by Repository FS, the CLI's installed-tarball runtime boundary, and the first official package-backed adapters. The Anthropic, Claude Agent SDK, Google Gen AI, LangChain, OpenAI, OpenAI Agents SDK, and Vercel AI SDK adapters now own experimental TypeScript Messages, query/subagent, generate-content, `createAgent`, Responses API, agent-handoff, and ToolLoopAgent/direct-generation targets with deterministic fixtures, diagnostics, evidence, package metadata, and packed-runtime verification. Their provider-neutral source analysis, relationship classification, and operation-local inspection caches live in the private `@moldea.ai/adapter-static-analysis` package and are bundled into each public adapter artifact. Website UI now owns the reusable public-website foundation independently of the runtime package chain. Package publication remains an explicit independently versioned release operation; the LangGraph adapter stays `planned` until its implementation and fixtures support a verified compatibility claim.

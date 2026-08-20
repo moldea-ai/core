@@ -104,10 +104,10 @@ describe('runtime compatibility matrix validation', () => {
     'accepts %s only without support claims',
     (status) => {
       const matrix = cloneCanonicalMatrix();
-      const adapter = matrix.adapters['langchain'];
+      const adapter = matrix.adapters['langgraph'];
 
       if (adapter === undefined) {
-        throw new Error('Canonical matrix is missing the LangChain adapter.');
+        throw new Error('Canonical matrix is missing the LangGraph adapter.');
       }
 
       adapter.implementationStatus = status;
@@ -425,7 +425,7 @@ describe('runtime compatibility matrix validation', () => {
     adapter.replacement = 'openai';
     expectIssue(stringify(matrix), 'cannot replace itself');
 
-    adapter.replacement = 'langchain';
+    adapter.replacement = 'langgraph';
     expectIssue(stringify(matrix), 'Replacement must identify an available adapter');
   });
 

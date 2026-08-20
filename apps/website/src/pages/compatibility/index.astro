@@ -5,12 +5,38 @@ import { withBase } from '@moldea.ai/website-ui/site';
 import AdapterDetails from '../../components/adapter-details.astro';
 import AdapterCompanyLogo from '../../components/adapter-company-logo.astro';
 import StatusBadge from '../../components/status-badge.astro';
+import TargetMaturityLegend from '../../components/target-maturity-legend.astro';
 import BaseLayout from '../../layouts/base-layout.astro';
 import { loadWebsiteModel } from '../../lib/generation/generation.ts';
+import type { IAdapterPage } from '../../lib/model/types.ts';
+
+// one target-level row in the compatibility summary
+interface ICompatibilityRow {
+  adapter: IAdapterPage;
+  isFirstTarget: boolean;
+  isLastTarget: boolean;
+  rowSpan: number;
+  target: NonNullable<IAdapterPage['entry']['targets']>[number] | null;
+}
 
 const model = loadWebsiteModel();
 const breadcrumbs = [{ href: '/', label: 'Home' }, { label: 'Runtime Compatibility' }];
 const basePath = import.meta.env.BASE_URL;
+const compatibilityRows = model.adapters.flatMap<ICompatibilityRow>((adapter) => {
+  const targets = adapter.entry.targets ?? [];
+
+  if (targets.length === 0) {
+    return [{ adapter, isFirstTarget: true, isLastTarget: true, rowSpan: 1, target: null }];
+  }
+
+  return targets.map((target, index) => ({
+    adapter,
+    isFirstTarget: index === 0,
+    isLastTarget: index === targets.length - 1,
+    rowSpan: targets.length,
+    target,
+  }));
+});
 ---
 
 <BaseLayout
@@ -32,6 +58,8 @@ const basePath = import.meta.env.BASE_URL;
       </p>
     </div>
 
+    <TargetMaturityLegend />
+
     <div class="table-scroll">
       <table class="w-full min-w-[54rem] text-sm">
         <caption class="sr-only">Official moldea runtime adapter compatibility summary</caption>
@@ -40,42 +68,87 @@ const basePath = import.meta.env.BASE_URL;
             <th class="px-4 py-3 text-start">Adapter</th>
             <th class="px-4 py-3 text-start">Implementation status</th>
             <th class="px-4 py-3 text-start">Kind</th>
-            <th class="px-4 py-3 text-start">Target maturity</th>
+            <th
+              id="target-maturity-heading"
+              class="px-4 py-3 text-start"
+            >
+              Target maturity
+            </th>
             <th class="px-4 py-3 text-start">Verified</th>
           </tr>
         </thead>
         <tbody>
           {
-            model.adapters.map((adapter) => (
-              <tr class="border-t">
-                <th class="px-4 py-3 text-start font-mono">
-                  <a
-                    class="inline-flex items-center gap-3 hover:underline"
-                    href={withBase(adapter.route, basePath)}
+            compatibilityRows.map(({ adapter, isFirstTarget, isLastTarget, rowSpan, target }) => (
+              <tr class:list={['align-top', isFirstTarget && 'border-t']}>
+                {isFirstTarget && (
+                  <th
+                    class="px-4 py-3 text-start font-mono"
+                    rowspan={rowSpan}
                   >
-                    <AdapterCompanyLogo
-                      adapterId={adapter.id}
-                      compact
-                    />
-                    <span>{adapter.id}</span>
-                  </a>
-                </th>
-                <td class="px-4 py-3">
-                  <StatusBadge kind={adapter.entry.implementationStatus} />
+                    <a
+                      class="inline-flex items-center gap-3 hover:underline"
+                      href={withBase(adapter.route, basePath)}
+                    >
+                      <AdapterCompanyLogo
+                        adapterId={adapter.id}
+                        compact
+                      />
+                      <span>{adapter.id}</span>
+                    </a>
+                  </th>
+                )}
+                {isFirstTarget && (
+                  <td
+                    class="px-4 py-3"
+                    rowspan={rowSpan}
+                  >
+                    <StatusBadge kind={adapter.entry.implementationStatus} />
+                  </td>
+                )}
+                {isFirstTarget && (
+                  <td
+                    class="px-4 py-3"
+                    rowspan={rowSpan}
+                  >
+                    {adapter.entry.implementation.kind}
+                  </td>
+                )}
+                <td
+                  class:list={[
+                    'px-4',
+                    rowSpan === 1 && 'py-3',
+                    rowSpan > 1 && isFirstTarget && 'pt-3 pb-1',
+                    rowSpan > 1 && !isFirstTarget && !isLastTarget && 'py-1',
+                    rowSpan > 1 && isLastTarget && 'pt-1 pb-3',
+                  ]}
+                  headers="target-maturity-heading"
+                >
+                  {target === null ? (
+                    'Not available'
+                  ) : (
+                    <a
+                      class="inline-block max-w-48 rounded-full align-middle"
+                      href={`${withBase(adapter.route, basePath)}#${adapter.id}-${target.id}`}
+                      aria-label={`${target.id}, ${target.supportLevel}`}
+                      title={target.id}
+                    >
+                      <StatusBadge
+                        kind={target.supportLevel}
+                        label={target.id}
+                        truncate
+                      />
+                    </a>
+                  )}
                 </td>
-                <td class="px-4 py-3">{adapter.entry.implementation.kind}</td>
-                <td class="px-4 py-3">
-                  {adapter.entry.targets?.length
-                    ? [
-                        ...new Set(adapter.entry.targets.map(({ supportLevel }) => supportLevel)),
-                      ].map((supportLevel) => (
-                        <span class="me-2 inline-flex">
-                          <StatusBadge kind={supportLevel} />
-                        </span>
-                      ))
-                    : 'Not available'}
-                </td>
-                <td class="px-4 py-3">{adapter.entry.lastVerifiedAt ?? 'Not available'}</td>
+                {isFirstTarget && (
+                  <td
+                    class="px-4 py-3"
+                    rowspan={rowSpan}
+                  >
+                    {adapter.entry.lastVerifiedAt ?? 'Not available'}
+                  </td>
+                )}
               </tr>
             ))
           }

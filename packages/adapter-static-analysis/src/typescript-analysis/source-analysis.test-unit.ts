@@ -91,6 +91,10 @@ describe('TypeScript source analysis', () => {
     ['/src/agent.ts', true],
     ['/src/agent.tsx', true],
     ['/src/agent.mts', true],
+    ['/src/agent.d.ts', false],
+    ['/src/agent.d.tsx', false],
+    ['/src/agent.d.mts', false],
+    ['/src/agent.d.cts', false],
     ['/src/agent.js', false],
   ])('isSupportedTypeScriptSourcePath(%s) -> %s', (path, expected) => {
     expect(isSupportedTypeScriptSourcePath(path)).toBe(expected);

@@ -414,6 +414,7 @@ test('presents available runtime adapters without promoting planned inventory', 
   await expect(adapterSection.getByRole('link', { name: /claude-agent-sdk/ })).toBeVisible();
   await expect(adapterSection.getByRole('link', { name: /cloudflare-agents/ })).toBeVisible();
   await expect(adapterSection.getByRole('link', { name: /eve/ })).toBeVisible();
+  await expect(adapterSection.getByRole('link', { name: /langchain/ })).toBeVisible();
   await expect(adapterSection.getByRole('link', { name: /vercel-ai-sdk/ })).toBeVisible();
   await expect(adapterSection.getByAltText('Vercel company logo')).toHaveCount(2);
   await expect(adapterSection.getByRole('link', { name: 'View all adapters' })).toHaveAttribute(
@@ -476,9 +477,11 @@ test('shows the same company marks in the compatibility summary and accordions',
     name: 'Official moldea runtime adapter compatibility summary',
   });
   const compatibilityAccordions = page.locator('details');
-  const vercelAiSdkRow = compatibilityTable.getByRole('row', { name: /vercel-ai-sdk/ });
-
-  await expect(vercelAiSdkRow.getByText('experimental', { exact: true })).toHaveCount(1);
+  await expect(
+    compatibilityTable.getByRole('link', {
+      name: /typescript-(?:generate-stream-text|tool-loop-agent)-7, experimental/u,
+    }),
+  ).toHaveCount(2);
 
   for (const [companyName, expectedCount] of [
     ['Anthropic', 2],
@@ -513,6 +516,7 @@ test('shows company marks for runtime adapters on the packages page', async ({ p
   const runtimeAdapters = page.locator('section[aria-labelledby="adapter-packages-title"]');
 
   await expect(runtimeAdapters.getByAltText('Anthropic company logo')).toHaveCount(2);
+  await expect(runtimeAdapters.getByAltText('LangChain company logo')).toHaveCount(1);
   await expect(runtimeAdapters.getByAltText('OpenAI company logo')).toHaveCount(2);
   await expect(runtimeAdapters.getByRole('img', { name: 'Custom adapter icon' })).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Website Foundations' })).toHaveCount(0);

@@ -1,0 +1,129 @@
+[
+  {
+    "agentId": "support",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": { "targetId": "typescript-create-agent-1-5" },
+    "kind": "agent-definition",
+    "references": [{ "path": "/src/agent.ts", "symbol": "supportAgent" }],
+    "runtimeName": "support-runtime",
+    "source": "langchain"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "instructionForm": "system-message",
+      "property": "systemPrompt",
+      "targetId": "typescript-create-agent-1-5"
+    },
+    "kind": "instruction-loader",
+    "references": [
+      { "path": "/src/agent.ts", "symbol": "supportAgent" },
+      { "path": "/src/instructions.ts", "symbol": "loadSupportInstruction" }
+    ],
+    "runtimeName": "loadSupportInstruction",
+    "source": "langchain"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": { "language": "typescript" },
+    "kind": "language",
+    "references": [{ "path": "/src/agent.ts", "symbol": "supportAgent" }],
+    "runtimeName": null,
+    "source": "langchain"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "classification": "supported",
+      "declaredRange": "~1.2.8",
+      "dependencyKind": "dependencies",
+      "packageName": "@langchain/core",
+      "packageRole": "companion",
+      "targetClassification": "supported",
+      "targetId": "typescript-create-agent-1-5"
+    },
+    "kind": "runtime-package",
+    "references": [{ "path": "/package.json" }],
+    "runtimeName": "@langchain/core",
+    "source": "langchain"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "classification": "supported",
+      "declaredRange": "~1.5.9",
+      "dependencyKind": "dependencies",
+      "packageName": "langchain",
+      "packageRole": "primary",
+      "targetClassification": "supported",
+      "targetId": "typescript-create-agent-1-5"
+    },
+    "kind": "runtime-package",
+    "references": [{ "path": "/package.json" }],
+    "runtimeName": "langchain",
+    "source": "langchain"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "property": "responseFormat",
+      "schemaRole": "agent-output",
+      "schemaStrategy": "provider-strategy",
+      "targetId": "typescript-create-agent-1-5"
+    },
+    "kind": "schema",
+    "references": [
+      { "path": "/src/agent.ts", "symbol": "supportAgent" },
+      { "path": "/src/contracts.ts", "symbol": "SupportOutputSchema" }
+    ],
+    "runtimeName": "SupportOutputSchema",
+    "source": "langchain"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": "find-order",
+    "capabilityKind": "tool",
+    "details": {
+      "property": "schema",
+      "schemaRole": "tool-input",
+      "targetId": "typescript-create-agent-1-5"
+    },
+    "kind": "schema",
+    "references": [
+      { "path": "/src/contracts.ts", "symbol": "FindOrderInputSchema" },
+      { "path": "/src/tools.ts", "symbol": "findOrderTool" }
+    ],
+    "runtimeName": "FindOrderInputSchema",
+    "source": "langchain"
+  },
+  {
+    "agentId": "support",
+    "capabilityId": "find-order",
+    "capabilityKind": "tool",
+    "details": {
+      "helperSource": "@langchain/core/tools",
+      "registrationForm": "normal-function-tool",
+      "targetId": "typescript-create-agent-1-5"
+    },
+    "kind": "tool-registration",
+    "references": [
+      { "path": "/src/agent.ts", "symbol": "supportAgent" },
+      { "path": "/src/contracts.ts", "symbol": "FindOrderInputSchema" },
+      { "path": "/src/implementations.ts", "symbol": "findOrder" },
+      { "path": "/src/tools.ts", "symbol": "findOrderTool" }
+    ],
+    "runtimeName": "find_order",
+    "source": "langchain"
+  }
+]

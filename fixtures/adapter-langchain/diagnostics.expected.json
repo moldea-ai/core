@@ -1,0 +1,66 @@
+[
+  {
+    "code": "LANGCHAIN_AGENT_OUTPUT_SCHEMA_NOT_WIRED",
+    "message": "The declared agent output schema is not wired to the detected LangChain structured-output configuration."
+  },
+  {
+    "code": "LANGCHAIN_AGENT_OUTPUT_SCHEMA_SYMBOL_NOT_FOUND",
+    "message": "The declared agent output-schema symbol was not found."
+  },
+  {
+    "code": "LANGCHAIN_INSTRUCTION_LOADER_NOT_WIRED",
+    "message": "The declared instruction loader is not wired to the detected LangChain agent."
+  },
+  {
+    "code": "LANGCHAIN_INSTRUCTION_LOADER_SYMBOL_NOT_FOUND",
+    "message": "The declared instruction-loader symbol was not found."
+  },
+  {
+    "code": "LANGCHAIN_PACKAGE_MANIFEST_INVALID",
+    "message": "The owning package manifest is invalid for LangChain dependency detection."
+  },
+  {
+    "code": "LANGCHAIN_RUNTIME_AGENT_SYMBOL_NOT_FOUND",
+    "message": "The declared runtime-agent symbol was not found."
+  },
+  {
+    "code": "LANGCHAIN_SOURCE_SYNTAX_INVALID",
+    "message": "The referenced LangChain source file contains invalid TypeScript syntax."
+  },
+  {
+    "code": "LANGCHAIN_SOURCE_TEXT_INVALID",
+    "message": "The referenced LangChain source file is not valid normalized text."
+  },
+  {
+    "code": "LANGCHAIN_TOOL_IMPLEMENTATION_NOT_WIRED",
+    "message": "The declared tool implementation is not wired to the detected LangChain function tool."
+  },
+  {
+    "code": "LANGCHAIN_TOOL_IMPLEMENTATION_SYMBOL_NOT_FOUND",
+    "message": "The declared tool-implementation symbol was not found."
+  },
+  {
+    "code": "LANGCHAIN_TOOL_INPUT_SCHEMA_NOT_WIRED",
+    "message": "The declared tool input schema is not wired to the detected LangChain function tool."
+  },
+  {
+    "code": "LANGCHAIN_TOOL_INPUT_SCHEMA_SYMBOL_NOT_FOUND",
+    "message": "The declared tool input-schema symbol was not found."
+  },
+  {
+    "code": "LANGCHAIN_TOOL_NAME_MISMATCH",
+    "message": "The declared tool name does not match the detected LangChain tool name."
+  },
+  {
+    "code": "LANGCHAIN_TOOL_REGISTRATION_NOT_WIRED",
+    "message": "The declared tool registration is not available to the detected LangChain agent."
+  },
+  {
+    "code": "LANGCHAIN_TOOL_REGISTRATION_SYMBOL_NOT_FOUND",
+    "message": "The declared tool-registration symbol was not found."
+  },
+  {
+    "code": "LANGCHAIN_VERSION_UNSUPPORTED",
+    "message": "The observed LangChain package ranges are disjoint from the supported target."
+  }
+]

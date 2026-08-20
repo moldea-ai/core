@@ -22,6 +22,7 @@ export const NPM_RELEASE_PROJECT_ORDER = [
   'adapter-claude-agent-sdk',
   'adapter-cloudflare-agents',
   'adapter-eve',
+  'adapter-langchain',
   'adapter-vercel-ai-sdk',
   'cli',
   'website-ui',
@@ -76,6 +77,12 @@ export const NPM_RELEASE_PROJECTS = {
     packageName: '@moldea.ai/adapter-eve',
     projectDirectory: 'projects/adapter-eve',
     tagPrefix: 'adapter-eve-v',
+  },
+  'adapter-langchain': {
+    artifactPrefix: 'moldea.ai-adapter-langchain',
+    packageName: '@moldea.ai/adapter-langchain',
+    projectDirectory: 'projects/adapter-langchain',
+    tagPrefix: 'adapter-langchain-v',
   },
   cli: {
     artifactPrefix: 'moldea.ai-cli',
