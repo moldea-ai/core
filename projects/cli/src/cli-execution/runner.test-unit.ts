@@ -16,6 +16,7 @@ const INSTALLED_PACKAGE_METADATA = Object.freeze({
     '@moldea.ai/adapter-eve': 'workspace:1.0.0',
     '@moldea.ai/adapter-google-genai': 'workspace:1.0.3',
     '@moldea.ai/adapter-langchain': 'workspace:1.0.0',
+    '@moldea.ai/adapter-langgraph': 'workspace:1.0.0',
     '@moldea.ai/adapter-openai': 'workspace:2.0.4',
     '@moldea.ai/adapter-openai-agents-sdk': 'workspace:1.0.2',
     '@moldea.ai/adapter-vercel-ai-sdk': 'workspace:1.0.0',
@@ -31,6 +32,7 @@ const INSTALLED_PACKAGE_METADATA = Object.freeze({
     '@moldea.ai/adapter-eve': '1.0.0',
     '@moldea.ai/adapter-google-genai': '1.0.3',
     '@moldea.ai/adapter-langchain': '1.0.0',
+    '@moldea.ai/adapter-langgraph': '1.0.0',
     '@moldea.ai/adapter-openai': '2.0.4',
     '@moldea.ai/adapter-openai-agents-sdk': '1.0.2',
     '@moldea.ai/adapter-vercel-ai-sdk': '1.0.0',
@@ -39,7 +41,7 @@ const INSTALLED_PACKAGE_METADATA = Object.freeze({
     '@moldea.ai/repository-fs': '1.0.2',
   }),
   supportedNodeRange: '^22.11.0 || ^24.11.0',
-  version: '3.3.5',
+  version: '3.3.6',
 });
 
 describe('runMoldeaCli', () => {
@@ -139,7 +141,7 @@ Options:
         packageMetadata: INSTALLED_PACKAGE_METADATA,
         releaseMetadata: MOLDEA_CLI_RELEASE_METADATA,
       }),
-    ).resolves.toStrictEqual({ exitCode: 0, stderr: '', stdout: '3.3.5\n' });
+    ).resolves.toStrictEqual({ exitCode: 0, stderr: '', stdout: '3.3.6\n' });
     expect(executeCommand).not.toHaveBeenCalled();
   });
 
@@ -170,7 +172,7 @@ Options:
       exitCode: 2,
       stderr: '',
       stdout:
-        '{"cliVersion":"3.3.5","command":null,"error":{"code":"INVALID_ARGUMENT","details":{},"message":"The command invocation is invalid.","path":null,"retryable":false,"source":"cli"},"result":null,"schemaVersion":1,"status":"error"}\n',
+        '{"cliVersion":"3.3.6","command":null,"error":{"code":"INVALID_ARGUMENT","details":{},"message":"The command invocation is invalid.","path":null,"retryable":false,"source":"cli"},"result":null,"schemaVersion":1,"status":"error"}\n',
     });
   });
 
@@ -225,7 +227,7 @@ Options:
     expect(compatibilityResult.exitCode).toBe(0);
     expect(compatibilityResult.stderr).toBe('');
     expect(JSON.parse(compatibilityResult.stdout)).toMatchObject({
-      cliVersion: '3.3.5',
+      cliVersion: '3.3.6',
       command: 'compatibility',
       result: { matrixVersion: 1 },
       status: 'valid',
@@ -247,7 +249,7 @@ Options:
       exitCode: 3,
       stderr: '',
       stdout:
-        '{"cliVersion":"3.3.5","command":"inspect","error":{"code":"INTERNAL_ERROR","details":{},"message":"The command could not be completed.","path":null,"retryable":false,"source":"cli"},"result":null,"schemaVersion":1,"status":"error"}\n',
+        '{"cliVersion":"3.3.6","command":"inspect","error":{"code":"INTERNAL_ERROR","details":{},"message":"The command could not be completed.","path":null,"retryable":false,"source":"cli"},"result":null,"schemaVersion":1,"status":"error"}\n',
     });
   });
 });

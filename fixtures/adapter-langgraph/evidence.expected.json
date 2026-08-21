@@ -1,0 +1,388 @@
+[
+  {
+    "agentId": "functional",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "apiKind": "functional",
+      "targetId": "typescript-functional-api-1-4"
+    },
+    "kind": "agent-definition",
+    "references": [
+      {
+        "path": "/src/functional.ts",
+        "symbol": "supportWorkflow"
+      }
+    ],
+    "runtimeName": "support_workflow",
+    "source": "langgraph"
+  },
+  {
+    "agentId": "graph",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "apiKind": "state-graph",
+      "builderForm": "module-local",
+      "targetId": "typescript-state-graph-1-4"
+    },
+    "kind": "agent-definition",
+    "references": [
+      {
+        "path": "/src/graph.ts",
+        "symbol": "supportGraph"
+      }
+    ],
+    "runtimeName": "support_graph",
+    "source": "langgraph"
+  },
+  {
+    "agentId": "functional",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "language": "typescript",
+      "moduleKind": "esm"
+    },
+    "kind": "language",
+    "references": [
+      {
+        "path": "/src/functional.ts",
+        "symbol": "supportWorkflow"
+      }
+    ],
+    "runtimeName": null,
+    "source": "langgraph"
+  },
+  {
+    "agentId": "graph",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "language": "typescript",
+      "moduleKind": "esm"
+    },
+    "kind": "language",
+    "references": [
+      {
+        "path": "/src/graph.ts",
+        "symbol": "supportGraph"
+      }
+    ],
+    "runtimeName": null,
+    "source": "langgraph"
+  },
+  {
+    "agentId": "functional",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "classification": "supported",
+      "declaredRange": "~1.2.9",
+      "dependencyKind": "dependencies",
+      "packageName": "@langchain/core",
+      "packageRole": "companion",
+      "targetClassification": "supported"
+    },
+    "kind": "runtime-package",
+    "references": [
+      {
+        "path": "/package.json"
+      }
+    ],
+    "runtimeName": "@langchain/core",
+    "source": "langgraph"
+  },
+  {
+    "agentId": "functional",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "classification": "supported",
+      "declaredRange": "~1.4.12",
+      "dependencyKind": "dependencies",
+      "packageName": "@langchain/langgraph",
+      "packageRole": "primary",
+      "targetClassification": "supported"
+    },
+    "kind": "runtime-package",
+    "references": [
+      {
+        "path": "/package.json"
+      }
+    ],
+    "runtimeName": "@langchain/langgraph",
+    "source": "langgraph"
+  },
+  {
+    "agentId": "graph",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "classification": "supported",
+      "declaredRange": "~1.2.9",
+      "dependencyKind": "dependencies",
+      "packageName": "@langchain/core",
+      "packageRole": "companion",
+      "targetClassification": "supported"
+    },
+    "kind": "runtime-package",
+    "references": [
+      {
+        "path": "/package.json"
+      }
+    ],
+    "runtimeName": "@langchain/core",
+    "source": "langgraph"
+  },
+  {
+    "agentId": "graph",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "classification": "supported",
+      "declaredRange": "~1.4.12",
+      "dependencyKind": "dependencies",
+      "packageName": "@langchain/langgraph",
+      "packageRole": "primary",
+      "targetClassification": "supported"
+    },
+    "kind": "runtime-package",
+    "references": [
+      {
+        "path": "/package.json"
+      }
+    ],
+    "runtimeName": "@langchain/langgraph",
+    "source": "langgraph"
+  },
+  {
+    "agentId": "functional",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "apiKind": "functional",
+      "patternId": "functional-final-state",
+      "targetId": "typescript-functional-api-1-4"
+    },
+    "kind": "runtime-pattern",
+    "references": [
+      {
+        "path": "/src/functional.ts"
+      }
+    ],
+    "runtimeName": null,
+    "source": "langgraph"
+  },
+  {
+    "agentId": "functional",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "apiKind": "functional",
+      "patternId": "functional-interrupt",
+      "targetId": "typescript-functional-api-1-4"
+    },
+    "kind": "runtime-pattern",
+    "references": [
+      {
+        "path": "/src/functional.ts"
+      }
+    ],
+    "runtimeName": null,
+    "source": "langgraph"
+  },
+  {
+    "agentId": "functional",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "apiKind": "functional",
+      "patternId": "functional-previous-state",
+      "targetId": "typescript-functional-api-1-4"
+    },
+    "kind": "runtime-pattern",
+    "references": [
+      {
+        "path": "/src/functional.ts"
+      }
+    ],
+    "runtimeName": null,
+    "source": "langgraph"
+  },
+  {
+    "agentId": "functional",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "apiKind": "functional",
+      "patternId": "functional-task",
+      "targetId": "typescript-functional-api-1-4",
+      "taskForm": "module-local",
+      "taskName": "prepare_task"
+    },
+    "kind": "runtime-pattern",
+    "references": [
+      {
+        "path": "/src/functional.ts"
+      }
+    ],
+    "runtimeName": "prepare_task",
+    "source": "langgraph"
+  },
+  {
+    "agentId": "graph",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "graphOperation": "addConditionalEdges",
+      "patternId": "state-graph-conditional-edge",
+      "sourceName": "respond",
+      "targetId": "typescript-state-graph-1-4"
+    },
+    "kind": "runtime-pattern",
+    "references": [
+      {
+        "path": "/src/graph.ts"
+      },
+      {
+        "path": "/src/graph.ts",
+        "symbol": "route"
+      }
+    ],
+    "runtimeName": null,
+    "source": "langgraph"
+  },
+  {
+    "agentId": "graph",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "edgeKind": "direct",
+      "graphOperation": "addEdge",
+      "patternId": "state-graph-edge",
+      "sourceName": "__start__",
+      "targetId": "typescript-state-graph-1-4",
+      "targetName": "prepare"
+    },
+    "kind": "runtime-pattern",
+    "references": [
+      {
+        "path": "/src/graph.ts"
+      }
+    ],
+    "runtimeName": null,
+    "source": "langgraph"
+  },
+  {
+    "agentId": "graph",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "edgeKind": "direct",
+      "graphOperation": "addEdge",
+      "patternId": "state-graph-edge",
+      "sourceName": "prepare",
+      "targetId": "typescript-state-graph-1-4",
+      "targetName": "respond"
+    },
+    "kind": "runtime-pattern",
+    "references": [
+      {
+        "path": "/src/graph.ts"
+      }
+    ],
+    "runtimeName": null,
+    "source": "langgraph"
+  },
+  {
+    "agentId": "graph",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "graphOperation": "addNode",
+      "patternId": "state-graph-node",
+      "targetId": "typescript-state-graph-1-4"
+    },
+    "kind": "runtime-pattern",
+    "references": [
+      {
+        "path": "/src/graph.ts"
+      },
+      {
+        "path": "/src/graph.ts",
+        "symbol": "prepare"
+      }
+    ],
+    "runtimeName": "prepare",
+    "source": "langgraph"
+  },
+  {
+    "agentId": "graph",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "graphOperation": "addNode",
+      "patternId": "state-graph-node",
+      "targetId": "typescript-state-graph-1-4"
+    },
+    "kind": "runtime-pattern",
+    "references": [
+      {
+        "path": "/src/graph.ts"
+      },
+      {
+        "path": "/src/graph.ts",
+        "symbol": "respond"
+      }
+    ],
+    "runtimeName": "respond",
+    "source": "langgraph"
+  },
+  {
+    "agentId": "graph",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "schemaRole": "agent-input",
+      "schemaSource": "explicit-input",
+      "targetId": "typescript-state-graph-1-4"
+    },
+    "kind": "schema",
+    "references": [
+      {
+        "path": "/src/contracts.ts",
+        "symbol": "GraphInputSchema"
+      },
+      {
+        "path": "/src/graph.ts",
+        "symbol": "supportGraph"
+      }
+    ],
+    "runtimeName": null,
+    "source": "langgraph"
+  },
+  {
+    "agentId": "graph",
+    "capabilityId": null,
+    "capabilityKind": null,
+    "details": {
+      "schemaRole": "agent-output",
+      "schemaSource": "explicit-output",
+      "targetId": "typescript-state-graph-1-4"
+    },
+    "kind": "schema",
+    "references": [
+      {
+        "path": "/src/contracts.ts",
+        "symbol": "GraphOutputSchema"
+      },
+      {
+        "path": "/src/graph.ts",
+        "symbol": "supportGraph"
+      }
+    ],
+    "runtimeName": null,
+    "source": "langgraph"
+  }
+]

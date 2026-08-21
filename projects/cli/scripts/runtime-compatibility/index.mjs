@@ -84,6 +84,11 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
       /^moldea\.ai-adapter-langchain-.+\.tgz$/u,
       '@moldea.ai/adapter-langchain',
     ),
+    '@moldea.ai/adapter-langgraph': selectPackageTarball(
+      tarballNames,
+      /^moldea\.ai-adapter-langgraph-.+\.tgz$/u,
+      '@moldea.ai/adapter-langgraph',
+    ),
     '@moldea.ai/adapter-openai': selectPackageTarball(
       tarballNames,
       /^moldea\.ai-adapter-openai-(?!agents-sdk-).+\.tgz$/u,
@@ -195,7 +200,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     };
 
     assertRuntimeInvariant(cliManifest?.name === '@moldea.ai/cli', 'The CLI identity is invalid.');
-    assertRuntimeInvariant(cliManifest?.version === '3.3.5', 'The CLI version is invalid.');
+    assertRuntimeInvariant(cliManifest?.version === '3.3.6', 'The CLI version is invalid.');
     assertRuntimeInvariant(
       cliManifest?.engines?.node === '^22.11.0 || ^24.11.0',
       'The CLI runtime range is invalid.',
@@ -205,6 +210,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
       '@moldea.ai/adapter-claude-agent-sdk',
       '@moldea.ai/adapter-google-genai',
       '@moldea.ai/adapter-langchain',
+      '@moldea.ai/adapter-langgraph',
       '@moldea.ai/adapter-openai',
       '@moldea.ai/adapter-openai-agents-sdk',
       '@moldea.ai/adapter-cloudflare-agents',
@@ -228,7 +234,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
 
     assertRuntimeInvariant(versionResult.status === 0, 'The installed CLI version command failed.');
     assertRuntimeInvariant(versionResult.stderr === '', 'The version command wrote stderr.');
-    assertRuntimeInvariant(versionResult.stdout === '3.3.5\n', 'The version output is invalid.');
+    assertRuntimeInvariant(versionResult.stdout === '3.3.6\n', 'The version output is invalid.');
 
     const compatibilityResult = executeCli(
       executablePath,
@@ -249,6 +255,9 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     );
     const langChainAdapter = compatibilityEnvelope.result?.adapters?.find(
       ({ id }) => id === 'langchain',
+    );
+    const langGraphAdapter = compatibilityEnvelope.result?.adapters?.find(
+      ({ id }) => id === 'langgraph',
     );
     const openAiAdapter = compatibilityEnvelope.result?.adapters?.find(({ id }) => id === 'openai');
     const openAiAgentsSdkAdapter = compatibilityEnvelope.result?.adapters?.find(
@@ -276,7 +285,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
       'The compatibility result is invalid.',
     );
     assertRuntimeInvariant(
-      compatibilityEnvelope.cliVersion === '3.3.5' &&
+      compatibilityEnvelope.cliVersion === '3.3.6' &&
         compatibilityEnvelope.schemaVersion === 1 &&
         compatibilityEnvelope.result?.outputSchemaVersion === 1,
       'The compatibility envelope is invalid.',
@@ -290,6 +299,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
           { name: '@moldea.ai/adapter-eve', version: '1.0.0' },
           { name: '@moldea.ai/adapter-google-genai', version: '1.0.3' },
           { name: '@moldea.ai/adapter-langchain', version: '1.0.0' },
+          { name: '@moldea.ai/adapter-langgraph', version: '1.0.0' },
           { name: '@moldea.ai/adapter-openai', version: '2.0.4' },
           { name: '@moldea.ai/adapter-openai-agents-sdk', version: '1.0.2' },
           { name: '@moldea.ai/adapter-vercel-ai-sdk', version: '1.0.0' },
@@ -355,6 +365,20 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
         langChainAdapter.matrix?.targets?.[0]?.id === 'typescript-create-agent-1-5' &&
         langChainAdapter.matrix?.targets?.[0]?.supportLevel === 'experimental',
       'The LangChain compatibility claim is invalid.',
+    );
+    assertRuntimeInvariant(
+      langGraphAdapter?.active === true &&
+        langGraphAdapter.bundledVersion === '1.0.0' &&
+        langGraphAdapter.matrix?.implementationStatus === 'available' &&
+        langGraphAdapter.matrix?.compatibleCoreRange === '^2.0.0' &&
+        langGraphAdapter.matrix?.runtimeGuidance?.expectation === 'recommended' &&
+        JSON.stringify(langGraphAdapter.matrix?.supportedRepositoryFormatVersions) === '[1]' &&
+        langGraphAdapter.matrix?.targets?.[0]?.id === 'typescript-functional-api-1-4' &&
+        langGraphAdapter.matrix?.targets?.[1]?.id === 'typescript-state-graph-1-4' &&
+        langGraphAdapter.matrix?.targets?.every(
+          ({ supportLevel }) => supportLevel === 'experimental',
+        ),
+      'The LangGraph compatibility claim is invalid.',
     );
     assertRuntimeInvariant(
       openAiAdapter?.active === true &&

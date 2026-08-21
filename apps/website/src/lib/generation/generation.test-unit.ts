@@ -100,6 +100,7 @@ describe('discoverPublicPackages', () => {
       '@moldea.ai/adapter-eve',
       '@moldea.ai/adapter-google-genai',
       '@moldea.ai/adapter-langchain',
+      '@moldea.ai/adapter-langgraph',
       '@moldea.ai/adapter-openai',
       '@moldea.ai/adapter-openai-agents-sdk',
       '@moldea.ai/adapter-vercel-ai-sdk',
@@ -125,6 +126,9 @@ describe('discoverPublicPackages', () => {
       'runtime-adapters',
     );
     expect(model.packages.find(({ slug }) => slug === 'adapter-langchain')?.family).toBe(
+      'runtime-adapters',
+    );
+    expect(model.packages.find(({ slug }) => slug === 'adapter-langgraph')?.family).toBe(
       'runtime-adapters',
     );
     expect(model.packages.find(({ slug }) => slug === 'adapter-vercel-ai-sdk')?.family).toBe(

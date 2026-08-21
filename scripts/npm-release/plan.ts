@@ -43,6 +43,7 @@ const createEmptyPublishedVersions = (): INpmReleaseWorkflowPlanSources['publish
   'adapter-cloudflare-agents': [],
   'adapter-eve': [],
   'adapter-langchain': [],
+  'adapter-langgraph': [],
   'adapter-vercel-ai-sdk': [],
   cli: [],
   core: [],

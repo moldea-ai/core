@@ -9,6 +9,7 @@ import {
   AVAILABLE_OPENAI_MATRIX_ENTRY,
   createTestActivePackageAdaptersState,
   createTestCompatibilityState,
+  createTestPlannedLangGraphState,
   createTestRuntimeAdapter,
 } from './compatibility.test-fixtures.js';
 
@@ -140,6 +141,7 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
             '@moldea.ai/adapter-eve': '1.0.0',
             '@moldea.ai/adapter-google-genai': '1.0.3',
             '@moldea.ai/adapter-langchain': '1.0.0',
+            '@moldea.ai/adapter-langgraph': '1.0.0',
             '@moldea.ai/adapter-openai': '2.0.4',
             '@moldea.ai/adapter-openai-agents-sdk': '1.0.2',
             '@moldea.ai/adapter-vercel-ai-sdk': '1.0.0',
@@ -163,6 +165,7 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
           createTestRuntimeAdapter('openai'),
           createTestRuntimeAdapter('openai-agents-sdk'),
           createTestRuntimeAdapter('vercel-ai-sdk'),
+          createTestRuntimeAdapter('langgraph'),
           createTestRuntimeAdapter('langchain'),
           createTestRuntimeAdapter('google-genai'),
           createTestRuntimeAdapter('eve'),
@@ -180,11 +183,21 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
       [createTestRuntimeAdapter('openai'), createTestRuntimeAdapter('openai')],
     ],
     ['the built-in custom ID', [createTestRuntimeAdapter('custom')]],
-    ['a planned adapter', [createTestRuntimeAdapter('langgraph')]],
   ])('rejects active registration containing %s', (_description, activeAdapters) => {
     const state = createTestCompatibilityState();
 
     expect(isMoldeaCliCompatibilityStateValid({ ...state, activeAdapters })).toBe(false);
+  });
+
+  test('rejects active registration for an adapter whose matrix entry is planned', () => {
+    const state = createTestPlannedLangGraphState();
+
+    expect(
+      isMoldeaCliCompatibilityStateValid({
+        ...state,
+        activeAdapters: [...state.activeAdapters, createTestRuntimeAdapter('langgraph')],
+      }),
+    ).toBe(false);
   });
 
   test('rejects an available adapter that is absent from active registration', () => {
@@ -357,7 +370,7 @@ describe('isMoldeaCliCompatibilityStateValid', () => {
       (entry: IMoldeaCliRuntimeAdapterEntry) => ({ ...entry, lastVerifiedAt: '2026-08-13' }),
     ],
   ])('rejects a planned entry carrying prohibited %s', (_description, mutate) => {
-    const state = createTestCompatibilityState();
+    const state = createTestPlannedLangGraphState();
     const plannedEntry = state.releaseMetadata.matrix.adapters['langgraph'];
 
     if (plannedEntry === undefined) {

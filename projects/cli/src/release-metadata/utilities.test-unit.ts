@@ -37,6 +37,7 @@ describe('CLI release metadata immutability', () => {
         'eve',
         'google-genai',
         'langchain',
+        'langgraph',
         'openai',
         'openai-agents-sdk',
         'vercel-ai-sdk',
@@ -44,7 +45,7 @@ describe('CLI release metadata immutability', () => {
       cliPackage: {
         name: '@moldea.ai/cli',
         supportedNodeRange: '^22.11.0 || ^24.11.0',
-        version: '3.3.5',
+        version: '3.3.6',
       },
       coreRecognizedAdapterIds: [
         'anthropic',
@@ -68,6 +69,7 @@ describe('CLI release metadata immutability', () => {
         { name: '@moldea.ai/adapter-eve', version: '1.0.0' },
         { name: '@moldea.ai/adapter-google-genai', version: '1.0.3' },
         { name: '@moldea.ai/adapter-langchain', version: '1.0.0' },
+        { name: '@moldea.ai/adapter-langgraph', version: '1.0.0' },
         { name: '@moldea.ai/adapter-openai', version: '2.0.4' },
         { name: '@moldea.ai/adapter-openai-agents-sdk', version: '1.0.2' },
         { name: '@moldea.ai/adapter-vercel-ai-sdk', version: '1.0.0' },
@@ -131,6 +133,17 @@ describe('CLI release metadata immutability', () => {
       supportedRepositoryFormatVersions: [1],
       targets: [{ id: 'typescript-models-generate-content-2', supportLevel: 'experimental' }],
     });
+    expect(MOLDEA_CLI_RELEASE_METADATA.matrix.adapters['langgraph']).toMatchObject({
+      compatibleCoreRange: '^2.0.0',
+      implementation: { package: '@moldea.ai/adapter-langgraph', versionRange: '^1.0.0' },
+      implementationStatus: 'available',
+      runtimeGuidance: { expectation: 'recommended' },
+      supportedRepositoryFormatVersions: [1],
+      targets: [
+        { id: 'typescript-functional-api-1-4', supportLevel: 'experimental' },
+        { id: 'typescript-state-graph-1-4', supportLevel: 'experimental' },
+      ],
+    });
     expect(MOLDEA_CLI_RELEASE_METADATA.matrix.adapters['openai-agents-sdk']).toMatchObject({
       compatibleCoreRange: '^2.0.0',
       implementation: {
@@ -165,6 +178,7 @@ describe('CLI release metadata immutability', () => {
           adapterId === 'eve' ||
           adapterId === 'google-genai' ||
           adapterId === 'langchain' ||
+          adapterId === 'langgraph' ||
           adapterId === 'openai' ||
           adapterId === 'openai-agents-sdk' ||
           adapterId === 'cloudflare-agents' ||

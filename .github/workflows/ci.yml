@@ -116,12 +116,13 @@ jobs:
           pnpm --dir projects/adapter-cloudflare-agents pack --pack-destination "$public_packages_directory"
           pnpm --dir projects/adapter-eve pack --pack-destination "$public_packages_directory"
           pnpm --dir projects/adapter-langchain pack --pack-destination "$public_packages_directory"
+          pnpm --dir projects/adapter-langgraph pack --pack-destination "$public_packages_directory"
           pnpm --dir projects/adapter-vercel-ai-sdk pack --pack-destination "$public_packages_directory"
           pnpm --dir projects/cli pack --pack-destination "$public_packages_directory"
           pnpm --dir projects/website-ui pack --pack-destination "$public_packages_directory"
           pnpm release:checksums create "$public_packages_directory"
 
-          expected_tarball_count=14
+          expected_tarball_count=15
           actual_tarball_count=$(find "$public_packages_directory" -maxdepth 1 -type f -name '*.tgz' | wc -l)
           if [ "$actual_tarball_count" -ne "$expected_tarball_count" ]; then
             echo "Expected $expected_tarball_count package tarballs, found $actual_tarball_count." >&2
@@ -457,6 +458,38 @@ jobs:
       - name: Test Packed LangChain Adapter Runtime
         run: >-
           node projects/adapter-langchain/scripts/runtime-compatibility/index.mjs
+          "${{ runner.temp }}/public-package-tarballs"
+
+  adapter-langgraph-runtime-compatibility:
+    name: LangGraph Adapter Runtime (Node.js ${{ matrix.node-version }})
+    needs: verify
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version:
+          - 22.11.0
+          - 22.x
+          - 24.11.0
+          - 24.x
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Download LangGraph Adapter Runtime Artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: public-package-tarballs
+          path: ${{ runner.temp }}/public-package-tarballs
+
+      - name: Test Packed LangGraph Adapter Runtime
+        run: >-
+          node projects/adapter-langgraph/scripts/runtime-compatibility/index.mjs
           "${{ runner.temp }}/public-package-tarballs"
 
   adapter-anthropic-runtime-compatibility:

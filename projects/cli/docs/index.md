@@ -18,7 +18,7 @@ The package exposes no supported JavaScript or TypeScript import API. Its public
 
 ## Composition
 
-The CLI composes `@moldea.ai/repository`, `@moldea.ai/repository-fs`, `@moldea.ai/core`, and the currently active package-backed adapters. The `custom` runtime remains built into Core. The Anthropic, Claude Agent SDK, Cloudflare Agents, Eve, Google Gen AI, LangChain, OpenAI, OpenAI Agents SDK, and Vercel AI SDK adapters are active for the matrix's experimental TypeScript SDK targets.
+The CLI composes `@moldea.ai/repository`, `@moldea.ai/repository-fs`, `@moldea.ai/core`, and the currently active package-backed adapters. The `custom` runtime remains built into Core. The Anthropic, Claude Agent SDK, Cloudflare Agents, Eve, Google Gen AI, LangChain, LangGraph, OpenAI, OpenAI Agents SDK, and Vercel AI SDK adapters are active for the matrix's experimental TypeScript SDK targets.
 
 The Agent Skill consumes this local executable as its deterministic package layer. The compatibility report may carry a canonical skill-owned qualification evidence URL, but the CLI never fetches it. Complete skill installation, workflows, and tutorials belong to the separate Agent Skill experience; this documentation covers only the CLI contract.
 

@@ -18,6 +18,7 @@ export const INSTALLED_PACKAGE_METADATA: IMoldeaCliPackageMetadata = Object.free
     '@moldea.ai/adapter-eve': 'workspace:1.0.0',
     '@moldea.ai/adapter-google-genai': 'workspace:1.0.3',
     '@moldea.ai/adapter-langchain': 'workspace:1.0.0',
+    '@moldea.ai/adapter-langgraph': 'workspace:1.0.0',
     '@moldea.ai/adapter-openai': 'workspace:2.0.4',
     '@moldea.ai/adapter-openai-agents-sdk': 'workspace:1.0.2',
     '@moldea.ai/adapter-vercel-ai-sdk': 'workspace:1.0.0',
@@ -33,6 +34,7 @@ export const INSTALLED_PACKAGE_METADATA: IMoldeaCliPackageMetadata = Object.free
     '@moldea.ai/adapter-eve': '1.0.0',
     '@moldea.ai/adapter-google-genai': '1.0.3',
     '@moldea.ai/adapter-langchain': '1.0.0',
+    '@moldea.ai/adapter-langgraph': '1.0.0',
     '@moldea.ai/adapter-openai': '2.0.4',
     '@moldea.ai/adapter-openai-agents-sdk': '1.0.2',
     '@moldea.ai/adapter-vercel-ai-sdk': '1.0.0',
@@ -41,7 +43,7 @@ export const INSTALLED_PACKAGE_METADATA: IMoldeaCliPackageMetadata = Object.free
     '@moldea.ai/repository-fs': '1.0.2',
   }),
   supportedNodeRange: '^22.11.0 || ^24.11.0',
-  version: '3.3.5',
+  version: '3.3.6',
 });
 
 const availableOpenAiMatrixEntry = MOLDEA_CLI_RELEASE_METADATA.matrix.adapters['openai'];
@@ -80,6 +82,7 @@ export const createTestCompatibilityState = (): IMoldeaCliCompatibilityStateInpu
       createTestRuntimeAdapter('eve'),
       createTestRuntimeAdapter('google-genai'),
       createTestRuntimeAdapter('langchain'),
+      createTestRuntimeAdapter('langgraph'),
       createTestRuntimeAdapter('openai'),
       createTestRuntimeAdapter('openai-agents-sdk'),
       createTestRuntimeAdapter('vercel-ai-sdk'),
@@ -96,4 +99,59 @@ export const createTestCompatibilityState = (): IMoldeaCliCompatibilityStateInpu
 /** Creates a valid compatibility state with the active package-backed adapters. */
 export const createTestActivePackageAdaptersState = (): IMoldeaCliCompatibilityStateInput => {
   return createTestCompatibilityState();
+};
+
+/** Creates a valid compatibility state where LangGraph remains an unbundled planned adapter. */
+export const createTestPlannedLangGraphState = (): IMoldeaCliCompatibilityStateInput => {
+  const state = createTestCompatibilityState();
+  const langGraphEntry = state.releaseMetadata.matrix.adapters['langgraph'];
+
+  if (langGraphEntry === undefined) {
+    throw new TypeError('The generated LangGraph matrix entry is required.');
+  }
+
+  const plannedLangGraphEntry: IMoldeaCliRuntimeAdapterEntry = {
+    implementation: {
+      distribution: langGraphEntry.implementation.distribution,
+      kind: langGraphEntry.implementation.kind,
+      package: langGraphEntry.implementation.package,
+    },
+    implementationStatus: 'planned',
+  };
+  const dependencies = Object.fromEntries(
+    Object.entries(state.packageMetadata.dependencies ?? {}).filter(
+      ([packageName]) => packageName !== '@moldea.ai/adapter-langgraph',
+    ),
+  );
+  const installedPackageVersions = Object.fromEntries(
+    Object.entries(state.packageMetadata.installedPackageVersions ?? {}).filter(
+      ([packageName]) => packageName !== '@moldea.ai/adapter-langgraph',
+    ),
+  );
+
+  return {
+    ...state,
+    activeAdapters: state.activeAdapters.filter(({ id }) => id !== 'langgraph'),
+    packageMetadata: {
+      ...state.packageMetadata,
+      dependencies,
+      installedPackageVersions,
+    },
+    releaseMetadata: {
+      ...state.releaseMetadata,
+      activeAdapterIds: state.releaseMetadata.activeAdapterIds.filter(
+        (adapterId) => adapterId !== 'langgraph',
+      ),
+      matrix: {
+        ...state.releaseMetadata.matrix,
+        adapters: {
+          ...state.releaseMetadata.matrix.adapters,
+          langgraph: plannedLangGraphEntry,
+        },
+      },
+      packages: state.releaseMetadata.packages.filter(
+        ({ name }) => name !== '@moldea.ai/adapter-langgraph',
+      ),
+    },
+  };
 };

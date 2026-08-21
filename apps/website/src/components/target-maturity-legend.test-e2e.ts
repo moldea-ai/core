@@ -20,6 +20,12 @@ test('renders the maturity legend and one target per compatibility row', async (
   const langChainTarget = compatibilityTable.getByRole('link', {
     name: 'typescript-create-agent-1-5, experimental',
   });
+  const langGraphStateGraphTarget = compatibilityTable.getByRole('link', {
+    name: 'typescript-state-graph-1-4, experimental',
+  });
+  const langGraphFunctionalApiTarget = compatibilityTable.getByRole('link', {
+    name: 'typescript-functional-api-1-4, experimental',
+  });
 
   await expect(maturityLegend.getByRole('list', { name: 'Target maturity legend' })).toContainText(
     'supportedexperimentaldeprecated',
@@ -33,7 +39,7 @@ test('renders the maturity legend and one target per compatibility row', async (
   await expect(
     maturityLegend.getByTitle('Documented for existing users; new adoption is discouraged.'),
   ).toBeVisible();
-  await expect(experimentalTargets).toHaveCount(11);
+  await expect(experimentalTargets).toHaveCount(13);
   await expect(compatibilityTable.getByRole('link', { name: /, supported$/u })).toHaveCount(1);
   await expect(compatibilityTable.getByRole('link', { name: /, deprecated$/u })).toHaveCount(0);
   expect(
@@ -43,6 +49,11 @@ test('renders the maturity legend and one target per compatibility row', async (
   ).toBe(true);
   await expect(customTarget).toHaveAttribute('title', 'custom');
   await expect(langChainTarget).toHaveAttribute('title', 'typescript-create-agent-1-5');
+  await expect(langGraphStateGraphTarget).toHaveAttribute('title', 'typescript-state-graph-1-4');
+  await expect(langGraphFunctionalApiTarget).toHaveAttribute(
+    'title',
+    'typescript-functional-api-1-4',
+  );
   await expect(
     compatibilityTable.getByRole('link', {
       name: 'typescript-think-0-16-ai-sdk-7, experimental',
@@ -53,11 +64,8 @@ test('renders the maturity legend and one target per compatibility row', async (
       name: 'typescript-ai-chat-agent-0-10-ai-sdk-7, experimental',
     }),
   ).toBeVisible();
-  await expect(
-    compatibilityTable
-      .getByRole('row', { name: /langgraph/u })
-      .locator('[headers="target-maturity-heading"]'),
-  ).toHaveText('Not available');
+  await expect(langGraphStateGraphTarget).toBeVisible();
+  await expect(langGraphFunctionalApiTarget).toBeVisible();
   expect(
     await customTarget
       .locator('span')

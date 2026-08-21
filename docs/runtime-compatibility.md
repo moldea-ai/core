@@ -13,7 +13,7 @@ The matrix publishes only the verified targets and support boundaries shown belo
 | `eve`               | `@moldea.ai/adapter-eve`               | `package`      | `public`     | `^1.0.0`             | `available` | `optional`       |              `1` |
 | `google-genai`      | `@moldea.ai/adapter-google-genai`      | `package`      | `public`     | `^1.0.3`             | `available` | `optional`       |              `1` |
 | `langchain`         | `@moldea.ai/adapter-langchain`         | `package`      | `public`     | `^1.0.0`             | `available` | `optional`       |              `1` |
-| `langgraph`         | `@moldea.ai/adapter-langgraph`         | `package`      | `public`     | Not available        | `planned`   | Not available    |              `0` |
+| `langgraph`         | `@moldea.ai/adapter-langgraph`         | `package`      | `public`     | `^1.0.0`             | `available` | `recommended`    |              `2` |
 | `openai`            | `@moldea.ai/adapter-openai`            | `package`      | `public`     | `^2.0.0`             | `available` | `recommended`    |              `1` |
 | `openai-agents-sdk` | `@moldea.ai/adapter-openai-agents-sdk` | `package`      | `public`     | `^1.0.0`             | `available` | `optional`       |              `1` |
 | `vercel-ai-sdk`     | `@moldea.ai/adapter-vercel-ai-sdk`     | `package`      | `public`     | `^1.0.0`             | `available` | `optional`       |              `2` |
@@ -495,6 +495,126 @@ Runtime guidance notes: Project-local guidance is needed only for repository-spe
 - The target does not infer agent input schemas from stateSchema or contextSchema.
 - The target does not infer supervisors, routing targets, handoffs, or subagent control transfer.
 - The target does not interpret headless tools, provider tools, server tools, toolkits, MCP tools, or tool output schemas.
+
+## Adapter: `langgraph`
+
+- Owning package: `@moldea.ai/adapter-langgraph`
+- Implementation range: `^1.0.0`
+- Supported repository-format versions: `1`
+- Compatible Core range: `^2.0.0`
+- Runtime guidance: `recommended`
+- Last verified: `2026-08-21`
+
+Runtime guidance notes: Project-local guidance is recommended for prompt ownership, model and tool boundaries, node responsibilities, dynamic routing, state semantics, subgraphs, persistence, interrupts, human control, supervisor composition, and other repository-specific LangGraph behavior not represented by the initial static targets.
+
+### Target: `typescript-functional-api-1-4`
+
+- Kind: `package`
+- Support level: `experimental`
+- Language: `typescript`
+- Evidence kinds: `agent-definition`, `language`, `runtime-package`, `runtime-pattern`
+- Last verified: `2026-08-21`
+
+| Ecosystem | Package                | Role        | Verified range    |
+| --------- | ---------------------- | ----------- | ----------------- |
+| `npm`     | `@langchain/core`      | `companion` | `>=1.2.9 <1.3.0`  |
+| `npm`     | `@langchain/langgraph` | `primary`   | `>=1.4.12 <1.5.0` |
+
+#### Binding support
+
+| Subject         | Relationship | Symbol    |
+| --------------- | ------------ | --------- |
+| `runtime-agent` | `partial`    | `partial` |
+
+#### Patterns
+
+| Kind      | Pattern                        | Support       | Description                                                                                                                                                                                                                                                                                                                                                     | Notes         |
+| --------- | ------------------------------ | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| `agent`   | `direct-functional-entrypoint` | `full`        | A directly exported TypeScript const initialized through the package-root entrypoint helper with a supported static string name or direct closed options object literal and a supported workflow function is recognized as the runtime-agent definition; the name is copied into runtimeName only when it satisfies the evidence-safe runtime-identity grammar. | Not available |
+| `routing` | `functional-routing`           | `unsupported` | Entrypoint control flow and task calls do not establish source-to-target agent handoffs.                                                                                                                                                                                                                                                                        | Not available |
+| `runtime` | `direct-functional-tasks`      | `partial`     | Direct local or relative-import package-root task declarations with supported non-generator functions produce positive task-pattern evidence when the non-generic returned task proxy is called directly, non-optionally, without explicit type arguments, from the entrypoint lexical body.                                                                    | Not available |
+| `runtime` | `functional-control-flow`      | `ambiguous`   | Ordinary branches, loops, callbacks, helper calls, and dynamic task selection are not reconstructed as a static graph.                                                                                                                                                                                                                                          | Not available |
+| `runtime` | `functional-final-state`       | `partial`     | An exact one-argument direct entrypoint.final call with a closed value/save object produces saved-state separation evidence without inferring input, output, or persistent-state schemas.                                                                                                                                                                       | Not available |
+| `runtime` | `functional-interrupt`         | `partial`     | An exact one-argument direct package-root interrupt call in the entrypoint body produces human-in-the-loop runtime-pattern evidence without interpreting approval semantics.                                                                                                                                                                                    | Not available |
+| `runtime` | `functional-previous-state`    | `partial`     | An exact zero-argument direct getPreviousState call produces persistence-related runtime-pattern evidence without inferring a schema.                                                                                                                                                                                                                           | Not available |
+| `schema`  | `functional-agent-schemas`     | `unsupported` | TypeScript parameter and return types are not treated as executable Repository Format agent schema bindings.                                                                                                                                                                                                                                                    | Not available |
+| `tool`    | `functional-task-capabilities` | `unsupported` | Functional API tasks do not establish model-visible manifest tool relationships in the initial target.                                                                                                                                                                                                                                                          | Not available |
+
+#### Known limitations
+
+- Entrypoint and task declarations require exactly two explicit type arguments when a list is present. Interrupt accepts one or two, getPreviousState accepts exactly one, and entrypoint.final accepts exactly two; another count produces no applicable target or optional evidence. Returned task proxies are non-generic, and final-state options must be a closed direct value/save object literal.
+- Entrypoint and task names outside the evidence-safe runtime-identity grammar may still establish supported relationships but are omitted from runtimeName and name-detail fields.
+- Entrypoint and task options are interpreted only when authored as direct closed object literals in the corresponding helper call; indirect options bindings and expressions are unsupported.
+- Interrupt payloads, checkpoint behavior, replay determinism, idempotency, and human-approval semantics are not validated.
+- Lockfiles and installed package versions are not inspected.
+- Nested callback, nested helper, and transitive task-call graphs are not followed.
+- Only TypeScript ESM source and documented direct relative imports are interpreted.
+- Only directly exported package-root entrypoint definitions with inline or directly resolved non-generator workflow functions are recognized.
+- Only non-optional direct calls to the exact returned task proxy, with no explicit type arguments, in the entrypoint function's own lexical body are attributed to the registered workflow; explicit type arguments or indirect callee forms at the task-use site produce no task-use evidence.
+- Ordinary JavaScript control flow is not reconstructed as a graph topology.
+- Task declarations resolve only through local const values or direct relative named imports to exported const declarations; generator and async-generator task functions are unsupported.
+- Tasks do not become manifest tools, skills, or handoffs merely because they are exported or invoked.
+- TypeScript input and output types do not establish executable schema relationships.
+
+### Target: `typescript-state-graph-1-4`
+
+- Kind: `package`
+- Support level: `experimental`
+- Language: `typescript`
+- Evidence kinds: `agent-definition`, `language`, `runtime-package`, `runtime-pattern`, `schema`
+- Last verified: `2026-08-21`
+
+| Ecosystem | Package                | Role        | Verified range    |
+| --------- | ---------------------- | ----------- | ----------------- |
+| `npm`     | `@langchain/core`      | `companion` | `>=1.2.9 <1.3.0`  |
+| `npm`     | `@langchain/langgraph` | `primary`   | `>=1.4.12 <1.5.0` |
+
+#### Binding support
+
+| Subject         | Relationship | Symbol    |
+| --------------- | ------------ | --------- |
+| `runtime-agent` | `partial`    | `partial` |
+| `input-schema`  | `partial`    | `partial` |
+| `output-schema` | `partial`    | `partial` |
+
+#### Patterns
+
+| Kind      | Pattern                            | Support       | Description                                                                                                                                                                                                                                                                                                                            | Notes         |
+| --------- | ---------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| `agent`   | `compile-runtime-name`             | `partial`     | A supported static compile name may establish the graph runtime identity used in agent-definition evidence only when it satisfies the common machine-string contract and the adapter's evidence-safe runtime-identity grammar.                                                                                                         | Not available |
+| `agent`   | `direct-compiled-state-graph`      | `full`        | A directly exported TypeScript const compiled from a supported package-root StateGraph builder with a target-viable version-matched constructor is recognized as the runtime-agent definition.                                                                                                                                         | Not available |
+| `agent`   | `prebuilt-and-supervisor-agents`   | `unsupported` | Prebuilt agents, ToolNode, Deep Agents, supervisor packages, and higher-level harnesses are outside the initial direct StateGraph target.                                                                                                                                                                                              | Not available |
+| `routing` | `compile-description-routing`      | `unsupported` | Compiled-graph description is not validated against the effective routing description without a supported supervisor registration target.                                                                                                                                                                                              | Not available |
+| `routing` | `conditional-edge-registration`    | `partial`     | Direct static-source addConditionalEdges calls with supported callable or opaque potentially runnable router sources and an absent, explicitly omitted, or target-viable path-map collection produce control-flow evidence without inferring path-map destinations, router destinations, or agent handoffs.                            | Not available |
+| `routing` | `dynamic-command-and-send-routing` | `ambiguous`   | Command, Send, parent-graph navigation, and runtime-generated destinations cannot be reconstructed as a complete static topology.                                                                                                                                                                                                      | Not available |
+| `runtime` | `direct-edge-registration`         | `partial`     | Direct addEdge calls with role-valid START, END, admissible static node-name, or non-empty waiting-edge positions produce positive edge-pattern evidence, except for the version-matched rejected direct START-to-END pair.                                                                                                            | Not available |
+| `runtime` | `direct-node-registration`         | `partial`     | Direct named addNode calls produce positive node-pattern evidence only for static names outside the runtime-rejected sentinel and reserved-separator set, supported repository-local, inline callable, or opaque potentially runnable action sources, and an absent, explicitly omitted, or target-viable object-family options value. | Not available |
+| `runtime` | `inline-state-graph-builder`       | `full`        | One inline fluent StateGraph chain ending in compile is supported when every intermediate method belongs to the documented target boundary.                                                                                                                                                                                            | Not available |
+| `runtime` | `single-owner-state-graph-builder` | `partial`     | One module-local const builder with deterministic top-level ownership and one authoritative compile call is supported.                                                                                                                                                                                                                 | Not available |
+| `schema`  | `graph-input-output-schemas`       | `partial`     | Direct immutable non-object-literal schema value bindings in one closed modern object initializer are supported, including state fallback when distinct input or output schemas are absent.                                                                                                                                            | Not available |
+| `tool`    | `graph-node-capabilities`          | `unsupported` | Graph nodes and node-local model or tool calls do not establish manifest tool relationships in the initial target.                                                                                                                                                                                                                     | Not available |
+
+#### Known limitations
+
+- Command, Send, router-body destinations, and other dynamic routing remain unresolved.
+- Compiled-graph description is not validated without a supported supervisor registration.
+- Edge-pattern evidence classifies the version-matched START and END sentinel values before applying role-specific source and target rules; waiting-edge source arrays must be non-empty, and role-invalid sentinel positions or the rejected direct START-to-END pair produce no edge evidence or diagnostic and cannot preserve the graph target when statically established.
+- Every recognized builder call requires a version-matched public runtime arity and explicit type-argument count. StateGraph construction admits one through ten explicit type arguments; positional addNode admits one through three; object-map addNode and addSequence admit exactly two; tuple-array or opaque-collection addNode and addSequence admit one through three; compile admits exactly one. Explicit type arguments on addEdge, addConditionalEdges, setNodeDefaults, setEntryPoint, or setFinishPoint produce no graph target. One-argument node collections, positional and tuple node-options values, conditional-edge path maps and object overloads, and recognized-but-uninterpreted methods also apply explicit target-preservation gates. A call without positive operation evidence preserves the graph target only through the closed object-or-schema, opaque-potentially-string, target-viable node-action, target-viable conditional-router, options, path-map, endpoint, and collection classifiers; statically non-object node options, non-collection path maps, role-invalid path-map destinations, reserved node identities, role-invalid sentinels, separator-bearing endpoints, target-excluded operation sources, and the rejected direct START-to-END pair produce no graph target.
+- Graph nodes do not become manifest tools, skills, subagents, or handoffs merely from their graph position.
+- Graph schema relationships require direct immutable non-object-literal values in unambiguous state, stateSchema, input, or output properties of one closed modern object initializer. Direct and directly bound raw object maps are deliberately unverified; the overloaded direct constructor family may preserve target selection but produces no schema evidence or negative wiring diagnostics.
+- Lockfiles and installed package versions are not inspected.
+- Member-sensitive directly bound runnable maps, node collections, tuple collections, and path maps must satisfy the closed aggregate-binding use grammar. A const declaration alone proves only binding identity; rooted writes, aliases, separate export forms, returns, yields, spreads, container insertion, unsupported argument or receiver uses, computed or optional access, and other escapes prevent target preservation through member inspection.
+- Node metadata, node-option property values, node defaults, subgraphs, error handlers, reducers, checkpointers, stores, caches, stream transformers, path-map destination meaning, and runtime context are not semantically interpreted. Compile options, node options, and context or schema candidates preserve unresolved target roles only through their documented closed object- and schema-role classifiers.
+- One-argument object-map and tuple-array addNode overloads and addSequence are not expanded into positive node or edge evidence. Target preservation requires a non-empty closed supported collection shape or an opaque value that could resolve to one; statically empty, malformed, or incompatible direct or directly bound collections cannot preserve the graph target.
+- Only TypeScript ESM source and documented direct relative imports are interpreted.
+- Only directly exported compiled StateGraph definitions with inline or single-owner builders are recognized.
+- Positive addNode evidence excludes the reserved **start** and **end** node names, names containing | or :, and action sources outside the supported callable or opaque potentially runnable forms. Closed recursive runnable-map node-action candidates and exact inline opaque runnable candidates may preserve the graph target without positive operation evidence.
+- Positive conditional-edge evidence excludes router sources outside the supported callable or opaque potentially runnable forms. Other router values preserve the graph target only through the closed target-viable conditional-router classifier.
+- Positive edge and conditional-edge evidence excludes separator-bearing static node endpoints. Only the closed opaque-potentially-string classifier may preserve unresolved string-valued operation roles.
+- Runtime names and source, target, or task name details are omitted unless they satisfy the deliberately narrow evidence-safe runtime-identity grammar; locator-shaped or otherwise unsafe names may still participate in relationship analysis without being copied into evidence.
+- Runtime-pattern evidence is positive and does not represent a complete or validated graph topology.
+- StateGraph target selection requires a target-viable version-matched one- or two-argument constructor. Opaque first arguments and indirect second arguments preserve the target only through the closed direct immutable object-family and opaque potentially object-or-schema classifiers; arbitrary unknown expressions do not. Statically impossible first arguments, direct or indirectly bound object literals outside the direct closed modern form, raw state maps, legacy channels objects, and unsupported modern object initializers produce no agent-definition evidence. Conditional constructor and schema candidates are role-viable only when recursive branch classification leaves at least one admitted result; an all-incompatible conditional cannot preserve the target.
+- Structurally open or incompatible runnable-like object maps, callable objects outside the classifier, generators, mutable bindings, aliases, re-exports, computed or optional accesses, and other excluded runnable forms remain unverified rather than being treated as invalid LangGraph usage.
 
 ## Adapter: `openai`
 
