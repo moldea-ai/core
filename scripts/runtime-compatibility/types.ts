@@ -95,6 +95,11 @@ export interface IProviderLimit {
   value: boolean | number | string | string[];
 }
 
+// canonical skill-owned evidence for one qualification profile
+export interface IRuntimeTargetQualificationEvidence {
+  url: string;
+}
+
 export interface IRuntimeTarget {
   bindingSupport?: Partial<Record<IBindingSubject, IBindingSupport>>;
   evidenceKinds?: IEvidenceKind[];
@@ -106,6 +111,7 @@ export interface IRuntimeTarget {
   packages?: IPackageRequirement[];
   patterns?: IRuntimePattern[];
   providerLimits?: IProviderLimit[];
+  qualificationEvidence?: IRuntimeTargetQualificationEvidence;
   supportLevel: IRuntimeTargetSupportLevel;
 }
 

@@ -4,7 +4,7 @@
 
 ## Source model
 
-The build discovers immediate public implemented projects from `/projects/**`, validates their manifests and package-owned `docs/**`, derives dependencies from manifests, extracts API reference data from actual public TypeScript exports, and reads adapter status only through the repository's strict parser for `compatibility/runtimes.yaml`.
+The build discovers immediate public implemented projects from `/projects/**`, validates their manifests and package-owned `docs/**`, derives dependencies from manifests, extracts API reference data from actual public TypeScript exports, and reads adapter status and optional skill-owned qualification links only through the repository's strict parser for `compatibility/runtimes.yaml`.
 
 The ignored `.generated/model.json` file is a deterministic build cache. Do not edit it. Authored website content is limited to landing-page framing, application-owned layouts and navigation, SEO identity, public assets, accessibility labels, and other site-specific presentation concerns. Package behavior belongs in each project's docs; adapter compatibility belongs in the matrix.
 

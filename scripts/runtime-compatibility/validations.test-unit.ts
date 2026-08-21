@@ -162,6 +162,82 @@ describe('runtime compatibility matrix validation', () => {
     expect(parseRuntimeCompatibilityMatrix(stringify(matrix)).valid).toBe(true);
   });
 
+  test('publishes qualification evidence only for the committed Custom profile', () => {
+    const result = parseRuntimeCompatibilityMatrix(canonicalSource);
+
+    expect(result.valid).toBe(true);
+    if (result.valid) {
+      const qualificationTargets = Object.entries(result.matrix.adapters).flatMap(
+        ([adapterId, adapter]) =>
+          (adapter.targets ?? []).flatMap((target) =>
+            target.qualificationEvidence === undefined
+              ? []
+              : [
+                  {
+                    adapterId,
+                    targetId: target.id,
+                    url: target.qualificationEvidence.url,
+                  },
+                ],
+          ),
+      );
+
+      expect(qualificationTargets).toStrictEqual([
+        {
+          adapterId: 'custom',
+          targetId: 'custom',
+          url: 'https://skill.moldea.ai/qualification/custom/custom/',
+        },
+      ]);
+    }
+  });
+
+  test.each([
+    ['without HTTPS', 'http://skill.moldea.ai/qualification/custom/custom/', 'must use HTTPS'],
+    [
+      'from another origin',
+      'https://packages.moldea.ai/qualification/custom/custom/',
+      'must use origin https://skill.moldea.ai',
+    ],
+    [
+      'for another adapter',
+      'https://skill.moldea.ai/qualification/openai/custom/',
+      'must match adapter custom and implementation custom',
+    ],
+    [
+      'for another implementation',
+      'https://skill.moldea.ai/qualification/custom/typescript/',
+      'must match adapter custom and implementation custom',
+    ],
+    [
+      'with a query',
+      'https://skill.moldea.ai/qualification/custom/custom/?attempt=latest',
+      'must omit query and fragment data',
+    ],
+  ])('rejects qualification evidence %s', (_description, url, expectedMessage) => {
+    const matrix = cloneCanonicalMatrix();
+    const target = matrix.adapters['custom']?.targets?.[0];
+
+    if (target?.qualificationEvidence === undefined) {
+      throw new Error('Canonical Custom target is missing qualification evidence.');
+    }
+
+    target.qualificationEvidence.url = url;
+    expectIssue(stringify(matrix), expectedMessage);
+  });
+
+  test('rejects unknown qualification evidence properties', () => {
+    const matrix = cloneCanonicalMatrix();
+    const evidence = matrix.adapters['custom']?.targets?.[0]?.qualificationEvidence;
+
+    if (evidence === undefined) {
+      throw new Error('Canonical Custom target is missing qualification evidence.');
+    }
+
+    Object.assign(evidence, { status: 'passing' });
+    expectIssue(stringify(matrix), 'Unknown property');
+  });
+
   test.each([
     [
       'directive',

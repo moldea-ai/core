@@ -1,4 +1,7 @@
 ---
+import { ArrowUpRight } from '@lucide/astro';
+import ActionLink from '@moldea.ai/website-ui/action-link';
+
 import type { IAdapterPage } from '../lib/model/types.ts';
 import StatusBadge from './status-badge.astro';
 
@@ -96,15 +99,33 @@ const { entry } = adapter;
         class="space-y-6 border-t border-border pt-7"
         aria-labelledby={`${adapter.id}-${target.id}`}
       >
-        <div>
-          <p class="eyebrow mb-2">Compatibility target</p>
-          <h2
-            id={`${adapter.id}-${target.id}`}
-            class="scroll-mt-24 text-2xl font-semibold tracking-tight break-words"
-          >
-            {target.id}
-          </h2>
-          <p class="mt-2 text-muted-foreground">Language: {target.language}</p>
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div class="min-w-0">
+            <p class="eyebrow mb-2">Compatibility target</p>
+            <h2
+              id={`${adapter.id}-${target.id}`}
+              class="scroll-mt-24 text-2xl font-semibold tracking-tight break-words"
+            >
+              {target.id}
+            </h2>
+            <p class="mt-2 text-muted-foreground">Language: {target.language}</p>
+          </div>
+          {target.qualificationEvidence && (
+            <ActionLink
+              aria-label={`View qualification evidence for ${adapter.id} target ${target.id}`}
+              class="w-fit shrink-0"
+              href={target.qualificationEvidence.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              variant="outline"
+            >
+              Qualification evidence
+              <ArrowUpRight
+                class="size-4"
+                aria-hidden="true"
+              />
+            </ActionLink>
+          )}
         </div>
 
         {target.packages && (

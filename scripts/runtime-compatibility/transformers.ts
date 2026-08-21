@@ -20,6 +20,10 @@ const normalizeProviderLimit = (providerLimit: IProviderLimit): IProviderLimit =
 const normalizeTarget = (target: IRuntimeTarget): IRuntimeTarget => {
   const normalized: IRuntimeTarget = { ...target };
 
+  if (target.qualificationEvidence !== undefined) {
+    normalized.qualificationEvidence = { ...target.qualificationEvidence };
+  }
+
   if (target.packages !== undefined) {
     normalized.packages = [...target.packages].sort((left, right) => {
       return (

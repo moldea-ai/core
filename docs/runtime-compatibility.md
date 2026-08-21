@@ -271,6 +271,7 @@ Runtime guidance notes: Project-local guidance defines the custom runtime integr
 - Language: `any`
 - Evidence kinds: Not available
 - Last verified: `2026-08-15`
+- Qualification evidence: [View profile and results](https://skill.moldea.ai/qualification/custom/custom/)
 
 #### Patterns
 

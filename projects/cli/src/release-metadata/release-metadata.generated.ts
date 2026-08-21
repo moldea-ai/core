@@ -27,7 +27,7 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
   cliPackage: {
     name: '@moldea.ai/cli',
     supportedNodeRange: '^22.11.0 || ^24.11.0',
-    version: '3.3.4',
+    version: '3.3.5',
   },
   coreRecognizedAdapterIds: [
     'anthropic',
@@ -699,6 +699,9 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
                 support: 'full',
               },
             ],
+            qualificationEvidence: {
+              url: 'https://skill.moldea.ai/qualification/custom/custom/',
+            },
             supportLevel: 'supported',
           },
         ],

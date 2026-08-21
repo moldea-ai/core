@@ -137,6 +137,11 @@ const generateTarget = (target: IRuntimeTarget): string[] => {
     `- Language: ${formatInlineCode(target.language)}`,
     `- Evidence kinds: ${target.evidenceKinds?.map(formatInlineCode).join(', ') ?? MISSING_VALUE}`,
     `- Last verified: ${formatInlineCode(target.lastVerifiedAt)}`,
+    ...(target.qualificationEvidence === undefined
+      ? []
+      : [
+          `- Qualification evidence: [View profile and results](${target.qualificationEvidence.url})`,
+        ]),
     '',
     ...generatePackageRequirements(target),
     ...generateBindingSupport(target),

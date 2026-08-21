@@ -112,6 +112,11 @@ export interface IMoldeaCliProviderLimit {
   readonly value: boolean | number | string | readonly string[];
 }
 
+// canonical skill-owned evidence for one qualification profile
+export interface IMoldeaCliRuntimeTargetQualificationEvidence {
+  readonly url: string;
+}
+
 // one verified runtime target within an adapter matrix entry
 export interface IMoldeaCliRuntimeTarget {
   readonly bindingSupport?: Partial<
@@ -126,6 +131,7 @@ export interface IMoldeaCliRuntimeTarget {
   readonly packages?: readonly IMoldeaCliRuntimePackageRequirement[];
   readonly patterns?: readonly IMoldeaCliRuntimePattern[];
   readonly providerLimits?: readonly IMoldeaCliProviderLimit[];
+  readonly qualificationEvidence?: IMoldeaCliRuntimeTargetQualificationEvidence;
   readonly supportLevel: IMoldeaCliRuntimeTargetSupportLevel;
 }
 

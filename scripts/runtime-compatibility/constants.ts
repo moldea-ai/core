@@ -20,6 +20,7 @@ export const RUNTIME_COMPATIBILITY_SOURCE_PATH = 'compatibility/runtimes.yaml';
 export const RUNTIME_COMPATIBILITY_DOCUMENT_PATH = 'docs/runtime-compatibility.md';
 export const MOLDEA_CLI_RELEASE_METADATA_PATH =
   'projects/cli/src/release-metadata/release-metadata.generated.ts';
+export const QUALIFICATION_EVIDENCE_ORIGIN = 'https://skill.moldea.ai';
 
 // complete official adapter-to-package identity map for matrix version 1
 export const OFFICIAL_RUNTIME_ADAPTER_PACKAGES = {

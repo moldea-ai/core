@@ -451,6 +451,8 @@ adapters:
         kind: custom
         supportLevel: supported
         language: any
+        qualificationEvidence:
+          url: 'https://skill.moldea.ai/qualification/custom/custom/'
         patterns:
           - id: explicit-repository-relationships
             kind: runtime

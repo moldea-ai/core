@@ -39,7 +39,7 @@ const INSTALLED_PACKAGE_METADATA = Object.freeze({
     '@moldea.ai/repository-fs': '1.0.2',
   }),
   supportedNodeRange: '^22.11.0 || ^24.11.0',
-  version: '3.3.4',
+  version: '3.3.5',
 });
 
 describe('runMoldeaCli', () => {
@@ -139,7 +139,7 @@ Options:
         packageMetadata: INSTALLED_PACKAGE_METADATA,
         releaseMetadata: MOLDEA_CLI_RELEASE_METADATA,
       }),
-    ).resolves.toStrictEqual({ exitCode: 0, stderr: '', stdout: '3.3.4\n' });
+    ).resolves.toStrictEqual({ exitCode: 0, stderr: '', stdout: '3.3.5\n' });
     expect(executeCommand).not.toHaveBeenCalled();
   });
 
@@ -170,7 +170,7 @@ Options:
       exitCode: 2,
       stderr: '',
       stdout:
-        '{"cliVersion":"3.3.4","command":null,"error":{"code":"INVALID_ARGUMENT","details":{},"message":"The command invocation is invalid.","path":null,"retryable":false,"source":"cli"},"result":null,"schemaVersion":1,"status":"error"}\n',
+        '{"cliVersion":"3.3.5","command":null,"error":{"code":"INVALID_ARGUMENT","details":{},"message":"The command invocation is invalid.","path":null,"retryable":false,"source":"cli"},"result":null,"schemaVersion":1,"status":"error"}\n',
     });
   });
 
@@ -225,7 +225,7 @@ Options:
     expect(compatibilityResult.exitCode).toBe(0);
     expect(compatibilityResult.stderr).toBe('');
     expect(JSON.parse(compatibilityResult.stdout)).toMatchObject({
-      cliVersion: '3.3.4',
+      cliVersion: '3.3.5',
       command: 'compatibility',
       result: { matrixVersion: 1 },
       status: 'valid',
@@ -247,7 +247,7 @@ Options:
       exitCode: 3,
       stderr: '',
       stdout:
-        '{"cliVersion":"3.3.4","command":"inspect","error":{"code":"INTERNAL_ERROR","details":{},"message":"The command could not be completed.","path":null,"retryable":false,"source":"cli"},"result":null,"schemaVersion":1,"status":"error"}\n',
+        '{"cliVersion":"3.3.5","command":"inspect","error":{"code":"INTERNAL_ERROR","details":{},"message":"The command could not be completed.","path":null,"retryable":false,"source":"cli"},"result":null,"schemaVersion":1,"status":"error"}\n',
     });
   });
 });

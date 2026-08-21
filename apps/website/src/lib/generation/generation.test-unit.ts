@@ -289,6 +289,9 @@ describe('adapter and route generation', () => {
       implementedPackageSlug: null,
       entry: { implementationStatus: 'available', implementation: { kind: 'built-in' } },
     });
+    expect(custom?.entry.targets?.[0]?.qualificationEvidence).toStrictEqual({
+      url: 'https://skill.moldea.ai/qualification/custom/custom/',
+    });
     expect(openAi).toMatchObject({
       implementedPackageSlug: 'adapter-openai',
       entry: {
@@ -296,6 +299,7 @@ describe('adapter and route generation', () => {
         targets: [{ supportLevel: 'experimental' }],
       },
     });
+    expect(openAi?.entry.targets?.[0]?.qualificationEvidence).toBeUndefined();
     expect(anthropic).toMatchObject({
       implementedPackageSlug: 'adapter-anthropic',
       entry: {

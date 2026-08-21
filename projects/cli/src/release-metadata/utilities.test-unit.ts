@@ -44,7 +44,7 @@ describe('CLI release metadata immutability', () => {
       cliPackage: {
         name: '@moldea.ai/cli',
         supportedNodeRange: '^22.11.0 || ^24.11.0',
-        version: '3.3.4',
+        version: '3.3.5',
       },
       coreRecognizedAdapterIds: [
         'anthropic',
@@ -95,7 +95,14 @@ describe('CLI release metadata immutability', () => {
       implementationStatus: 'available',
       runtimeGuidance: { expectation: 'required' },
       supportedRepositoryFormatVersions: [1],
-      targets: [{ id: 'custom' }],
+      targets: [
+        {
+          id: 'custom',
+          qualificationEvidence: {
+            url: 'https://skill.moldea.ai/qualification/custom/custom/',
+          },
+        },
+      ],
     });
     expect(MOLDEA_CLI_RELEASE_METADATA.matrix.adapters['openai']).toMatchObject({
       compatibleCoreRange: '^2.0.0',

@@ -1,6 +1,6 @@
 {
   "name": "@moldea.ai/cli",
-  "version": "3.3.4",
+  "version": "3.3.5",
   "description": "The canonical read-only local command-line composition for moldea repositories.",
   "homepage": "https://github.com/moldea-ai/packages/tree/main/projects/cli#readme",
   "bugs": {

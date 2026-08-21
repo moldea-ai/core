@@ -23,6 +23,7 @@ import {
   PATTERN_SUPPORT_LEVELS,
   PROVIDER_LIMIT_KINDS,
   PROVIDER_LIMIT_SUBJECTS,
+  QUALIFICATION_EVIDENCE_ORIGIN,
   RUNTIME_GUIDANCE_EXPECTATIONS,
   RUNTIME_TARGET_KINDS,
   RUNTIME_TARGET_SUPPORT_LEVELS,
@@ -70,8 +71,10 @@ const TARGET_PROPERTIES = new Set([
   'packages',
   'patterns',
   'providerLimits',
+  'qualificationEvidence',
   'supportLevel',
 ]);
+const QUALIFICATION_EVIDENCE_PROPERTIES = new Set(['url']);
 const PACKAGE_PROPERTIES = new Set(['ecosystem', 'name', 'role', 'versionRange']);
 const BINDING_PROPERTIES = new Set(['relationship', 'symbol']);
 const PATTERN_PROPERTIES = new Set(['description', 'id', 'kind', 'notes', 'support']);
@@ -693,6 +696,77 @@ const validateKnownLimitations = (
   rejectDuplicateStrings(validLimitations, path, issues);
 };
 
+const validateQualificationEvidence = (
+  value: unknown,
+  adapterId: string,
+  targetId: string | null,
+  path: string,
+  issues: IRuntimeCompatibilityValidationIssue[],
+): void => {
+  const evidence = requireRecord(value, path, issues);
+
+  if (evidence === null) {
+    return;
+  }
+
+  rejectUnknownProperties(evidence, QUALIFICATION_EVIDENCE_PROPERTIES, path, issues);
+  const urlValue = evidence['url'];
+
+  if (!requireStrictSingleLine(urlValue, `${path}.url`, issues)) {
+    return;
+  }
+
+  let url: URL;
+
+  try {
+    url = new URL(urlValue);
+  } catch {
+    addIssue(issues, `${path}.url`, 'Expected an absolute qualification evidence URL.');
+    return;
+  }
+
+  if (url.protocol !== 'https:') {
+    addIssue(issues, `${path}.url`, 'Qualification evidence must use HTTPS.');
+  }
+
+  if (url.origin !== QUALIFICATION_EVIDENCE_ORIGIN) {
+    addIssue(
+      issues,
+      `${path}.url`,
+      `Qualification evidence must use origin ${QUALIFICATION_EVIDENCE_ORIGIN}.`,
+    );
+  }
+
+  if (url.username !== '' || url.password !== '') {
+    addIssue(issues, `${path}.url`, 'Qualification evidence URLs must omit credentials.');
+  }
+
+  if (url.search !== '' || url.hash !== '') {
+    addIssue(
+      issues,
+      `${path}.url`,
+      'Qualification evidence URLs must omit query and fragment data.',
+    );
+  }
+
+  if (targetId !== null) {
+    const expectedPath = `/qualification/${adapterId}/${targetId}/`;
+    const expectedUrl = `${QUALIFICATION_EVIDENCE_ORIGIN}${expectedPath}`;
+
+    if (url.pathname !== expectedPath) {
+      addIssue(
+        issues,
+        `${path}.url`,
+        `Qualification evidence path must match adapter ${adapterId} and implementation ${targetId}.`,
+      );
+    }
+
+    if (urlValue !== expectedUrl) {
+      addIssue(issues, `${path}.url`, `Expected canonical qualification URL ${expectedUrl}.`);
+    }
+  }
+};
+
 const validateTarget = (
   adapterId: string,
   value: unknown,
@@ -716,6 +790,16 @@ const validateTarget = (
   );
   const hasLanguage = requireStableId(target['language'], `${path}.language`, issues);
   const hasDate = requireDate(target['lastVerifiedAt'], `${path}.lastVerifiedAt`, issues);
+
+  if (target['qualificationEvidence'] !== undefined) {
+    validateQualificationEvidence(
+      target['qualificationEvidence'],
+      adapterId,
+      hasId ? (target['id'] as string) : null,
+      `${path}.qualificationEvidence`,
+      issues,
+    );
+  }
 
   if (hasKind && target['kind'] === 'package') {
     validatePackageRequirements(target['packages'], `${path}.packages`, issues);
