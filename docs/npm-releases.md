@@ -21,6 +21,7 @@ Package-owned full documentation under `projects/<project>/docs/**` is repositor
 | `adapter-cloudflare-agents` | `@moldea.ai/adapter-cloudflare-agents` | `adapter-cloudflare-agents-v<version>` |
 | `adapter-eve`               | `@moldea.ai/adapter-eve`               | `adapter-eve-v<version>`               |
 | `adapter-langchain`         | `@moldea.ai/adapter-langchain`         | `adapter-langchain-v<version>`         |
+| `adapter-langgraph`         | `@moldea.ai/adapter-langgraph`         | `adapter-langgraph-v<version>`         |
 | `adapter-vercel-ai-sdk`     | `@moldea.ai/adapter-vercel-ai-sdk`     | `adapter-vercel-ai-sdk-v<version>`     |
 | `cli`                       | `@moldea.ai/cli`                       | `cli-v<version>`                       |
 | `website-ui`                | `@moldea.ai/website-ui`                | `website-ui-v<version>`                |
@@ -52,7 +53,7 @@ The workflow uses npm OIDC and contains no npm publication token. The publicatio
 
 Pull-request CI compares every public project directory with the target commit and rejects a changed existing project with an unchanged, lower, prerelease, or noncanonical version. A new project absent from the target commit is selected with no predecessor version and must still declare a canonical stable version. The resulting push to `main` repeats the comparison against the exact pushed commits, loads the published versions for every public package, and selects changed projects plus each current repository version absent from npm. An unpublished candidate uses the latest published version as its predecessor, so a safe skipped version can recover automatically while downgrades remain prohibited. A changed version already present on npm retains its base-commit predecessor so the reusable release boundary still validates its tag identity. The publish orchestrator verifies that commit once rather than starting a parallel standalone CI run. Selected projects pass one complete repository, supported-Node, cross-platform, packed-artifact, checksum, and runtime verification boundary before any tag or publication is attempted.
 
-Repository publishes first, followed by Repository FS, Core, the Anthropic adapter, the Google Gen AI adapter, the OpenAI adapter, the OpenAI Agents SDK adapter, the Claude Agent SDK adapter, the Cloudflare Agents adapter, the Eve adapter, the LangChain adapter, the Vercel AI SDK adapter, and the CLI. Website UI is independent of that runtime dependency chain and may publish after the shared verification boundary without waiting for those package jobs. An unselected package is skipped without blocking later selected packages. A failed package blocks every dependent downstream release, while a rerun or manual trusted dispatch can resume from a matching tag without republishing completed versions.
+Repository publishes first, followed by Repository FS, Core, the Anthropic adapter, the Google Gen AI adapter, the OpenAI adapter, the OpenAI Agents SDK adapter, the Claude Agent SDK adapter, the Cloudflare Agents adapter, the Eve adapter, the LangChain adapter, the LangGraph adapter, the Vercel AI SDK adapter, and the CLI. Website UI is independent of that runtime dependency chain and may publish after the shared verification boundary without waiting for those package jobs. An unselected package is skipped without blocking later selected packages. A failed package blocks every dependent downstream release, while a rerun or manual trusted dispatch can resume from a matching tag without republishing completed versions.
 
 The workflow accepts stable semantic versions only. Prerelease versions and alternate npm distribution tags require a separately designed release path.
 
@@ -89,9 +90,10 @@ npm requires a package to exist before it can be connected to a trusted publishe
    9. `@moldea.ai/adapter-cloudflare-agents`
    10. `@moldea.ai/adapter-eve`
    11. `@moldea.ai/adapter-langchain`
-   12. `@moldea.ai/adapter-vercel-ai-sdk`
-   13. `@moldea.ai/cli`
-   14. `@moldea.ai/website-ui`
+   12. `@moldea.ai/adapter-langgraph`
+   13. `@moldea.ai/adapter-vercel-ai-sdk`
+   14. `@moldea.ai/cli`
+   15. `@moldea.ai/website-ui`
 
 Repository FS and Core require a compatible Repository version to exist on npm. Every package-backed runtime adapter requires compatible Repository and Core versions. The CLI requires the exact Repository, Repository FS, Core, and active adapter versions declared by its release.
 

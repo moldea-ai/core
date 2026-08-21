@@ -443,11 +443,21 @@ test('presents available runtime adapters without promoting planned inventory', 
   await expect(adapterSection.getByRole('link', { name: /cloudflare-agents/ })).toBeVisible();
   await expect(adapterSection.getByRole('link', { name: /eve/ })).toBeVisible();
   await expect(adapterSection.getByRole('link', { name: /langchain/ })).toBeVisible();
+  await expect(adapterSection.getByRole('link', { name: /langgraph/ })).toBeVisible();
   await expect(adapterSection.getByRole('link', { name: /vercel-ai-sdk/ })).toBeVisible();
   await expect(adapterSection.getByAltText('Vercel company logo')).toHaveCount(2);
   await expect(adapterSection.getByRole('link', { name: 'View all adapters' })).toHaveAttribute(
     'href',
     toPublicPath('/adapters/'),
+  );
+});
+
+test('omits the planned adapter inventory when every adapter is available', async ({ page }) => {
+  await page.goto(toPublicPath('/adapters/'));
+
+  await expect(page.getByText('Matrix-approved inventory', { exact: true })).toHaveCount(0);
+  await expect(page.getByRole('heading', { level: 2, name: 'Planned and evolving' })).toHaveCount(
+    0,
   );
 });
 
@@ -544,7 +554,7 @@ test('shows company marks for runtime adapters on the packages page', async ({ p
   const runtimeAdapters = page.locator('section[aria-labelledby="adapter-packages-title"]');
 
   await expect(runtimeAdapters.getByAltText('Anthropic company logo')).toHaveCount(2);
-  await expect(runtimeAdapters.getByAltText('LangChain company logo')).toHaveCount(1);
+  await expect(runtimeAdapters.getByAltText('LangChain company logo')).toHaveCount(2);
   await expect(runtimeAdapters.getByAltText('OpenAI company logo')).toHaveCount(2);
   await expect(runtimeAdapters.getByRole('img', { name: 'Custom adapter icon' })).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Website Foundations' })).toHaveCount(0);
@@ -587,12 +597,19 @@ test('uses branded action states in both themes and respects reduced motion', as
   const primaryAction = page.getByRole('link', { name: 'Explore packages' });
   const outlineAction = page.getByRole('link', { name: 'Source', exact: true });
   const inlineAction = page.getByRole('link', { name: 'View all packages' });
+  const actionTransitionProperties = await primaryAction.evaluate((element) =>
+    getComputedStyle(element)
+      .transitionProperty.split(',')
+      .map((property) => property.trim()),
+  );
   const lightPrimaryBackground = await primaryAction.evaluate(
     (element) => getComputedStyle(element).backgroundColor,
   );
   const lightOutlineBackground = await outlineAction.evaluate(
     (element) => getComputedStyle(element).backgroundColor,
   );
+
+  expect(actionTransitionProperties).toStrictEqual(['border-color', 'box-shadow', 'translate']);
 
   await primaryAction.hover();
   await expect

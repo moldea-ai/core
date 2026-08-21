@@ -5,6 +5,7 @@ import { cloudflareAgentsAdapter } from '@moldea.ai/adapter-cloudflare-agents';
 import { eveAdapter } from '@moldea.ai/adapter-eve';
 import { googleGenAiAdapter } from '@moldea.ai/adapter-google-genai';
 import { langChainAdapter } from '@moldea.ai/adapter-langchain';
+import { langGraphAdapter } from '@moldea.ai/adapter-langgraph';
 import { openAiAdapter } from '@moldea.ai/adapter-openai';
 import { openAiAgentsSdkAdapter } from '@moldea.ai/adapter-openai-agents-sdk';
 import { vercelAiSdkAdapter } from '@moldea.ai/adapter-vercel-ai-sdk';
@@ -17,6 +18,7 @@ export const ACTIVE_RUNTIME_ADAPTERS: readonly IRuntimeAdapter[] = Object.freeze
   eveAdapter,
   googleGenAiAdapter,
   langChainAdapter,
+  langGraphAdapter,
   openAiAdapter,
   openAiAgentsSdkAdapter,
   vercelAiSdkAdapter,

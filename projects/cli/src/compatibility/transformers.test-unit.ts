@@ -50,6 +50,7 @@ describe('createMoldeaCliCompatibilityResult', () => {
         { name: '@moldea.ai/adapter-eve', version: '1.0.0' },
         { name: '@moldea.ai/adapter-google-genai', version: '1.0.3' },
         { name: '@moldea.ai/adapter-langchain', version: '1.0.0' },
+        { name: '@moldea.ai/adapter-langgraph', version: '1.0.0' },
         { name: '@moldea.ai/adapter-openai', version: '2.0.4' },
         { name: '@moldea.ai/adapter-openai-agents-sdk', version: '1.0.2' },
         { name: '@moldea.ai/adapter-vercel-ai-sdk', version: '1.0.0' },

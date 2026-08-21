@@ -34,6 +34,7 @@ const createManifest = (project: INpmReleaseProject): Record<string, unknown> =>
                 '@moldea.ai/adapter-cloudflare-agents': 'workspace:1.0.0',
                 '@moldea.ai/adapter-eve': 'workspace:1.0.0',
                 '@moldea.ai/adapter-langchain': 'workspace:1.0.0',
+                '@moldea.ai/adapter-langgraph': 'workspace:1.0.0',
                 '@moldea.ai/adapter-vercel-ai-sdk': 'workspace:1.0.0',
                 '@moldea.ai/core': 'workspace:1.0.0',
                 '@moldea.ai/repository': 'workspace:1.0.0',
@@ -47,6 +48,7 @@ const createManifest = (project: INpmReleaseProject): Record<string, unknown> =>
                 project === 'adapter-cloudflare-agents' ||
                 project === 'adapter-eve' ||
                 project === 'adapter-langchain' ||
+                project === 'adapter-langgraph' ||
                 project === 'adapter-vercel-ai-sdk'
               ? {
                   '@moldea.ai/core': 'workspace:^1.0.0',
@@ -113,6 +115,7 @@ describe('npm release validation', () => {
     ],
     ['adapter-eve', 'moldea.ai-adapter-eve-1.0.0.tgz', 'adapter-eve-v1.0.0'],
     ['adapter-langchain', 'moldea.ai-adapter-langchain-1.0.0.tgz', 'adapter-langchain-v1.0.0'],
+    ['adapter-langgraph', 'moldea.ai-adapter-langgraph-1.0.0.tgz', 'adapter-langgraph-v1.0.0'],
     [
       'adapter-vercel-ai-sdk',
       'moldea.ai-adapter-vercel-ai-sdk-1.0.0.tgz',

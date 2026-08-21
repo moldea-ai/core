@@ -1,0 +1,38 @@
+[
+  {
+    "code": "LANGGRAPH_AGENT_INPUT_SCHEMA_NOT_WIRED",
+    "message": "The declared agent input schema is not wired to the detected LangGraph input schema."
+  },
+  {
+    "code": "LANGGRAPH_AGENT_INPUT_SCHEMA_SYMBOL_NOT_FOUND",
+    "message": "The declared agent input-schema symbol was not found."
+  },
+  {
+    "code": "LANGGRAPH_AGENT_OUTPUT_SCHEMA_NOT_WIRED",
+    "message": "The declared agent output schema is not wired to the detected LangGraph output schema."
+  },
+  {
+    "code": "LANGGRAPH_AGENT_OUTPUT_SCHEMA_SYMBOL_NOT_FOUND",
+    "message": "The declared agent output-schema symbol was not found."
+  },
+  {
+    "code": "LANGGRAPH_PACKAGE_MANIFEST_INVALID",
+    "message": "The owning package manifest is invalid for LangGraph dependency detection."
+  },
+  {
+    "code": "LANGGRAPH_RUNTIME_AGENT_SYMBOL_NOT_FOUND",
+    "message": "The declared runtime-agent symbol was not found."
+  },
+  {
+    "code": "LANGGRAPH_SOURCE_SYNTAX_INVALID",
+    "message": "The referenced LangGraph source file contains invalid TypeScript syntax."
+  },
+  {
+    "code": "LANGGRAPH_SOURCE_TEXT_INVALID",
+    "message": "The referenced LangGraph source file is not valid normalized text."
+  },
+  {
+    "code": "LANGGRAPH_VERSION_UNSUPPORTED",
+    "message": "The observed LangGraph target package ranges are disjoint from the supported target."
+  }
+]

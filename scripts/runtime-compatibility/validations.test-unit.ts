@@ -110,6 +110,12 @@ describe('runtime compatibility matrix validation', () => {
         throw new Error('Canonical matrix is missing the LangGraph adapter.');
       }
 
+      delete adapter.implementation.versionRange;
+      delete adapter.compatibleCoreRange;
+      delete adapter.supportedRepositoryFormatVersions;
+      delete adapter.runtimeGuidance;
+      delete adapter.targets;
+      delete adapter.lastVerifiedAt;
       adapter.implementationStatus = status;
       expect(parseRuntimeCompatibilityMatrix(stringify(matrix)).valid).toBe(true);
 
@@ -258,7 +264,7 @@ describe('runtime compatibility matrix validation', () => {
     [
       'alias',
       (source: string) =>
-        source.replace('implementationStatus: planned', 'implementationStatus: *status'),
+        source.replace('implementationStatus: available', 'implementationStatus: *status'),
       'aliases are prohibited',
     ],
     [
@@ -274,7 +280,7 @@ describe('runtime compatibility matrix validation', () => {
     [
       'explicit null',
       (source: string) =>
-        source.replace('implementationStatus: planned', 'implementationStatus: null'),
+        source.replace('implementationStatus: available', 'implementationStatus: null'),
       'null values are prohibited',
     ],
     [
@@ -501,6 +507,18 @@ describe('runtime compatibility matrix validation', () => {
     adapter.replacement = 'openai';
     expectIssue(stringify(matrix), 'cannot replace itself');
 
+    const langGraphAdapter = matrix.adapters['langgraph'];
+    if (langGraphAdapter === undefined) {
+      throw new Error('Canonical matrix is missing the LangGraph adapter.');
+    }
+
+    delete langGraphAdapter.implementation.versionRange;
+    delete langGraphAdapter.compatibleCoreRange;
+    delete langGraphAdapter.supportedRepositoryFormatVersions;
+    delete langGraphAdapter.runtimeGuidance;
+    delete langGraphAdapter.targets;
+    delete langGraphAdapter.lastVerifiedAt;
+    langGraphAdapter.implementationStatus = 'planned';
     adapter.replacement = 'langgraph';
     expectIssue(stringify(matrix), 'Replacement must identify an available adapter');
   });
