@@ -511,7 +511,7 @@ describe('verified filesystem file capture', () => {
           { signal: controller.signal },
           {
             closeFileHandle: async (fileHandle) => {
-              await writeFile(filePath, Uint8Array.from([9, 8, 7]));
+              await writeFile(filePath, Uint8Array.from([9, 8, 7, 6]));
               controller.abort('cancel-changed-close');
               await fileHandle.close();
 
