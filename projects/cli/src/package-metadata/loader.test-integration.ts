@@ -68,9 +68,9 @@ describe('loadMoldeaCliPackageMetadata', () => {
   test('loads and freezes exact installed package metadata', async () => {
     const manifestPath = await writeManifest({
       dependencies: {
-        '@moldea.ai/core': '2.0.0',
-        '@moldea.ai/repository': '1.0.1',
-        '@moldea.ai/repository-fs': '1.0.2',
+        '@moldea.ai/core': '2.0.1',
+        '@moldea.ai/repository': '1.0.2',
+        '@moldea.ai/repository-fs': '1.0.3',
         semver: '7.8.5',
       },
       engines: { node: '^22.11.0 || ^24.11.0' },
@@ -81,15 +81,15 @@ describe('loadMoldeaCliPackageMetadata', () => {
 
     expect(metadata).toStrictEqual({
       dependencies: {
-        '@moldea.ai/core': '2.0.0',
-        '@moldea.ai/repository': '1.0.1',
-        '@moldea.ai/repository-fs': '1.0.2',
+        '@moldea.ai/core': '2.0.1',
+        '@moldea.ai/repository': '1.0.2',
+        '@moldea.ai/repository-fs': '1.0.3',
         semver: '7.8.5',
       },
       installedPackageVersions: {
-        '@moldea.ai/core': '2.0.0',
-        '@moldea.ai/repository': '1.0.1',
-        '@moldea.ai/repository-fs': '1.0.2',
+        '@moldea.ai/core': '2.0.1',
+        '@moldea.ai/repository': '1.0.2',
+        '@moldea.ai/repository-fs': '1.0.3',
       },
       supportedNodeRange: '^22.11.0 || ^24.11.0',
       version: '1.0.1',

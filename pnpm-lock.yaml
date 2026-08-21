@@ -474,43 +474,43 @@ importers:
   projects/cli:
     dependencies:
       '@moldea.ai/adapter-anthropic':
-        specifier: workspace:2.0.1
+        specifier: workspace:2.0.2
         version: link:../adapter-anthropic
       '@moldea.ai/adapter-claude-agent-sdk':
-        specifier: workspace:1.0.0
+        specifier: workspace:1.0.1
         version: link:../adapter-claude-agent-sdk
       '@moldea.ai/adapter-cloudflare-agents':
-        specifier: workspace:1.0.0
+        specifier: workspace:1.0.1
         version: link:../adapter-cloudflare-agents
       '@moldea.ai/adapter-eve':
-        specifier: workspace:1.0.0
+        specifier: workspace:1.0.1
         version: link:../adapter-eve
       '@moldea.ai/adapter-google-genai':
-        specifier: workspace:1.0.3
+        specifier: workspace:1.0.4
         version: link:../adapter-google-genai
       '@moldea.ai/adapter-langchain':
-        specifier: workspace:1.0.0
+        specifier: workspace:1.0.1
         version: link:../adapter-langchain
       '@moldea.ai/adapter-langgraph':
-        specifier: workspace:1.0.0
+        specifier: workspace:1.0.1
         version: link:../adapter-langgraph
       '@moldea.ai/adapter-openai':
-        specifier: workspace:2.0.4
+        specifier: workspace:2.0.5
         version: link:../adapter-openai
       '@moldea.ai/adapter-openai-agents-sdk':
-        specifier: workspace:1.0.2
+        specifier: workspace:1.0.3
         version: link:../adapter-openai-agents-sdk
       '@moldea.ai/adapter-vercel-ai-sdk':
-        specifier: workspace:1.0.0
+        specifier: workspace:1.0.1
         version: link:../adapter-vercel-ai-sdk
       '@moldea.ai/core':
-        specifier: workspace:2.0.0
+        specifier: workspace:2.0.1
         version: link:../core
       '@moldea.ai/repository':
-        specifier: workspace:1.0.1
+        specifier: workspace:1.0.2
         version: link:../repository
       '@moldea.ai/repository-fs':
-        specifier: workspace:1.0.2
+        specifier: workspace:1.0.3
         version: link:../repository-fs
       semver:
         specifier: 7.8.5

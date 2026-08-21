@@ -10,7 +10,7 @@ Its behavior is intentionally uneventful: the same repository snapshot and resou
 
 ## Supported target
 
-Version `2.0.4` experimentally supports:
+Version `2.0.5` experimentally supports:
 
 - Repository Format version `1`
 - `@moldea.ai/core ^2.0.0`

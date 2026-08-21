@@ -200,7 +200,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     };
 
     assertRuntimeInvariant(cliManifest?.name === '@moldea.ai/cli', 'The CLI identity is invalid.');
-    assertRuntimeInvariant(cliManifest?.version === '3.3.6', 'The CLI version is invalid.');
+    assertRuntimeInvariant(cliManifest?.version === '3.3.7', 'The CLI version is invalid.');
     assertRuntimeInvariant(
       cliManifest?.engines?.node === '^22.11.0 || ^24.11.0',
       'The CLI runtime range is invalid.',
@@ -234,7 +234,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
 
     assertRuntimeInvariant(versionResult.status === 0, 'The installed CLI version command failed.');
     assertRuntimeInvariant(versionResult.stderr === '', 'The version command wrote stderr.');
-    assertRuntimeInvariant(versionResult.stdout === '3.3.6\n', 'The version output is invalid.');
+    assertRuntimeInvariant(versionResult.stdout === '3.3.7\n', 'The version output is invalid.');
 
     const compatibilityResult = executeCli(
       executablePath,
@@ -285,7 +285,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
       'The compatibility result is invalid.',
     );
     assertRuntimeInvariant(
-      compatibilityEnvelope.cliVersion === '3.3.6' &&
+      compatibilityEnvelope.cliVersion === '3.3.7' &&
         compatibilityEnvelope.schemaVersion === 1 &&
         compatibilityEnvelope.result?.outputSchemaVersion === 1,
       'The compatibility envelope is invalid.',
@@ -293,25 +293,25 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     assertRuntimeInvariant(
       JSON.stringify(compatibilityEnvelope.result?.packages) ===
         JSON.stringify([
-          { name: '@moldea.ai/adapter-anthropic', version: '2.0.1' },
-          { name: '@moldea.ai/adapter-claude-agent-sdk', version: '1.0.0' },
-          { name: '@moldea.ai/adapter-cloudflare-agents', version: '1.0.0' },
-          { name: '@moldea.ai/adapter-eve', version: '1.0.0' },
-          { name: '@moldea.ai/adapter-google-genai', version: '1.0.3' },
-          { name: '@moldea.ai/adapter-langchain', version: '1.0.0' },
-          { name: '@moldea.ai/adapter-langgraph', version: '1.0.0' },
-          { name: '@moldea.ai/adapter-openai', version: '2.0.4' },
-          { name: '@moldea.ai/adapter-openai-agents-sdk', version: '1.0.2' },
-          { name: '@moldea.ai/adapter-vercel-ai-sdk', version: '1.0.0' },
-          { name: '@moldea.ai/core', version: '2.0.0' },
-          { name: '@moldea.ai/repository', version: '1.0.1' },
-          { name: '@moldea.ai/repository-fs', version: '1.0.2' },
+          { name: '@moldea.ai/adapter-anthropic', version: '2.0.2' },
+          { name: '@moldea.ai/adapter-claude-agent-sdk', version: '1.0.1' },
+          { name: '@moldea.ai/adapter-cloudflare-agents', version: '1.0.1' },
+          { name: '@moldea.ai/adapter-eve', version: '1.0.1' },
+          { name: '@moldea.ai/adapter-google-genai', version: '1.0.4' },
+          { name: '@moldea.ai/adapter-langchain', version: '1.0.1' },
+          { name: '@moldea.ai/adapter-langgraph', version: '1.0.1' },
+          { name: '@moldea.ai/adapter-openai', version: '2.0.5' },
+          { name: '@moldea.ai/adapter-openai-agents-sdk', version: '1.0.3' },
+          { name: '@moldea.ai/adapter-vercel-ai-sdk', version: '1.0.1' },
+          { name: '@moldea.ai/core', version: '2.0.1' },
+          { name: '@moldea.ai/repository', version: '1.0.2' },
+          { name: '@moldea.ai/repository-fs', version: '1.0.3' },
         ]),
       'The compatibility package list is invalid.',
     );
     assertRuntimeInvariant(
       customAdapter?.active === true &&
-        customAdapter.bundledVersion === '2.0.0' &&
+        customAdapter.bundledVersion === '2.0.1' &&
         customAdapter.matrix?.implementationStatus === 'available' &&
         customAdapter.matrix?.compatibleCoreRange === '^2.0.0' &&
         customAdapter.matrix?.runtimeGuidance?.expectation === 'required' &&
@@ -324,7 +324,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     );
     assertRuntimeInvariant(
       anthropicAdapter?.active === true &&
-        anthropicAdapter.bundledVersion === '2.0.1' &&
+        anthropicAdapter.bundledVersion === '2.0.2' &&
         anthropicAdapter.matrix?.implementationStatus === 'available' &&
         anthropicAdapter.matrix?.compatibleCoreRange === '^2.0.0' &&
         anthropicAdapter.matrix?.runtimeGuidance?.expectation === 'optional' &&
@@ -335,7 +335,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     );
     assertRuntimeInvariant(
       claudeAgentSdkAdapter?.active === true &&
-        claudeAgentSdkAdapter.bundledVersion === '1.0.0' &&
+        claudeAgentSdkAdapter.bundledVersion === '1.0.1' &&
         claudeAgentSdkAdapter.matrix?.implementationStatus === 'available' &&
         claudeAgentSdkAdapter.matrix?.compatibleCoreRange === '^2.0.0' &&
         claudeAgentSdkAdapter.matrix?.runtimeGuidance?.expectation === 'optional' &&
@@ -346,7 +346,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     );
     assertRuntimeInvariant(
       googleGenAiAdapter?.active === true &&
-        googleGenAiAdapter.bundledVersion === '1.0.3' &&
+        googleGenAiAdapter.bundledVersion === '1.0.4' &&
         googleGenAiAdapter.matrix?.implementationStatus === 'available' &&
         googleGenAiAdapter.matrix?.compatibleCoreRange === '^2.0.0' &&
         googleGenAiAdapter.matrix?.runtimeGuidance?.expectation === 'optional' &&
@@ -357,7 +357,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     );
     assertRuntimeInvariant(
       langChainAdapter?.active === true &&
-        langChainAdapter.bundledVersion === '1.0.0' &&
+        langChainAdapter.bundledVersion === '1.0.1' &&
         langChainAdapter.matrix?.implementationStatus === 'available' &&
         langChainAdapter.matrix?.compatibleCoreRange === '^2.0.0' &&
         langChainAdapter.matrix?.runtimeGuidance?.expectation === 'optional' &&
@@ -368,7 +368,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     );
     assertRuntimeInvariant(
       langGraphAdapter?.active === true &&
-        langGraphAdapter.bundledVersion === '1.0.0' &&
+        langGraphAdapter.bundledVersion === '1.0.1' &&
         langGraphAdapter.matrix?.implementationStatus === 'available' &&
         langGraphAdapter.matrix?.compatibleCoreRange === '^2.0.0' &&
         langGraphAdapter.matrix?.runtimeGuidance?.expectation === 'recommended' &&
@@ -382,7 +382,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     );
     assertRuntimeInvariant(
       openAiAdapter?.active === true &&
-        openAiAdapter.bundledVersion === '2.0.4' &&
+        openAiAdapter.bundledVersion === '2.0.5' &&
         openAiAdapter.matrix?.implementationStatus === 'available' &&
         openAiAdapter.matrix?.compatibleCoreRange === '^2.0.0' &&
         openAiAdapter.matrix?.runtimeGuidance?.expectation === 'recommended' &&
@@ -393,7 +393,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     );
     assertRuntimeInvariant(
       openAiAgentsSdkAdapter?.active === true &&
-        openAiAgentsSdkAdapter.bundledVersion === '1.0.2' &&
+        openAiAgentsSdkAdapter.bundledVersion === '1.0.3' &&
         openAiAgentsSdkAdapter.matrix?.implementationStatus === 'available' &&
         openAiAgentsSdkAdapter.matrix?.compatibleCoreRange === '^2.0.0' &&
         openAiAgentsSdkAdapter.matrix?.runtimeGuidance?.expectation === 'optional' &&
@@ -405,7 +405,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     );
     assertRuntimeInvariant(
       cloudflareAgentsAdapter?.active === true &&
-        cloudflareAgentsAdapter.bundledVersion === '1.0.0' &&
+        cloudflareAgentsAdapter.bundledVersion === '1.0.1' &&
         cloudflareAgentsAdapter.matrix?.implementationStatus === 'available' &&
         cloudflareAgentsAdapter.matrix?.compatibleCoreRange === '^2.0.0' &&
         cloudflareAgentsAdapter.matrix?.runtimeGuidance?.expectation === 'recommended' &&
@@ -424,7 +424,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     );
     assertRuntimeInvariant(
       eveAdapter?.active === true &&
-        eveAdapter.bundledVersion === '1.0.0' &&
+        eveAdapter.bundledVersion === '1.0.1' &&
         eveAdapter.matrix?.implementationStatus === 'available' &&
         eveAdapter.matrix?.compatibleCoreRange === '^2.0.0' &&
         eveAdapter.matrix?.runtimeGuidance?.expectation === 'optional' &&
@@ -435,7 +435,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     );
     assertRuntimeInvariant(
       vercelAiSdkAdapter?.active === true &&
-        vercelAiSdkAdapter.bundledVersion === '1.0.0' &&
+        vercelAiSdkAdapter.bundledVersion === '1.0.1' &&
         vercelAiSdkAdapter.matrix?.implementationStatus === 'available' &&
         vercelAiSdkAdapter.matrix?.compatibleCoreRange === '^2.0.0' &&
         vercelAiSdkAdapter.matrix?.runtimeGuidance?.expectation === 'optional' &&

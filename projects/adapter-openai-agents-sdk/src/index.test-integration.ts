@@ -82,7 +82,7 @@ describe('@moldea.ai/adapter-openai-agents-sdk public API', () => {
 
     expect(packResult).toMatchObject({
       name: '@moldea.ai/adapter-openai-agents-sdk',
-      version: '1.0.2',
+      version: '1.0.3',
     });
     expect(packedPaths).toEqual(
       expect.arrayContaining([

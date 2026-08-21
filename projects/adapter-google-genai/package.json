@@ -1,6 +1,6 @@
 {
   "name": "@moldea.ai/adapter-google-genai",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Deterministic runtime evidence and diagnostics for direct Google Gen AI SDK integrations.",
   "homepage": "https://github.com/moldea-ai/packages/tree/main/projects/adapter-google-genai#readme",
   "bugs": {

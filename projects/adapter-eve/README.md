@@ -19,7 +19,7 @@ const core = createCore({ adapters: [eveAdapter] });
 
 ## Verified target
 
-Version `1.0.0` supports Repository Format `1` and direct TypeScript Eve filesystem agents using `eve >=0.39.1 <0.40.0`. The experimental target recognizes:
+Version `1.0.1` supports Repository Format `1` and direct TypeScript Eve filesystem agents using `eve >=0.39.1 <0.40.0`. The experimental target recognizes:
 
 - flat and nested root `agent.ts` definitions
 - recursive directory-backed local subagents
