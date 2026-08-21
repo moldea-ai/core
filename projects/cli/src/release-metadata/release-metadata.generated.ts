@@ -28,7 +28,7 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
   cliPackage: {
     name: '@moldea.ai/cli',
     supportedNodeRange: '^22.11.0 || ^24.11.0',
-    version: '3.3.6',
+    version: '3.3.7',
   },
   coreRecognizedAdapterIds: [
     'anthropic',
@@ -2198,55 +2198,55 @@ export const MOLDEA_CLI_RELEASE_METADATA = freezeMoldeaCliReleaseMetadata({
   packages: [
     {
       name: '@moldea.ai/adapter-anthropic',
-      version: '2.0.1',
+      version: '2.0.2',
     },
     {
       name: '@moldea.ai/adapter-claude-agent-sdk',
-      version: '1.0.0',
-    },
-    {
-      name: '@moldea.ai/adapter-cloudflare-agents',
-      version: '1.0.0',
-    },
-    {
-      name: '@moldea.ai/adapter-eve',
-      version: '1.0.0',
-    },
-    {
-      name: '@moldea.ai/adapter-google-genai',
-      version: '1.0.3',
-    },
-    {
-      name: '@moldea.ai/adapter-langchain',
-      version: '1.0.0',
-    },
-    {
-      name: '@moldea.ai/adapter-langgraph',
-      version: '1.0.0',
-    },
-    {
-      name: '@moldea.ai/adapter-openai',
-      version: '2.0.4',
-    },
-    {
-      name: '@moldea.ai/adapter-openai-agents-sdk',
-      version: '1.0.2',
-    },
-    {
-      name: '@moldea.ai/adapter-vercel-ai-sdk',
-      version: '1.0.0',
-    },
-    {
-      name: '@moldea.ai/core',
-      version: '2.0.0',
-    },
-    {
-      name: '@moldea.ai/repository',
       version: '1.0.1',
     },
     {
-      name: '@moldea.ai/repository-fs',
+      name: '@moldea.ai/adapter-cloudflare-agents',
+      version: '1.0.1',
+    },
+    {
+      name: '@moldea.ai/adapter-eve',
+      version: '1.0.1',
+    },
+    {
+      name: '@moldea.ai/adapter-google-genai',
+      version: '1.0.4',
+    },
+    {
+      name: '@moldea.ai/adapter-langchain',
+      version: '1.0.1',
+    },
+    {
+      name: '@moldea.ai/adapter-langgraph',
+      version: '1.0.1',
+    },
+    {
+      name: '@moldea.ai/adapter-openai',
+      version: '2.0.5',
+    },
+    {
+      name: '@moldea.ai/adapter-openai-agents-sdk',
+      version: '1.0.3',
+    },
+    {
+      name: '@moldea.ai/adapter-vercel-ai-sdk',
+      version: '1.0.1',
+    },
+    {
+      name: '@moldea.ai/core',
+      version: '2.0.1',
+    },
+    {
+      name: '@moldea.ai/repository',
       version: '1.0.2',
+    },
+    {
+      name: '@moldea.ai/repository-fs',
+      version: '1.0.3',
     },
   ],
   repositoryFormatVersions: [1],

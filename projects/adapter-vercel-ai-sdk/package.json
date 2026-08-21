@@ -1,6 +1,6 @@
 {
   "name": "@moldea.ai/adapter-vercel-ai-sdk",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Deterministic runtime evidence and diagnostics for Vercel AI SDK integrations.",
   "homepage": "https://github.com/moldea-ai/packages/tree/main/projects/adapter-vercel-ai-sdk#readme",
   "bugs": {

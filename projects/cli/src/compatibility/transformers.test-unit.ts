@@ -44,26 +44,26 @@ describe('createMoldeaCliCompatibilityResult', () => {
       minimumGitVersion: '2.30.0',
       outputSchemaVersion: 1,
       packages: [
-        { name: '@moldea.ai/adapter-anthropic', version: '2.0.1' },
-        { name: '@moldea.ai/adapter-claude-agent-sdk', version: '1.0.0' },
-        { name: '@moldea.ai/adapter-cloudflare-agents', version: '1.0.0' },
-        { name: '@moldea.ai/adapter-eve', version: '1.0.0' },
-        { name: '@moldea.ai/adapter-google-genai', version: '1.0.3' },
-        { name: '@moldea.ai/adapter-langchain', version: '1.0.0' },
-        { name: '@moldea.ai/adapter-langgraph', version: '1.0.0' },
-        { name: '@moldea.ai/adapter-openai', version: '2.0.4' },
-        { name: '@moldea.ai/adapter-openai-agents-sdk', version: '1.0.2' },
-        { name: '@moldea.ai/adapter-vercel-ai-sdk', version: '1.0.0' },
-        { name: '@moldea.ai/core', version: '2.0.0' },
-        { name: '@moldea.ai/repository', version: '1.0.1' },
-        { name: '@moldea.ai/repository-fs', version: '1.0.2' },
+        { name: '@moldea.ai/adapter-anthropic', version: '2.0.2' },
+        { name: '@moldea.ai/adapter-claude-agent-sdk', version: '1.0.1' },
+        { name: '@moldea.ai/adapter-cloudflare-agents', version: '1.0.1' },
+        { name: '@moldea.ai/adapter-eve', version: '1.0.1' },
+        { name: '@moldea.ai/adapter-google-genai', version: '1.0.4' },
+        { name: '@moldea.ai/adapter-langchain', version: '1.0.1' },
+        { name: '@moldea.ai/adapter-langgraph', version: '1.0.1' },
+        { name: '@moldea.ai/adapter-openai', version: '2.0.5' },
+        { name: '@moldea.ai/adapter-openai-agents-sdk', version: '1.0.3' },
+        { name: '@moldea.ai/adapter-vercel-ai-sdk', version: '1.0.1' },
+        { name: '@moldea.ai/core', version: '2.0.1' },
+        { name: '@moldea.ai/repository', version: '1.0.2' },
+        { name: '@moldea.ai/repository-fs', version: '1.0.3' },
       ],
       repositoryFormatVersions: [1],
       supportedNodeRange: '^22.11.0 || ^24.11.0',
     });
     expect(customAdapter).toMatchObject({
       active: true,
-      bundledVersion: '2.0.0',
+      bundledVersion: '2.0.1',
       id: 'custom',
       matrix: {
         compatibleCoreRange: '^2.0.0',
@@ -80,7 +80,7 @@ describe('createMoldeaCliCompatibilityResult', () => {
     });
     expect(openAiAdapter).toMatchObject({
       active: true,
-      bundledVersion: '2.0.4',
+      bundledVersion: '2.0.5',
       id: 'openai',
       matrix: {
         implementationStatus: 'available',
@@ -89,7 +89,7 @@ describe('createMoldeaCliCompatibilityResult', () => {
     });
     expect(claudeAgentSdkAdapter).toMatchObject({
       active: true,
-      bundledVersion: '1.0.0',
+      bundledVersion: '1.0.1',
       id: 'claude-agent-sdk',
       matrix: {
         implementationStatus: 'available',
@@ -98,7 +98,7 @@ describe('createMoldeaCliCompatibilityResult', () => {
     });
     expect(openAiAgentsSdkAdapter).toMatchObject({
       active: true,
-      bundledVersion: '1.0.2',
+      bundledVersion: '1.0.3',
       id: 'openai-agents-sdk',
       matrix: {
         implementationStatus: 'available',
@@ -107,7 +107,7 @@ describe('createMoldeaCliCompatibilityResult', () => {
     });
     expect(vercelAiSdkAdapter).toMatchObject({
       active: true,
-      bundledVersion: '1.0.0',
+      bundledVersion: '1.0.1',
       id: 'vercel-ai-sdk',
       matrix: {
         implementationStatus: 'available',
@@ -126,7 +126,7 @@ describe('createMoldeaCliCompatibilityResult', () => {
 
     expect(result.adapters.find(({ id }) => id === 'anthropic')).toMatchObject({
       active: true,
-      bundledVersion: '2.0.1',
+      bundledVersion: '2.0.2',
       matrix: {
         implementation: { versionRange: '^2.0.0' },
         implementationStatus: 'available',
@@ -149,7 +149,7 @@ describe('createMoldeaCliCompatibilityResult', () => {
 
     expect(result.adapters.find(({ id }) => id === 'openai')).toMatchObject({
       active: true,
-      bundledVersion: '2.0.4',
+      bundledVersion: '2.0.5',
       matrix: {
         implementation: { versionRange: '^2.0.0' },
         implementationStatus: 'available',
@@ -158,7 +158,7 @@ describe('createMoldeaCliCompatibilityResult', () => {
     });
     expect(result.adapters.find(({ id }) => id === 'claude-agent-sdk')).toMatchObject({
       active: true,
-      bundledVersion: '1.0.0',
+      bundledVersion: '1.0.1',
       matrix: {
         implementation: { versionRange: '^1.0.0' },
         implementationStatus: 'available',
@@ -167,7 +167,7 @@ describe('createMoldeaCliCompatibilityResult', () => {
     });
     expect(result.adapters.find(({ id }) => id === 'openai-agents-sdk')).toMatchObject({
       active: true,
-      bundledVersion: '1.0.2',
+      bundledVersion: '1.0.3',
       matrix: {
         implementation: { versionRange: '^1.0.0' },
         implementationStatus: 'available',
@@ -176,7 +176,7 @@ describe('createMoldeaCliCompatibilityResult', () => {
     });
     expect(result.adapters.find(({ id }) => id === 'vercel-ai-sdk')).toMatchObject({
       active: true,
-      bundledVersion: '1.0.0',
+      bundledVersion: '1.0.1',
       matrix: {
         implementation: { versionRange: '^1.0.0' },
         implementationStatus: 'available',

@@ -8,7 +8,7 @@ The package implements the official `cloudflare-agents` runtime adapter for `@mo
 
 ## Supported targets
 
-Version `1.0.0` experimentally supports:
+Version `1.0.1` experimentally supports:
 
 - Repository Format version `1`
 - `@moldea.ai/core ^2.0.0`
