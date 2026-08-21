@@ -452,6 +452,15 @@ test('presents available runtime adapters without promoting planned inventory', 
   );
 });
 
+test('omits the planned adapter inventory when every adapter is available', async ({ page }) => {
+  await page.goto(toPublicPath('/adapters/'));
+
+  await expect(page.getByText('Matrix-approved inventory', { exact: true })).toHaveCount(0);
+  await expect(page.getByRole('heading', { level: 2, name: 'Planned and evolving' })).toHaveCount(
+    0,
+  );
+});
+
 test('shows company marks for provider adapters and keeps the custom adapter icon', async ({
   page,
 }) => {
@@ -588,12 +597,19 @@ test('uses branded action states in both themes and respects reduced motion', as
   const primaryAction = page.getByRole('link', { name: 'Explore packages' });
   const outlineAction = page.getByRole('link', { name: 'Source', exact: true });
   const inlineAction = page.getByRole('link', { name: 'View all packages' });
+  const actionTransitionProperties = await primaryAction.evaluate((element) =>
+    getComputedStyle(element)
+      .transitionProperty.split(',')
+      .map((property) => property.trim()),
+  );
   const lightPrimaryBackground = await primaryAction.evaluate(
     (element) => getComputedStyle(element).backgroundColor,
   );
   const lightOutlineBackground = await outlineAction.evaluate(
     (element) => getComputedStyle(element).backgroundColor,
   );
+
+  expect(actionTransitionProperties).toStrictEqual(['border-color', 'box-shadow', 'translate']);
 
   await primaryAction.hover();
   await expect
