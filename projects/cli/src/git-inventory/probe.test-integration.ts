@@ -637,7 +637,7 @@ describe('real Git inventory probe', () => {
     } finally {
       repository.remove();
     }
-  }, 30_000);
+  });
 
   test('excludes a nested linked worktree boundary', async () => {
     const repository = createGitRepository();

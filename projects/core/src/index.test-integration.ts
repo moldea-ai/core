@@ -398,7 +398,7 @@ describe('published Core package artifacts', () => {
     } finally {
       rmSync(consumerDirectory, { force: true, recursive: true });
     }
-  }, 60_000);
+  });
 
   test('keeps every runtime artifact environment-neutral', () => {
     const javascript = readDistributionFiles('.js').join('\n');

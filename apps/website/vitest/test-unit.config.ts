@@ -1,10 +1,3 @@
-import { defineConfig } from 'vitest/config';
+import { createTestConfig } from '../../../configs/vitest/test.config.js';
 
-export default defineConfig({
-  test: {
-    environment: 'node',
-    include: ['src/**/*.test-unit.ts'],
-    // TypeScript program creation shares constrained CI workers with the monorepo.
-    testTimeout: 20_000,
-  },
-});
+export default createTestConfig({ suite: 'unit' });

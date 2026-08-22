@@ -315,7 +315,7 @@ describe('published Repository FS package artifacts', () => {
         encoding: 'utf8',
       },
     );
-  }, 20_000);
+  });
 
   test('installs real Repository FS and Repository tarballs and typechecks a consumer', () => {
     const packageManagerEntrypoint = process.env['npm_execpath'];
@@ -423,5 +423,5 @@ describe('published Repository FS package artifacts', () => {
     } finally {
       rmSync(consumerDirectory, { force: true, recursive: true });
     }
-  }, 60_000);
+  });
 });
