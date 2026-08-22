@@ -1,4 +1,4 @@
-version: 1
+version: 2
 adapters:
   anthropic:
     implementation:
@@ -16,7 +16,6 @@ adapters:
     targets:
       - id: typescript-messages-api-0-117
         kind: package
-        supportLevel: experimental
         language: typescript
         packages:
           - ecosystem: npm
@@ -98,7 +97,6 @@ adapters:
     targets:
       - id: typescript-query-subagents-0-3
         kind: package
-        supportLevel: experimental
         language: typescript
         packages:
           - ecosystem: npm
@@ -307,7 +305,6 @@ adapters:
     targets:
       - id: typescript-think-0-16-ai-sdk-7
         kind: package
-        supportLevel: experimental
         language: typescript
         packages:
           - ecosystem: npm
@@ -369,7 +366,6 @@ adapters:
         lastVerifiedAt: '2026-08-19'
       - id: typescript-ai-chat-agent-0-10-ai-sdk-7
         kind: package
-        supportLevel: experimental
         language: typescript
         packages:
           - ecosystem: npm
@@ -449,7 +445,6 @@ adapters:
     targets:
       - id: custom
         kind: custom
-        supportLevel: supported
         language: any
         qualificationEvidence:
           url: 'https://skill.moldea.ai/qualification/custom/custom/'
@@ -476,7 +471,6 @@ adapters:
     targets:
       - id: typescript-filesystem-agent-0-39
         kind: package
-        supportLevel: experimental
         language: typescript
         packages:
           - ecosystem: npm
@@ -655,7 +649,6 @@ adapters:
     targets:
       - id: typescript-models-generate-content-2
         kind: package
-        supportLevel: experimental
         language: typescript
         packages:
           - ecosystem: npm
@@ -763,7 +756,6 @@ adapters:
     targets:
       - id: typescript-create-agent-1-5
         kind: package
-        supportLevel: experimental
         language: typescript
         packages:
           - ecosystem: npm
@@ -885,7 +877,6 @@ adapters:
     targets:
       - id: typescript-state-graph-1-4
         kind: package
-        supportLevel: experimental
         language: typescript
         packages:
           - ecosystem: npm
@@ -984,7 +975,6 @@ adapters:
         lastVerifiedAt: '2026-08-21'
       - id: typescript-functional-api-1-4
         kind: package
-        supportLevel: experimental
         language: typescript
         packages:
           - ecosystem: npm
@@ -1073,7 +1063,6 @@ adapters:
     targets:
       - id: typescript-responses-api-7
         kind: package
-        supportLevel: experimental
         language: typescript
         packages:
           - ecosystem: npm
@@ -1148,7 +1137,6 @@ adapters:
     targets:
       - id: typescript-agent-handoffs-0-16
         kind: package
-        supportLevel: experimental
         language: typescript
         packages:
           - ecosystem: npm
@@ -1272,7 +1260,6 @@ adapters:
     targets:
       - id: typescript-tool-loop-agent-7
         kind: package
-        supportLevel: experimental
         language: typescript
         packages:
           - ecosystem: npm
@@ -1361,7 +1348,6 @@ adapters:
         lastVerifiedAt: '2026-08-19'
       - id: typescript-generate-stream-text-7
         kind: package
-        supportLevel: experimental
         language: typescript
         packages:
           - ecosystem: npm

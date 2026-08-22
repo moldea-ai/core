@@ -1,11 +1,10 @@
 import { satisfies as doesVersionSatisfy, valid as isValidVersion, validRange } from 'semver';
 
 import type {
-  IMoldeaCliGeneratedReleaseMetadata,
-  IMoldeaCliReleaseMetadataSources,
+  IMoldeaCliImplementationSources,
   IMoldeaPackageManifestSource,
   IRuntimeAdapterEntry,
-  IRuntimeAdapterReleaseDefinition,
+  IRuntimeAdapterImplementationDefinition,
 } from './types.ts';
 import { compareExactStrings, isRecord, isStrictSingleLine } from './utilities.ts';
 
@@ -98,16 +97,16 @@ const requireExactNumberSet = (
 };
 
 const getActiveAdapter = (
-  adapters: readonly IRuntimeAdapterReleaseDefinition[],
+  adapters: readonly IRuntimeAdapterImplementationDefinition[],
   adapterId: string,
-): IRuntimeAdapterReleaseDefinition | undefined => {
+): IRuntimeAdapterImplementationDefinition | undefined => {
   return adapters.find(({ id }) => id === adapterId);
 };
 
 const validatePublishedAdapter = (
   adapterId: string,
   matrixEntry: IRuntimeAdapterEntry,
-  sources: IMoldeaCliReleaseMetadataSources,
+  sources: IMoldeaCliImplementationSources,
   coreVersion: string,
   cliDependencies: Readonly<Record<string, string>>,
 ): void => {
@@ -186,15 +185,12 @@ const validatePublishedAdapter = (
 };
 
 /**
- * Validates canonical sources and creates one normalized CLI release-metadata value.
+ * Validates the actual CLI adapter composition against package, Core, and matrix sources.
  * @param sources The package, Core, adapter-registration, and compatibility-matrix sources.
- * @returns The exact deterministic metadata to bundle into the CLI executable.
  * @throws
  * - If the canonical sources are malformed, incomplete, or mutually inconsistent.
  */
-export const createMoldeaCliReleaseMetadata = (
-  sources: IMoldeaCliReleaseMetadataSources,
-): IMoldeaCliGeneratedReleaseMetadata => {
+export const validateMoldeaCliImplementation = (sources: IMoldeaCliImplementationSources): void => {
   const cliManifest = requireManifest(sources.cliManifest, MOLDEA_CLI_PACKAGE_NAME);
   const supportedNodeRange = cliManifest.engines?.['node'];
 
@@ -204,10 +200,6 @@ export const createMoldeaCliReleaseMetadata = (
     validRange(supportedNodeRange) === null
   ) {
     throw new TypeError('The CLI Node.js engine range is invalid.');
-  }
-
-  if (isValidVersion(sources.minimumGitVersion) === null) {
-    throw new TypeError('The minimum Git version is invalid.');
   }
 
   const matrixAdapterIds = Object.keys(sources.matrix.adapters).sort(compareExactStrings);
@@ -282,23 +274,4 @@ export const createMoldeaCliReleaseMetadata = (
       );
     }
   }
-
-  return {
-    activeAdapterIds: [...activeAdapterIds].sort(compareExactStrings),
-    cliPackage: {
-      name: cliManifest.name,
-      supportedNodeRange,
-      version: cliManifest.version,
-    },
-    coreRecognizedAdapterIds: [...sources.coreRecognizedAdapterIds].sort(compareExactStrings),
-    matrix: sources.matrix,
-    minimumGitVersion: sources.minimumGitVersion,
-    outputSchemaVersion: sources.outputSchemaVersion,
-    packages: packageManifests
-      .map(({ name, version }) => ({ name, version }))
-      .sort((left, right) => compareExactStrings(left.name, right.name)),
-    repositoryFormatVersions: [...sources.coreSupportedRepositoryFormatVersions].sort(
-      (left, right) => left - right,
-    ),
-  };
 };

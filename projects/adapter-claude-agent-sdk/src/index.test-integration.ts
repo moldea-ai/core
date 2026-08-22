@@ -82,7 +82,7 @@ describe('@moldea.ai/adapter-claude-agent-sdk public API', () => {
 
     expect(packResult).toMatchObject({
       name: '@moldea.ai/adapter-claude-agent-sdk',
-      version: '1.0.1',
+      version: '1.0.2',
     });
     expect(packedPaths).toEqual(
       expect.arrayContaining([

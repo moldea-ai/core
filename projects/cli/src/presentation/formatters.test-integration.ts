@@ -110,7 +110,7 @@ Adapter evidence items: 0
         inspection: JSON.parse(JSON.stringify(inspection)) as unknown,
         source: { kind: 'git-working-tree' },
       },
-      schemaVersion: 1,
+      schemaVersion: 2,
       status: 'valid',
     });
     expect(jsonOutput).toContain('Universal project.');

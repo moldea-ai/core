@@ -1,6 +1,6 @@
 {
   "name": "@moldea.ai/cli",
-  "version": "3.3.7",
+  "version": "4.0.0",
   "description": "The canonical read-only local command-line composition for moldea repositories.",
   "homepage": "https://github.com/moldea-ai/packages/tree/main/projects/cli#readme",
   "bugs": {
@@ -29,7 +29,7 @@
     "node": "^22.11.0 || ^24.11.0"
   },
   "scripts": {
-    "build": "pnpm --dir ../.. compatibility:check && vite build --emptyOutDir",
+    "build": "vite build --emptyOutDir",
     "dev": "vite build --watch",
     "lint": "eslint .",
     "test": "pnpm run test:unit && pnpm run test:integration && pnpm run test:e2e",
@@ -39,16 +39,16 @@
     "typecheck": "tsc -p tsconfig.src.json --noEmit && tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@moldea.ai/adapter-anthropic": "workspace:2.0.2",
-    "@moldea.ai/adapter-claude-agent-sdk": "workspace:1.0.1",
-    "@moldea.ai/adapter-cloudflare-agents": "workspace:1.0.1",
-    "@moldea.ai/adapter-eve": "workspace:1.0.1",
-    "@moldea.ai/adapter-google-genai": "workspace:1.0.4",
-    "@moldea.ai/adapter-langchain": "workspace:1.0.1",
-    "@moldea.ai/adapter-langgraph": "workspace:1.0.1",
-    "@moldea.ai/adapter-openai": "workspace:2.0.5",
-    "@moldea.ai/adapter-openai-agents-sdk": "workspace:1.0.3",
-    "@moldea.ai/adapter-vercel-ai-sdk": "workspace:1.0.1",
+    "@moldea.ai/adapter-anthropic": "workspace:2.0.3",
+    "@moldea.ai/adapter-claude-agent-sdk": "workspace:1.0.2",
+    "@moldea.ai/adapter-cloudflare-agents": "workspace:1.0.2",
+    "@moldea.ai/adapter-eve": "workspace:1.0.2",
+    "@moldea.ai/adapter-google-genai": "workspace:1.0.5",
+    "@moldea.ai/adapter-langchain": "workspace:1.0.2",
+    "@moldea.ai/adapter-langgraph": "workspace:1.0.2",
+    "@moldea.ai/adapter-openai": "workspace:2.0.6",
+    "@moldea.ai/adapter-openai-agents-sdk": "workspace:1.0.4",
+    "@moldea.ai/adapter-vercel-ai-sdk": "workspace:1.0.2",
     "@moldea.ai/core": "workspace:2.0.1",
     "@moldea.ai/repository": "workspace:1.0.2",
     "@moldea.ai/repository-fs": "workspace:1.0.3",

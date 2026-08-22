@@ -6,7 +6,7 @@ order: 10
 
 # Verified target
 
-The canonical Runtime Compatibility Matrix defines the current target as `typescript-responses-api-7` with experimental maturity.
+The canonical Runtime Compatibility Matrix defines the technical target as `typescript-responses-api-7`.
 
 ## Supported boundary
 

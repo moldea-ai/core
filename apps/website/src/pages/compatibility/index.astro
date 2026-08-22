@@ -41,7 +41,7 @@ const compatibilityRows = model.adapters.flatMap<ICompatibilityRow>((adapter) =>
 
 <BaseLayout
   title="Runtime compatibility"
-  description="The complete canonical-matrix-driven view of moldea runtime adapter implementation status, target maturity, binding support, patterns, and limitations."
+  description="The complete view of technical runtime compatibility and website-owned target maturity, including implementation status, binding support, patterns, and limitations."
   {breadcrumbs}
 >
   <section class="page-shell pt-8 pb-section-gap">
@@ -130,11 +130,11 @@ const compatibilityRows = model.adapters.flatMap<ICompatibilityRow>((adapter) =>
                     <a
                       class="inline-block max-w-48 rounded-full align-middle"
                       href={`${withBase(adapter.route, basePath)}#${adapter.id}-${target.id}`}
-                      aria-label={`${target.id}, ${target.supportLevel}`}
+                      aria-label={`${target.id}, ${target.maturity}`}
                       title={target.id}
                     >
                       <StatusBadge
-                        kind={target.supportLevel}
+                        kind={target.maturity}
                         label={target.id}
                         truncate
                       />

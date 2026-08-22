@@ -79,7 +79,7 @@ describe('@moldea.ai/adapter-cloudflare-agents public API', () => {
 
     expect(packResult).toMatchObject({
       name: '@moldea.ai/adapter-cloudflare-agents',
-      version: '1.0.1',
+      version: '1.0.2',
     });
     expect(packResult.files.map(({ path: filePath }) => filePath)).toEqual(
       expect.arrayContaining([

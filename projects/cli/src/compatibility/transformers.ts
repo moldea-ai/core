@@ -1,5 +1,3 @@
-import type { IMoldeaCliRuntimeAdapterEntry } from '../release-metadata/index.js';
-
 import { MOLDEA_CLI_CUSTOM_ADAPTER_ID } from './constants.js';
 import type {
   IMoldeaCliAdapterCompatibility,
@@ -7,7 +5,10 @@ import type {
   IMoldeaCliCompatibilityStateInput,
 } from './types.js';
 
-/** Recursively freezes a cloned compatibility value without retaining mutable input ownership. */
+const compareIdentifiers = (left: string, right: string): number =>
+  left < right ? -1 : left > right ? 1 : 0;
+
+/** Recursively freezes a compatibility result without retaining mutable input ownership. */
 const freezeCompatibilityValue = <TValue extends object>(value: TValue): TValue => {
   const pendingValues: object[] = [value];
   const visitedValues = new Set<object>();
@@ -32,55 +33,39 @@ const freezeCompatibilityValue = <TValue extends object>(value: TValue): TValue 
   return value;
 };
 
-/** Clones one generated matrix entry before assigning immutable result ownership. */
-const cloneMatrixEntry = (
-  matrixEntry: IMoldeaCliRuntimeAdapterEntry,
-): IMoldeaCliRuntimeAdapterEntry => freezeCompatibilityValue(structuredClone(matrixEntry));
-
 /**
- * Creates the exact immutable version 1 compatibility result from validated runtime state.
- * @param input The already validated generated and installed compatibility composition.
+ * Creates the compact immutable compatibility result from validated installed state.
+ * @param input The already validated installed and executable composition.
  * @returns A deeply immutable compatibility result in deterministic report order.
  */
 export const createMoldeaCliCompatibilityResult = (
   input: IMoldeaCliCompatibilityStateInput,
 ): IMoldeaCliCompatibilityResult => {
-  const packageVersions = new Map(
-    input.releaseMetadata.packages.map((packageMetadata) => [
-      packageMetadata.name,
-      packageMetadata.version,
-    ]),
-  );
-  const activeAdapterIds = new Set(input.releaseMetadata.activeAdapterIds);
-  const adapters = Object.entries(input.releaseMetadata.matrix.adapters).map(
-    ([adapterId, matrixEntry]): IMoldeaCliAdapterCompatibility => {
-      const isCustom = adapterId === MOLDEA_CLI_CUSTOM_ADAPTER_ID;
-      const isActive = isCustom || activeAdapterIds.has(adapterId);
-      const bundledVersion = isCustom
-        ? (packageVersions.get('@moldea.ai/core') ?? null)
-        : isActive
-          ? (packageVersions.get(matrixEntry.implementation.package) ?? null)
-          : null;
-
-      return Object.freeze({
-        active: isActive,
-        bundledVersion,
-        id: adapterId,
-        matrix: cloneMatrixEntry(matrixEntry),
-      });
+  const adapters: IMoldeaCliAdapterCompatibility[] = [
+    {
+      id: MOLDEA_CLI_CUSTOM_ADAPTER_ID,
+      repositoryFormatVersions: [...input.coreSupportedRepositoryFormatVersions].sort(
+        (left, right) => left - right,
+      ),
     },
-  );
-  const packages = input.releaseMetadata.packages.map((packageMetadata) =>
-    Object.freeze({ name: packageMetadata.name, version: packageMetadata.version }),
-  );
+    ...input.activeAdapters.map((adapter) => ({
+      id: adapter.id,
+      repositoryFormatVersions: [...adapter.supportedRepositoryFormatVersions].sort(
+        (left, right) => left - right,
+      ),
+    })),
+  ].sort((left, right) => compareIdentifiers(left.id, right.id));
+  const packages = Object.entries(input.packageMetadata.installedPackageVersions ?? {})
+    .map(([name, version]) => ({ name, version }))
+    .sort((left, right) => compareIdentifiers(left.name, right.name));
 
   return freezeCompatibilityValue({
-    adapters: Object.freeze(adapters),
-    matrixVersion: input.releaseMetadata.matrix.version,
-    minimumGitVersion: input.releaseMetadata.minimumGitVersion,
-    outputSchemaVersion: input.releaseMetadata.outputSchemaVersion,
-    packages: Object.freeze(packages),
-    repositoryFormatVersions: Object.freeze([...input.releaseMetadata.repositoryFormatVersions]),
-    supportedNodeRange: input.releaseMetadata.cliPackage.supportedNodeRange,
+    adapters,
+    minimumGitVersion: input.minimumGitVersion,
+    packages,
+    repositoryFormatVersions: [...input.coreSupportedRepositoryFormatVersions].sort(
+      (left, right) => left - right,
+    ),
+    supportedNodeRange: input.packageMetadata.supportedNodeRange ?? '',
   });
 };

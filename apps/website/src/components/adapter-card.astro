@@ -28,7 +28,7 @@ const target = adapter.entry.targets?.[0];
   </div>
   <div class="mb-3 flex flex-wrap items-center gap-2">
     <StatusBadge kind={adapter.entry.implementationStatus} />
-    {target && <StatusBadge kind={target.supportLevel} />}
+    {target && <StatusBadge kind={target.maturity} />}
   </div>
   <h3 class="mb-2 text-xl font-semibold tracking-tight">{adapter.id}</h3>
   <p class="text-sm leading-6 text-muted-foreground">

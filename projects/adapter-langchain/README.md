@@ -19,7 +19,7 @@ const core = createCore({ adapters: [langChainAdapter] });
 
 ## Verified target
 
-Version `1.0.1` supports Repository Format `1`, `langchain >=1.5.9 <1.6.0`, and companion `@langchain/core >=1.2.8 <1.3.0`. The experimental target recognizes:
+Version `1.0.2` supports Repository Format `1`, `langchain >=1.5.9 <1.6.0`, and companion `@langchain/core >=1.2.8 <1.3.0`. The verified target recognizes:
 
 - directly exported package-root `createAgent(...)` definitions
 - direct instruction-loader calls and `SystemMessage` construction

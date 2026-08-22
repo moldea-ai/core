@@ -10,7 +10,7 @@ Its behavior is intentionally uneventful: the same repository snapshot and resou
 
 ## Supported target
 
-Version `2.0.5` experimentally supports:
+Version `2.0.6` supports:
 
 - Repository Format version `1`
 - `@moldea.ai/core ^2.0.0`
@@ -28,7 +28,7 @@ Request closure is evaluated independently for `instructions` and `tools`. Unrel
 
 Supported function-tool objects require exact `type`, `name`, `parameters`, and `strict` properties and may include a supported static or `null` `description`. Statically named `allowed_callers`, `defer_loading`, and `output_schema` properties are tolerated without interpreting their values. Unknown properties and unsupported object-member forms leave the registration unestablished. Inline schema values support recursive static strings, no-substitution templates, signed numbers, booleans, `null`, arrays without holes or spreads, and objects with exact identifier or string-literal property assignments; the adapter proves wiring, not OpenAI schema validity.
 
-The Runtime Compatibility Matrix is authoritative for current target maturity, exact versions, evidence, binding support, patterns, and known limitations.
+The Runtime Compatibility Matrix is authoritative for exact versions, evidence, binding support, patterns, and known limitations.
 
 ## Usage
 

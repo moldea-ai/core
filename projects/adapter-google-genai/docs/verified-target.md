@@ -6,7 +6,7 @@ order: 10
 
 # Verified target
 
-The canonical Runtime Compatibility Matrix defines `typescript-models-generate-content-2` with experimental maturity.
+The canonical Runtime Compatibility Matrix defines technical target `typescript-models-generate-content-2`.
 
 ## Runtime boundary
 

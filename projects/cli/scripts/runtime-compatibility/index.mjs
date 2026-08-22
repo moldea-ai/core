@@ -200,7 +200,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     };
 
     assertRuntimeInvariant(cliManifest?.name === '@moldea.ai/cli', 'The CLI identity is invalid.');
-    assertRuntimeInvariant(cliManifest?.version === '3.3.7', 'The CLI version is invalid.');
+    assertRuntimeInvariant(cliManifest?.version === '4.0.0', 'The CLI version is invalid.');
     assertRuntimeInvariant(
       cliManifest?.engines?.node === '^22.11.0 || ^24.11.0',
       'The CLI runtime range is invalid.',
@@ -234,7 +234,7 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
 
     assertRuntimeInvariant(versionResult.status === 0, 'The installed CLI version command failed.');
     assertRuntimeInvariant(versionResult.stderr === '', 'The version command wrote stderr.');
-    assertRuntimeInvariant(versionResult.stdout === '3.3.7\n', 'The version output is invalid.');
+    assertRuntimeInvariant(versionResult.stdout === '4.0.0\n', 'The version output is invalid.');
 
     const compatibilityResult = executeCli(
       executablePath,
@@ -243,34 +243,6 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
       environment,
     );
     const compatibilityEnvelope = JSON.parse(compatibilityResult.stdout);
-    const anthropicAdapter = compatibilityEnvelope.result?.adapters?.find(
-      ({ id }) => id === 'anthropic',
-    );
-    const claudeAgentSdkAdapter = compatibilityEnvelope.result?.adapters?.find(
-      ({ id }) => id === 'claude-agent-sdk',
-    );
-    const customAdapter = compatibilityEnvelope.result?.adapters?.find(({ id }) => id === 'custom');
-    const googleGenAiAdapter = compatibilityEnvelope.result?.adapters?.find(
-      ({ id }) => id === 'google-genai',
-    );
-    const langChainAdapter = compatibilityEnvelope.result?.adapters?.find(
-      ({ id }) => id === 'langchain',
-    );
-    const langGraphAdapter = compatibilityEnvelope.result?.adapters?.find(
-      ({ id }) => id === 'langgraph',
-    );
-    const openAiAdapter = compatibilityEnvelope.result?.adapters?.find(({ id }) => id === 'openai');
-    const openAiAgentsSdkAdapter = compatibilityEnvelope.result?.adapters?.find(
-      ({ id }) => id === 'openai-agents-sdk',
-    );
-    const cloudflareAgentsAdapter = compatibilityEnvelope.result?.adapters?.find(
-      ({ id }) => id === 'cloudflare-agents',
-    );
-    const eveAdapter = compatibilityEnvelope.result?.adapters?.find(({ id }) => id === 'eve');
-    const vercelAiSdkAdapter = compatibilityEnvelope.result?.adapters?.find(
-      ({ id }) => id === 'vercel-ai-sdk',
-    );
-
     assertRuntimeInvariant(
       compatibilityResult.status === 0,
       'The installed CLI compatibility command failed.',
@@ -281,28 +253,28 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
     );
     assertRuntimeInvariant(
       compatibilityEnvelope.status === 'valid' &&
-        compatibilityEnvelope.result?.supportedNodeRange === '^22.11.0 || ^24.11.0',
+        compatibilityEnvelope.result?.supportedNodeRange === '^22.11.0 || ^24.11.0' &&
+        typeof compatibilityEnvelope.result?.minimumGitVersion === 'string' &&
+        JSON.stringify(compatibilityEnvelope.result?.repositoryFormatVersions) === '[1]',
       'The compatibility result is invalid.',
     );
     assertRuntimeInvariant(
-      compatibilityEnvelope.cliVersion === '3.3.7' &&
-        compatibilityEnvelope.schemaVersion === 1 &&
-        compatibilityEnvelope.result?.outputSchemaVersion === 1,
+      compatibilityEnvelope.cliVersion === '4.0.0' && compatibilityEnvelope.schemaVersion === 2,
       'The compatibility envelope is invalid.',
     );
     assertRuntimeInvariant(
       JSON.stringify(compatibilityEnvelope.result?.packages) ===
         JSON.stringify([
-          { name: '@moldea.ai/adapter-anthropic', version: '2.0.2' },
-          { name: '@moldea.ai/adapter-claude-agent-sdk', version: '1.0.1' },
-          { name: '@moldea.ai/adapter-cloudflare-agents', version: '1.0.1' },
-          { name: '@moldea.ai/adapter-eve', version: '1.0.1' },
-          { name: '@moldea.ai/adapter-google-genai', version: '1.0.4' },
-          { name: '@moldea.ai/adapter-langchain', version: '1.0.1' },
-          { name: '@moldea.ai/adapter-langgraph', version: '1.0.1' },
-          { name: '@moldea.ai/adapter-openai', version: '2.0.5' },
-          { name: '@moldea.ai/adapter-openai-agents-sdk', version: '1.0.3' },
-          { name: '@moldea.ai/adapter-vercel-ai-sdk', version: '1.0.1' },
+          { name: '@moldea.ai/adapter-anthropic', version: '2.0.3' },
+          { name: '@moldea.ai/adapter-claude-agent-sdk', version: '1.0.2' },
+          { name: '@moldea.ai/adapter-cloudflare-agents', version: '1.0.2' },
+          { name: '@moldea.ai/adapter-eve', version: '1.0.2' },
+          { name: '@moldea.ai/adapter-google-genai', version: '1.0.5' },
+          { name: '@moldea.ai/adapter-langchain', version: '1.0.2' },
+          { name: '@moldea.ai/adapter-langgraph', version: '1.0.2' },
+          { name: '@moldea.ai/adapter-openai', version: '2.0.6' },
+          { name: '@moldea.ai/adapter-openai-agents-sdk', version: '1.0.4' },
+          { name: '@moldea.ai/adapter-vercel-ai-sdk', version: '1.0.2' },
           { name: '@moldea.ai/core', version: '2.0.1' },
           { name: '@moldea.ai/repository', version: '1.0.2' },
           { name: '@moldea.ai/repository-fs', version: '1.0.3' },
@@ -310,142 +282,23 @@ const runRuntimeCompatibilityCheck = async (artifactDirectory) => {
       'The compatibility package list is invalid.',
     );
     assertRuntimeInvariant(
-      customAdapter?.active === true &&
-        customAdapter.bundledVersion === '2.0.1' &&
-        customAdapter.matrix?.implementationStatus === 'available' &&
-        customAdapter.matrix?.compatibleCoreRange === '^2.0.0' &&
-        customAdapter.matrix?.runtimeGuidance?.expectation === 'required' &&
-        JSON.stringify(customAdapter.matrix?.supportedRepositoryFormatVersions) === '[1]' &&
-        customAdapter.matrix?.targets?.[0]?.id === 'custom' &&
-        customAdapter.matrix?.targets?.[0]?.patterns?.[0]?.id ===
-          'explicit-repository-relationships' &&
-        customAdapter.matrix?.targets?.[0]?.patterns?.[0]?.support === 'full',
-      'The custom compatibility claim is invalid.',
-    );
-    assertRuntimeInvariant(
-      anthropicAdapter?.active === true &&
-        anthropicAdapter.bundledVersion === '2.0.2' &&
-        anthropicAdapter.matrix?.implementationStatus === 'available' &&
-        anthropicAdapter.matrix?.compatibleCoreRange === '^2.0.0' &&
-        anthropicAdapter.matrix?.runtimeGuidance?.expectation === 'optional' &&
-        JSON.stringify(anthropicAdapter.matrix?.supportedRepositoryFormatVersions) === '[1]' &&
-        anthropicAdapter.matrix?.targets?.[0]?.id === 'typescript-messages-api-0-117' &&
-        anthropicAdapter.matrix?.targets?.[0]?.supportLevel === 'experimental',
-      'The Anthropic compatibility claim is invalid.',
-    );
-    assertRuntimeInvariant(
-      claudeAgentSdkAdapter?.active === true &&
-        claudeAgentSdkAdapter.bundledVersion === '1.0.1' &&
-        claudeAgentSdkAdapter.matrix?.implementationStatus === 'available' &&
-        claudeAgentSdkAdapter.matrix?.compatibleCoreRange === '^2.0.0' &&
-        claudeAgentSdkAdapter.matrix?.runtimeGuidance?.expectation === 'optional' &&
-        JSON.stringify(claudeAgentSdkAdapter.matrix?.supportedRepositoryFormatVersions) === '[1]' &&
-        claudeAgentSdkAdapter.matrix?.targets?.[0]?.id === 'typescript-query-subagents-0-3' &&
-        claudeAgentSdkAdapter.matrix?.targets?.[0]?.supportLevel === 'experimental',
-      'The Claude Agent SDK compatibility claim is invalid.',
-    );
-    assertRuntimeInvariant(
-      googleGenAiAdapter?.active === true &&
-        googleGenAiAdapter.bundledVersion === '1.0.4' &&
-        googleGenAiAdapter.matrix?.implementationStatus === 'available' &&
-        googleGenAiAdapter.matrix?.compatibleCoreRange === '^2.0.0' &&
-        googleGenAiAdapter.matrix?.runtimeGuidance?.expectation === 'optional' &&
-        JSON.stringify(googleGenAiAdapter.matrix?.supportedRepositoryFormatVersions) === '[1]' &&
-        googleGenAiAdapter.matrix?.targets?.[0]?.id === 'typescript-models-generate-content-2' &&
-        googleGenAiAdapter.matrix?.targets?.[0]?.supportLevel === 'experimental',
-      'The Google Gen AI compatibility claim is invalid.',
-    );
-    assertRuntimeInvariant(
-      langChainAdapter?.active === true &&
-        langChainAdapter.bundledVersion === '1.0.1' &&
-        langChainAdapter.matrix?.implementationStatus === 'available' &&
-        langChainAdapter.matrix?.compatibleCoreRange === '^2.0.0' &&
-        langChainAdapter.matrix?.runtimeGuidance?.expectation === 'optional' &&
-        JSON.stringify(langChainAdapter.matrix?.supportedRepositoryFormatVersions) === '[1]' &&
-        langChainAdapter.matrix?.targets?.[0]?.id === 'typescript-create-agent-1-5' &&
-        langChainAdapter.matrix?.targets?.[0]?.supportLevel === 'experimental',
-      'The LangChain compatibility claim is invalid.',
-    );
-    assertRuntimeInvariant(
-      langGraphAdapter?.active === true &&
-        langGraphAdapter.bundledVersion === '1.0.1' &&
-        langGraphAdapter.matrix?.implementationStatus === 'available' &&
-        langGraphAdapter.matrix?.compatibleCoreRange === '^2.0.0' &&
-        langGraphAdapter.matrix?.runtimeGuidance?.expectation === 'recommended' &&
-        JSON.stringify(langGraphAdapter.matrix?.supportedRepositoryFormatVersions) === '[1]' &&
-        langGraphAdapter.matrix?.targets?.[0]?.id === 'typescript-functional-api-1-4' &&
-        langGraphAdapter.matrix?.targets?.[1]?.id === 'typescript-state-graph-1-4' &&
-        langGraphAdapter.matrix?.targets?.every(
-          ({ supportLevel }) => supportLevel === 'experimental',
+      JSON.stringify(compatibilityEnvelope.result?.adapters) ===
+        JSON.stringify(
+          [
+            'anthropic',
+            'claude-agent-sdk',
+            'cloudflare-agents',
+            'custom',
+            'eve',
+            'google-genai',
+            'langchain',
+            'langgraph',
+            'openai',
+            'openai-agents-sdk',
+            'vercel-ai-sdk',
+          ].map((id) => ({ id, repositoryFormatVersions: [1] })),
         ),
-      'The LangGraph compatibility claim is invalid.',
-    );
-    assertRuntimeInvariant(
-      openAiAdapter?.active === true &&
-        openAiAdapter.bundledVersion === '2.0.5' &&
-        openAiAdapter.matrix?.implementationStatus === 'available' &&
-        openAiAdapter.matrix?.compatibleCoreRange === '^2.0.0' &&
-        openAiAdapter.matrix?.runtimeGuidance?.expectation === 'recommended' &&
-        JSON.stringify(openAiAdapter.matrix?.supportedRepositoryFormatVersions) === '[1]' &&
-        openAiAdapter.matrix?.targets?.[0]?.id === 'typescript-responses-api-7' &&
-        openAiAdapter.matrix?.targets?.[0]?.supportLevel === 'experimental',
-      'The OpenAI compatibility claim is invalid.',
-    );
-    assertRuntimeInvariant(
-      openAiAgentsSdkAdapter?.active === true &&
-        openAiAgentsSdkAdapter.bundledVersion === '1.0.3' &&
-        openAiAgentsSdkAdapter.matrix?.implementationStatus === 'available' &&
-        openAiAgentsSdkAdapter.matrix?.compatibleCoreRange === '^2.0.0' &&
-        openAiAgentsSdkAdapter.matrix?.runtimeGuidance?.expectation === 'optional' &&
-        JSON.stringify(openAiAgentsSdkAdapter.matrix?.supportedRepositoryFormatVersions) ===
-          '[1]' &&
-        openAiAgentsSdkAdapter.matrix?.targets?.[0]?.id === 'typescript-agent-handoffs-0-16' &&
-        openAiAgentsSdkAdapter.matrix?.targets?.[0]?.supportLevel === 'experimental',
-      'The OpenAI Agents SDK compatibility claim is invalid.',
-    );
-    assertRuntimeInvariant(
-      cloudflareAgentsAdapter?.active === true &&
-        cloudflareAgentsAdapter.bundledVersion === '1.0.1' &&
-        cloudflareAgentsAdapter.matrix?.implementationStatus === 'available' &&
-        cloudflareAgentsAdapter.matrix?.compatibleCoreRange === '^2.0.0' &&
-        cloudflareAgentsAdapter.matrix?.runtimeGuidance?.expectation === 'recommended' &&
-        JSON.stringify(cloudflareAgentsAdapter.matrix?.supportedRepositoryFormatVersions) ===
-          '[1]' &&
-        cloudflareAgentsAdapter.matrix?.targets?.length === 2 &&
-        cloudflareAgentsAdapter.matrix.targets.some(
-          ({ id, supportLevel }) =>
-            id === 'typescript-think-0-16-ai-sdk-7' && supportLevel === 'experimental',
-        ) &&
-        cloudflareAgentsAdapter.matrix.targets.some(
-          ({ id, supportLevel }) =>
-            id === 'typescript-ai-chat-agent-0-10-ai-sdk-7' && supportLevel === 'experimental',
-        ),
-      'The Cloudflare Agents adapter is not active with its expected compatibility metadata.',
-    );
-    assertRuntimeInvariant(
-      eveAdapter?.active === true &&
-        eveAdapter.bundledVersion === '1.0.1' &&
-        eveAdapter.matrix?.implementationStatus === 'available' &&
-        eveAdapter.matrix?.compatibleCoreRange === '^2.0.0' &&
-        eveAdapter.matrix?.runtimeGuidance?.expectation === 'optional' &&
-        JSON.stringify(eveAdapter.matrix?.supportedRepositoryFormatVersions) === '[1]' &&
-        eveAdapter.matrix?.targets?.[0]?.id === 'typescript-filesystem-agent-0-39' &&
-        eveAdapter.matrix?.targets?.[0]?.supportLevel === 'experimental',
-      'The Eve compatibility claim is invalid.',
-    );
-    assertRuntimeInvariant(
-      vercelAiSdkAdapter?.active === true &&
-        vercelAiSdkAdapter.bundledVersion === '1.0.1' &&
-        vercelAiSdkAdapter.matrix?.implementationStatus === 'available' &&
-        vercelAiSdkAdapter.matrix?.compatibleCoreRange === '^2.0.0' &&
-        vercelAiSdkAdapter.matrix?.runtimeGuidance?.expectation === 'optional' &&
-        JSON.stringify(vercelAiSdkAdapter.matrix?.supportedRepositoryFormatVersions) === '[1]' &&
-        vercelAiSdkAdapter.matrix?.targets?.[0]?.id === 'typescript-generate-stream-text-7' &&
-        vercelAiSdkAdapter.matrix?.targets?.[1]?.id === 'typescript-tool-loop-agent-7' &&
-        vercelAiSdkAdapter.matrix?.targets?.every(
-          ({ supportLevel }) => supportLevel === 'experimental',
-        ),
-      'The Vercel AI SDK compatibility claim is invalid.',
+      'The executable adapter list is invalid.',
     );
 
     executeFixtureGit(consumerDirectory, hooksDirectory, environment, ['init']);

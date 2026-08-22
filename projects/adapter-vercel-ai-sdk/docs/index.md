@@ -20,7 +20,7 @@ The local CLI registers the adapter automatically. Applications composing Core d
 
 ## Current state
 
-The package is available. Its experimental targets use TypeScript ESM and npm `ai >=7.0.66 <8.0.0` with Repository Format version `1` and compatible Core `^2.0.0`.
+The package is available. Its technical targets use TypeScript ESM and npm `ai >=7.0.66 <8.0.0` with Repository Format version `1` and compatible Core `^2.0.0`.
 
 The adapter never imports or calls the SDK, requires no API key, executes no repository code, and makes no network request. It proves supported static relationships; it does not verify credentials, provider behavior, model availability, tool execution, or schema semantics.
 

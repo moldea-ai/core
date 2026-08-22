@@ -6,7 +6,7 @@ order: 10
 
 # Verified target
 
-The canonical Runtime Compatibility Matrix defines the experimental target `typescript-agent-handoffs-0-16`.
+The canonical Runtime Compatibility Matrix defines the technical target `typescript-agent-handoffs-0-16`.
 
 ## Supported boundary
 

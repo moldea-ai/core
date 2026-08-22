@@ -6,7 +6,7 @@ order: 10
 
 # Verified targets
 
-The canonical Runtime Compatibility Matrix defines `typescript-tool-loop-agent-7` and `typescript-generate-stream-text-7` as experimental targets.
+The canonical Runtime Compatibility Matrix defines technical targets `typescript-tool-loop-agent-7` and `typescript-generate-stream-text-7`.
 
 ## Shared boundary
 

@@ -133,7 +133,6 @@ const generateTarget = (target: IRuntimeTarget): string[] => {
     `### Target: ${formatInlineCode(target.id)}`,
     '',
     `- Kind: ${formatInlineCode(target.kind)}`,
-    `- Support level: ${formatInlineCode(target.supportLevel)}`,
     `- Language: ${formatInlineCode(target.language)}`,
     `- Evidence kinds: ${target.evidenceKinds?.map(formatInlineCode).join(', ') ?? MISSING_VALUE}`,
     `- Last verified: ${formatInlineCode(target.lastVerifiedAt)}`,

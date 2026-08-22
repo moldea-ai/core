@@ -7,7 +7,6 @@ import { createMemoryRepositoryReader } from '@moldea.ai/repository/memory';
 
 import { ACTIVE_RUNTIME_ADAPTERS } from './constants.js';
 import { createMoldeaCliCoreInspectionExecutor } from './executor.js';
-import { ACTIVE_RUNTIME_ADAPTER_RELEASE_DEFINITIONS } from './release-definitions/index.js';
 import type { IMoldeaCliCoreFactory } from './types.js';
 
 const RESOURCE_LIMITS = Object.freeze({
@@ -119,12 +118,6 @@ describe('createMoldeaCliCoreInspectionExecutor', () => {
       'vercel-ai-sdk',
     ]);
     expect(Object.isFrozen(ACTIVE_RUNTIME_ADAPTERS)).toBe(true);
-    expect(ACTIVE_RUNTIME_ADAPTER_RELEASE_DEFINITIONS).toStrictEqual(
-      ACTIVE_RUNTIME_ADAPTERS.map(({ id, supportedRepositoryFormatVersions }) => ({
-        id,
-        supportedRepositoryFormatVersions,
-      })),
-    );
   });
 
   test('normalizes the active package-backed adapter set by ID before Core creation', async () => {

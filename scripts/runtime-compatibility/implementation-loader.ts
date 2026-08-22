@@ -4,14 +4,11 @@ import {
   RECOGNIZED_RUNTIME_ADAPTER_IDS,
   SUPPORTED_REPOSITORY_FORMAT_VERSIONS,
 } from '../../projects/core/src/constants/index.ts';
-import { ACTIVE_RUNTIME_ADAPTER_RELEASE_DEFINITIONS } from '../../projects/cli/src/core-composition/release-definitions/index.ts';
-import { MINIMUM_GIT_VERSION } from '../../projects/cli/src/git-version/constants.ts';
-import { MOLDEA_CLI_JSON_SCHEMA_VERSION } from '../../projects/cli/src/json-output-contract/index.ts';
+import { ACTIVE_RUNTIME_ADAPTERS } from '../../projects/cli/src/core-composition/constants.ts';
 
-import { createMoldeaCliReleaseMetadata } from './release-metadata-validations.ts';
+import { validateMoldeaCliImplementation } from './implementation-validations.ts';
 import type {
-  IMoldeaCliGeneratedReleaseMetadata,
-  IRuntimeAdapterReleaseDefinition,
+  IRuntimeAdapterImplementationDefinition,
   IRuntimeCompatibilityMatrix,
 } from './types.ts';
 
@@ -33,19 +30,19 @@ const getProjectManifestPath = (packageName: string): string => {
 const readJson = async (url: URL): Promise<unknown> => JSON.parse(await readFile(url, 'utf8'));
 
 /**
- * Loads canonical workspace sources and produces validated CLI release metadata.
+ * Loads canonical workspace sources and validates the CLI implementation against the matrix.
  * @param repositoryRoot The repository root containing the canonical project manifests.
  * @param matrix The already validated and normalized compatibility matrix.
- * @returns The exact deterministic metadata to bundle into the CLI executable.
+ * @returns A promise that resolves after every implementation source is consistent.
  * @throws
- * - If a source cannot be read or the release composition is inconsistent.
+ * - If a source cannot be read or the implementation composition is inconsistent.
  */
-export const loadMoldeaCliReleaseMetadata = async (
+export const validateMoldeaCliImplementationSources = async (
   repositoryRoot: URL,
   matrix: IRuntimeCompatibilityMatrix,
-): Promise<IMoldeaCliGeneratedReleaseMetadata> => {
-  const activeAdapters: readonly IRuntimeAdapterReleaseDefinition[] =
-    ACTIVE_RUNTIME_ADAPTER_RELEASE_DEFINITIONS;
+): Promise<void> => {
+  const activeAdapters: readonly IRuntimeAdapterImplementationDefinition[] =
+    ACTIVE_RUNTIME_ADAPTERS;
   const activePackageNames = activeAdapters.map(({ id }) => {
     const packageName = matrix.adapters[id]?.implementation.package;
 
@@ -66,14 +63,12 @@ export const loadMoldeaCliReleaseMetadata = async (
     packageNames.map((packageName, index) => [packageName, packageManifestValues[index]]),
   );
 
-  return createMoldeaCliReleaseMetadata({
+  validateMoldeaCliImplementation({
     activeAdapters,
     cliManifest,
     coreRecognizedAdapterIds: RECOGNIZED_RUNTIME_ADAPTER_IDS,
     coreSupportedRepositoryFormatVersions: SUPPORTED_REPOSITORY_FORMAT_VERSIONS,
     matrix,
-    minimumGitVersion: MINIMUM_GIT_VERSION,
-    outputSchemaVersion: MOLDEA_CLI_JSON_SCHEMA_VERSION,
     packageManifests,
   });
 };

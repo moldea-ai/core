@@ -1,51 +1,40 @@
 import type { IRuntimeAdapter } from '@moldea.ai/core/adapter';
 
 import type { IMoldeaCliPackageMetadata } from '../package-metadata/index.js';
-import type {
-  IMoldeaCliReleaseMetadata,
-  IMoldeaCliRuntimeAdapterEntry,
-} from '../release-metadata/index.js';
 
-// one exact package version reported by the compatibility command
+// one exact installed package version reported by the compatibility command
 export interface IMoldeaCliPackageCompatibility {
   readonly name: string;
   readonly version: string;
 }
 
-// one adapter composition reported with its exact bundled matrix entry
+// one executable adapter and the repository formats accepted by its implementation
 export interface IMoldeaCliAdapterCompatibility {
-  readonly active: boolean;
-  readonly bundledVersion: string | null;
   readonly id: string;
-  readonly matrix: IMoldeaCliRuntimeAdapterEntry;
+  readonly repositoryFormatVersions: readonly number[];
 }
 
-// complete version 1 compatibility command result
+// compact technical compatibility state derived by the installed CLI
 export interface IMoldeaCliCompatibilityResult {
   readonly adapters: readonly IMoldeaCliAdapterCompatibility[];
-  readonly matrixVersion: number;
   readonly minimumGitVersion: string;
-  readonly outputSchemaVersion: 1;
   readonly packages: readonly IMoldeaCliPackageCompatibility[];
   readonly repositoryFormatVersions: readonly number[];
   readonly supportedNodeRange: string;
 }
 
-// runtime and generated state compared before any command produces a result
+// actual runtime and package state checked before any command produces a result
 export interface IMoldeaCliCompatibilityStateInput {
   readonly activeAdapters: readonly IRuntimeAdapter[];
-  readonly coreRecognizedAdapterIds: readonly string[];
   readonly coreSupportedRepositoryFormatVersions: readonly number[];
   readonly minimumGitVersion: string;
-  readonly outputSchemaVersion: 1;
+  readonly outputSchemaVersion: 2;
   readonly packageMetadata: IMoldeaCliPackageMetadata;
-  readonly releaseMetadata: IMoldeaCliReleaseMetadata;
 }
 
-// installed inputs resolved through the executable's fixed runtime composition
+// installed input resolved through the executable's fixed runtime composition
 export interface IMoldeaCliInstalledCompatibilityInput {
   readonly packageMetadata: IMoldeaCliPackageMetadata;
-  readonly releaseMetadata: IMoldeaCliReleaseMetadata;
 }
 
 // all-or-nothing runtime compatibility resolution

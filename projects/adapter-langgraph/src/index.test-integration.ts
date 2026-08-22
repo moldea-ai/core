@@ -82,7 +82,7 @@ describe('@moldea.ai/adapter-langgraph public API', () => {
 
     expect(packResult).toMatchObject({
       name: '@moldea.ai/adapter-langgraph',
-      version: '1.0.1',
+      version: '1.0.2',
     });
     expect(packedPaths).toEqual(
       expect.arrayContaining([

@@ -271,7 +271,7 @@ export const verifyProductionBuild = (): void => {
     }
 
     for (const target of adapter.entry.targets ?? []) {
-      if (!adapterLine.includes(`${target.id}: ${target.supportLevel}`)) {
+      if (!adapterLine.includes(`${target.id}: ${target.maturity}`)) {
         throw new Error(`llms.txt contradicts target maturity for ${adapter.id}/${target.id}.`);
       }
     }

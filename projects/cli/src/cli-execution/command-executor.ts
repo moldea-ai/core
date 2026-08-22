@@ -32,7 +32,7 @@ import type { IMoldeaCliCommandExecutor, IMoldeaCliExecutionResult } from './typ
  * @param workingTreeDiscovery The Git working-tree discovery operation.
  * @param workingTreeSnapshotExecutor The complete working-tree snapshot operation.
  * @param coreInspectionExecutor The attempt-local Core inspection composition.
- * @param compatibilityResolver The installed release-integrity and compatibility boundary.
+ * @param compatibilityResolver The installed executable-integrity and compatibility boundary.
  * @returns A command executor for the current behavioral slice.
  */
 export const createMoldeaCliCommandExecutor =
@@ -45,7 +45,6 @@ export const createMoldeaCliCommandExecutor =
   async (input): Promise<IMoldeaCliExecutionResult> => {
     const compatibilityResolution = compatibilityResolver({
       packageMetadata: input.packageMetadata,
-      releaseMetadata: input.releaseMetadata,
     });
 
     if (compatibilityResolution.kind === 'invalid') {

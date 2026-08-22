@@ -17,12 +17,17 @@ import type {
   ISearchRecord,
   IWebsiteModel,
 } from '../model/types.ts';
+import {
+  parseRuntimeTargetMaturity,
+  type IRuntimeTargetMaturity,
+  type IRuntimeTargetMaturityRegistry,
+} from '../runtime-target-maturity/index.ts';
 import { REPOSITORY_FORMAT_GUIDE_URL } from '../site/constants.ts';
 
 const REPOSITORY_URL = 'https://github.com/moldea-ai/packages';
 const EXCLUDED_DIRECTORY_NAMES = new Set(['_archive', '_archives', '_backup', '_backups']);
 const GENERATED_NOTICE =
-  'Generated from project manifests, package-owned documentation, public exports, and compatibility/runtimes.yaml. Do not edit generated output.';
+  'Generated from project manifests, package-owned documentation, public exports, compatibility/runtimes.yaml, and the website-owned runtime target maturity file. Do not edit generated output.';
 
 const PackageManifestSchema = z.object({
   bin: z.record(z.string(), z.string()).optional(),
@@ -226,10 +231,25 @@ const loadCompatibilityMatrix = (repositoryRoot: string): IRuntimeCompatibilityM
   return result.matrix;
 };
 
+const requireTargetMaturity = (
+  targetMaturities: IRuntimeTargetMaturityRegistry,
+  adapterId: string,
+  targetId: string,
+): IRuntimeTargetMaturity => {
+  const maturity = targetMaturities[adapterId]?.[targetId];
+
+  if (maturity === undefined) {
+    throw new Error(`Runtime target maturity is missing for ${adapterId}/${targetId}.`);
+  }
+
+  return maturity;
+};
+
 /** Transforms the canonical matrix into validated public adapter status routes. */
 export const buildAdapterPages = (
   matrix: IRuntimeCompatibilityMatrix,
   packages: IPublicPackage[],
+  targetMaturities: IRuntimeTargetMaturityRegistry,
 ): IAdapterPage[] => {
   const packageByName = new Map(packages.map((packageModel) => [packageModel.name, packageModel]));
 
@@ -256,7 +276,13 @@ export const buildAdapterPages = (
       }
 
       return {
-        entry,
+        entry: {
+          ...entry,
+          targets: entry.targets?.map((target) => ({
+            ...target,
+            maturity: requireTargetMaturity(targetMaturities, id, target.id),
+          })),
+        },
         id,
         implementedPackageSlug: implementedPackage?.slug ?? null,
         route: `/adapters/${id}/`,
@@ -462,7 +488,7 @@ export const createLlmsText = (packages: IPublicPackage[], adapters: IAdapterPag
 
   for (const adapter of orderedAdapters) {
     const targetSummary =
-      adapter.entry.targets?.map((target) => `${target.id}: ${target.supportLevel}`).join(', ') ??
+      adapter.entry.targets?.map((target) => `${target.id}: ${target.maturity}`).join(', ') ??
       'no verified targets';
     const implementation =
       adapter.entry.implementation.kind === 'built-in'
@@ -495,7 +521,11 @@ export const createWebsiteModel = (): IWebsiteModel => {
   const repositoryRoot = getRepositoryRoot();
   const packages = discoverPublicPackages(repositoryRoot);
   const matrix = loadCompatibilityMatrix(repositoryRoot);
-  const adapters = buildAdapterPages(matrix, packages);
+  const targetMaturities = parseRuntimeTargetMaturity(
+    readFileSync(join(repositoryRoot, 'apps/website/content/runtime-target-maturity.yaml'), 'utf8'),
+    matrix,
+  );
+  const adapters = buildAdapterPages(matrix, packages, targetMaturities);
   const routes = createRouteManifest(packages, adapters);
   const searchRecords = createSearchRecords(packages, adapters);
 

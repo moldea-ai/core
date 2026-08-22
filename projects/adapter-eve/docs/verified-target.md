@@ -6,7 +6,7 @@ order: 10
 
 # Verified target
 
-Target `typescript-filesystem-agent-0-39` covers `eve >=0.39.1 <0.40.0` at experimental support level.
+Technical target `typescript-filesystem-agent-0-39` covers `eve >=0.39.1 <0.40.0`.
 
 Positive agent evidence requires an uncollided flat or nested `agent.ts` that directly default-exports `defineAgent(...)`, uses only `model`, optional `description`, and optional `outputSchema`, and resolves `model` to a supported static string. Directory-backed local subagents use the same rule recursively.
 

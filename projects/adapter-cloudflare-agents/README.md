@@ -8,7 +8,7 @@ The package implements the official `cloudflare-agents` runtime adapter for `@mo
 
 ## Supported targets
 
-Version `1.0.1` experimentally supports:
+Version `1.0.2` supports:
 
 - Repository Format version `1`
 - `@moldea.ai/core ^2.0.0`
@@ -20,7 +20,7 @@ Version `1.0.1` experimentally supports:
 - AIChatAgent instructions and structured output through direct `generateText` or `streamText` requests
 - AI SDK function tools, closed tools maps, and Cloudflare `agentTool` handoffs
 
-Named value imports and aliases are supported. Default imports, namespace imports, re-export graphs, runtime mutation, and dynamic class or tools-map forms remain outside the verified boundary. The Runtime Compatibility Matrix is authoritative for target maturity, exact versions, evidence, binding support, patterns, and known limitations.
+Named value imports and aliases are supported. Default imports, namespace imports, re-export graphs, runtime mutation, and dynamic class or tools-map forms remain outside the verified boundary. The Runtime Compatibility Matrix is authoritative for exact versions, evidence, binding support, patterns, and known limitations.
 
 ## Usage
 

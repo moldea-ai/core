@@ -1,12 +1,12 @@
 # Packages website
 
-`@moldea.ai/packages-website` is the private Astro application that renders the public technical documentation for the open-source `moldea` packages ecosystem. It is an application under `/apps/**`, not a first-class package, npm artifact, package-catalog entry, or source of package compatibility truth.
+`@moldea.ai/packages-website` is the private Astro application that renders the public technical documentation for the open-source `moldea` packages ecosystem. It is an application under `/apps/**`, not a first-class package, npm artifact, or package-catalog entry. It owns the public maturity assigned to each runtime target.
 
 ## Source model
 
-The build discovers immediate public implemented projects from `/projects/**`, validates their manifests and package-owned `docs/**`, derives dependencies from manifests, extracts API reference data from actual public TypeScript exports, and reads adapter status and optional skill-owned qualification links only through the repository's strict parser for `compatibility/runtimes.yaml`.
+The build discovers immediate public implemented projects from `/projects/**`, validates their manifests and package-owned `docs/**`, derives dependencies from manifests, extracts API reference data from actual public TypeScript exports, and reads technical adapter compatibility and optional skill-owned qualification links through the repository's strict parser for `compatibility/runtimes.yaml`. Target maturity is edited in `content/runtime-target-maturity.yaml`; generation fails unless that file contains exactly one maturity for every matrix target and no stale targets.
 
-The ignored `.generated/model.json` file is a deterministic build cache. Do not edit it. Authored website content is limited to landing-page framing, application-owned layouts and navigation, SEO identity, public assets, accessibility labels, and other site-specific presentation concerns. Package behavior belongs in each project's docs; adapter compatibility belongs in the matrix.
+The ignored `.generated/model.json` file is a deterministic build cache. Do not edit it. Package behavior belongs in each project's docs, technical adapter compatibility belongs in the matrix, and target maturity belongs in the website content file. Updating and deploying that one YAML file is the complete maturity-management workflow.
 
 Reusable website foundations come from the public `@moldea.ai/website-ui` workspace package. That package owns shared semantic design tokens, global interaction states, base-path and theme utilities, local-search behavior, and small Astro components. This application owns the `https://packages.moldea.ai` origin, `moldea-website-theme` storage key, page composition, package discovery, generated content, and packages-specific copy.
 

@@ -74,12 +74,11 @@ describe('runtime compatibility normalization', () => {
               qualificationEvidence: {
                 url: 'https://skill.moldea.ai/qualification/openai/typescript/',
               },
-              supportLevel: 'supported',
             },
           ],
         },
       },
-      version: 1,
+      version: 2,
     };
 
     const normalized = normalizeRuntimeCompatibilityMatrix(matrix);

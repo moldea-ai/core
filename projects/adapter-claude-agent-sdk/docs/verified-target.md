@@ -6,7 +6,7 @@ order: 10
 
 # Verified target
 
-The canonical Runtime Compatibility Matrix defines the experimental target `typescript-query-subagents-0-3`.
+The canonical Runtime Compatibility Matrix defines the technical target `typescript-query-subagents-0-3`.
 
 ## Supported boundary
 

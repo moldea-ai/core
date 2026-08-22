@@ -3,9 +3,9 @@ import { describe, expect, test } from 'vitest';
 import { satisfies } from 'semver';
 
 import { OFFICIAL_RUNTIME_ADAPTER_PACKAGES } from './constants.ts';
-import { createMoldeaCliReleaseMetadata } from './release-metadata-validations.ts';
+import { validateMoldeaCliImplementation } from './implementation-validations.ts';
 import type {
-  IMoldeaCliReleaseMetadataSources,
+  IMoldeaCliImplementationSources,
   IRuntimeAdapterEntry,
   IRuntimeCompatibilityMatrix,
 } from './types.ts';
@@ -30,10 +30,10 @@ const createPlannedMatrix = (): IRuntimeCompatibilityMatrix => ({
       },
     ]),
   ),
-  version: 1,
+  version: 2,
 });
 
-const createSources = (): IMoldeaCliReleaseMetadataSources => ({
+const createSources = (): IMoldeaCliImplementationSources => ({
   activeAdapters: [],
   cliManifest: {
     dependencies: { ...FOUNDATIONAL_DEPENDENCIES },
@@ -44,8 +44,6 @@ const createSources = (): IMoldeaCliReleaseMetadataSources => ({
   coreRecognizedAdapterIds: Object.keys(OFFICIAL_RUNTIME_ADAPTER_PACKAGES),
   coreSupportedRepositoryFormatVersions: [1],
   matrix: createPlannedMatrix(),
-  minimumGitVersion: '2.30.0',
-  outputSchemaVersion: 1,
   packageManifests: {
     '@moldea.ai/core': { name: '@moldea.ai/core', version: '1.0.0' },
     '@moldea.ai/repository': { name: '@moldea.ai/repository', version: '1.0.0' },
@@ -79,7 +77,6 @@ const AVAILABLE_OPENAI_ENTRY: IRuntimeAdapterEntry = {
           versionRange: '^1.0.0',
         },
       ],
-      supportLevel: 'supported',
     },
   ],
 };
@@ -99,16 +96,15 @@ const AVAILABLE_CUSTOM_ENTRY: IRuntimeAdapterEntry = {
     {
       id: 'custom',
       kind: 'custom',
-      language: 'custom',
+      language: 'any',
       lastVerifiedAt: '2026-08-13',
-      supportLevel: 'supported',
     },
   ],
 };
 
 const activateOpenAi = (
-  sources: IMoldeaCliReleaseMetadataSources,
-): IMoldeaCliReleaseMetadataSources => {
+  sources: IMoldeaCliImplementationSources,
+): IMoldeaCliImplementationSources => {
   sources.matrix.adapters['openai'] = AVAILABLE_OPENAI_ENTRY;
   const cliManifest = sources.cliManifest as {
     dependencies: Record<string, string>;
@@ -127,28 +123,9 @@ const activateOpenAi = (
   };
 };
 
-describe('CLI release metadata validation', () => {
-  test('creates exact sorted metadata for the current planned composition', () => {
-    const metadata = createMoldeaCliReleaseMetadata(createSources());
-
-    expect(metadata).toStrictEqual({
-      activeAdapterIds: [],
-      cliPackage: {
-        name: '@moldea.ai/cli',
-        supportedNodeRange: '^22.11.0 || ^24.11.0',
-        version: '1.0.0',
-      },
-      coreRecognizedAdapterIds: Object.keys(OFFICIAL_RUNTIME_ADAPTER_PACKAGES),
-      matrix: createPlannedMatrix(),
-      minimumGitVersion: '2.30.0',
-      outputSchemaVersion: 1,
-      packages: [
-        { name: '@moldea.ai/core', version: '1.0.0' },
-        { name: '@moldea.ai/repository', version: '1.0.0' },
-        { name: '@moldea.ai/repository-fs', version: '1.0.0' },
-      ],
-      repositoryFormatVersions: [1],
-    });
+describe('CLI implementation validation', () => {
+  test('accepts the current planned technical composition', () => {
+    expect(validateMoldeaCliImplementation(createSources())).toBeUndefined();
   });
 
   test.each([
@@ -162,21 +139,17 @@ describe('CLI release metadata validation', () => {
     ['25.0.0', false],
     ['26.0.0', false],
   ])('publishes the intended Node.js runtime boundary for %s -> %s', (version, isSupported) => {
-    const metadata = createMoldeaCliReleaseMetadata(createSources());
+    const sources = createSources();
+    validateMoldeaCliImplementation(sources);
+    const supportedNodeRange = (sources.cliManifest as { engines: { node: string } }).engines.node;
 
-    expect(satisfies(version, metadata.cliPackage.supportedNodeRange)).toBe(isSupported);
+    expect(satisfies(version, supportedNodeRange)).toBe(isSupported);
   });
 
   test('accepts one available adapter only when package and runtime composition agree', () => {
     const sources = activateOpenAi(createSources());
 
-    const metadata = createMoldeaCliReleaseMetadata(sources);
-
-    expect(metadata.activeAdapterIds).toStrictEqual(['openai']);
-    expect(metadata.packages).toContainEqual({
-      name: '@moldea.ai/adapter-openai',
-      version: '1.0.0',
-    });
+    expect(validateMoldeaCliImplementation(sources)).toBeUndefined();
   });
 
   test('rejects an adapter inventory that differs from Core', () => {
@@ -186,7 +159,7 @@ describe('CLI release metadata validation', () => {
       coreRecognizedAdapterIds: baseSources.coreRecognizedAdapterIds.slice(1),
     };
 
-    expect(() => createMoldeaCliReleaseMetadata(sources)).toThrow(
+    expect(() => validateMoldeaCliImplementation(sources)).toThrow(
       'The Core and matrix adapter inventory is inconsistent.',
     );
   });
@@ -194,7 +167,7 @@ describe('CLI release metadata validation', () => {
   test.each([
     [
       'non-exact Core dependency',
-      (sources: IMoldeaCliReleaseMetadataSources): void => {
+      (sources: IMoldeaCliImplementationSources): void => {
         const cliManifest = sources.cliManifest as { dependencies: Record<string, string> };
         cliManifest.dependencies['@moldea.ai/core'] = 'workspace:^1.0.0';
       },
@@ -202,7 +175,7 @@ describe('CLI release metadata validation', () => {
     ],
     [
       'missing Repository dependency',
-      (sources: IMoldeaCliReleaseMetadataSources): void => {
+      (sources: IMoldeaCliImplementationSources): void => {
         const cliManifest = sources.cliManifest as { dependencies: Record<string, string> };
         delete cliManifest.dependencies['@moldea.ai/repository'];
       },
@@ -210,7 +183,7 @@ describe('CLI release metadata validation', () => {
     ],
     [
       'unexpected first-class dependency',
-      (sources: IMoldeaCliReleaseMetadataSources): void => {
+      (sources: IMoldeaCliImplementationSources): void => {
         const cliManifest = sources.cliManifest as { dependencies: Record<string, string> };
         cliManifest.dependencies['@moldea.ai/unexpected'] = 'workspace:1.0.0';
       },
@@ -218,7 +191,7 @@ describe('CLI release metadata validation', () => {
     ],
     [
       'invalid Node.js range',
-      (sources: IMoldeaCliReleaseMetadataSources): void => {
+      (sources: IMoldeaCliImplementationSources): void => {
         const cliManifest = sources.cliManifest as { engines: Record<string, string> };
         cliManifest.engines['node'] = 'not a range';
       },
@@ -228,14 +201,14 @@ describe('CLI release metadata validation', () => {
     const sources = createSources();
     mutate(sources);
 
-    expect(() => createMoldeaCliReleaseMetadata(sources)).toThrow(expectedMessage);
+    expect(() => validateMoldeaCliImplementation(sources)).toThrow(expectedMessage);
   });
 
   test('rejects an available adapter that is absent from the CLI composition', () => {
     const sources = createSources();
     sources.matrix.adapters['openai'] = AVAILABLE_OPENAI_ENTRY;
 
-    expect(() => createMoldeaCliReleaseMetadata(sources)).toThrow(
+    expect(() => validateMoldeaCliImplementation(sources)).toThrow(
       'The available openai adapter is not active in the CLI release.',
     );
   });
@@ -244,10 +217,10 @@ describe('CLI release metadata validation', () => {
     const sources = createSources();
     sources.matrix.adapters['custom'] = AVAILABLE_CUSTOM_ENTRY;
 
-    expect(createMoldeaCliReleaseMetadata(sources).activeAdapterIds).toStrictEqual([]);
+    expect(validateMoldeaCliImplementation(sources)).toBeUndefined();
 
     expect(() =>
-      createMoldeaCliReleaseMetadata({
+      validateMoldeaCliImplementation({
         ...sources,
         coreSupportedRepositoryFormatVersions: [1, 2],
       }),
@@ -263,7 +236,7 @@ describe('CLI release metadata validation', () => {
     const cliManifest = sources.cliManifest as { dependencies: Record<string, string> };
     cliManifest.dependencies['@moldea.ai/adapter-openai'] = 'workspace:1.0.0';
 
-    expect(() => createMoldeaCliReleaseMetadata(sources)).toThrow(
+    expect(() => validateMoldeaCliImplementation(sources)).toThrow(
       'The openai adapter cannot be active while unpublished.',
     );
   });
@@ -294,7 +267,7 @@ describe('CLI release metadata validation', () => {
       '^2.0.0',
     ],
   ])(
-    'rejects inconsistent active adapter release metadata for %s -> %s',
+    'rejects inconsistent active adapter implementation data for %s -> %s',
     (dependencyVersion, expectedMessage, versionRange, compatibleCoreRange) => {
       const sources = activateOpenAi(createSources());
       const cliManifest = sources.cliManifest as { dependencies: Record<string, string> };
@@ -308,7 +281,7 @@ describe('CLI release metadata validation', () => {
         },
       };
 
-      expect(() => createMoldeaCliReleaseMetadata(sources)).toThrow(expectedMessage);
+      expect(() => validateMoldeaCliImplementation(sources)).toThrow(expectedMessage);
     },
   );
 
@@ -318,7 +291,7 @@ describe('CLI release metadata validation', () => {
       activeAdapters: [{ id: 'openai', supportedRepositoryFormatVersions: [1, 2] }],
     };
 
-    expect(() => createMoldeaCliReleaseMetadata(sources)).toThrow(
+    expect(() => validateMoldeaCliImplementation(sources)).toThrow(
       'The openai adapter repository-format support is inconsistent.',
     );
   });
@@ -331,7 +304,7 @@ describe('CLI release metadata validation', () => {
     };
 
     expect(() =>
-      createMoldeaCliReleaseMetadata({
+      validateMoldeaCliImplementation({
         ...sources,
         activeAdapters: [{ id: 'openai', supportedRepositoryFormatVersions: [2] }],
       }),

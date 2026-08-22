@@ -102,6 +102,6 @@ export const normalizeRuntimeCompatibilityMatrix = (
         .sort(([leftId], [rightId]) => compareExactStrings(leftId, rightId))
         .map(([adapterId, adapter]) => [adapterId, normalizeAdapter(adapter)]),
     ),
-    version: 1,
+    version: 2,
   };
 };

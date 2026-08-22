@@ -49,7 +49,6 @@ export const runMoldeaCli = async (
       invocationDirectory: options.invocationDirectory,
       invocation: parseResult.invocation,
       packageMetadata: options.packageMetadata,
-      releaseMetadata: options.releaseMetadata,
       ...(options.signal === undefined ? {} : { signal: options.signal }),
     });
   } catch {

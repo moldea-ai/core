@@ -31,4 +31,4 @@ An adapter returns evidence plus adapter diagnostics. Core validates every resul
 
 Evidence records source-grounded observations such as a runtime package, language, runtime pattern, instruction-loader wiring, schema wiring, or tool registration. Records identify logical sources and relevant agents or capabilities without including repository content, secrets, model input, tool arguments, or provider payloads.
 
-The [Runtime Compatibility Matrix](/compatibility/) is the only authority for approved adapter IDs, implementation state, target maturity, evidence kinds, binding support, supported patterns, provider limits, and verification dates.
+The [Runtime Compatibility Matrix](/compatibility/) is the authority for approved adapter IDs, implementation state, evidence kinds, binding support, supported patterns, provider limits, and verification dates. The packages website assigns target maturity separately and does not change Core or adapter behavior.

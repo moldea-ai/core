@@ -8,7 +8,7 @@ The package implements the official `claude-agent-sdk` runtime adapter for `@mol
 
 ## Supported target
 
-Version `1.0.1` experimentally supports:
+Version `1.0.2` supports:
 
 - Repository Format version `1`
 - `@moldea.ai/core ^2.0.0`
@@ -26,7 +26,7 @@ Version `1.0.1` experimentally supports:
 
 Named root-package imports and aliases of `query`, `tool`, and `createSdkMcpServer` are supported. Relative ESM named imports resolve exact paths plus `.js` to `.ts` or `.tsx` and `.mjs` to `.mts` substitutions. Relationship closure is independent: a dynamic relationship does not erase other relationships proved from the same query or definition.
 
-The Runtime Compatibility Matrix is authoritative for current target maturity, exact versions, evidence, binding support, patterns, and known limitations.
+The Runtime Compatibility Matrix is authoritative for exact versions, evidence, binding support, patterns, and known limitations.
 
 ## Usage
 

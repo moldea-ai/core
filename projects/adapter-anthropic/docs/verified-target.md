@@ -6,7 +6,7 @@ order: 10
 
 # Verified target
 
-The canonical Runtime Compatibility Matrix defines the current target as `typescript-messages-api-0-117` with experimental maturity.
+The canonical Runtime Compatibility Matrix defines the technical target as `typescript-messages-api-0-117`.
 
 ## Supported boundary
 

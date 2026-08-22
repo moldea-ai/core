@@ -2,7 +2,6 @@
 import { describe, expect, test, vi } from 'vitest';
 
 import { MOLDEA_CLI_TOP_LEVEL_HELP } from '../presentation/index.js';
-import { MOLDEA_CLI_RELEASE_METADATA } from '../release-metadata/index.js';
 
 import { runMoldeaCli } from './runner.js';
 import type { IMoldeaCliCommandExecutor } from './types.js';
@@ -54,7 +53,6 @@ describe('runMoldeaCli', () => {
         executeCommand,
         invocationDirectory: INVOCATION_DIRECTORY,
         packageMetadata: INSTALLED_PACKAGE_METADATA,
-        releaseMetadata: MOLDEA_CLI_RELEASE_METADATA,
       }),
     ).resolves.toStrictEqual({
       exitCode: 0,
@@ -124,7 +122,6 @@ Options:
         executeCommand,
         invocationDirectory: INVOCATION_DIRECTORY,
         packageMetadata: INSTALLED_PACKAGE_METADATA,
-        releaseMetadata: MOLDEA_CLI_RELEASE_METADATA,
       }),
     ).resolves.toStrictEqual({ exitCode: 0, stderr: '', stdout: expectedHelp });
     expect(executeCommand).not.toHaveBeenCalled();
@@ -139,7 +136,6 @@ Options:
         executeCommand,
         invocationDirectory: INVOCATION_DIRECTORY,
         packageMetadata: INSTALLED_PACKAGE_METADATA,
-        releaseMetadata: MOLDEA_CLI_RELEASE_METADATA,
       }),
     ).resolves.toStrictEqual({ exitCode: 0, stderr: '', stdout: '3.3.7\n' });
     expect(executeCommand).not.toHaveBeenCalled();
@@ -151,7 +147,6 @@ Options:
         commandLineArguments: ['unknown'],
         invocationDirectory: INVOCATION_DIRECTORY,
         packageMetadata: INSTALLED_PACKAGE_METADATA,
-        releaseMetadata: MOLDEA_CLI_RELEASE_METADATA,
       }),
     ).resolves.toStrictEqual({
       exitCode: 2,
@@ -166,13 +161,12 @@ Options:
         commandLineArguments: ['--json'],
         invocationDirectory: INVOCATION_DIRECTORY,
         packageMetadata: INSTALLED_PACKAGE_METADATA,
-        releaseMetadata: MOLDEA_CLI_RELEASE_METADATA,
       }),
     ).resolves.toStrictEqual({
       exitCode: 2,
       stderr: '',
       stdout:
-        '{"cliVersion":"3.3.7","command":null,"error":{"code":"INVALID_ARGUMENT","details":{},"message":"The command invocation is invalid.","path":null,"retryable":false,"source":"cli"},"result":null,"schemaVersion":1,"status":"error"}\n',
+        '{"cliVersion":"3.3.7","command":null,"error":{"code":"INVALID_ARGUMENT","details":{},"message":"The command invocation is invalid.","path":null,"retryable":false,"source":"cli"},"result":null,"schemaVersion":2,"status":"error"}\n',
     });
   });
 
@@ -187,7 +181,6 @@ Options:
         executeCommand,
         invocationDirectory: INVOCATION_DIRECTORY,
         packageMetadata: INSTALLED_PACKAGE_METADATA,
-        releaseMetadata: MOLDEA_CLI_RELEASE_METADATA,
         signal: controller.signal,
       }),
     ).resolves.toBe(executionResult);
@@ -211,7 +204,6 @@ Options:
         },
       },
       packageMetadata: INSTALLED_PACKAGE_METADATA,
-      releaseMetadata: MOLDEA_CLI_RELEASE_METADATA,
       signal: controller.signal,
     });
   });
@@ -221,7 +213,6 @@ Options:
       commandLineArguments: ['compatibility', '--json'],
       invocationDirectory: INVOCATION_DIRECTORY,
       packageMetadata: INSTALLED_PACKAGE_METADATA,
-      releaseMetadata: MOLDEA_CLI_RELEASE_METADATA,
     });
 
     expect(compatibilityResult.exitCode).toBe(0);
@@ -229,7 +220,7 @@ Options:
     expect(JSON.parse(compatibilityResult.stdout)).toMatchObject({
       cliVersion: '3.3.7',
       command: 'compatibility',
-      result: { matrixVersion: 1 },
+      result: { repositoryFormatVersions: [1] },
       status: 'valid',
     });
 
@@ -243,13 +234,12 @@ Options:
         executeCommand,
         invocationDirectory: INVOCATION_DIRECTORY,
         packageMetadata: INSTALLED_PACKAGE_METADATA,
-        releaseMetadata: MOLDEA_CLI_RELEASE_METADATA,
       }),
     ).resolves.toStrictEqual({
       exitCode: 3,
       stderr: '',
       stdout:
-        '{"cliVersion":"3.3.7","command":"inspect","error":{"code":"INTERNAL_ERROR","details":{},"message":"The command could not be completed.","path":null,"retryable":false,"source":"cli"},"result":null,"schemaVersion":1,"status":"error"}\n',
+        '{"cliVersion":"3.3.7","command":"inspect","error":{"code":"INTERNAL_ERROR","details":{},"message":"The command could not be completed.","path":null,"retryable":false,"source":"cli"},"result":null,"schemaVersion":2,"status":"error"}\n',
     });
   });
 });

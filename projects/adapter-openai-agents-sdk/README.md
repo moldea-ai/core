@@ -8,7 +8,7 @@ The package implements the official `openai-agents-sdk` runtime adapter for `@mo
 
 ## Supported target
 
-Version `1.0.3` experimentally supports:
+Version `1.0.4` supports:
 
 - Repository Format version `1`
 - `@moldea.ai/core ^2.0.0`
@@ -25,7 +25,7 @@ Version `1.0.3` experimentally supports:
 
 Named root-package imports and aliases of `Agent`, `tool`, and `handoff` are supported. Relationship closure is independent: a dynamic or mutated relationship does not erase other relationships proved from the same definition. Relative ESM named imports resolve exact paths plus `.js` to `.ts` or `.tsx` and `.mjs` to `.mts` substitutions.
 
-The Runtime Compatibility Matrix is authoritative for current target maturity, exact versions, evidence, binding support, patterns, and known limitations.
+The Runtime Compatibility Matrix is authoritative for exact versions, evidence, binding support, patterns, and known limitations.
 
 ## Usage
 

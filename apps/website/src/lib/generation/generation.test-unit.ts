@@ -300,7 +300,7 @@ describe('adapter and route generation', () => {
       implementedPackageSlug: 'adapter-openai',
       entry: {
         implementationStatus: 'available',
-        targets: [{ supportLevel: 'experimental' }],
+        targets: [{ maturity: 'experimental' }],
       },
     });
     expect(openAi?.entry.targets?.[0]?.qualificationEvidence).toBeUndefined();
@@ -308,14 +308,14 @@ describe('adapter and route generation', () => {
       implementedPackageSlug: 'adapter-anthropic',
       entry: {
         implementationStatus: 'available',
-        targets: [{ supportLevel: 'experimental' }],
+        targets: [{ maturity: 'experimental' }],
       },
     });
   });
 
   test('rejects an available package-backed adapter without an implemented package', () => {
     const matrix: IRuntimeCompatibilityMatrix = {
-      version: 1,
+      version: 2,
       adapters: {
         missing: {
           implementation: {
@@ -328,7 +328,7 @@ describe('adapter and route generation', () => {
       },
     };
 
-    expect(() => buildAdapterPages(matrix, [])).toThrow(
+    expect(() => buildAdapterPages(matrix, [], {})).toThrow(
       'Available adapter missing has no implemented public package.',
     );
   });
@@ -379,7 +379,7 @@ describe('createLlmsText', () => {
 
       expect(line).toContain(`): ${adapter.entry.implementationStatus};`);
       for (const target of adapter.entry.targets ?? []) {
-        expect(line).toContain(`${target.id}: ${target.supportLevel}`);
+        expect(line).toContain(`${target.id}: ${target.maturity}`);
       }
     }
 

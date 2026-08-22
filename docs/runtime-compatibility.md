@@ -1,6 +1,6 @@
 > **Generated file. Do not edit directly. Canonical source: `/compatibility/runtimes.yaml`.**
 
-Matrix format version: `1`
+Matrix format version: `2`
 
 The matrix publishes only the verified targets and support boundaries shown below.
 
@@ -32,7 +32,6 @@ Runtime guidance notes: Project-local guidance is needed only for repository-spe
 ### Target: `typescript-messages-api-0-117`
 
 - Kind: `package`
-- Support level: `experimental`
 - Language: `typescript`
 - Evidence kinds: `instruction-loader`, `language`, `runtime-package`, `runtime-pattern`, `schema`, `tool-registration`
 - Last verified: `2026-08-17`
@@ -88,7 +87,6 @@ Runtime guidance notes: Project-local guidance is needed only for repository-spe
 ### Target: `typescript-query-subagents-0-3`
 
 - Kind: `package`
-- Support level: `experimental`
 - Language: `typescript`
 - Evidence kinds: `agent-definition`, `handoff-registration`, `instruction-loader`, `language`, `runtime-package`, `runtime-pattern`, `schema`, `tool-registration`
 - Last verified: `2026-08-19`
@@ -177,7 +175,6 @@ Runtime guidance notes: Project-local guidance should document Cloudflare bindin
 ### Target: `typescript-ai-chat-agent-0-10-ai-sdk-7`
 
 - Kind: `package`
-- Support level: `experimental`
 - Language: `typescript`
 - Evidence kinds: `agent-definition`, `handoff-registration`, `instruction-loader`, `language`, `runtime-package`, `runtime-pattern`, `schema`, `tool-registration`
 - Last verified: `2026-08-19`
@@ -217,7 +214,6 @@ Runtime guidance notes: Project-local guidance should document Cloudflare bindin
 ### Target: `typescript-think-0-16-ai-sdk-7`
 
 - Kind: `package`
-- Support level: `experimental`
 - Language: `typescript`
 - Evidence kinds: `agent-definition`, `handoff-registration`, `instruction-loader`, `language`, `runtime-package`, `schema`, `tool-registration`
 - Last verified: `2026-08-19`
@@ -267,7 +263,6 @@ Runtime guidance notes: Project-local guidance defines the custom runtime integr
 ### Target: `custom`
 
 - Kind: `custom`
-- Support level: `supported`
 - Language: `any`
 - Evidence kinds: Not available
 - Last verified: `2026-08-15`
@@ -293,7 +288,6 @@ Runtime guidance notes: Project-local guidance is needed only for unsupported dy
 ### Target: `typescript-filesystem-agent-0-39`
 
 - Kind: `package`
-- Support level: `experimental`
 - Language: `typescript`
 - Evidence kinds: `agent-definition`, `handoff-registration`, `instruction-loader`, `language`, `runtime-package`, `schema`, `skill-registration`, `tool-registration`
 - Last verified: `2026-08-19`
@@ -381,7 +375,6 @@ Runtime guidance notes: Project-local guidance is needed only for repository-spe
 ### Target: `typescript-models-generate-content-2`
 
 - Kind: `package`
-- Support level: `experimental`
 - Language: `typescript`
 - Evidence kinds: `instruction-loader`, `language`, `runtime-package`, `runtime-pattern`, `schema`, `tool-registration`
 - Last verified: `2026-08-19`
@@ -444,7 +437,6 @@ Runtime guidance notes: Project-local guidance is needed only for repository-spe
 ### Target: `typescript-create-agent-1-5`
 
 - Kind: `package`
-- Support level: `experimental`
 - Language: `typescript`
 - Evidence kinds: `agent-definition`, `instruction-loader`, `language`, `runtime-package`, `schema`, `tool-registration`
 - Last verified: `2026-08-20`
@@ -510,7 +502,6 @@ Runtime guidance notes: Project-local guidance is recommended for prompt ownersh
 ### Target: `typescript-functional-api-1-4`
 
 - Kind: `package`
-- Support level: `experimental`
 - Language: `typescript`
 - Evidence kinds: `agent-definition`, `language`, `runtime-package`, `runtime-pattern`
 - Last verified: `2026-08-21`
@@ -559,7 +550,6 @@ Runtime guidance notes: Project-local guidance is recommended for prompt ownersh
 ### Target: `typescript-state-graph-1-4`
 
 - Kind: `package`
-- Support level: `experimental`
 - Language: `typescript`
 - Evidence kinds: `agent-definition`, `language`, `runtime-package`, `runtime-pattern`, `schema`
 - Last verified: `2026-08-21`
@@ -630,7 +620,6 @@ Runtime guidance notes: Document project-specific model selection, tool executio
 ### Target: `typescript-responses-api-7`
 
 - Kind: `package`
-- Support level: `experimental`
 - Language: `typescript`
 - Evidence kinds: `instruction-loader`, `language`, `runtime-package`, `runtime-pattern`, `schema`, `tool-registration`
 - Last verified: `2026-08-17`
@@ -680,7 +669,6 @@ Runtime guidance notes: Project-local guidance is needed only for repository-spe
 ### Target: `typescript-agent-handoffs-0-16`
 
 - Kind: `package`
-- Support level: `experimental`
 - Language: `typescript`
 - Evidence kinds: `agent-definition`, `handoff-registration`, `instruction-loader`, `language`, `runtime-package`, `schema`, `tool-registration`
 - Last verified: `2026-08-19`
@@ -745,7 +733,6 @@ Runtime guidance notes: Project-local guidance is needed only for repository-spe
 ### Target: `typescript-generate-stream-text-7`
 
 - Kind: `package`
-- Support level: `experimental`
 - Language: `typescript`
 - Evidence kinds: `instruction-loader`, `language`, `runtime-package`, `runtime-pattern`, `schema`, `tool-registration`
 - Last verified: `2026-08-19`
@@ -793,7 +780,6 @@ Runtime guidance notes: Project-local guidance is needed only for repository-spe
 ### Target: `typescript-tool-loop-agent-7`
 
 - Kind: `package`
-- Support level: `experimental`
 - Language: `typescript`
 - Evidence kinds: `agent-definition`, `instruction-loader`, `language`, `runtime-package`, `schema`, `tool-registration`
 - Last verified: `2026-08-19`

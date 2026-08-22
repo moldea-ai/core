@@ -20,7 +20,7 @@ The local CLI registers the adapter automatically. Applications composing Core d
 
 ## Current state
 
-The package is available. Its only current compatibility target is **experimental**: TypeScript ESM using direct OpenAI Agents SDK agent, instruction, function-tool, schema, handoff, and routing-description patterns with npm `@openai/agents >=0.16.1 <0.17.0`, Repository Format version `1`, and compatible Core `^2.0.0`.
+The package is available. Its current technical compatibility target covers TypeScript ESM using direct OpenAI Agents SDK agent, instruction, function-tool, schema, handoff, and routing-description patterns with npm `@openai/agents >=0.16.1 <0.17.0`, Repository Format version `1`, and compatible Core `^2.0.0`.
 
 The adapter never imports or calls the SDK, requires no API key, executes no repository code, and makes no network request. It proves supported static relationships in source; it does not verify credentials, provider behavior, runtime handoff decisions, model availability, prompts, tool execution, or schema semantics.
 

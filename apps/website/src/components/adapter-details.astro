@@ -20,8 +20,8 @@ const { entry } = adapter;
     {
       entry.targets?.map((target) => (
         <StatusBadge
-          kind={target.supportLevel}
-          label={`${target.id} · ${target.supportLevel}`}
+          kind={target.maturity}
+          label={`${target.id} · ${target.maturity}`}
         />
       ))
     }

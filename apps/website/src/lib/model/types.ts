@@ -1,4 +1,9 @@
-import type { IRuntimeAdapterEntry } from '../../../../../scripts/runtime-compatibility/types.ts';
+import type {
+  IRuntimeAdapterEntry,
+  IRuntimeTarget,
+} from '../../../../../scripts/runtime-compatibility/types.ts';
+
+import type { IRuntimeTargetMaturity } from '../runtime-target-maturity/index.ts';
 
 // documentation source attached to one generated package route
 export interface IPackageDocument {
@@ -45,9 +50,19 @@ export interface IPublicPackage {
   version: string;
 }
 
-// one official compatibility-matrix adapter and its optional implemented project
+// one website target combining technical matrix data with website-owned maturity
+export interface IWebsiteRuntimeTarget extends IRuntimeTarget {
+  maturity: IRuntimeTargetMaturity;
+}
+
+// one website adapter entry with target maturity applied for presentation
+export interface IWebsiteRuntimeAdapterEntry extends Omit<IRuntimeAdapterEntry, 'targets'> {
+  targets?: IWebsiteRuntimeTarget[];
+}
+
+// one official technical adapter and its optional implemented project
 export interface IAdapterPage {
-  entry: IRuntimeAdapterEntry;
+  entry: IWebsiteRuntimeAdapterEntry;
   id: string;
   implementedPackageSlug: string | null;
   route: string;

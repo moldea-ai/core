@@ -1,0 +1,27 @@
+version: 1
+targets:
+  anthropic:
+    typescript-messages-api-0-117: experimental
+  claude-agent-sdk:
+    typescript-query-subagents-0-3: experimental
+  cloudflare-agents:
+    typescript-ai-chat-agent-0-10-ai-sdk-7: experimental
+    typescript-think-0-16-ai-sdk-7: experimental
+  custom:
+    custom: supported
+  eve:
+    typescript-filesystem-agent-0-39: experimental
+  google-genai:
+    typescript-models-generate-content-2: experimental
+  langchain:
+    typescript-create-agent-1-5: experimental
+  langgraph:
+    typescript-functional-api-1-4: experimental
+    typescript-state-graph-1-4: experimental
+  openai:
+    typescript-responses-api-7: experimental
+  openai-agents-sdk:
+    typescript-agent-handoffs-0-16: experimental
+  vercel-ai-sdk:
+    typescript-generate-stream-text-7: experimental
+    typescript-tool-loop-agent-7: experimental

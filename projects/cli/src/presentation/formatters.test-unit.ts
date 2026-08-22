@@ -56,7 +56,7 @@ describe('CLI presentation formatters', () => {
     expect(
       formatMoldeaCliJsonError(createMoldeaCliOwnedError('INVALID_ARGUMENT'), null, '1.0.0'),
     ).toBe(
-      '{"cliVersion":"1.0.0","command":null,"error":{"code":"INVALID_ARGUMENT","details":{},"message":"The command invocation is invalid.","path":null,"retryable":false,"source":"cli"},"result":null,"schemaVersion":1,"status":"error"}\n',
+      '{"cliVersion":"1.0.0","command":null,"error":{"code":"INVALID_ARGUMENT","details":{},"message":"The command invocation is invalid.","path":null,"retryable":false,"source":"cli"},"result":null,"schemaVersion":2,"status":"error"}\n',
     );
   });
 
@@ -97,56 +97,19 @@ describe('CLI presentation formatters', () => {
     );
   });
 
-  test('formats exact human and JSON compatibility reports with published matrix details', () => {
+  test('formats exact human and JSON compatibility reports from executable state', () => {
     const result: IMoldeaCliCompatibilityResult = Object.freeze({
       adapters: Object.freeze([
         Object.freeze({
-          active: true,
-          bundledVersion: '1.0.0',
           id: 'custom',
-          matrix: Object.freeze({
-            implementation: Object.freeze({
-              distribution: 'public' as const,
-              kind: 'built-in' as const,
-              package: '@moldea.ai/core',
-            }),
-            implementationStatus: 'planned' as const,
-          }),
+          repositoryFormatVersions: Object.freeze([1]),
         }),
         Object.freeze({
-          active: true,
-          bundledVersion: '1.0.0',
           id: 'openai',
-          matrix: Object.freeze({
-            compatibleCoreRange: '^1.0.0',
-            implementation: Object.freeze({
-              distribution: 'public' as const,
-              kind: 'package' as const,
-              package: '@moldea.ai/adapter-openai',
-              versionRange: '^1.0.0',
-            }),
-            implementationStatus: 'available' as const,
-            lastVerifiedAt: '2026-08-13',
-            runtimeGuidance: Object.freeze({
-              expectation: 'optional' as const,
-              notes: 'Use when runtime evidence is available.',
-            }),
-            supportedRepositoryFormatVersions: Object.freeze([1]),
-            targets: Object.freeze([
-              Object.freeze({
-                id: 'typescript',
-                kind: 'package' as const,
-                language: 'typescript',
-                lastVerifiedAt: '2026-08-13',
-                supportLevel: 'supported' as const,
-              }),
-            ]),
-          }),
+          repositoryFormatVersions: Object.freeze([1]),
         }),
       ]),
-      matrixVersion: 1,
       minimumGitVersion: '2.30.0',
-      outputSchemaVersion: 1,
       packages: Object.freeze([
         Object.freeze({ name: '@moldea.ai/adapter-openai', version: '1.0.0' }),
         Object.freeze({ name: '@moldea.ai/core', version: '1.0.0' }),
@@ -159,27 +122,19 @@ describe('CLI presentation formatters', () => {
       `The installed CLI compatibility state is valid.
 CLI version: 1.0.0
 Supported Node.js: ^22.11.0 || ^24.11.0
-JSON output schema: 1
-Runtime compatibility matrix: 1
+JSON output schema: 2
 Minimum Git: 2.30.0
 Repository formats: 1
 Packages:
   @moldea.ai/adapter-openai: 1.0.0
   @moldea.ai/core: 1.0.0
 Adapters:
-  custom: active=yes, bundled=1.0.0, kind=built-in, package=@moldea.ai/core, status=planned
-  openai: active=yes, bundled=1.0.0, kind=package, package=@moldea.ai/adapter-openai, status=available
-    Implementation range: ^1.0.0
-    Compatible Core range: ^1.0.0
-    Repository formats: 1
-    Runtime guidance: optional
-    Runtime guidance notes: Use when runtime evidence is available.
-    Last verified: 2026-08-13
-    Target typescript: kind=package, language=typescript, support=supported, verified=2026-08-13
+  custom: repository formats 1
+  openai: repository formats 1
 `,
     );
     expect(formatMoldeaCliJsonCompatibilityResult(result, '1.0.0')).toBe(
-      '{"cliVersion":"1.0.0","command":"compatibility","error":null,"result":{"adapters":[{"active":true,"bundledVersion":"1.0.0","id":"custom","matrix":{"implementation":{"distribution":"public","kind":"built-in","package":"@moldea.ai/core"},"implementationStatus":"planned"}},{"active":true,"bundledVersion":"1.0.0","id":"openai","matrix":{"compatibleCoreRange":"^1.0.0","implementation":{"distribution":"public","kind":"package","package":"@moldea.ai/adapter-openai","versionRange":"^1.0.0"},"implementationStatus":"available","lastVerifiedAt":"2026-08-13","runtimeGuidance":{"expectation":"optional","notes":"Use when runtime evidence is available."},"supportedRepositoryFormatVersions":[1],"targets":[{"id":"typescript","kind":"package","language":"typescript","lastVerifiedAt":"2026-08-13","supportLevel":"supported"}]}}],"matrixVersion":1,"minimumGitVersion":"2.30.0","outputSchemaVersion":1,"packages":[{"name":"@moldea.ai/adapter-openai","version":"1.0.0"},{"name":"@moldea.ai/core","version":"1.0.0"}],"repositoryFormatVersions":[1],"supportedNodeRange":"^22.11.0 || ^24.11.0"},"schemaVersion":1,"status":"valid"}\n',
+      '{"cliVersion":"1.0.0","command":"compatibility","error":null,"result":{"adapters":[{"id":"custom","repositoryFormatVersions":[1]},{"id":"openai","repositoryFormatVersions":[1]}],"minimumGitVersion":"2.30.0","packages":[{"name":"@moldea.ai/adapter-openai","version":"1.0.0"},{"name":"@moldea.ai/core","version":"1.0.0"}],"repositoryFormatVersions":[1],"supportedNodeRange":"^22.11.0 || ^24.11.0"},"schemaVersion":2,"status":"valid"}\n',
     );
   });
 
@@ -233,7 +188,7 @@ Adapters:
         '1.0.0',
       ),
     ).toBe(
-      '{"cliVersion":"1.0.0","command":"inspect","error":{"code":"ENTRY_NOT_FOUND","details":{},"message":"The requested repository entry was not found.","path":"/moldea/project.md","retryable":false,"source":"repository"},"result":null,"schemaVersion":1,"status":"error"}\n',
+      '{"cliVersion":"1.0.0","command":"inspect","error":{"code":"ENTRY_NOT_FOUND","details":{},"message":"The requested repository entry was not found.","path":"/moldea/project.md","retryable":false,"source":"repository"},"result":null,"schemaVersion":2,"status":"error"}\n',
     );
   });
 
@@ -248,7 +203,7 @@ Adapters:
       'The moldea project is valid.\nRepository format: 1\n',
     );
     expect(formatMoldeaCliJsonValidateResult(result, '1.0.0')).toBe(
-      '{"cliVersion":"1.0.0","command":"validate","error":null,"result":{"diagnostics":[],"formatVersion":1,"source":{"kind":"git-working-tree"}},"schemaVersion":1,"status":"valid"}\n',
+      '{"cliVersion":"1.0.0","command":"validate","error":null,"result":{"diagnostics":[],"formatVersion":1,"source":{"kind":"git-working-tree"}},"schemaVersion":2,"status":"valid"}\n',
     );
   });
 
@@ -302,7 +257,7 @@ core:MOLDEA_AGENT_INSTRUCTION_EMPTY /moldea/agents/alpha/instruction.md:2:3 The 
       'The moldea project is invalid.\ncore:MOLDEA_MANIFEST_MISSING The project manifest is missing.\n1 diagnostic.\n',
     );
     expect(formatMoldeaCliJsonValidateResult(result, '1.0.0')).toBe(
-      '{"cliVersion":"1.0.0","command":"validate","error":null,"result":{"diagnostics":[{"code":"MOLDEA_MANIFEST_MISSING","details":{},"entity":null,"message":"The project manifest is missing.","path":null,"pointer":null,"range":null,"source":"core"}],"formatVersion":null,"source":{"kind":"git-working-tree"}},"schemaVersion":1,"status":"invalid"}\n',
+      '{"cliVersion":"1.0.0","command":"validate","error":null,"result":{"diagnostics":[{"code":"MOLDEA_MANIFEST_MISSING","details":{},"entity":null,"message":"The project manifest is missing.","path":null,"pointer":null,"range":null,"source":"core"}],"formatVersion":null,"source":{"kind":"git-working-tree"}},"schemaVersion":2,"status":"invalid"}\n',
     );
   });
 
@@ -344,7 +299,7 @@ core:MOLDEA_PROJECT_FILE_MISSING /moldea/project.md The project file is missing.
 `,
     );
     expect(formatMoldeaCliJsonInspectResult(result, '1.0.0')).toBe(
-      '{"cliVersion":"1.0.0","command":"inspect","error":null,"result":{"inspection":{"diagnostics":[{"code":"MOLDEA_MANIFEST_MISSING","details":{},"entity":null,"message":"The project manifest is missing.","path":"/moldea/moldea.yaml","pointer":null,"range":null,"source":"core"},{"code":"MOLDEA_PROJECT_FILE_MISSING","details":{},"entity":null,"message":"The project file is missing.","path":"/moldea/project.md","pointer":null,"range":null,"source":"core"}],"evidence":[{"agentId":"alpha","capabilityId":null,"capabilityKind":null,"details":{"package":"@example/runtime"},"kind":"runtime-package","references":[],"runtimeName":"example-runtime","source":"example"}],"formatVersion":1,"project":null,"valid":false},"source":{"kind":"git-working-tree"}},"schemaVersion":1,"status":"invalid"}\n',
+      '{"cliVersion":"1.0.0","command":"inspect","error":null,"result":{"inspection":{"diagnostics":[{"code":"MOLDEA_MANIFEST_MISSING","details":{},"entity":null,"message":"The project manifest is missing.","path":"/moldea/moldea.yaml","pointer":null,"range":null,"source":"core"},{"code":"MOLDEA_PROJECT_FILE_MISSING","details":{},"entity":null,"message":"The project file is missing.","path":"/moldea/project.md","pointer":null,"range":null,"source":"core"}],"evidence":[{"agentId":"alpha","capabilityId":null,"capabilityKind":null,"details":{"package":"@example/runtime"},"kind":"runtime-package","references":[],"runtimeName":"example-runtime","source":"example"}],"formatVersion":1,"project":null,"valid":false},"source":{"kind":"git-working-tree"}},"schemaVersion":2,"status":"invalid"}\n',
     );
   });
 });

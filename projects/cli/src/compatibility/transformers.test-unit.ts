@@ -1,191 +1,35 @@
 // @vitest-environment node
 import { describe, expect, test } from 'vitest';
 
-import {
-  createTestActivePackageAdaptersState,
-  createTestCompatibilityState,
-} from './compatibility.test-fixtures.js';
+import { createTestCompatibilityState } from './compatibility.test-fixtures.js';
 import { createMoldeaCliCompatibilityResult } from './transformers.js';
 
-/** Asserts recursive immutability for one JSON-compatible result graph. */
-const expectDeeplyFrozen = (root: object): void => {
-  const pendingValues: object[] = [root];
-  const visitedValues = new Set<object>();
-
-  while (pendingValues.length > 0) {
-    const currentValue = pendingValues.pop();
-
-    if (currentValue === undefined || visitedValues.has(currentValue)) {
-      continue;
-    }
-
-    visitedValues.add(currentValue);
-    expect(Object.isFrozen(currentValue)).toBe(true);
-    for (const nestedValue of Object.values(currentValue as Readonly<Record<string, unknown>>)) {
-      if (typeof nestedValue === 'object' && nestedValue !== null) {
-        pendingValues.push(nestedValue);
-      }
-    }
-  }
-};
-
 describe('createMoldeaCliCompatibilityResult', () => {
-  test('reports the exact current release with its active package-backed adapter', () => {
-    const state = createTestCompatibilityState();
-    const result = createMoldeaCliCompatibilityResult(state);
-    const customAdapter = result.adapters.find(({ id }) => id === 'custom');
-    const claudeAgentSdkAdapter = result.adapters.find(({ id }) => id === 'claude-agent-sdk');
-    const openAiAdapter = result.adapters.find(({ id }) => id === 'openai');
-    const openAiAgentsSdkAdapter = result.adapters.find(({ id }) => id === 'openai-agents-sdk');
-    const vercelAiSdkAdapter = result.adapters.find(({ id }) => id === 'vercel-ai-sdk');
+  test('reports only executable technical compatibility state', () => {
+    const result = createMoldeaCliCompatibilityResult(createTestCompatibilityState());
 
     expect(result).toMatchObject({
-      matrixVersion: 1,
       minimumGitVersion: '2.30.0',
-      outputSchemaVersion: 1,
-      packages: [
-        { name: '@moldea.ai/adapter-anthropic', version: '2.0.2' },
-        { name: '@moldea.ai/adapter-claude-agent-sdk', version: '1.0.1' },
-        { name: '@moldea.ai/adapter-cloudflare-agents', version: '1.0.1' },
-        { name: '@moldea.ai/adapter-eve', version: '1.0.1' },
-        { name: '@moldea.ai/adapter-google-genai', version: '1.0.4' },
-        { name: '@moldea.ai/adapter-langchain', version: '1.0.1' },
-        { name: '@moldea.ai/adapter-langgraph', version: '1.0.1' },
-        { name: '@moldea.ai/adapter-openai', version: '2.0.5' },
-        { name: '@moldea.ai/adapter-openai-agents-sdk', version: '1.0.3' },
-        { name: '@moldea.ai/adapter-vercel-ai-sdk', version: '1.0.1' },
-        { name: '@moldea.ai/core', version: '2.0.1' },
-        { name: '@moldea.ai/repository', version: '1.0.2' },
-        { name: '@moldea.ai/repository-fs', version: '1.0.3' },
-      ],
       repositoryFormatVersions: [1],
       supportedNodeRange: '^22.11.0 || ^24.11.0',
     });
-    expect(customAdapter).toMatchObject({
-      active: true,
-      bundledVersion: '2.0.1',
+    expect(result.adapters).toHaveLength(11);
+    expect(result.adapters[0]).toStrictEqual({
+      id: 'anthropic',
+      repositoryFormatVersions: [1],
+    });
+    expect(result.adapters.find(({ id }) => id === 'custom')).toStrictEqual({
       id: 'custom',
-      matrix: {
-        compatibleCoreRange: '^2.0.0',
-        implementationStatus: 'available',
-        runtimeGuidance: { expectation: 'required' },
-        supportedRepositoryFormatVersions: [1],
-        targets: [
-          {
-            id: 'custom',
-            patterns: [{ id: 'explicit-repository-relationships', support: 'full' }],
-          },
-        ],
-      },
+      repositoryFormatVersions: [1],
     });
-    expect(openAiAdapter).toMatchObject({
-      active: true,
-      bundledVersion: '2.0.5',
-      id: 'openai',
-      matrix: {
-        implementationStatus: 'available',
-        targets: [{ id: 'typescript-responses-api-7' }],
-      },
+    expect(result.packages).toContainEqual({
+      name: '@moldea.ai/adapter-openai',
+      version: '2.0.6',
     });
-    expect(claudeAgentSdkAdapter).toMatchObject({
-      active: true,
-      bundledVersion: '1.0.1',
-      id: 'claude-agent-sdk',
-      matrix: {
-        implementationStatus: 'available',
-        targets: [{ id: 'typescript-query-subagents-0-3' }],
-      },
-    });
-    expect(openAiAgentsSdkAdapter).toMatchObject({
-      active: true,
-      bundledVersion: '1.0.3',
-      id: 'openai-agents-sdk',
-      matrix: {
-        implementationStatus: 'available',
-        targets: [{ id: 'typescript-agent-handoffs-0-16' }],
-      },
-    });
-    expect(vercelAiSdkAdapter).toMatchObject({
-      active: true,
-      bundledVersion: '1.0.1',
-      id: 'vercel-ai-sdk',
-      matrix: {
-        implementationStatus: 'available',
-        targets: [
-          { id: 'typescript-generate-stream-text-7' },
-          { id: 'typescript-tool-loop-agent-7' },
-        ],
-      },
-    });
-    expect(customAdapter?.matrix).not.toBe(state.releaseMetadata.matrix.adapters['custom']);
-    expectDeeplyFrozen(result);
-  });
-
-  test('reports active package-backed adapters with their bundled versions and matrix claims', () => {
-    const result = createMoldeaCliCompatibilityResult(createTestActivePackageAdaptersState());
-
-    expect(result.adapters.find(({ id }) => id === 'anthropic')).toMatchObject({
-      active: true,
-      bundledVersion: '2.0.2',
-      matrix: {
-        implementation: { versionRange: '^2.0.0' },
-        implementationStatus: 'available',
-        targets: [
-          {
-            id: 'typescript-messages-api-0-117',
-            lastVerifiedAt: '2026-08-17',
-            providerLimits: [
-              {
-                id: 'client-tool-name',
-                kind: 'pattern',
-                subject: 'tool-name',
-                value: '^[A-Za-z0-9_-]{1,64}$',
-              },
-            ],
-          },
-        ],
-      },
-    });
-
-    expect(result.adapters.find(({ id }) => id === 'openai')).toMatchObject({
-      active: true,
-      bundledVersion: '2.0.5',
-      matrix: {
-        implementation: { versionRange: '^2.0.0' },
-        implementationStatus: 'available',
-        targets: [{ id: 'typescript-responses-api-7', lastVerifiedAt: '2026-08-17' }],
-      },
-    });
-    expect(result.adapters.find(({ id }) => id === 'claude-agent-sdk')).toMatchObject({
-      active: true,
-      bundledVersion: '1.0.1',
-      matrix: {
-        implementation: { versionRange: '^1.0.0' },
-        implementationStatus: 'available',
-        targets: [{ id: 'typescript-query-subagents-0-3', lastVerifiedAt: '2026-08-19' }],
-      },
-    });
-    expect(result.adapters.find(({ id }) => id === 'openai-agents-sdk')).toMatchObject({
-      active: true,
-      bundledVersion: '1.0.3',
-      matrix: {
-        implementation: { versionRange: '^1.0.0' },
-        implementationStatus: 'available',
-        targets: [{ id: 'typescript-agent-handoffs-0-16', lastVerifiedAt: '2026-08-19' }],
-      },
-    });
-    expect(result.adapters.find(({ id }) => id === 'vercel-ai-sdk')).toMatchObject({
-      active: true,
-      bundledVersion: '1.0.1',
-      matrix: {
-        implementation: { versionRange: '^1.0.0' },
-        implementationStatus: 'available',
-        targets: [
-          { id: 'typescript-generate-stream-text-7', lastVerifiedAt: '2026-08-19' },
-          { id: 'typescript-tool-loop-agent-7', lastVerifiedAt: '2026-08-19' },
-        ],
-      },
-    });
-    expectDeeplyFrozen(result);
+    expect(JSON.stringify(result)).not.toContain('maturity');
+    expect(JSON.stringify(result)).not.toContain('matrix');
+    expect(Object.isFrozen(result)).toBe(true);
+    expect(Object.isFrozen(result.adapters)).toBe(true);
+    expect(Object.isFrozen(result.adapters[0])).toBe(true);
   });
 });

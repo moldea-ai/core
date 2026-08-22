@@ -12,17 +12,14 @@ import type {
   IProviderLimitSubject,
   IRuntimeGuidanceExpectation,
   IRuntimeTargetKind,
-  IRuntimeTargetSupportLevel,
 } from './types.ts';
 
 // canonical repository paths used by matrix tooling
 export const RUNTIME_COMPATIBILITY_SOURCE_PATH = 'compatibility/runtimes.yaml';
 export const RUNTIME_COMPATIBILITY_DOCUMENT_PATH = 'docs/runtime-compatibility.md';
-export const MOLDEA_CLI_RELEASE_METADATA_PATH =
-  'projects/cli/src/release-metadata/release-metadata.generated.ts';
 export const QUALIFICATION_EVIDENCE_ORIGIN = 'https://skill.moldea.ai';
 
-// complete official adapter-to-package identity map for matrix version 1
+// complete official adapter-to-package identity map for matrix version 2
 export const OFFICIAL_RUNTIME_ADAPTER_PACKAGES = {
   anthropic: '@moldea.ai/adapter-anthropic',
   'claude-agent-sdk': '@moldea.ai/adapter-claude-agent-sdk',
@@ -37,7 +34,7 @@ export const OFFICIAL_RUNTIME_ADAPTER_PACKAGES = {
   'vercel-ai-sdk': '@moldea.ai/adapter-vercel-ai-sdk',
 } as const;
 
-// fixed matrix version 1 vocabularies
+// fixed matrix version 2 vocabularies
 export const ADAPTER_DISTRIBUTIONS = [
   'private',
   'public',
@@ -121,11 +118,6 @@ export const RUNTIME_TARGET_KINDS = [
   'package',
   'custom',
 ] as const satisfies readonly IRuntimeTargetKind[];
-export const RUNTIME_TARGET_SUPPORT_LEVELS = [
-  'experimental',
-  'supported',
-  'deprecated',
-] as const satisfies readonly IRuntimeTargetSupportLevel[];
 
 // exact Unicode White_Space and line-break sets inherited from Repository Format version 1
 export const REPOSITORY_FORMAT_WHITESPACE_RANGES = [

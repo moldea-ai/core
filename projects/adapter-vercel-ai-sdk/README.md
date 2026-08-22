@@ -8,7 +8,7 @@ The package implements the official `vercel-ai-sdk` runtime adapter for `@moldea
 
 ## Supported targets
 
-Version `1.0.1` experimentally supports:
+Version `1.0.2` supports:
 
 - Repository Format version `1`
 - `@moldea.ai/core ^2.0.0`
@@ -25,7 +25,7 @@ Version `1.0.1` experimentally supports:
 
 Named value imports from the `ai` package root and their aliases are supported. Relative ESM named imports resolve exact TypeScript paths plus `.js` to `.ts` or `.tsx` and `.mjs` to `.mts`. Relationship closure is independent: a dynamic relationship does not erase another relationship proved from the same configuration.
 
-The Runtime Compatibility Matrix is authoritative for target maturity, exact versions, evidence, binding support, patterns, and known limitations.
+The Runtime Compatibility Matrix is authoritative for exact versions, evidence, binding support, patterns, and known limitations.
 
 ## Usage
 

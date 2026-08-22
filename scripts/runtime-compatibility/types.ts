@@ -1,4 +1,4 @@
-// runtime compatibility matrix version 1 contracts
+// runtime compatibility matrix version 2 contracts
 export type IAdapterDistribution = 'private' | 'public';
 export type IAdapterImplementationKind = 'built-in' | 'package';
 export type IAdapterImplementationStatus =
@@ -52,7 +52,6 @@ export type IProviderLimitSubject =
   | 'tool-name';
 export type IRuntimeGuidanceExpectation = 'optional' | 'recommended' | 'required';
 export type IRuntimeTargetKind = 'custom' | 'package';
-export type IRuntimeTargetSupportLevel = 'deprecated' | 'experimental' | 'supported';
 
 export interface IRuntimeAdapterImplementation {
   distribution: IAdapterDistribution;
@@ -112,7 +111,6 @@ export interface IRuntimeTarget {
   patterns?: IRuntimePattern[];
   providerLimits?: IProviderLimit[];
   qualificationEvidence?: IRuntimeTargetQualificationEvidence;
-  supportLevel: IRuntimeTargetSupportLevel;
 }
 
 export interface IRuntimeAdapterEntry {
@@ -129,7 +127,7 @@ export interface IRuntimeAdapterEntry {
 
 export interface IRuntimeCompatibilityMatrix {
   adapters: Record<string, IRuntimeAdapterEntry>;
-  version: 1;
+  version: 2;
 }
 
 // package manifest fields used to derive one CLI release composition
@@ -140,40 +138,20 @@ export interface IMoldeaPackageManifestSource {
   version: string;
 }
 
-// one active runtime adapter definition inspected during release generation
-export interface IRuntimeAdapterReleaseDefinition {
+// one active runtime adapter implementation inspected during repository validation
+export interface IRuntimeAdapterImplementationDefinition {
   id: string;
   supportedRepositoryFormatVersions: readonly number[];
 }
 
-// canonical inputs required to validate and generate CLI release metadata
-export interface IMoldeaCliReleaseMetadataSources {
-  activeAdapters: readonly IRuntimeAdapterReleaseDefinition[];
+// canonical inputs required to validate the CLI implementation against the technical matrix
+export interface IMoldeaCliImplementationSources {
+  activeAdapters: readonly IRuntimeAdapterImplementationDefinition[];
   cliManifest: unknown;
   coreRecognizedAdapterIds: readonly string[];
   coreSupportedRepositoryFormatVersions: readonly number[];
   matrix: IRuntimeCompatibilityMatrix;
-  minimumGitVersion: string;
-  outputSchemaVersion: 1;
   packageManifests: Readonly<Record<string, unknown>>;
-}
-
-// one exact package version bundled into the generated CLI composition
-export interface IMoldeaCliGeneratedPackageMetadata {
-  name: string;
-  version: string;
-}
-
-// deterministic release metadata serialized into the CLI source artifact
-export interface IMoldeaCliGeneratedReleaseMetadata {
-  activeAdapterIds: string[];
-  cliPackage: IMoldeaCliGeneratedPackageMetadata & { supportedNodeRange: string };
-  coreRecognizedAdapterIds: string[];
-  matrix: IRuntimeCompatibilityMatrix;
-  minimumGitVersion: string;
-  outputSchemaVersion: 1;
-  packages: IMoldeaCliGeneratedPackageMetadata[];
-  repositoryFormatVersions: number[];
 }
 
 // structured validator failure with a canonical matrix path

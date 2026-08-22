@@ -55,13 +55,13 @@ export interface IMoldeaCliInspectResult {
   readonly source: IMoldeaCliSource;
 }
 
-// version 1 JSON envelope for a completed compatibility command
+// version 2 JSON envelope for a completed compatibility command
 export interface IMoldeaCliJsonCompatibilityEnvelope {
   readonly cliVersion: string;
   readonly command: 'compatibility';
   readonly error: null;
   readonly result: IMoldeaCliCompatibilityResult;
-  readonly schemaVersion: 1;
+  readonly schemaVersion: 2;
   readonly status: 'valid';
 }
 
@@ -71,26 +71,26 @@ export interface IMoldeaCliJsonErrorEnvelope {
   readonly command: IMoldeaCliCommand | null;
   readonly error: IMoldeaCliError;
   readonly result: null;
-  readonly schemaVersion: 1;
+  readonly schemaVersion: 2;
   readonly status: 'error';
 }
 
-// version 1 JSON envelope for a completed validate command
+// version 2 JSON envelope for a completed validate command
 export interface IMoldeaCliJsonValidateEnvelope {
   readonly cliVersion: string;
   readonly command: 'validate';
   readonly error: null;
   readonly result: IMoldeaCliValidateResult;
-  readonly schemaVersion: 1;
+  readonly schemaVersion: 2;
   readonly status: 'valid' | 'invalid';
 }
 
-// version 1 JSON envelope for a completed inspect command
+// version 2 JSON envelope for a completed inspect command
 export interface IMoldeaCliJsonInspectEnvelope {
   readonly cliVersion: string;
   readonly command: 'inspect';
   readonly error: null;
   readonly result: IMoldeaCliInspectResult;
-  readonly schemaVersion: 1;
+  readonly schemaVersion: 2;
   readonly status: 'valid' | 'invalid';
 }

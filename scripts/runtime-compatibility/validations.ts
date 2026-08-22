@@ -26,7 +26,6 @@ import {
   QUALIFICATION_EVIDENCE_ORIGIN,
   RUNTIME_GUIDANCE_EXPECTATIONS,
   RUNTIME_TARGET_KINDS,
-  RUNTIME_TARGET_SUPPORT_LEVELS,
 } from './constants.ts';
 import { normalizeRuntimeCompatibilityMatrix } from './transformers.ts';
 import type {
@@ -72,7 +71,6 @@ const TARGET_PROPERTIES = new Set([
   'patterns',
   'providerLimits',
   'qualificationEvidence',
-  'supportLevel',
 ]);
 const QUALIFICATION_EVIDENCE_PROPERTIES = new Set(['url']);
 const PACKAGE_PROPERTIES = new Set(['ecosystem', 'name', 'role', 'versionRange']);
@@ -782,12 +780,6 @@ const validateTarget = (
   rejectUnknownProperties(target, TARGET_PROPERTIES, path, issues);
   const hasId = requireStableId(target['id'], `${path}.id`, issues);
   const hasKind = requireEnum(target['kind'], RUNTIME_TARGET_KINDS, `${path}.kind`, issues);
-  requireEnum(
-    target['supportLevel'],
-    RUNTIME_TARGET_SUPPORT_LEVELS,
-    `${path}.supportLevel`,
-    issues,
-  );
   const hasLanguage = requireStableId(target['language'], `${path}.language`, issues);
   const hasDate = requireDate(target['lastVerifiedAt'], `${path}.lastVerifiedAt`, issues);
 
@@ -895,7 +887,6 @@ const validateTargets = (
 
   const targetIds: string[] = [];
   const targetDates: string[] = [];
-  let hasCurrentTarget = false;
 
   targets.forEach((targetValue, index) => {
     const targetPath = `${path}[${index}]`;
@@ -904,21 +895,6 @@ const validateTargets = (
     if (isRecord(targetValue)) {
       if (typeof targetValue['id'] === 'string' && isStableId(targetValue['id'])) {
         targetIds.push(targetValue['id']);
-      }
-
-      if (
-        targetValue['supportLevel'] === 'experimental' ||
-        targetValue['supportLevel'] === 'supported'
-      ) {
-        hasCurrentTarget = true;
-      }
-
-      if (status === 'deprecated' && targetValue['supportLevel'] !== 'deprecated') {
-        addIssue(
-          issues,
-          `${targetPath}.supportLevel`,
-          'Every deprecated adapter target must be deprecated.',
-        );
       }
     }
 
@@ -929,19 +905,9 @@ const validateTargets = (
 
   rejectDuplicateStrings(targetIds, path, issues);
 
-  if (status === 'available' && !hasCurrentTarget) {
-    addIssue(issues, path, 'An available adapter needs an experimental or supported target.');
-  }
-
   if (adapterId === 'custom' && status === 'available') {
-    const customTarget = targets[0];
-
     if (targets.length !== 1) {
       addIssue(issues, path, 'An available custom adapter must have exactly one target.');
-    }
-
-    if (!isRecord(customTarget) || customTarget['supportLevel'] !== 'supported') {
-      addIssue(issues, `${path}[0].supportLevel`, 'The available custom target must be supported.');
     }
   }
 
@@ -1250,8 +1216,8 @@ export const parseRuntimeCompatibilityMatrix = (
 
   rejectUnknownProperties(root, TOP_LEVEL_PROPERTIES, '$', issues);
 
-  if (root['version'] !== 1) {
-    addIssue(issues, '$.version', 'Matrix version must be the integer 1.');
+  if (root['version'] !== 2) {
+    addIssue(issues, '$.version', 'Matrix version must be the integer 2.');
   }
 
   const adapters = requireRecord(root['adapters'], '$.adapters', issues);

@@ -6,7 +6,7 @@ order: 10
 
 # Verified target
 
-Target `typescript-create-agent-1-5` covers `langchain >=1.5.9 <1.6.0` with companion `@langchain/core >=1.2.8 <1.3.0` at experimental support level.
+Technical target `typescript-create-agent-1-5` covers `langchain >=1.5.9 <1.6.0` with companion `@langchain/core >=1.2.8 <1.3.0`.
 
 Positive agent evidence requires a directly exported TypeScript `const` initialized by the named package-root `createAgent(...)` helper with one closed object-literal configuration and a `model` property. Named import aliases and `.ts`, `.tsx`, and `.mts` source are supported.
 

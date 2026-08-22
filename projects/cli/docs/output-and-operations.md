@@ -1,6 +1,6 @@
 ---
 title: Output and operations
-description: JSON envelopes, statuses, exit codes, safe errors, cancellation, read-only behavior, and release integrity.
+description: JSON envelopes, statuses, exit codes, safe errors, cancellation, read-only behavior, and installation integrity.
 order: 30
 ---
 
@@ -8,7 +8,7 @@ order: 30
 
 ## JSON envelope
 
-`--json` writes one deterministic version 1 envelope to standard output. Envelopes identify the command, source, status, result or safe error, and schema version. No command mixes a partial success result with an operational error.
+`--json` writes one deterministic version 2 envelope to standard output. Envelopes identify the command, source, status, result or safe error, and schema version. No command mixes a partial success result with an operational error.
 
 `validate` minimizes content. `inspect` preserves the complete Core result and can therefore contain project descriptions, context, decisions, runtime guidance, agent instructions, and other canonical content. Downstream systems must protect that output as repository data.
 
@@ -32,4 +32,4 @@ Known repository and Core exceptions retain their source, code, retryability, sa
 
 One operation-scoped abort signal reaches Git processes, inventory, filesystem reader creation, repository reads, Core, and adapters. A signal discards an unwritten provisional result and stops further snapshot retries.
 
-The executable does not modify the working tree, index, configuration, attributes, submodules, filters, or runtime environment. Before command work, release-integrity checks compare installed package identities, exact versions, dependency declarations, active adapters, Core formats, and generated compatibility metadata so a contradictory installation cannot report a misleading result.
+The executable does not modify the working tree, index, configuration, attributes, submodules, filters, or runtime environment. Before command work, installation-integrity checks compare installed package identities, exact versions, dependency declarations, actual active adapters, Core formats, and executable constants so a contradictory installation cannot report a misleading result.

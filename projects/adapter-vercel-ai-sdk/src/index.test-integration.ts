@@ -82,7 +82,7 @@ describe('@moldea.ai/adapter-vercel-ai-sdk public API', () => {
 
     expect(packResult).toMatchObject({
       name: '@moldea.ai/adapter-vercel-ai-sdk',
-      version: '1.0.1',
+      version: '1.0.2',
     });
     expect(packedPaths).toEqual(
       expect.arrayContaining([

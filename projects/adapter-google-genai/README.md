@@ -8,7 +8,7 @@ The package implements the official `google-genai` runtime adapter for `@moldea.
 
 ## Supported target
 
-Version `1.0.4` experimentally supports:
+Version `1.0.5` supports:
 
 - Repository Format version `1`
 - `@moldea.ai/core ^2.0.0`
@@ -25,7 +25,7 @@ Module bindings must remain lexically visible at every matched use. Dynamic requ
 
 Function declarations require a static `name`, may include a static `description` and supported `parametersJsonSchema`, and tolerate `behavior`, `response`, and `responseJsonSchema` without interpreting them. The alternative `parameters` surface and unknown properties are unsupported. Static inline JSON-schema values may contain recursive strings, no-substitution templates, signed numbers, booleans, `null`, arrays without holes or spreads, and closed objects. The adapter proves binding relationships, not provider validity or business meaning.
 
-The Runtime Compatibility Matrix is authoritative for current target maturity, exact versions, evidence, limits, patterns, and known limitations.
+The Runtime Compatibility Matrix is authoritative for exact versions, evidence, limits, patterns, and known limitations.
 
 ## Usage
 

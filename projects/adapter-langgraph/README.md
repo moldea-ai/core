@@ -19,7 +19,7 @@ const core = createCore({ adapters: [langGraphAdapter] });
 
 ## Verified targets
 
-Version `1.0.1` supports Repository Format `1`, `@langchain/langgraph >=1.4.12 <1.5.0`, and companion `@langchain/core >=1.2.9 <1.3.0`. The experimental targets recognize:
+Version `1.0.2` supports Repository Format `1`, `@langchain/langgraph >=1.4.12 <1.5.0`, and companion `@langchain/core >=1.2.9 <1.3.0`. The verified targets recognize:
 
 - directly exported compiled `StateGraph` definitions using supported inline fluent or single-owner module-local builders
 - closed modern Graph API schema initialization and direct input/output schema wiring

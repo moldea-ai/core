@@ -20,7 +20,7 @@ The local CLI registers the adapter automatically. Applications composing Core d
 
 ## Current state
 
-The package is available. Its only current compatibility target is **experimental**, not production-ready support: TypeScript ESM using direct Anthropic Messages API calls with npm `@anthropic-ai/sdk >=0.117.1 <0.118.0`, Repository Format version `1`, and compatible Core `^2.0.0`.
+The package is available. Its current technical compatibility target covers TypeScript ESM using direct Anthropic Messages API calls with npm `@anthropic-ai/sdk >=0.117.1 <0.118.0`, Repository Format version `1`, and compatible Core `^2.0.0`.
 
 The adapter never imports or calls the Anthropic SDK, requires no API key, executes no repository code, and makes no network request. It proves supported static relationships in source; it does not verify provider behavior, credentials, model availability, request execution, streaming, retries, or response semantics.
 

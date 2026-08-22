@@ -16,7 +16,7 @@ const INVALID_COMPATIBILITY_RESOLUTION = Object.freeze({ kind: 'invalid' as cons
 
 /**
  * Resolves one explicit runtime composition without emitting a partial compatibility result.
- * @param input The generated, installed, and actual runtime state to compare.
+ * @param input The installed and actual runtime state to compare.
  * @returns A valid immutable result or the single invalid-state outcome.
  */
 export const resolveMoldeaCliCompatibility = (
@@ -38,7 +38,7 @@ export const resolveMoldeaCliCompatibility = (
 
 /**
  * Resolves compatibility through the fixed package, Core, adapter, Git, and JSON composition.
- * @param input The installed package metadata and generated release snapshot.
+ * @param input The installed package metadata.
  * @returns A valid immutable result or the single invalid-state outcome.
  */
 export const resolveInstalledMoldeaCliCompatibility = (
@@ -46,10 +46,8 @@ export const resolveInstalledMoldeaCliCompatibility = (
 ): IMoldeaCliCompatibilityResolution =>
   resolveMoldeaCliCompatibility({
     activeAdapters: ACTIVE_RUNTIME_ADAPTERS,
-    coreRecognizedAdapterIds: input.releaseMetadata.coreRecognizedAdapterIds,
     coreSupportedRepositoryFormatVersions: SUPPORTED_REPOSITORY_FORMAT_VERSIONS,
     minimumGitVersion: MINIMUM_GIT_VERSION,
     outputSchemaVersion: MOLDEA_CLI_JSON_SCHEMA_VERSION,
     packageMetadata: input.packageMetadata,
-    releaseMetadata: input.releaseMetadata,
   });

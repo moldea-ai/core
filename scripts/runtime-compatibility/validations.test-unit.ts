@@ -19,9 +19,7 @@ let repositoryReadme = '';
 
 const cloneCanonicalMatrix = (): IRuntimeCompatibilityMatrix => structuredClone(canonicalMatrix);
 
-const createPackageTarget = (
-  supportLevel: IRuntimeTarget['supportLevel'] = 'supported',
-): IRuntimeTarget => ({
+const createPackageTarget = (): IRuntimeTarget => ({
   evidenceKinds: ['runtime-package'],
   id: 'typescript',
   kind: 'package',
@@ -35,7 +33,6 @@ const createPackageTarget = (
       versionRange: '>=4.0.0 <5.0.0',
     },
   ],
-  supportLevel,
 });
 
 const publishOpenAi = (
@@ -53,7 +50,7 @@ const publishOpenAi = (
   adapter.supportedRepositoryFormatVersions = [1];
   adapter.compatibleCoreRange = '^1.0.0';
   adapter.runtimeGuidance = { expectation: 'optional' };
-  adapter.targets = [createPackageTarget(status === 'deprecated' ? 'deprecated' : 'supported')];
+  adapter.targets = [createPackageTarget()];
   adapter.lastVerifiedAt = '2026-08-12';
   return adapter;
 };
@@ -160,7 +157,6 @@ describe('runtime compatibility matrix validation', () => {
             support: 'full',
           },
         ],
-        supportLevel: 'supported',
       },
     ];
     adapter.lastVerifiedAt = '2026-08-12';
@@ -250,10 +246,10 @@ describe('runtime compatibility matrix validation', () => {
       (source: string) => `%YAML 1.2\n---\n${source}`,
       'YAML directives are prohibited',
     ],
-    ['duplicate key', (source: string) => `${source}\nversion: 1\n`, 'Map keys must be unique'],
+    ['duplicate key', (source: string) => `${source}\nversion: 2\n`, 'Map keys must be unique'],
     [
       'multiple documents',
-      (source: string) => `${source}\n---\nversion: 1\nadapters: {}\n`,
+      (source: string) => `${source}\n---\nversion: 2\nadapters: {}\n`,
       'exactly one YAML document',
     ],
     [
@@ -269,7 +265,7 @@ describe('runtime compatibility matrix validation', () => {
     ],
     [
       'custom tag',
-      (source: string) => source.replace('version: 1', 'version: !custom 1'),
+      (source: string) => source.replace('version: 2', 'version: !custom 2'),
       'custom YAML tag',
     ],
     [
@@ -285,7 +281,7 @@ describe('runtime compatibility matrix validation', () => {
     ],
     [
       'non-finite number',
-      (source: string) => source.replace('version: 1', 'version: .nan'),
+      (source: string) => source.replace('version: 2', 'version: .nan'),
       'Non-finite numeric values are prohibited',
     ],
   ])('rejects strict YAML violation: %s', (_name, createSource, expectedMessage) => {
@@ -413,7 +409,6 @@ describe('runtime compatibility matrix validation', () => {
       throw new Error('Published test adapter is missing its target.');
     }
 
-    target.supportLevel = 'experimental';
     target.bindingSupport = {
       'runtime-agent': { relationship: 'full', symbol: 'partial' },
     };
@@ -465,7 +460,6 @@ describe('runtime compatibility matrix validation', () => {
 
     expect(result.valid).toBe(true);
     if (result.valid) {
-      expect(result.matrix.adapters['openai']?.targets?.[0]?.supportLevel).toBe('experimental');
       expect(
         result.matrix.adapters['openai']?.targets?.[0]?.providerLimits?.find(
           ({ id }) => id === 'allowed-names',
@@ -497,7 +491,7 @@ describe('runtime compatibility matrix validation', () => {
     invalidAvailableAdapter.compatibleCoreRange = '^1.0.0';
     invalidAvailableAdapter.runtimeGuidance = { expectation: 'required' };
     invalidAvailableAdapter.lastVerifiedAt = '2026-08-12';
-    invalidAvailableAdapter.targets = [createPackageTarget('experimental')];
+    invalidAvailableAdapter.targets = [createPackageTarget()];
     expectIssue(stringify(invalidAvailable), 'custom adapter may contain only a custom target');
   });
 
