@@ -21,10 +21,9 @@ import {
 const temporaryDirectories: string[] = [];
 let currentWebsiteModel: IWebsiteModel;
 
-// full TypeScript model generation can exceed the default hook timeout on Windows CI
 beforeAll(() => {
   currentWebsiteModel = createWebsiteModel();
-}, 60_000);
+});
 
 const getCurrentWebsiteModel = (): IWebsiteModel => structuredClone(currentWebsiteModel);
 

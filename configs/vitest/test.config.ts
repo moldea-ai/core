@@ -1,7 +1,7 @@
 import { defineConfig, type ViteUserConfig } from 'vitest/config';
 
-// cross-platform allowance for package, filesystem, and process integration work
-const INTEGRATION_TEST_TIMEOUT_MS = 20_000;
+// cross-platform budget for package, filesystem, compiler, and process integration work
+const INTEGRATION_TEST_TIMEOUT_MS = 120_000;
 
 // supported correctness-test categories and shared test-config inputs
 export type ITestSuiteKind = 'e2e' | 'integration' | 'unit';
@@ -27,7 +27,12 @@ export const createTestConfig = (options: ITestConfigOptions): ViteUserConfig =>
       include: [...include],
       passWithNoTests: false,
       restoreMocks: true,
-      ...(options.suite === 'integration' ? { testTimeout: INTEGRATION_TEST_TIMEOUT_MS } : {}),
+      ...(options.suite === 'integration'
+        ? {
+            hookTimeout: INTEGRATION_TEST_TIMEOUT_MS,
+            testTimeout: INTEGRATION_TEST_TIMEOUT_MS,
+          }
+        : {}),
       sequence: {
         shuffle: false,
       },

@@ -68,7 +68,7 @@ afterEach(() => {
   for (const directory of temporaryDirectories.splice(0)) {
     rmSync(directory, { force: true, recursive: true });
   }
-}, 30_000);
+});
 
 describe('published website UI package', () => {
   test('packs only the documented runtime, component, style, and package files', () => {
