@@ -21,7 +21,7 @@
   },
   "scripts": {
     "build": "turbo run build",
-    "compatibility:check": "node scripts/runtime-compatibility/check.ts",
+    "compatibility:check": "turbo run build --filter @moldea.ai/cli... && node scripts/runtime-compatibility/check.ts",
     "compatibility:generate": "node scripts/runtime-compatibility/generate.ts",
     "docs:check": "pnpm --filter @moldea.ai/packages-website docs:check",
     "docs:generate": "pnpm --filter @moldea.ai/packages-website docs:generate",
